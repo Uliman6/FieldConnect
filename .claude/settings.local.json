@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker:*)",
+      "Bash(npm run db:generate:*)",
+      "Bash(npm run db:push:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(cd:*)",
+      "Bash(dir:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(python:*)",
+      "Bash(tasklist:*)",
+      "Bash(npx expo start)",
+      "Bash(ipconfig:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill //F //PID 65368)",
+      "Bash(findstr:*)",
+      "Bash(taskkill //F //PID 96452)",
+      "Bash(npm start)",
+      "Bash(timeout:*)"
+    ]
+  }
+}

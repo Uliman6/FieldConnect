@@ -1,0 +1,17 @@
+{
+  "name": "sitespeak",
+  "version": "1.0.0",
+  "description": "SiteSpeak - Voice-based event logging for construction",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd node-backend && npm run dev",
+    "dev:frontend": "cd Frontend && npm run web",
+    "dev:mobile": "cd Frontend && npm start",
+    "install:all": "npm install && cd node-backend && npm install && cd ../Frontend && npm install",
+    "db:setup": "cd node-backend && npx prisma generate && npx prisma db push",
+    "db:seed": "cd node-backend && node prisma/seed-admin.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

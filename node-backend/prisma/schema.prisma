@@ -1,0 +1,299 @@
+// Prisma Schema for Construction Daily Log & Event Intelligence System
+// Supports full-text search on PostgreSQL
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION
+// ============================================
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String?
+  role         Role     @default(VIEWER)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// ============================================
+// CORE ENTITIES
+// ============================================
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  number    String?
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Original ID from imported JSON (for deduplication)
+  originalId String? @unique @map("original_id")
+
+  dailyLogs DailyLog[]
+  events    Event[]
+
+  @@index([name])
+  @@index([number])
+  @@map("projects")
+}
+
+model DailyLog {
+  id                 String   @id @default(uuid())
+  projectId          String   @map("project_id")
+  date               DateTime @db.Date
+  preparedBy         String?  @map("prepared_by")
+  status             String?  @default("draft")
+  dailyTotalsWorkers Int?     @map("daily_totals_workers")
+  dailyTotalsHours   Float?   @map("daily_totals_hours")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Original ID from imported JSON (for deduplication)
+  originalId String? @unique @map("original_id")
+
+  // Weather as JSON (flexible structure)
+  weather Json?
+
+  // Relations
+  project              Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks                Task[]
+  visitors             Visitor[]
+  equipment            Equipment[]
+  materials            Material[]
+  pendingIssues        PendingIssue[]
+  inspectionNotes      InspectionNote[]
+  additionalWorkEntries AdditionalWorkEntry[]
+
+  @@index([projectId])
+  @@index([date])
+  @@index([status])
+  @@map("daily_logs")
+}
+
+// ============================================
+// DAILY LOG NESTED ENTITIES
+// ============================================
+
+model Task {
+  id              String  @id @default(uuid())
+  dailyLogId      String  @map("daily_log_id")
+  companyName     String? @map("company_name")
+  workers         Int?
+  hours           Float?
+  taskDescription String? @map("task_description") @db.Text
+  notes           String? @db.Text
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([dailyLogId])
+  @@index([companyName])
+  @@map("tasks")
+}
+
+model Visitor {
+  id          String  @id @default(uuid())
+  dailyLogId  String  @map("daily_log_id")
+  time        String?
+  companyName String? @map("company_name")
+  visitorName String? @map("visitor_name")
+  notes       String? @db.Text
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([dailyLogId])
+  @@map("visitors")
+}
+
+model Equipment {
+  id            String  @id @default(uuid())
+  dailyLogId    String  @map("daily_log_id")
+  equipmentType String? @map("equipment_type")
+  quantity      Int?
+  hours         Float?
+  notes         String? @db.Text
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([dailyLogId])
+  @@map("equipment")
+}
+
+model Material {
+  id         String  @id @default(uuid())
+  dailyLogId String  @map("daily_log_id")
+  material   String?
+  quantity   Float?
+  unit       String?
+  supplier   String?
+  notes      String? @db.Text
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([dailyLogId])
+  @@index([supplier])
+  @@map("materials")
+}
+
+model PendingIssue {
+  id             String   @id @default(uuid())
+  dailyLogId     String   @map("daily_log_id")
+  title          String?
+  description    String?  @db.Text
+  category       String?
+  severity       String?
+  assignee       String?
+  dueDate        DateTime? @map("due_date") @db.Date
+  externalEntity String?  @map("external_entity")
+  location       String?
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([dailyLogId])
+  @@index([category])
+  @@index([severity])
+  @@index([assignee])
+  @@map("pending_issues")
+}
+
+model InspectionNote {
+  id             String   @id @default(uuid())
+  dailyLogId     String   @map("daily_log_id")
+  inspectorName  String?  @map("inspector_name")
+  ahj            String?  // Authority Having Jurisdiction
+  inspectionType String?  @map("inspection_type")
+  result         String?
+  notes          String?  @db.Text
+  followUpNeeded Boolean? @map("follow_up_needed")
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([dailyLogId])
+  @@index([inspectorName])
+  @@index([inspectionType])
+  @@index([result])
+  @@map("inspection_notes")
+}
+
+model AdditionalWorkEntry {
+  id          String  @id @default(uuid())
+  dailyLogId  String  @map("daily_log_id")
+  category    String?
+  description String? @db.Text
+
+  dailyLog DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([dailyLogId])
+  @@index([category])
+  @@map("additional_work_entries")
+}
+
+// ============================================
+// EVENTS (for Event Intelligence)
+// ============================================
+
+model Event {
+  id             String    @id @default(uuid())
+  projectId      String    @map("project_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  transcriptText String?   @map("transcript_text") @db.Text
+  eventType      String?   @map("event_type")
+  severity       String?
+  title          String?
+  notes          String?   @db.Text
+  location       String?
+  tradeVendor    String?   @map("trade_vendor")
+  isResolved     Boolean?  @default(false) @map("is_resolved")
+
+  // Original ID from imported JSON (for deduplication)
+  originalId String? @unique @map("original_id")
+
+  // Link to audio file if exists
+  audioFileId String? @map("audio_file_id")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  index   EventIndex?
+
+  @@index([projectId])
+  @@index([eventType])
+  @@index([severity])
+  @@index([tradeVendor])
+  @@index([location])
+  @@index([isResolved])
+  @@index([createdAt])
+  @@map("events")
+}
+
+// ============================================
+// EVENT INDEX (Searchable Keywords)
+// ============================================
+
+model EventIndex {
+  id        String   @id @default(uuid())
+  eventId   String   @unique @map("event_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Extracted entities stored as JSON arrays for flexible querying
+  inspectors     Json?    // ["John Nathan", "Jignesh Molan"]
+  trades         Json?    // ["electricians", "plumbers", "BMS"]
+  materials      Json?    // ["Oil Flow", "metal panels", "concrete"]
+  issueTypes     Json?    // ["cost_impact", "code_violation", "rework"]
+  locations      Json?    // ["level 1", "fire command center", "roof"]
+  ahj            Json?    // Authority Having Jurisdiction ["Santa Clara", "Santa Clara County"]
+  systems        Json?    // ["BMS", "HVAC", "sprinkler", "smoke control"]
+  costImpact     Float?   @map("cost_impact") // Extracted dollar amount if mentioned
+
+  // Follow-up tracking
+  needsFollowUp  Boolean  @default(false) @map("needs_follow_up")
+  followUpReason String?  @map("follow_up_reason") @db.Text
+  followUpDueDate DateTime? @map("follow_up_due_date")
+
+  // Full-text searchable summary of all keywords
+  keywordsSummary String? @map("keywords_summary") @db.Text
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([needsFollowUp])
+  @@index([costImpact])
+  @@map("event_indexes")
+}
+
+// ============================================
+// IMPORT TRACKING
+// ============================================
+
+model ImportLog {
+  id              String   @id @default(uuid())
+  filename        String
+  importedAt      DateTime @default(now()) @map("imported_at")
+  projectsCreated Int      @default(0) @map("projects_created")
+  logsImported    Int      @default(0) @map("logs_imported")
+  eventsImported  Int      @default(0) @map("events_imported")
+  status          String   @default("completed")
+  errorMessage    String?  @map("error_message") @db.Text
+
+  @@map("import_logs")
+}

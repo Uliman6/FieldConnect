@@ -1,0 +1,34 @@
+# Render Blueprint for SiteSpeak
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Backend API
+  - type: web
+    name: sitespeak-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd node-backend && npm install && npx prisma generate
+    startCommand: cd node-backend && npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sitespeak-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGIN
+        sync: false
+
+databases:
+  - name: sitespeak-db
+    databaseName: sitespeak
+    plan: free
+    region: oregon

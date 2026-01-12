@@ -1,0 +1,348 @@
+{
+  "projects": [
+    {
+      "id": "77bnj6ve6afmjghy2qy",
+      "name": "Julie Home",
+      "number": "1",
+      "address": "1 Florida Avenue, Washington dc",
+      "created_at": "2025-12-22T01:47:56.647Z",
+      "updated_at": "2025-12-22T01:47:56.647Z"
+    },
+    {
+      "id": "lyvvfnlcvamjhxe3f2",
+      "name": "Orkun Ev",
+      "number": "3",
+      "address": "2626 Ohio Avenue",
+      "created_at": "2025-12-23T01:48:04.429Z",
+      "updated_at": "2025-12-23T01:48:04.429Z"
+    },
+    {
+      "id": "t2n81sremiemji271r4",
+      "name": "Test",
+      "number": "1",
+      "address": "Mountain view, California, united states",
+      "created_at": "2025-12-23T04:02:33.760Z",
+      "updated_at": "2025-12-23T04:02:33.760Z"
+    }
+  ],
+  "daily_logs": [
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "19li77isuvbmk3m6lls",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2026-01-08",
+        "prepared_by": "Uli",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "daily_summary_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767913017566_kzr1l0wzycmk61rise.m4a",
+        "status": "draft",
+        "created_at": "2026-01-07T06:05:14.848Z",
+        "updated_at": "2026-01-08T22:58:33.364Z"
+      },
+      "tasks": [
+        {
+          "id": "9l75viutexmk3m7dqh",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [
+        {
+          "id": "tn768yyzu9mmk3m6w7t",
+          "title": "",
+          "description": "",
+          "category": "Other",
+          "severity": "Medium",
+          "assignee": "",
+          "due_date": null,
+          "external_entity": "",
+          "location": ""
+        }
+      ],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [
+        {
+          "id": "14y3s6qlu0tmk5z25ie",
+          "section_key": "master_recording",
+          "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767908473385_sk6kkl735rqmk5z24h5.m4a",
+          "transcript_text": "The weather today was rainy and 50 degrees. We had to stop working. DPR Concrete had to stop working four hours into their shift. They will have to come back Saturday for overtime to complete this work. They had four guys working four hours. We had SNS Steel working on the northwest side of the building erecting steel beams and columns. They had five guys working eight hours. Special Inspector Jason Kim was on site inspecting welds that SNS was installing. We had AMB Landscaping working on the southeast side of the exterior bringing in soil, digging soil as well as putting in shrubs and water meters for irrigation. They had three guys working ten hours. We also had EIG Electric working the electrical room for the most part and lighting control. They had six guys working eight hours. We also had electrical inspection in the electrical room so two of their guys were supporting the inspection.",
+          "status": "transcribed",
+          "created_at": "2026-01-08T21:41:14.726Z"
+        },
+        {
+          "id": "cfzu1w1sigjmk5zg0xx",
+          "section_key": "master_recording",
+          "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767909118712_ieuj5phchqemk5zfyew.m4a",
+          "transcript_text": null,
+          "status": "recorded",
+          "created_at": "2026-01-08T21:52:01.989Z"
+        },
+        {
+          "id": "q3lhlhhbefmk5zgax6",
+          "section_key": "master_recording",
+          "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767909134112_fz3rzt0g9qmk5zgaao.m4a",
+          "transcript_text": null,
+          "status": "recorded",
+          "created_at": "2026-01-08T21:52:14.922Z"
+        },
+        {
+          "id": "pcw22nx433mk61rjsh",
+          "section_key": "master_recording",
+          "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767913017566_kzr1l0wzycmk61rise.m4a",
+          "transcript_text": null,
+          "status": "recorded",
+          "created_at": "2026-01-08T22:56:58.865Z"
+        }
+      ],
+      "metadata": {
+        "created_at": "2026-01-07T06:05:14.848Z",
+        "updated_at": "2026-01-08T23:09:18.246Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "zl8quk6jqpmmk4zga9q",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2026-01-08",
+        "prepared_by": "",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "daily_summary_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767913178028_zx2192cl57rmk61uylo.m4a",
+        "status": "draft",
+        "created_at": "2026-01-08T05:04:27.902Z",
+        "updated_at": "2026-01-08T22:59:43.447Z"
+      },
+      "tasks": [],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [
+        {
+          "id": "e4nop6b9op5mk61uz87",
+          "section_key": "master_recording",
+          "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767913178028_zx2192cl57rmk61uylo.m4a",
+          "transcript_text": "Yo",
+          "status": "transcribed",
+          "created_at": "2026-01-08T22:59:38.839Z"
+        }
+      ],
+      "metadata": {
+        "created_at": "2026-01-08T05:04:27.902Z",
+        "updated_at": "2026-01-08T23:09:18.247Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "77bnj6ve6afmjghy2qy",
+        "name": "Julie Home",
+        "number": "1",
+        "address": "1 Florida Avenue, Washington dc",
+        "created_at": "2025-12-22T01:47:56.647Z",
+        "updated_at": "2025-12-22T01:47:56.647Z"
+      },
+      "daily_log": {
+        "id": "utqskzdfr9imk5ytwfo",
+        "project_id": "77bnj6ve6afmjghy2qy",
+        "date": "2026-01-08",
+        "prepared_by": "",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2026-01-08T21:34:49.716Z",
+        "updated_at": "2026-01-08T21:34:49.716Z"
+      },
+      "tasks": [],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2026-01-08T21:34:49.716Z",
+        "updated_at": "2026-01-08T23:09:18.247Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "lbuxegzx2ehmk61z6mq",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2026-01-07",
+        "prepared_by": "",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2026-01-08T23:02:55.058Z",
+        "updated_at": "2026-01-08T23:02:55.059Z"
+      },
+      "tasks": [],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2026-01-08T23:02:55.058Z",
+        "updated_at": "2026-01-08T23:09:18.247Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    }
+  ],
+  "events": [
+    {
+      "event": {
+        "id": "s6mxy1abs5mk4z9a88",
+        "project_id": "t2n81sremiemji271r4",
+        "created_at": "2026-01-08T04:59:01.256Z",
+        "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767848338350_ct3mn7e8l8emk4z97zi.m4a",
+        "transcript_text": "The Santa Clara Fire Marshal Jignesh Molan called out that he wanted us to add an additional smoke control display in the fire command center that shows the north and south doors in addition to what has already been displayed. This is going to cost additional work for the electricians as well as the smoke control guys and the door guys, potentially around $10k in total.",
+        "status": "transcribed",
+        "event_type": "Other",
+        "severity": "Medium",
+        "title": "Untitled Event",
+        "notes": "",
+        "location": "",
+        "trade_vendor": "",
+        "linked_daily_log_id": null,
+        "is_resolved": false,
+        "resolved_at": null,
+        "server_id": null,
+        "last_synced_at": null,
+        "sync_status": "pending"
+      },
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states"
+      },
+      "metadata": {
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "app_version": "1.0.0",
+        "exported_at": "2026-01-08T23:09:18.247Z"
+      }
+    },
+    {
+      "event": {
+        "id": "alb35kmjd4smk4zc9l4",
+        "project_id": "t2n81sremiemji271r4",
+        "created_at": "2026-01-08T05:01:20.392Z",
+        "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Documents/audio/recording_1767848477106_im1l6t8etwmk4zc71u.m4a",
+        "transcript_text": "The painters used a projective covering which left a residue on the north side of the building on the exterior metal panels. This residue would not be cleaned off by regular alcohol because that would damage the panels, so we needed to use a product called Oil Flow. So in the future, if this ever happens, we should be using the specific product or reading the manual for the metal panels.",
+        "status": "transcribed",
+        "event_type": "Other",
+        "severity": "Medium",
+        "title": "Untitled Event",
+        "notes": "",
+        "location": "",
+        "trade_vendor": "",
+        "linked_daily_log_id": null,
+        "is_resolved": false,
+        "resolved_at": null,
+        "server_id": null,
+        "last_synced_at": null,
+        "sync_status": "pending"
+      },
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states"
+      },
+      "metadata": {
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "app_version": "1.0.0",
+        "exported_at": "2026-01-08T23:09:18.247Z"
+      }
+    }
+  ],
+  "export_metadata": {
+    "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+    "app_version": "1.0.0",
+    "exported_at": "2026-01-08T23:09:18.246Z"
+  }
+}

@@ -1,0 +1,1082 @@
+{
+  "projects": [
+    {
+      "id": "77bnj6ve6afmjghy2qy",
+      "name": "Julie Home",
+      "number": "1",
+      "address": "1 Florida Avenue, Washington dc",
+      "created_at": "2025-12-22T01:47:56.647Z",
+      "updated_at": "2025-12-22T01:47:56.647Z"
+    },
+    {
+      "id": "lyvvfnlcvamjhxe3f2",
+      "name": "Orkun Ev",
+      "number": "3",
+      "address": "2626 Ohio Avenue",
+      "created_at": "2025-12-23T01:48:04.429Z",
+      "updated_at": "2025-12-23T01:48:04.429Z"
+    },
+    {
+      "id": "t2n81sremiemji271r4",
+      "name": "Test",
+      "number": "1",
+      "address": "Mountain view, California, united states",
+      "created_at": "2025-12-23T04:02:33.760Z",
+      "updated_at": "2025-12-23T04:02:33.760Z"
+    }
+  ],
+  "daily_logs": [
+    {
+      "project": {
+        "id": "77bnj6ve6afmjghy2qy",
+        "name": "Julie Home",
+        "number": "1",
+        "address": "1 Florida Avenue, Washington dc",
+        "created_at": "2025-12-22T01:47:56.647Z",
+        "updated_at": "2025-12-22T01:47:56.647Z"
+      },
+      "daily_log": {
+        "id": "zha9oqyu1zsmjghy2r0",
+        "project_id": "77bnj6ve6afmjghy2qy",
+        "date": "2025-12-22",
+        "prepared_by": "",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-22T01:47:56.652Z",
+        "updated_at": "2025-12-22T01:58:56.241Z"
+      },
+      "tasks": [
+        {
+          "id": "4ew5ivbpsl7mjghym89",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "n40j5mqb5egmjgi9t4h",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [
+        {
+          "id": "op1pv9lfv48mjghy5ui",
+          "title": "",
+          "description": "",
+          "category": "QAQC",
+          "severity": "Low",
+          "assignee": "Uli Degirmenci",
+          "due_date": null,
+          "external_entity": "Inspector",
+          "location": "FCC"
+        }
+      ],
+      "inspection_notes": [
+        {
+          "id": "a69jmfarmzcmjgi12pn",
+          "inspector_name": "",
+          "ahj": "",
+          "inspection_type": "",
+          "result": "Pass",
+          "notes": "",
+          "follow_up_needed": false,
+          "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-22C31904-79BC-453E-845E-99ADE66F938D.m4a"
+        }
+      ],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-22T01:47:56.652Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "lyvvfnlcvamjhxe3f2",
+        "name": "Orkun Ev",
+        "number": "3",
+        "address": "2626 Ohio Avenue",
+        "created_at": "2025-12-23T01:48:04.429Z",
+        "updated_at": "2025-12-23T01:48:04.429Z"
+      },
+      "daily_log": {
+        "id": "2pfvcqkrfvlmjhxe3f3",
+        "project_id": "lyvvfnlcvamjhxe3f2",
+        "date": "2025-12-23",
+        "prepared_by": "Orkun",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-23T01:48:04.431Z",
+        "updated_at": "2025-12-23T01:48:51.101Z"
+      },
+      "tasks": [],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [
+        {
+          "id": "ix8vy8azgmmjhxe90e",
+          "title": "",
+          "description": "\n\n",
+          "category": "Coordination",
+          "severity": "Low",
+          "assignee": "",
+          "due_date": null,
+          "external_entity": "Inspector",
+          "location": "",
+          "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-CBF86910-BD19-45A3-BC66-4DFF869E0332.m4a"
+        }
+      ],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-23T01:48:04.431Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "77bnj6ve6afmjghy2qy",
+        "name": "Julie Home",
+        "number": "1",
+        "address": "1 Florida Avenue, Washington dc",
+        "created_at": "2025-12-22T01:47:56.647Z",
+        "updated_at": "2025-12-22T01:47:56.647Z"
+      },
+      "daily_log": {
+        "id": "px600tw6tzsmji25sin",
+        "project_id": "77bnj6ve6afmjghy2qy",
+        "date": "2025-12-23",
+        "prepared_by": "",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-23T04:01:35.135Z",
+        "updated_at": "2025-12-23T04:01:35.135Z"
+      },
+      "tasks": [],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-23T04:01:35.135Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "9brvl2a0aqdmji271r5",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2025-12-23",
+        "prepared_by": "Uli D",
+        "weather": {
+          "low_temp": 50,
+          "high_temp": 60,
+          "precipitation": "",
+          "wind": "Ok",
+          "sky_condition": "Partly Cloudy",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 18,
+        "daily_totals_hours": 34,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-23T04:02:33.761Z",
+        "updated_at": "2025-12-23T04:08:08.545Z"
+      },
+      "tasks": [
+        {
+          "id": "y0fi542pu7mji28zi6",
+          "company_name": "A&B Landscaping",
+          "workers": 3,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "r9nl3f3r6remji29x23",
+          "company_name": "Lee’s Steel ",
+          "workers": 5,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "be1x9q146tsmji2aoys",
+          "company_name": "S&S Concrete",
+          "workers": 4,
+          "hours": 10,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "vbg20ft0hdqmji2bz2e",
+          "company_name": "EIG Electric",
+          "workers": 6,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "en5umpqjk5mji2carv",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [],
+      "inspection_notes": [
+        {
+          "id": "u0ik0g5ihiimji2cfw0",
+          "inspector_name": "Hamid",
+          "ahj": "Santa Clara",
+          "inspection_type": "Electrical",
+          "result": "Partial",
+          "notes": "",
+          "follow_up_needed": true
+        }
+      ],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-23T04:02:33.761Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "l7ayc2nbudkmji2g67p",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2025-12-23",
+        "prepared_by": "Uli D",
+        "weather": {
+          "low_temp": 50,
+          "high_temp": 65,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Partly Cloudy",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 18,
+        "daily_totals_hours": 34,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-23T04:09:39.445Z",
+        "updated_at": "2025-12-26T18:36:28.240Z"
+      },
+      "tasks": [
+        {
+          "id": "hubl09xjkcbmji2ibpr",
+          "company_name": "A&B Landscaping",
+          "workers": 3,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "ar712a52y2amji2ibpu",
+          "company_name": "Lee’s Steel ",
+          "workers": 5,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "1ukyddusgtemji2ibpv",
+          "company_name": "S&S Concrete",
+          "workers": 4,
+          "hours": 10,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "rvz2qe83y7cmji2ibpx",
+          "company_name": "EIG Electric",
+          "workers": 6,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [
+        {
+          "id": "1peoxbz0dvfmjn7qggg",
+          "title": "",
+          "description": "",
+          "category": "Other",
+          "severity": "Medium",
+          "assignee": "",
+          "due_date": null,
+          "external_entity": "",
+          "location": ""
+        }
+      ],
+      "inspection_notes": [
+        {
+          "id": "gmb5l554dlmji2iqsp",
+          "inspector_name": "",
+          "ahj": "",
+          "inspection_type": "",
+          "result": "Pass",
+          "notes": "",
+          "follow_up_needed": false
+        }
+      ],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-23T04:09:39.445Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "22lnq0g3k0kmji34aj3",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2025-12-23",
+        "prepared_by": "Uli D",
+        "weather": {
+          "low_temp": 55,
+          "high_temp": 64,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 18,
+        "daily_totals_hours": 36,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-23T04:28:24.783Z",
+        "updated_at": "2025-12-26T18:37:24.878Z"
+      },
+      "tasks": [
+        {
+          "id": "vlkrlnipyqmji35yrb",
+          "company_name": "A&B Landscaping",
+          "workers": 3,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "zv9gs38fw2fmji35yre",
+          "company_name": "Lee’s Steel ",
+          "workers": 5,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "26zjlkflczjmji35yrj",
+          "company_name": "S&S Concrete",
+          "workers": 4,
+          "hours": 10,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "hums2nynxrdmji35yrk",
+          "company_name": "EIG Electric",
+          "workers": 6,
+          "hours": 10,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [
+        {
+          "id": "fyc4lm2viwcmji34jx7",
+          "title": "",
+          "description": "",
+          "category": "Inspection",
+          "severity": "Medium",
+          "assignee": "Antonio",
+          "due_date": null,
+          "external_entity": "Inspector",
+          "location": "Electrical room",
+          "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-4D8912F6-1F77-4E46-9615-6D5BFCA7E63C.m4a"
+        }
+      ],
+      "inspection_notes": [
+        {
+          "id": "mlckzifu2nnmji3686z",
+          "inspector_name": "Hamid",
+          "ahj": "",
+          "inspection_type": "Electrical",
+          "result": "Pass",
+          "notes": "Work completed",
+          "follow_up_needed": false
+        }
+      ],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-23T04:28:24.783Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "6z0jyxwtmkymji379uk",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2025-12-23",
+        "prepared_by": "",
+        "weather": {
+          "low_temp": 55,
+          "high_temp": 75,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Rainy",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 12,
+        "daily_totals_hours": 24,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-23T04:30:43.868Z",
+        "updated_at": "2025-12-31T03:55:24.367Z"
+      },
+      "tasks": [
+        {
+          "id": "jzku02sarbmji37vph",
+          "company_name": "A&B Landscaping",
+          "workers": 3,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "9kh5wt34qnmji37vpj",
+          "company_name": "Lee’s Steel ",
+          "workers": 3,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "8juvcofdr3dmji37vpl",
+          "company_name": "EIG Electric",
+          "workers": 6,
+          "hours": 8,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [
+        {
+          "id": "l3tm4sm8oemjk81sm1",
+          "title": "OT due to rain",
+          "description": "",
+          "category": "Schedule",
+          "severity": "Low",
+          "assignee": "",
+          "due_date": null,
+          "external_entity": "",
+          "location": "",
+          "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-8ED1BCFD-FE48-4B01-9689-192FC551C96B.m4a"
+        }
+      ],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-23T04:30:43.868Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "g5qdymk1vwmjn7pp4t",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2025-12-26",
+        "prepared_by": "",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-26T18:35:52.829Z",
+        "updated_at": "2025-12-26T18:35:52.832Z"
+      },
+      "tasks": [],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [
+        {
+          "id": "ut8x3jgxdlmjn7pp4v",
+          "title": "Metal Panel Residue",
+          "description": "See event audio",
+          "category": "Other",
+          "severity": "Low",
+          "assignee": "",
+          "due_date": null,
+          "external_entity": "",
+          "location": "",
+          "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-1450F98C-F939-43EA-8EC2-BB43A0B227FB.m4a",
+          "source_event_id": "rbll3cixitgmjn7oy3v"
+        }
+      ],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-26T18:35:52.829Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "zuoewx12j9cmjn7thnk",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2025-12-26",
+        "prepared_by": "Uli D",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Clear",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-26T18:38:49.760Z",
+        "updated_at": "2025-12-26T18:41:37.432Z"
+      },
+      "tasks": [
+        {
+          "id": "vqrplgudwgcmjn7tq6s",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "p9zq512if6dmjn7uc84",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        },
+        {
+          "id": "czrdrq38x7qmjn7v3jz",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [],
+      "inspection_notes": [],
+      "additional_work_entries": [
+        {
+          "id": "c6dl1fbjix8mjn7vtsz",
+          "description": "",
+          "tag": "field_condition",
+          "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-61F4C331-AE9A-445A-903C-313B3B0A10B3.m4a"
+        }
+      ],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-26T18:38:49.760Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    },
+    {
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states",
+        "created_at": "2025-12-23T04:02:33.760Z",
+        "updated_at": "2025-12-23T04:02:33.760Z"
+      },
+      "daily_log": {
+        "id": "cqlbj4d29f7mjth8zny",
+        "project_id": "t2n81sremiemji271r4",
+        "date": "2025-12-31",
+        "prepared_by": "Georgina",
+        "weather": {
+          "low_temp": null,
+          "high_temp": null,
+          "precipitation": "",
+          "wind": "",
+          "sky_condition": "Partly Cloudy",
+          "weather_delay": false
+        },
+        "daily_totals_workers": 0,
+        "daily_totals_hours": 0,
+        "daily_summary_notes": "",
+        "status": "draft",
+        "created_at": "2025-12-31T03:49:26.542Z",
+        "updated_at": "2025-12-31T03:57:26.584Z"
+      },
+      "tasks": [
+        {
+          "id": "86o5d4n4jyimjth9dup",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "\n",
+          "notes": ""
+        },
+        {
+          "id": "eil70rcjn24mjth9kjk",
+          "company_name": "",
+          "workers": 0,
+          "hours": 0,
+          "task_description": "",
+          "notes": ""
+        }
+      ],
+      "visitors": [],
+      "equipment": [],
+      "materials": [],
+      "pending_issues": [],
+      "inspection_notes": [],
+      "additional_work_entries": [],
+      "voice_artifacts": [],
+      "metadata": {
+        "created_at": "2025-12-31T03:49:26.542Z",
+        "updated_at": "2025-12-31T04:00:47.256Z",
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "user_id": null,
+        "app_version": "1.0.0"
+      }
+    }
+  ],
+  "events": [
+    {
+      "event": {
+        "id": "dtdq599tdfvmjhxfsji",
+        "project_id": "lyvvfnlcvamjhxe3f2",
+        "created_at": "2025-12-23T01:49:23.646Z",
+        "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-2B93E275-0162-4C81-A542-D0190EE7022A.m4a",
+        "transcript_text": null,
+        "status": "recorded",
+        "event_type": "Other",
+        "severity": "Medium",
+        "title": "Untitled Event",
+        "notes": "",
+        "location": "",
+        "trade_vendor": "",
+        "linked_daily_log_id": null,
+        "is_resolved": false,
+        "resolved_at": null,
+        "server_id": null,
+        "last_synced_at": null,
+        "sync_status": "pending"
+      },
+      "project": {
+        "id": "lyvvfnlcvamjhxe3f2",
+        "name": "Orkun Ev",
+        "number": "3",
+        "address": "2626 Ohio Avenue"
+      },
+      "metadata": {
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "app_version": "1.0.0",
+        "exported_at": "2025-12-31T04:00:47.256Z"
+      }
+    },
+    {
+      "event": {
+        "id": "rbll3cixitgmjn7oy3v",
+        "project_id": "t2n81sremiemji271r4",
+        "created_at": "2025-12-26T18:35:17.803Z",
+        "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-1450F98C-F939-43EA-8EC2-BB43A0B227FB.m4a",
+        "transcript_text": null,
+        "status": "recorded",
+        "event_type": "Other",
+        "severity": "Low",
+        "title": "Metal Panel Residue",
+        "notes": "",
+        "location": "",
+        "trade_vendor": "",
+        "linked_daily_log_id": "g5qdymk1vwmjn7pp4t",
+        "is_resolved": false,
+        "resolved_at": null,
+        "server_id": null,
+        "last_synced_at": null,
+        "sync_status": "pending"
+      },
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states"
+      },
+      "metadata": {
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "app_version": "1.0.0",
+        "exported_at": "2025-12-31T04:00:47.256Z"
+      }
+    },
+    {
+      "event": {
+        "id": "8us69n3y2vymjthhvdp",
+        "project_id": "t2n81sremiemji271r4",
+        "created_at": "2025-12-31T03:56:20.893Z",
+        "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-CFFB5217-C4C7-4CA2-8A88-24CB0450C847.m4a",
+        "transcript_text": null,
+        "status": "recorded",
+        "event_type": "Inspection",
+        "severity": "Medium",
+        "title": "Fire marshal request",
+        "notes": "",
+        "location": "",
+        "trade_vendor": "",
+        "linked_daily_log_id": null,
+        "is_resolved": false,
+        "resolved_at": null,
+        "server_id": null,
+        "last_synced_at": null,
+        "sync_status": "pending"
+      },
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states"
+      },
+      "metadata": {
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "app_version": "1.0.0",
+        "exported_at": "2025-12-31T04:00:47.257Z"
+      }
+    },
+    {
+      "event": {
+        "id": "g3ii2hg2hitmjthlmn8",
+        "project_id": "t2n81sremiemji271r4",
+        "created_at": "2025-12-31T03:59:16.196Z",
+        "local_audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-2311E1DE-0906-41BB-B958-7E8163D2748A.m4a",
+        "transcript_text": null,
+        "status": "recorded",
+        "event_type": "Other",
+        "severity": "Medium",
+        "title": "Daily Full attemp",
+        "notes": "",
+        "location": "",
+        "trade_vendor": "",
+        "linked_daily_log_id": null,
+        "is_resolved": false,
+        "resolved_at": null,
+        "server_id": null,
+        "last_synced_at": null,
+        "sync_status": "pending"
+      },
+      "project": {
+        "id": "t2n81sremiemji271r4",
+        "name": "Test",
+        "number": "1",
+        "address": "Mountain view, California, united states"
+      },
+      "metadata": {
+        "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+        "app_version": "1.0.0",
+        "exported_at": "2025-12-31T04:00:47.257Z"
+      }
+    }
+  ],
+  "export_metadata": {
+    "device_id": "FD8FFBAC-B755-4872-88B5-BF8C14EF0E76",
+    "app_version": "1.0.0",
+    "exported_at": "2025-12-31T04:00:47.256Z"
+  },
+  "audio_manifest": {
+    "events": [
+      {
+        "event_id": "dtdq599tdfvmjhxfsji",
+        "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-2B93E275-0162-4C81-A542-D0190EE7022A.m4a"
+      },
+      {
+        "event_id": "rbll3cixitgmjn7oy3v",
+        "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-1450F98C-F939-43EA-8EC2-BB43A0B227FB.m4a"
+      },
+      {
+        "event_id": "8us69n3y2vymjthhvdp",
+        "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-CFFB5217-C4C7-4CA2-8A88-24CB0450C847.m4a"
+      },
+      {
+        "event_id": "g3ii2hg2hitmjthlmn8",
+        "audio_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-2311E1DE-0906-41BB-B958-7E8163D2748A.m4a"
+      }
+    ],
+    "voice_artifacts": []
+  },
+  "enhanced_audio_manifest": {
+    "audio_files": [
+      {
+        "audio_file_id": "t77n233zjhfmjthnkwp",
+        "entity_type": "event",
+        "entity_id": "dtdq599tdfvmjhxfsji",
+        "section_key": "event",
+        "project_id": "lyvvfnlcvamjhxe3f2",
+        "daily_log_id": null,
+        "created_at": "2025-12-23T01:49:23.646Z",
+        "filename": "event_dtdq599tdfvmjhxf.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-2B93E275-0162-4C81-A542-D0190EE7022A.m4a"
+      },
+      {
+        "audio_file_id": "603wm1828xemjthnkwp",
+        "entity_type": "event",
+        "entity_id": "rbll3cixitgmjn7oy3v",
+        "section_key": "event",
+        "project_id": "t2n81sremiemji271r4",
+        "daily_log_id": "g5qdymk1vwmjn7pp4t",
+        "created_at": "2025-12-26T18:35:17.803Z",
+        "filename": "event_rbll3cixitgmjn7o.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-1450F98C-F939-43EA-8EC2-BB43A0B227FB.m4a"
+      },
+      {
+        "audio_file_id": "z39uqse4wldmjthnkwp",
+        "entity_type": "event",
+        "entity_id": "8us69n3y2vymjthhvdp",
+        "section_key": "event",
+        "project_id": "t2n81sremiemji271r4",
+        "daily_log_id": null,
+        "created_at": "2025-12-31T03:56:20.893Z",
+        "filename": "event_8us69n3y2vymjthh.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-CFFB5217-C4C7-4CA2-8A88-24CB0450C847.m4a"
+      },
+      {
+        "audio_file_id": "vfukejm6l5lmjthnkwp",
+        "entity_type": "event",
+        "entity_id": "g3ii2hg2hitmjthlmn8",
+        "section_key": "event",
+        "project_id": "t2n81sremiemji271r4",
+        "daily_log_id": null,
+        "created_at": "2025-12-31T03:59:16.196Z",
+        "filename": "event_g3ii2hg2hitmjthl.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-2311E1DE-0906-41BB-B958-7E8163D2748A.m4a"
+      },
+      {
+        "audio_file_id": "z3xjc3p4h0omjthnkwp",
+        "entity_type": "inspection_note",
+        "entity_id": "a69jmfarmzcmjgi12pn",
+        "section_key": "inspection_notes",
+        "project_id": "77bnj6ve6afmjghy2qy",
+        "daily_log_id": "zha9oqyu1zsmjghy2r0",
+        "created_at": "2025-12-22T01:47:56.652Z",
+        "filename": "inspection_note_a69jmfarmzcmjgi1.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-22C31904-79BC-453E-845E-99ADE66F938D.m4a"
+      },
+      {
+        "audio_file_id": "cueguecr0umjthnkwp",
+        "entity_type": "pending_issue",
+        "entity_id": "ix8vy8azgmmjhxe90e",
+        "section_key": "pending_issues",
+        "project_id": "lyvvfnlcvamjhxe3f2",
+        "daily_log_id": "2pfvcqkrfvlmjhxe3f3",
+        "created_at": "2025-12-23T01:48:04.431Z",
+        "filename": "pending_issue_ix8vy8azgmmjhxe9.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-CBF86910-BD19-45A3-BC66-4DFF869E0332.m4a"
+      },
+      {
+        "audio_file_id": "07mroqz6005qmjthnkwp",
+        "entity_type": "pending_issue",
+        "entity_id": "fyc4lm2viwcmji34jx7",
+        "section_key": "pending_issues",
+        "project_id": "t2n81sremiemji271r4",
+        "daily_log_id": "22lnq0g3k0kmji34aj3",
+        "created_at": "2025-12-23T04:28:24.783Z",
+        "filename": "pending_issue_fyc4lm2viwcmji34.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-4D8912F6-1F77-4E46-9615-6D5BFCA7E63C.m4a"
+      },
+      {
+        "audio_file_id": "0uamn1gxxlcfmjthnkwp",
+        "entity_type": "pending_issue",
+        "entity_id": "l3tm4sm8oemjk81sm1",
+        "section_key": "pending_issues",
+        "project_id": "t2n81sremiemji271r4",
+        "daily_log_id": "6z0jyxwtmkymji379uk",
+        "created_at": "2025-12-23T04:30:43.868Z",
+        "filename": "pending_issue_l3tm4sm8oemjk81s.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-8ED1BCFD-FE48-4B01-9689-192FC551C96B.m4a"
+      },
+      {
+        "audio_file_id": "f56fcb8kd6mjthnkwp",
+        "entity_type": "pending_issue",
+        "entity_id": "ut8x3jgxdlmjn7pp4v",
+        "section_key": "pending_issues",
+        "project_id": "t2n81sremiemji271r4",
+        "daily_log_id": "g5qdymk1vwmjn7pp4t",
+        "created_at": "2025-12-26T18:35:52.829Z",
+        "filename": "pending_issue_ut8x3jgxdlmjn7pp.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-1450F98C-F939-43EA-8EC2-BB43A0B227FB.m4a"
+      },
+      {
+        "audio_file_id": "cofi4a2t7gcmjthnkwp",
+        "entity_type": "additional_work",
+        "entity_id": "c6dl1fbjix8mjn7vtsz",
+        "section_key": "additional_work",
+        "project_id": "t2n81sremiemji271r4",
+        "daily_log_id": "zuoewx12j9cmjn7thnk",
+        "created_at": "2025-12-26T18:38:49.760Z",
+        "filename": "additional_work_c6dl1fbjix8mjn7v.m4a",
+        "mime_type": "audio/m4a",
+        "original_uri": "file:///var/mobile/Containers/Data/Application/171121ED-FC13-410A-8985-271D6F0AC7D8/Library/Caches/AV/recording-61F4C331-AE9A-445A-903C-313B3B0A10B3.m4a"
+      }
+    ],
+    "audio_pack_filename": "lessons_applied_audio_2025-12-30_2300.zip",
+    "audio_manifest_included": true
+  }
+}
