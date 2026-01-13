@@ -47,5 +47,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "fetch('http://localhost:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
-# Start command
-CMD ["npm", "start"]
+# Start command - run migrations then start server
+CMD ["sh", "-c", "npx prisma db push --skip-generate && npm start"]
