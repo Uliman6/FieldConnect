@@ -4,8 +4,8 @@ import * as SecureStore from 'expo-secure-store';
 import { User, AuthResponse } from './types';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
-const TOKEN_KEY = 'sitespeak_auth_token';
-const USER_KEY = 'sitespeak_user';
+const TOKEN_KEY = 'fieldconnect_auth_token';
+const USER_KEY = 'fieldconnect_user';
 
 interface AuthState {
   user: User | null;

@@ -52,7 +52,7 @@ export default function LoginScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>SiteSpeak</Text>
+            <Text style={styles.title}>FieldConnect</Text>
             <Text style={styles.subtitle}>Construction Event Logger</Text>
           </View>
 

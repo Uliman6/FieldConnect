@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function seedAdmin() {
-  const email = process.env.ADMIN_EMAIL || 'admin@sitespeak.local';
+  const email = process.env.ADMIN_EMAIL || 'admin@fieldconnect.local';
   const password = process.env.ADMIN_PASSWORD || 'AdminPass123!';
   const name = 'Admin';
 

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "SiteSpeak",
-    "slug": "sitespeak",
-    "scheme": "sitespeak",
+    "name": "FieldConnect",
+    "slug": "fieldconnect",
+    "scheme": "fieldconnect",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
