@@ -105,6 +105,30 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// POST /api/auth/setup - One-time admin setup
+const setupFirstAdmin = async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const result = await authService.setupFirstAdmin({ email, password, name });
+    res.status(201).json(result);
+  } catch (error) {
+    if (error.message === 'Setup already completed') {
+      return res.status(403).json({ error: error.message });
+    }
+    console.error('Setup error:', error);
+    res.status(500).json({ error: 'Setup failed' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -112,4 +136,5 @@ module.exports = {
   getAllUsers,
   updateUser,
   deleteUser,
+  setupFirstAdmin,
 };

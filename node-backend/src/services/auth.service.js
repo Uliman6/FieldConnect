@@ -151,6 +151,23 @@ class AuthService {
       where: { id },
     });
   }
+
+  async setupFirstAdmin({ email, password, name }) {
+    // Check if any users exist
+    const userCount = await prisma.user.count();
+
+    if (userCount > 0) {
+      throw new Error('Setup already completed');
+    }
+
+    // Create the first admin user
+    return this.register({
+      email,
+      password,
+      name: name || 'Admin',
+      role: 'ADMIN'
+    });
+  }
 }
 
 module.exports = new AuthService();

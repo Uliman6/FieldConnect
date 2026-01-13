@@ -6,6 +6,7 @@ const { authenticate, requireAdmin } = require('../middleware/auth.middleware');
 // Public routes
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/setup', authController.setupFirstAdmin);
 
 // Protected routes
 router.get('/me', authenticate, authController.getCurrentUser);
