@@ -1,107 +1,101 @@
-// Audio transcription service using OpenAI's GPT-4o-transcribe
-// Uses gpt-4o-transcribe for high-quality transcription with speech understanding
+// Audio transcription service - uses backend API for transcription
+// Backend handles OpenAI Whisper calls securely
 
-const OPENAI_API_KEY = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
-const TRANSCRIPTION_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
+import { Platform } from 'react-native';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
 export interface TranscriptionResult {
   success: boolean;
   text?: string;
+  title?: string;
   error?: string;
 }
 
 export interface TranscriptionOptions {
   language?: string;
-  model?: 'gpt-4o-transcribe' | 'gpt-4o-mini-transcribe';
 }
 
 /**
- * Transcribe an audio file using OpenAI's GPT-4o-transcribe API
- * @param audioUri - Local file URI (e.g., file:///path/to/recording.m4a)
- * @param options - Optional transcription options (language, model)
- * @returns TranscriptionResult with success status and transcribed text or error
+ * Check if transcription service is available
+ * Calls backend to verify API key is configured
+ */
+export async function isTranscriptionAvailable(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/api/transcripts/status`);
+    if (!response.ok) return false;
+    const data = await response.json();
+    return data.available === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Transcribe audio using backend API
+ * Works for both web (blob URL) and native (file URI)
  */
 export async function transcribeAudio(
   audioUri: string,
   options: TranscriptionOptions = {}
 ): Promise<TranscriptionResult> {
-  // Check if API key is configured
-  if (!OPENAI_API_KEY) {
-    console.warn('[transcription] OpenAI API key not configured');
-    return {
-      success: false,
-      error: 'OpenAI API key not configured. Please set up the API in the API tab.',
-    };
-  }
-
   try {
-    console.log('[transcription] Starting transcription for:', audioUri);
+    console.log('[transcription] Starting transcription via backend API');
 
-    // Create FormData with the audio file
     const formData = new FormData();
 
-    // Determine file extension and mime type
-    const lowerUri = audioUri.toLowerCase();
-    let mimeType = 'audio/m4a';
-    let fileName = 'recording.m4a';
+    if (Platform.OS === 'web') {
+      // Web: audioUri is a blob URL, fetch and append
+      const response = await fetch(audioUri);
+      const blob = await response.blob();
 
-    if (lowerUri.includes('.wav')) {
-      mimeType = 'audio/wav';
-      fileName = 'recording.wav';
-    } else if (lowerUri.includes('.mp3')) {
-      mimeType = 'audio/mpeg';
-      fileName = 'recording.mp3';
-    } else if (lowerUri.includes('.webm')) {
-      mimeType = 'audio/webm';
-      fileName = 'recording.webm';
+      // Determine filename from blob type
+      const ext = blob.type.includes('webm') ? 'webm' :
+                  blob.type.includes('mp4') ? 'm4a' :
+                  blob.type.includes('wav') ? 'wav' : 'webm';
+
+      formData.append('audio', blob, `recording.${ext}`);
+    } else {
+      // Native: append file URI directly (React Native style)
+      const ext = audioUri.toLowerCase().includes('.wav') ? 'wav' :
+                  audioUri.toLowerCase().includes('.mp3') ? 'mp3' :
+                  audioUri.toLowerCase().includes('.webm') ? 'webm' : 'm4a';
+
+      formData.append('audio', {
+        uri: audioUri,
+        type: `audio/${ext}`,
+        name: `recording.${ext}`,
+      } as any);
     }
 
-    // Append file to FormData (React Native style)
-    formData.append('file', {
-      uri: audioUri,
-      type: mimeType,
-      name: fileName,
-    } as any);
-
-    // Use gpt-4o-transcribe for high-quality transcription
-    // Can fall back to gpt-4o-mini-transcribe for faster/cheaper results
-    const model = options.model ?? 'gpt-4o-transcribe';
-    formData.append('model', model);
-    formData.append('response_format', 'json');
-
-    // Add language hint if provided
+    // Add language if specified
     if (options.language) {
       formData.append('language', options.language);
     }
 
-    console.log(`[transcription] Using model: ${model}`);
+    console.log('[transcription] Sending to backend...');
 
-    // Make the API request
-    const response = await fetch(TRANSCRIPTION_ENDPOINT, {
+    const response = await fetch(`${API_URL}/api/transcripts/transcribe`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
       body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[transcription] API error:', response.status, errorText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[transcription] API error:', response.status, errorData);
       return {
         success: false,
-        error: `Transcription failed: ${response.status}`,
+        error: errorData.message || `Transcription failed: ${response.status}`,
       };
     }
 
     const result = await response.json();
-    const transcribedText = result.text?.trim() ?? '';
-
-    console.log('[transcription] Success, text length:', transcribedText.length);
+    console.log('[transcription] Success, text length:', result.text?.length || 0);
 
     return {
       success: true,
-      text: transcribedText,
+      text: result.text,
+      title: result.title,
     };
   } catch (error) {
     console.error('[transcription] Error:', error);
@@ -113,35 +107,17 @@ export async function transcribeAudio(
 }
 
 /**
- * Transcribe audio using gpt-4o-transcribe (full quality)
+ * Transcribe with default settings
  */
-export async function transcribeWithGpt4o(
+export async function transcribeWithDefaults(
   audioUri: string,
   language?: string
 ): Promise<TranscriptionResult> {
-  return transcribeAudio(audioUri, { model: 'gpt-4o-transcribe', language });
-}
-
-/**
- * Transcribe audio using gpt-4o-mini-transcribe (faster/cheaper)
- */
-export async function transcribeWithGpt4oMini(
-  audioUri: string,
-  language?: string
-): Promise<TranscriptionResult> {
-  return transcribeAudio(audioUri, { model: 'gpt-4o-mini-transcribe', language });
-}
-
-/**
- * Check if transcription is available (API key configured)
- */
-export function isTranscriptionAvailable(): boolean {
-  return !!OPENAI_API_KEY;
+  return transcribeAudio(audioUri, { language });
 }
 
 /**
  * Generate a concise title from transcription text
- * Extracts the most relevant part of the transcription to use as a title
  * @param transcript - The full transcription text
  * @param maxLength - Maximum length for the title (default: 50)
  * @returns A concise title extracted from the transcription
@@ -187,4 +163,3 @@ export function generateTitleFromTranscript(
 
   return truncated.charAt(0).toUpperCase() + truncated.slice(1) + '...';
 }
-

@@ -1,6 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const transcriptController = require('../controllers/transcript.controller');
+const { uploadAudioMemory } = require('../middleware/upload.middleware');
+
+/**
+ * POST /api/transcripts/transcribe
+ * Transcribe audio file to text using OpenAI Whisper
+ */
+router.post('/transcribe', uploadAudioMemory.single('audio'), (req, res, next) => {
+  transcriptController.transcribeAudio(req, res, next);
+});
+
+/**
+ * GET /api/transcripts/status
+ * Check if transcription service is available
+ */
+router.get('/status', (req, res, next) => {
+  transcriptController.getTranscriptionStatus(req, res, next);
+});
 
 /**
  * POST /api/transcripts/parse

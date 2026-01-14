@@ -1,10 +1,70 @@
 const transcriptParser = require('../services/transcript-parser.service');
+const transcriptionService = require('../services/transcription.service');
 const prisma = require('../services/prisma');
 
 /**
  * Transcript Controller - Parse transcripts and auto-fill daily logs
  */
 class TranscriptController {
+  /**
+   * POST /api/transcripts/transcribe
+   * Transcribe audio file to text
+   */
+  async transcribeAudio(req, res, next) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Audio file is required. Send as "audio" field.'
+        });
+      }
+
+      const { language } = req.body;
+
+      const result = await transcriptionService.transcribe(
+        req.file.buffer,
+        req.file.originalname,
+        { language }
+      );
+
+      if (!result.success) {
+        return res.status(500).json({
+          error: 'Transcription Error',
+          message: result.error
+        });
+      }
+
+      // Generate a title from the transcription
+      const title = transcriptionService.generateTitle(result.text);
+
+      res.json({
+        success: true,
+        text: result.text,
+        title: title
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * GET /api/transcripts/status
+   * Check if transcription is available
+   */
+  async getTranscriptionStatus(req, res, next) {
+    try {
+      const available = transcriptionService.isAvailable();
+      res.json({
+        available,
+        message: available
+          ? 'Transcription service is available'
+          : 'Transcription service unavailable. OPENAI_API_KEY not configured.'
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   /**
    * POST /api/transcripts/parse
    * Parse a transcript and return structured data
