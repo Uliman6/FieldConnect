@@ -42,15 +42,12 @@ class TranscriptionService {
       };
       const mimeType = mimeTypes[ext] || 'audio/webm';
 
-      // Create form data for OpenAI API
-      const FormData = require('form-data');
+      // Use native FormData and Blob (Node.js 18+) for compatibility with native fetch
       const formData = new FormData();
 
-      // Append audio file
-      formData.append('file', audioBuffer, {
-        filename: filename,
-        contentType: mimeType
-      });
+      // Create a Blob from the buffer and append to form
+      const audioBlob = new Blob([audioBuffer], { type: mimeType });
+      formData.append('file', audioBlob, filename);
 
       // Use whisper-1 model (standard Whisper)
       formData.append('model', 'whisper-1');
@@ -63,12 +60,11 @@ class TranscriptionService {
 
       console.log(`[transcription] Sending ${audioBuffer.length} bytes to OpenAI Whisper`);
 
-      // Make the API request
+      // Make the API request using native fetch with native FormData
       const response = await fetch(TRANSCRIPTION_ENDPOINT, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          ...formData.getHeaders()
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
         },
         body: formData
       });
