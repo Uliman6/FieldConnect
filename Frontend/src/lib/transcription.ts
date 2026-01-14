@@ -2,8 +2,16 @@
 // Backend handles OpenAI Whisper calls securely
 
 import { Platform } from 'react-native';
+import { useAuthStore } from './auth-store';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+
+/**
+ * Get auth token for API requests
+ */
+function getAuthToken(): string | null {
+  return useAuthStore.getState().token;
+}
 
 export interface TranscriptionResult {
   success: boolean;
@@ -22,7 +30,13 @@ export interface TranscriptionOptions {
  */
 export async function isTranscriptionAvailable(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_URL}/api/transcripts/status`);
+    const token = getAuthToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_URL}/api/transcripts/status`, { headers });
     if (!response.ok) return false;
     const data = await response.json();
     return data.available === true;
@@ -75,8 +89,16 @@ export async function transcribeAudio(
 
     console.log('[transcription] Sending to backend...');
 
+    // Get auth token for authenticated request
+    const token = getAuthToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_URL}/api/transcripts/transcribe`, {
       method: 'POST',
+      headers,
       body: formData,
     });
 
