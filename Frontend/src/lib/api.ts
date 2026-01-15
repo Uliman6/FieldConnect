@@ -530,7 +530,7 @@ export async function createProject(data: {
 }
 
 /**
- * Create a new daily log
+ * Create a new daily log with nested data
  */
 export async function createDailyLog(data: {
   projectId: string;
@@ -540,17 +540,67 @@ export async function createDailyLog(data: {
   weather?: Record<string, unknown>;
   dailyTotalsWorkers?: number;
   dailyTotalsHours?: number;
+  tasks?: Array<{
+    company_name?: string;
+    workers?: number;
+    hours?: number;
+    task_description?: string;
+    notes?: string;
+  }>;
+  pending_issues?: Array<{
+    title?: string;
+    description?: string;
+    category?: string;
+    severity?: string;
+    location?: string;
+  }>;
+  inspection_notes?: Array<{
+    inspection_type?: string;
+    inspector_name?: string;
+    result?: string;
+    notes?: string;
+    follow_up_needed?: boolean;
+  }>;
+  materials?: Array<{
+    material?: string;
+    quantity?: number;
+    unit?: string;
+    supplier?: string;
+    notes?: string;
+  }>;
+  equipment?: Array<{
+    equipment_type?: string;
+    quantity?: number;
+    hours?: number;
+    notes?: string;
+  }>;
+  visitors?: Array<{
+    visitor_name?: string;
+    company_name?: string;
+    time?: string;
+    notes?: string;
+  }>;
 }): Promise<DailyLogDetail> {
+  // Fix timezone issue: append T12:00:00 to date to ensure it's treated as noon local time
+  // This prevents the date from shifting when converted to UTC
+  const dateWithTime = data.date.includes('T') ? data.date : `${data.date}T12:00:00`;
+
   return apiFetch('/api/daily-logs', {
     method: 'POST',
     body: JSON.stringify({
       project_id: data.projectId,
-      date: data.date,
+      date: dateWithTime,
       prepared_by: data.preparedBy,
       status: data.status,
       weather: data.weather,
       daily_totals_workers: data.dailyTotalsWorkers,
       daily_totals_hours: data.dailyTotalsHours,
+      tasks: data.tasks,
+      pending_issues: data.pending_issues,
+      inspection_notes: data.inspection_notes,
+      materials: data.materials,
+      equipment: data.equipment,
+      visitors: data.visitors,
     }),
   });
 }

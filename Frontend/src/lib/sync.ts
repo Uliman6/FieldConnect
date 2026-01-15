@@ -28,6 +28,7 @@ import {
   updateEventApi,
   getProjects,
 } from './api';
+import { parseDailyLogTranscript } from './transcription';
 
 // App version constant - update this when releasing new versions
 const APP_VERSION = '1.0.0';
@@ -838,6 +839,7 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
 
 /**
  * Sync a daily log to the backend
+ * Parses transcription from voice artifacts to extract structured data
  */
 export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string | null> {
   try {
@@ -871,15 +873,98 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
       return null;
     }
 
-    console.log('[sync] Creating daily log in backend');
+    // Extract transcription from voice artifacts
+    let transcriptText = '';
+    if (dailyLog.voice_artifacts && dailyLog.voice_artifacts.length > 0) {
+      // Combine all transcriptions from voice artifacts
+      transcriptText = dailyLog.voice_artifacts
+        .filter(a => a.transcript_text)
+        .map(a => a.transcript_text)
+        .join('. ');
+    }
+
+    // Parse the transcription to extract structured data
+    const parsedData = parseDailyLogTranscript(transcriptText);
+    console.log('[sync] Parsed transcript data:', {
+      tasks: parsedData.tasks.length,
+      issues: parsedData.pending_issues.length,
+      inspections: parsedData.inspection_notes.length,
+      materials: parsedData.materials.length,
+      equipment: parsedData.equipment.length,
+      visitors: parsedData.visitors.length,
+    });
+
+    // Merge parsed data with existing daily log data
+    const tasks = [...(dailyLog.tasks || []).map(t => ({
+      company_name: t.company_name,
+      workers: t.workers,
+      hours: t.hours,
+      task_description: t.task_description,
+      notes: t.notes,
+    })), ...parsedData.tasks];
+
+    const pendingIssues = [...(dailyLog.pending_issues || []).map(i => ({
+      title: i.title,
+      description: i.description,
+      category: i.category,
+      severity: i.severity,
+      location: i.location,
+    })), ...parsedData.pending_issues];
+
+    const inspectionNotes = [...(dailyLog.inspection_notes || []).map(n => ({
+      inspection_type: n.inspection_type,
+      inspector_name: n.inspector_name,
+      result: n.result,
+      notes: n.notes,
+      follow_up_needed: n.follow_up_needed,
+    })), ...parsedData.inspection_notes];
+
+    const materials = [...(dailyLog.materials || []).map(m => ({
+      material: m.material,
+      quantity: m.quantity,
+      unit: m.unit,
+      supplier: m.supplier,
+      notes: m.notes,
+    })), ...parsedData.materials];
+
+    const equipment = [...(dailyLog.equipment || []).map(e => ({
+      equipment_type: e.equipment_type,
+      quantity: e.quantity,
+      hours: e.hours,
+      notes: e.notes,
+    })), ...parsedData.equipment];
+
+    const visitors = [...(dailyLog.visitors || []).map(v => ({
+      visitor_name: v.visitor_name,
+      company_name: v.company_name,
+      time: v.time,
+      notes: v.notes,
+    })), ...parsedData.visitors];
+
+    // Calculate totals
+    const dailyTotalsWorkers = dailyLog.daily_totals_workers || parsedData.daily_totals.workers;
+    const dailyTotalsHours = dailyLog.daily_totals_hours || parsedData.daily_totals.hours;
+
+    console.log('[sync] Creating daily log in backend with', {
+      tasks: tasks.length,
+      pendingIssues: pendingIssues.length,
+      inspectionNotes: inspectionNotes.length,
+    });
+
     const result = await createDailyLogApi({
       projectId: backendProjectId,
       date: dailyLog.date,
       preparedBy: dailyLog.prepared_by || undefined,
-      status: dailyLog.status || undefined,
+      status: dailyLog.status || 'draft',
       weather: dailyLog.weather || undefined,
-      dailyTotalsWorkers: dailyLog.daily_totals_workers || undefined,
-      dailyTotalsHours: dailyLog.daily_totals_hours || undefined,
+      dailyTotalsWorkers: dailyTotalsWorkers || undefined,
+      dailyTotalsHours: dailyTotalsHours || undefined,
+      tasks: tasks.length > 0 ? tasks : undefined,
+      pending_issues: pendingIssues.length > 0 ? pendingIssues : undefined,
+      inspection_notes: inspectionNotes.length > 0 ? inspectionNotes : undefined,
+      materials: materials.length > 0 ? materials : undefined,
+      equipment: equipment.length > 0 ? equipment : undefined,
+      visitors: visitors.length > 0 ? visitors : undefined,
     });
 
     backendIdMap.dailyLogs.set(dailyLog.id, result.id);
