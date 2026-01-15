@@ -345,6 +345,35 @@ export default function EventDetailScreen() {
             </View>
           )}
 
+          {/* Action Items Display */}
+          {event.action_items && event.action_items.length > 0 && (
+            <View className="mb-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
+              <View className="flex-row items-center mb-3">
+                <AlertTriangle size={18} color="#F59E0B" />
+                <Text className="ml-2 text-base font-semibold text-amber-700 dark:text-amber-400">
+                  Action Items
+                </Text>
+                <View className="ml-auto bg-amber-200 dark:bg-amber-700 px-2 py-0.5 rounded-full">
+                  <Text className="text-xs font-bold text-amber-800 dark:text-amber-200">
+                    {event.action_items.length}
+                  </Text>
+                </View>
+              </View>
+              {event.action_items.map((item, idx) => (
+                <View key={idx} className="flex-row items-start mb-2">
+                  <View className="w-6 h-6 rounded-full bg-amber-200 dark:bg-amber-700 items-center justify-center mr-3 mt-0.5">
+                    <Text className="text-xs font-bold text-amber-800 dark:text-amber-200">
+                      {idx + 1}
+                    </Text>
+                  </View>
+                  <Text className="flex-1 text-sm text-amber-900 dark:text-amber-100 leading-5">
+                    {item}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* Title Input */}
           <View className="mb-4">
             <View className="flex-row items-center justify-between mb-1">
