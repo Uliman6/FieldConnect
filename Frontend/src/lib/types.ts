@@ -42,6 +42,8 @@ export interface Event {
   location: string;
   trade_vendor: string;
   linked_daily_log_id: string | null;
+  // Action items extracted from transcript
+  action_items: string[];
   // Resolution tracking
   is_resolved: boolean;
   resolved_at: string | null;
@@ -372,6 +374,7 @@ export function createEmptyEvent(projectId: string, audioUri: string): Event {
     location: '',
     trade_vendor: '',
     linked_daily_log_id: null,
+    action_items: [],
     is_resolved: false,
     resolved_at: null,
     server_id: null,

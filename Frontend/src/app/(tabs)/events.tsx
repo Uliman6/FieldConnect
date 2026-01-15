@@ -10,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { useDailyLogStore } from '@/lib/store';
 import { Event, EventType, EventSeverity } from '@/lib/types';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
-import { generateTitleFromTranscript, transcribeAudio } from '@/lib/transcription';
+import { generateTitleFromTranscript, transcribeAudio, analyzeTranscript } from '@/lib/transcription';
 import { syncEventToBackend } from '@/lib/sync';
 import { cn } from '@/lib/cn';
 import {
@@ -97,6 +97,32 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
           >
             {event.title}
           </Text>
+
+          {/* Action Items - displayed prominently */}
+          {event.action_items && event.action_items.length > 0 && (
+            <View className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2 mb-2 border border-amber-200 dark:border-amber-700">
+              <View className="flex-row items-center mb-1">
+                <AlertTriangle size={12} color="#F59E0B" />
+                <Text className="text-xs font-semibold text-amber-700 dark:text-amber-400 ml-1">
+                  Action Needed
+                </Text>
+              </View>
+              {event.action_items.slice(0, 2).map((item, idx) => (
+                <Text
+                  key={idx}
+                  className="text-xs text-amber-800 dark:text-amber-300 ml-4"
+                  numberOfLines={1}
+                >
+                  • {item}
+                </Text>
+              ))}
+              {event.action_items.length > 2 && (
+                <Text className="text-xs text-amber-600 dark:text-amber-500 ml-4">
+                  +{event.action_items.length - 2} more
+                </Text>
+              )}
+            </View>
+          )}
 
           {project && (
             <View className="flex-row items-center mb-1">
@@ -187,11 +213,22 @@ export default function EventsScreen() {
         const result = await transcribeAudio(audioUri);
 
         if (result.success && result.text) {
-          const autoTitle = generateTitleFromTranscript(result.text.trim());
+          const transcriptText = result.text.trim();
+          const autoTitle = generateTitleFromTranscript(transcriptText);
+
+          // Analyze transcript for intelligent categorization
+          const analysis = analyzeTranscript(transcriptText);
+          console.log('[events] Analysis:', analysis);
+
           updateEvent(newEvent.id, {
-            transcript_text: result.text.trim(),
+            transcript_text: transcriptText,
             status: 'transcribed',
             title: autoTitle,
+            event_type: analysis.eventType,
+            severity: analysis.severity,
+            action_items: analysis.actionItems,
+            location: analysis.location || newEvent.location,
+            trade_vendor: analysis.tradeVendor || newEvent.trade_vendor,
           });
           console.log('[events] Transcription complete for event:', newEvent.id);
 

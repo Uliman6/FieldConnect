@@ -23,8 +23,7 @@ import { cn } from '@/lib/cn';
 import {
   getDailyLogs,
   getProjects,
-  getDailyLogPdfUrl,
-  getDailyLogPdfPreviewUrl,
+  fetchDailyLogPdf,
   queryKeys,
   DailyLogSummary,
   ProjectSummary,
@@ -61,23 +60,40 @@ export default function LogsHistoryScreen() {
     dailyLogsQuery.refetch();
   }, [projectsQuery, dailyLogsQuery]);
 
-  const handleViewPdf = useCallback((logId: string) => {
+  const handleViewPdf = useCallback(async (logId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const url = getDailyLogPdfPreviewUrl(logId);
-    if (Platform.OS === 'web') {
-      window.open(url, '_blank');
-    } else {
-      Linking.openURL(url);
+    try {
+      const blobUrl = await fetchDailyLogPdf(logId, true);
+      if (Platform.OS === 'web') {
+        window.open(blobUrl, '_blank');
+      } else {
+        Linking.openURL(blobUrl);
+      }
+    } catch (error) {
+      console.error('[pdf] Failed to fetch PDF:', error);
+      // Could show an alert here
     }
   }, []);
 
-  const handleDownloadPdf = useCallback((logId: string) => {
+  const handleDownloadPdf = useCallback(async (logId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const url = getDailyLogPdfUrl(logId);
-    if (Platform.OS === 'web') {
-      window.open(url, '_blank');
-    } else {
-      Linking.openURL(url);
+    try {
+      const blobUrl = await fetchDailyLogPdf(logId, false);
+      if (Platform.OS === 'web') {
+        // Create a download link for web
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `daily-log-${logId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        Linking.openURL(blobUrl);
+      }
+    } catch (error) {
+      console.error('[pdf] Failed to download PDF:', error);
+      // Could show an alert here
     }
   }, []);
 

@@ -451,17 +451,50 @@ export async function getDailyLog(id: string): Promise<DailyLogDetail> {
 }
 
 /**
- * Get PDF download URL for a daily log
+ * Get PDF download URL for a daily log (raw URL without auth - use fetchDailyLogPdf instead)
  */
 export function getDailyLogPdfUrl(id: string): string {
   return `${API_BASE_URL}/api/reports/daily-log/${id}`;
 }
 
 /**
- * Get PDF preview URL for a daily log
+ * Get PDF preview URL for a daily log (raw URL without auth - use fetchDailyLogPdf instead)
  */
 export function getDailyLogPdfPreviewUrl(id: string): string {
   return `${API_BASE_URL}/api/reports/daily-log/${id}/preview`;
+}
+
+/**
+ * Fetch PDF with authentication and return blob URL
+ * This properly handles auth for PDF downloads
+ */
+export async function fetchDailyLogPdf(id: string, preview: boolean = false): Promise<string> {
+  const endpoint = preview
+    ? `/api/reports/daily-log/${id}/preview`
+    : `/api/reports/daily-log/${id}`;
+
+  const url = `${API_BASE_URL}${endpoint}`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || `Failed to fetch PDF: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 }
 
 /**
