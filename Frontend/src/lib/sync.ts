@@ -20,6 +20,14 @@ import * as Application from 'expo-application';
 import * as Device from 'expo-device';
 import * as FileSystem from 'expo-file-system';
 import NetInfo from '@react-native-community/netinfo';
+import {
+  createProject as createProjectApi,
+  createDailyLog as createDailyLogApi,
+  updateDailyLogApi,
+  createEvent as createEventApi,
+  updateEventApi,
+  getProjects,
+} from './api';
 
 // App version constant - update this when releasing new versions
 const APP_VERSION = '1.0.0';
@@ -789,4 +797,246 @@ export function getDateRange(days: number): { date_from: string; date_to: string
     date_from: from.toISOString().split('T')[0],
     date_to: now.toISOString().split('T')[0],
   };
+}
+
+// ============================================
+// REAL-TIME BACKEND SYNC FUNCTIONS
+// ============================================
+
+// Track backend IDs for local entities (maps local ID -> backend ID)
+const backendIdMap = {
+  projects: new Map<string, string>(),
+  dailyLogs: new Map<string, string>(),
+  events: new Map<string, string>(),
+};
+
+/**
+ * Sync a project to the backend (creates if new, returns backend ID)
+ */
+export async function syncProjectToBackend(project: Project): Promise<string | null> {
+  try {
+    // Check if already synced
+    if (backendIdMap.projects.has(project.id)) {
+      return backendIdMap.projects.get(project.id) || null;
+    }
+
+    console.log('[sync] Creating project in backend:', project.name);
+    const result = await createProjectApi({
+      name: project.name,
+      number: project.number || undefined,
+      address: project.address || undefined,
+    });
+
+    backendIdMap.projects.set(project.id, result.id);
+    console.log('[sync] Project synced:', project.id, '->', result.id);
+    return result.id;
+  } catch (error) {
+    console.error('[sync] Failed to sync project:', error);
+    return null;
+  }
+}
+
+/**
+ * Sync a daily log to the backend
+ */
+export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string | null> {
+  try {
+    // Check if already synced - update it
+    if (backendIdMap.dailyLogs.has(dailyLog.id)) {
+      const backendId = backendIdMap.dailyLogs.get(dailyLog.id)!;
+      console.log('[sync] Updating daily log in backend:', backendId);
+      await updateDailyLogApi(backendId, {
+        preparedBy: dailyLog.prepared_by || undefined,
+        status: dailyLog.status || undefined,
+        weather: dailyLog.weather || undefined,
+        dailyTotalsWorkers: dailyLog.daily_totals_workers || undefined,
+        dailyTotalsHours: dailyLog.daily_totals_hours || undefined,
+      });
+      return backendId;
+    }
+
+    // Get backend project ID
+    let backendProjectId = backendIdMap.projects.get(dailyLog.project_id);
+    if (!backendProjectId) {
+      // Try to sync the project first
+      const store = useDailyLogStore.getState();
+      const project = store.projects.find(p => p.id === dailyLog.project_id);
+      if (project) {
+        backendProjectId = await syncProjectToBackend(project);
+      }
+    }
+
+    if (!backendProjectId) {
+      console.error('[sync] Cannot sync daily log: project not synced');
+      return null;
+    }
+
+    console.log('[sync] Creating daily log in backend');
+    const result = await createDailyLogApi({
+      projectId: backendProjectId,
+      date: dailyLog.date,
+      preparedBy: dailyLog.prepared_by || undefined,
+      status: dailyLog.status || undefined,
+      weather: dailyLog.weather || undefined,
+      dailyTotalsWorkers: dailyLog.daily_totals_workers || undefined,
+      dailyTotalsHours: dailyLog.daily_totals_hours || undefined,
+    });
+
+    backendIdMap.dailyLogs.set(dailyLog.id, result.id);
+    console.log('[sync] Daily log synced:', dailyLog.id, '->', result.id);
+    return result.id;
+  } catch (error) {
+    console.error('[sync] Failed to sync daily log:', error);
+    return null;
+  }
+}
+
+/**
+ * Sync an event to the backend
+ */
+export async function syncEventToBackend(event: Event): Promise<string | null> {
+  try {
+    // Check if already synced - update it
+    if (backendIdMap.events.has(event.id)) {
+      const backendId = backendIdMap.events.get(event.id)!;
+      console.log('[sync] Updating event in backend:', backendId);
+      await updateEventApi(backendId, {
+        title: event.title || undefined,
+        transcriptText: event.transcript_text || undefined,
+        eventType: event.event_type || undefined,
+        severity: event.severity || undefined,
+        notes: event.notes || undefined,
+        location: event.location || undefined,
+        tradeVendor: event.trade_vendor || undefined,
+        isResolved: event.is_resolved,
+      });
+      return backendId;
+    }
+
+    // Get backend project ID
+    let backendProjectId = backendIdMap.projects.get(event.project_id);
+    if (!backendProjectId) {
+      // Try to sync the project first
+      const store = useDailyLogStore.getState();
+      const project = store.projects.find(p => p.id === event.project_id);
+      if (project) {
+        backendProjectId = await syncProjectToBackend(project);
+      }
+    }
+
+    if (!backendProjectId) {
+      console.error('[sync] Cannot sync event: project not synced');
+      return null;
+    }
+
+    console.log('[sync] Creating event in backend');
+    const result = await createEventApi({
+      projectId: backendProjectId,
+      title: event.title || undefined,
+      transcriptText: event.transcript_text || undefined,
+      eventType: event.event_type || undefined,
+      severity: event.severity || undefined,
+      notes: event.notes || undefined,
+      location: event.location || undefined,
+      tradeVendor: event.trade_vendor || undefined,
+      isResolved: event.is_resolved,
+    });
+
+    backendIdMap.events.set(event.id, result.id);
+    console.log('[sync] Event synced:', event.id, '->', result.id);
+    return result.id;
+  } catch (error) {
+    console.error('[sync] Failed to sync event:', error);
+    return null;
+  }
+}
+
+/**
+ * Sync all local data to backend
+ */
+export async function syncAllDataToBackend(): Promise<{
+  projects: number;
+  dailyLogs: number;
+  events: number;
+  errors: number;
+}> {
+  const store = useDailyLogStore.getState();
+  const results = { projects: 0, dailyLogs: 0, events: 0, errors: 0 };
+
+  // Check connectivity first
+  const online = await isOnline();
+  if (!online) {
+    console.log('[sync] Device is offline, skipping sync');
+    return results;
+  }
+
+  // Sync projects first
+  for (const project of store.projects) {
+    const backendId = await syncProjectToBackend(project);
+    if (backendId) {
+      results.projects++;
+    } else {
+      results.errors++;
+    }
+  }
+
+  // Sync daily logs
+  for (const dailyLog of store.dailyLogs) {
+    const backendId = await syncDailyLogToBackend(dailyLog);
+    if (backendId) {
+      results.dailyLogs++;
+    } else {
+      results.errors++;
+    }
+  }
+
+  // Sync events
+  for (const event of store.events) {
+    const backendId = await syncEventToBackend(event);
+    if (backendId) {
+      results.events++;
+    } else {
+      results.errors++;
+    }
+  }
+
+  console.log('[sync] Full sync complete:', results);
+  return results;
+}
+
+/**
+ * Load backend ID mappings by matching names
+ * Call this on app startup to restore mappings
+ */
+export async function loadBackendMappings(): Promise<void> {
+  try {
+    const store = useDailyLogStore.getState();
+    const backendProjects = await getProjects();
+
+    // Match local projects to backend by name
+    for (const localProject of store.projects) {
+      const match = backendProjects.find(bp => bp.name === localProject.name);
+      if (match) {
+        backendIdMap.projects.set(localProject.id, match.id);
+      }
+    }
+
+    console.log('[sync] Loaded project mappings:', backendIdMap.projects.size);
+  } catch (error) {
+    console.error('[sync] Failed to load backend mappings:', error);
+  }
+}
+
+/**
+ * Get backend ID for a local entity
+ */
+export function getBackendId(type: 'projects' | 'dailyLogs' | 'events', localId: string): string | null {
+  return backendIdMap[type].get(localId) || null;
+}
+
+/**
+ * Check if entity is synced
+ */
+export function isSynced(type: 'projects' | 'dailyLogs' | 'events', localId: string): boolean {
+  return backendIdMap[type].has(localId);
 }

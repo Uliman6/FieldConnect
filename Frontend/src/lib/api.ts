@@ -478,6 +478,197 @@ export async function getProject(id: string): Promise<ProjectSummary> {
   return apiFetch(`/api/projects/${id}`);
 }
 
+// ============================================
+// CREATE/UPDATE API FUNCTIONS
+// ============================================
+
+/**
+ * Create a new project
+ */
+export async function createProject(data: {
+  name: string;
+  number?: string;
+  address?: string;
+}): Promise<ProjectSummary> {
+  return apiFetch('/api/projects', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Create a new daily log
+ */
+export async function createDailyLog(data: {
+  projectId: string;
+  date: string;
+  preparedBy?: string;
+  status?: string;
+  weather?: Record<string, unknown>;
+  dailyTotalsWorkers?: number;
+  dailyTotalsHours?: number;
+}): Promise<DailyLogDetail> {
+  return apiFetch('/api/daily-logs', {
+    method: 'POST',
+    body: JSON.stringify({
+      project_id: data.projectId,
+      date: data.date,
+      prepared_by: data.preparedBy,
+      status: data.status,
+      weather: data.weather,
+      daily_totals_workers: data.dailyTotalsWorkers,
+      daily_totals_hours: data.dailyTotalsHours,
+    }),
+  });
+}
+
+/**
+ * Update a daily log
+ */
+export async function updateDailyLogApi(
+  id: string,
+  data: {
+    preparedBy?: string;
+    status?: string;
+    weather?: Record<string, unknown>;
+    dailyTotalsWorkers?: number;
+    dailyTotalsHours?: number;
+  }
+): Promise<DailyLogDetail> {
+  return apiFetch(`/api/daily-logs/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      prepared_by: data.preparedBy,
+      status: data.status,
+      weather: data.weather,
+      daily_totals_workers: data.dailyTotalsWorkers,
+      daily_totals_hours: data.dailyTotalsHours,
+    }),
+  });
+}
+
+/**
+ * Create a new event
+ */
+export async function createEvent(data: {
+  projectId: string;
+  title?: string;
+  transcriptText?: string;
+  eventType?: string;
+  severity?: string;
+  notes?: string;
+  location?: string;
+  tradeVendor?: string;
+  isResolved?: boolean;
+}): Promise<IndexedEvent> {
+  return apiFetch('/api/events', {
+    method: 'POST',
+    body: JSON.stringify({
+      project_id: data.projectId,
+      title: data.title,
+      transcript_text: data.transcriptText,
+      event_type: data.eventType,
+      severity: data.severity,
+      notes: data.notes,
+      location: data.location,
+      trade_vendor: data.tradeVendor,
+      is_resolved: data.isResolved,
+    }),
+  });
+}
+
+/**
+ * Update an event
+ */
+export async function updateEventApi(
+  id: string,
+  data: {
+    title?: string;
+    transcriptText?: string;
+    eventType?: string;
+    severity?: string;
+    notes?: string;
+    location?: string;
+    tradeVendor?: string;
+    isResolved?: boolean;
+  }
+): Promise<IndexedEvent> {
+  return apiFetch(`/api/events/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      title: data.title,
+      transcript_text: data.transcriptText,
+      event_type: data.eventType,
+      severity: data.severity,
+      notes: data.notes,
+      location: data.location,
+      trade_vendor: data.tradeVendor,
+      is_resolved: data.isResolved,
+    }),
+  });
+}
+
+/**
+ * Delete an event
+ */
+export async function deleteEventApi(id: string): Promise<void> {
+  return apiFetch(`/api/events/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Add a task to a daily log
+ */
+export async function addTaskApi(
+  dailyLogId: string,
+  data: {
+    companyName?: string;
+    workers?: number;
+    hours?: number;
+    taskDescription?: string;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/tasks`, {
+    method: 'POST',
+    body: JSON.stringify({
+      company_name: data.companyName,
+      workers: data.workers,
+      hours: data.hours,
+      task_description: data.taskDescription,
+      notes: data.notes,
+    }),
+  });
+}
+
+/**
+ * Add a pending issue to a daily log
+ */
+export async function addPendingIssueApi(
+  dailyLogId: string,
+  data: {
+    title?: string;
+    description?: string;
+    category?: string;
+    severity?: string;
+    assignee?: string;
+    location?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/pending-issues`, {
+    method: 'POST',
+    body: JSON.stringify({
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      severity: data.severity,
+      assignee: data.assignee,
+      location: data.location,
+    }),
+  });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   eventSearch: (query: string) => ['events', 'search', query] as const,
