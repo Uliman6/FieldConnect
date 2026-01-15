@@ -1,30 +1,52 @@
 /**
- * Transcription Service - Audio to text using OpenAI Whisper
+ * Transcription Service - Audio to text using Whisper
+ * Supports Groq (free, fast) and OpenAI as fallback
  */
 
+// Groq is preferred (free tier), OpenAI as fallback
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const TRANSCRIPTION_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
+
+// Determine which provider to use
+const useGroq = !!GROQ_API_KEY;
+const API_KEY = GROQ_API_KEY || OPENAI_API_KEY;
+const TRANSCRIPTION_ENDPOINT = useGroq
+  ? 'https://api.groq.com/openai/v1/audio/transcriptions'
+  : 'https://api.openai.com/v1/audio/transcriptions';
+const WHISPER_MODEL = useGroq ? 'whisper-large-v3' : 'whisper-1';
+const PROVIDER_NAME = useGroq ? 'Groq' : 'OpenAI';
 
 class TranscriptionService {
   /**
    * Check if transcription is available (API key configured)
    */
   isAvailable() {
-    return !!OPENAI_API_KEY;
+    return !!API_KEY;
   }
 
   /**
-   * Transcribe audio buffer using OpenAI Whisper
+   * Get current provider info
+   */
+  getProviderInfo() {
+    return {
+      provider: PROVIDER_NAME,
+      model: WHISPER_MODEL,
+      available: this.isAvailable()
+    };
+  }
+
+  /**
+   * Transcribe audio buffer using Whisper (Groq or OpenAI)
    * @param {Buffer} audioBuffer - Audio file buffer
    * @param {string} filename - Original filename (for mime type detection)
    * @param {object} options - Optional settings
    * @returns {Promise<{success: boolean, text?: string, error?: string}>}
    */
   async transcribe(audioBuffer, filename, options = {}) {
-    if (!OPENAI_API_KEY) {
+    if (!API_KEY) {
       return {
         success: false,
-        error: 'OpenAI API key not configured. Set OPENAI_API_KEY environment variable.'
+        error: 'No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY environment variable.'
       };
     }
 
@@ -49,8 +71,8 @@ class TranscriptionService {
       const audioBlob = new Blob([audioBuffer], { type: mimeType });
       formData.append('file', audioBlob, filename);
 
-      // Use whisper-1 model (standard Whisper)
-      formData.append('model', 'whisper-1');
+      // Use appropriate Whisper model
+      formData.append('model', WHISPER_MODEL);
       formData.append('response_format', 'json');
 
       // Add language hint if provided
@@ -58,20 +80,20 @@ class TranscriptionService {
         formData.append('language', options.language);
       }
 
-      console.log(`[transcription] Sending ${audioBuffer.length} bytes to OpenAI Whisper`);
+      console.log(`[transcription] Sending ${audioBuffer.length} bytes to ${PROVIDER_NAME} Whisper (${WHISPER_MODEL})`);
 
       // Make the API request using native fetch with native FormData
       const response = await fetch(TRANSCRIPTION_ENDPOINT, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
+          'Authorization': `Bearer ${API_KEY}`
         },
         body: formData
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[transcription] API error:', response.status, errorText);
+        console.error(`[transcription] ${PROVIDER_NAME} API error:`, response.status, errorText);
         return {
           success: false,
           error: `Transcription failed: ${response.status} - ${errorText}`
@@ -81,7 +103,7 @@ class TranscriptionService {
       const result = await response.json();
       const transcribedText = result.text?.trim() ?? '';
 
-      console.log('[transcription] Success, text length:', transcribedText.length);
+      console.log(`[transcription] Success via ${PROVIDER_NAME}, text length:`, transcribedText.length);
 
       return {
         success: true,

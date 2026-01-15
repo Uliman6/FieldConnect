@@ -53,12 +53,14 @@ class TranscriptController {
    */
   async getTranscriptionStatus(req, res, next) {
     try {
-      const available = transcriptionService.isAvailable();
+      const providerInfo = transcriptionService.getProviderInfo();
       res.json({
-        available,
-        message: available
-          ? 'Transcription service is available'
-          : 'Transcription service unavailable. OPENAI_API_KEY not configured.'
+        available: providerInfo.available,
+        provider: providerInfo.provider,
+        model: providerInfo.model,
+        message: providerInfo.available
+          ? `Transcription service available via ${providerInfo.provider} (${providerInfo.model})`
+          : 'Transcription service unavailable. Set GROQ_API_KEY or OPENAI_API_KEY.'
       });
     } catch (err) {
       next(err);
