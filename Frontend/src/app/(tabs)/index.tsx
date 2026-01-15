@@ -31,7 +31,7 @@ import { VoiceInputField } from '@/components/VoiceRecorder';
 import { MasterVoiceCapture } from '@/components/MasterVoiceCapture';
 import { SavedRecordingPlayer } from '@/components/SavedRecordingPlayer';
 import { SyncStatusBadge } from '@/components/SyncStatus';
-import { syncDailyLogs } from '@/lib/sync';
+import { syncDailyLogs, syncDailyLogToBackend } from '@/lib/sync';
 import { fetchWeatherCached, weatherToConditions, clearWeatherCache } from '@/lib/weather';
 import { transcribeAudio, isTranscriptionAvailable } from '@/lib/transcription';
 import { cn } from '@/lib/cn';
@@ -197,6 +197,16 @@ export default function DailyLogScreen() {
           status: 'transcribed',
         });
         console.log('[transcription] Saved transcription, length:', result.text.length);
+
+        // Sync daily log to backend after transcription
+        const updatedLog = useDailyLogStore.getState().dailyLogs.find(l => l.id === log.id);
+        if (updatedLog) {
+          syncDailyLogToBackend(updatedLog).then(backendId => {
+            if (backendId) {
+              console.log('[sync] Daily log synced to backend:', backendId);
+            }
+          });
+        }
       } else {
         setTranscriptionError(result.error ?? 'Transcription failed');
       }

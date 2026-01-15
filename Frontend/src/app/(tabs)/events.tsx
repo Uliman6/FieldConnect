@@ -10,7 +10,8 @@ import { useRouter } from 'expo-router';
 import { useDailyLogStore } from '@/lib/store';
 import { Event, EventType, EventSeverity } from '@/lib/types';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
-import { generateTitleFromTranscript } from '@/lib/transcription';
+import { generateTitleFromTranscript, transcribeAudio } from '@/lib/transcription';
+import { syncEventToBackend } from '@/lib/sync';
 import { cn } from '@/lib/cn';
 import {
   Mic,
@@ -171,29 +172,55 @@ export default function EventsScreen() {
     return sortedEvents.filter((e) => !e.created_at.startsWith(today));
   }, [sortedEvents, today]);
 
-  const handleRecordComplete = (text: string, audioUri?: string) => {
+  const handleRecordComplete = async (text: string, audioUri?: string) => {
     if (audioUri && currentProjectId) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       const newEvent = addEvent(currentProjectId, audioUri);
-
-      // If we got a transcription, save it to the event and auto-generate title
-      if (text && text.trim()) {
-        const autoTitle = generateTitleFromTranscript(text.trim());
-        updateEvent(newEvent.id, {
-          transcript_text: text.trim(),
-          status: 'transcribed',
-          title: autoTitle,
-        });
-      }
-
       setShowRecorder(false);
-      // Navigate to event detail to fill in details
+
+      // Navigate to event detail immediately
       router.push(`/event-detail?id=${newEvent.id}`);
+
+      // Trigger transcription in the background
+      try {
+        console.log('[events] Starting transcription for event:', newEvent.id);
+        const result = await transcribeAudio(audioUri);
+
+        if (result.success && result.text) {
+          const autoTitle = generateTitleFromTranscript(result.text.trim());
+          updateEvent(newEvent.id, {
+            transcript_text: result.text.trim(),
+            status: 'transcribed',
+            title: autoTitle,
+          });
+          console.log('[events] Transcription complete for event:', newEvent.id);
+
+          // Sync to backend after transcription
+          const updatedEvent = useDailyLogStore.getState().getEvent(newEvent.id);
+          if (updatedEvent) {
+            syncEventToBackend(updatedEvent).then(backendId => {
+              if (backendId) {
+                console.log('[events] Event synced to backend:', backendId);
+              }
+            });
+          }
+        } else {
+          console.error('[events] Transcription failed:', result.error);
+          // Still sync to backend even without transcription
+          syncEventToBackend(newEvent);
+        }
+      } catch (err) {
+        console.error('[events] Transcription error:', err);
+        // Still sync to backend even on error
+        syncEventToBackend(newEvent);
+      }
     } else if (!currentProjectId) {
       // No project selected, show warning
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      setShowRecorder(false);
+    } else {
+      setShowRecorder(false);
     }
-    setShowRecorder(false);
   };
 
   const handleRefresh = () => {
