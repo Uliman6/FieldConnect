@@ -290,6 +290,299 @@ const TRADE_PATTERNS = [
 /**
  * Analyze transcript text and extract intelligent metadata
  */
+/**
+ * Parse daily log transcript to extract structured data
+ * Extracts tasks, issues, inspections, materials, equipment, etc.
+ */
+export interface DailyLogTranscriptData {
+  summary: string;
+  tasks: Array<{
+    company_name?: string;
+    workers?: number;
+    hours?: number;
+    task_description: string;
+    notes?: string;
+  }>;
+  pending_issues: Array<{
+    title: string;
+    description?: string;
+    category?: string;
+    severity?: string;
+    location?: string;
+  }>;
+  inspection_notes: Array<{
+    inspection_type?: string;
+    inspector_name?: string;
+    result?: string;
+    notes?: string;
+    follow_up_needed?: boolean;
+  }>;
+  materials: Array<{
+    material: string;
+    quantity?: number;
+    unit?: string;
+    supplier?: string;
+    notes?: string;
+  }>;
+  equipment: Array<{
+    equipment_type: string;
+    quantity?: number;
+    hours?: number;
+    notes?: string;
+  }>;
+  visitors: Array<{
+    visitor_name?: string;
+    company_name?: string;
+    time?: string;
+    notes?: string;
+  }>;
+  additional_work: Array<{
+    category?: string;
+    description: string;
+  }>;
+  daily_totals: {
+    workers?: number;
+    hours?: number;
+  };
+}
+
+// Trade/company patterns for task extraction
+const TRADE_COMPANY_PATTERNS = [
+  /(?:the\s+)?(\w+(?:\s+\w+)?)\s+(?:crew|team|guys|workers|people|had|were|was|did|worked|installed|completed|finished|continued|started)/gi,
+  /(\w+(?:\s+\w+)?)\s+(?:electricians?|plumbers?|carpenters?|masons?|roofers?|painters?|drywallers?|framers?|hvac|mechanical)/gi,
+];
+
+// Issue/problem patterns
+const ISSUE_PATTERNS = [
+  /(?:issue|problem|concern|delay|waiting|hold\s*up|can't|cannot|unable|need|missing|broken|damaged|incorrect|wrong)[\s:]+([^.!?]+)/gi,
+  /(?:we|they)\s+(?:have|had|ran\s+into|discovered|found|noticed)\s+(?:a\s+|an\s+)?(?:issue|problem|concern)[\s:]*([^.!?]+)/gi,
+];
+
+// Inspection patterns
+const INSPECTION_PATTERNS = [
+  /(?:inspection|inspector|inspected)[\s:]+([^.!?]+)/gi,
+  /(\w+)\s+(?:inspection|inspector)\s+(?:passed|failed|came|arrived|visited|scheduled)/gi,
+  /(?:passed|failed|scheduled)\s+(?:the\s+)?(\w+)\s+inspection/gi,
+];
+
+// Material/delivery patterns
+const MATERIAL_PATTERNS = [
+  /(?:delivered|received|got|arrived)[\s:]+([^.!?]+(?:materials?|supplies|lumber|concrete|steel|rebar|drywall|insulation|pipe|wire|cable)[^.!?]*)/gi,
+  /(\d+)\s+(?:units?|pieces?|sheets?|yards?|tons?|loads?|pallets?|bundles?)\s+(?:of\s+)?([^.!?,]+)/gi,
+];
+
+// Equipment patterns
+const EQUIPMENT_PATTERNS = [
+  /(?:used|using|rented|had|brought\s+in)[\s:]+(?:a\s+|the\s+)?(\w+(?:\s+\w+)?)\s*(?:crane|lift|loader|excavator|forklift|boom|scaffolding|equipment)/gi,
+  /(crane|lift|loader|excavator|forklift|boom|scaffolding|backhoe|bulldozer|compactor)\s+(?:was|were|on\s+site|arrived|used)/gi,
+];
+
+// Visitor patterns
+const VISITOR_PATTERNS = [
+  /(?:visited|visit\s+from|came\s+by|stopped\s+by|met\s+with)[\s:]+([^.!?,]+)/gi,
+  /(\w+(?:\s+\w+)?)\s+(?:from\s+)?(\w+(?:\s+\w+)?)\s+(?:visited|came|stopped|was\s+on\s+site)/gi,
+];
+
+// Number extraction patterns
+const NUMBER_PATTERNS = {
+  workers: /(\d+)\s*(?:workers?|guys?|people|men|crew\s*members?)/i,
+  hours: /(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)/i,
+  quantity: /(\d+(?:\.\d+)?)\s*(?:units?|pieces?|sheets?|yards?|tons?|loads?|pallets?)/i,
+};
+
+/**
+ * Parse a daily log voice transcription into structured data
+ */
+export function parseDailyLogTranscript(transcript: string): DailyLogTranscriptData {
+  if (!transcript || !transcript.trim()) {
+    return {
+      summary: '',
+      tasks: [],
+      pending_issues: [],
+      inspection_notes: [],
+      materials: [],
+      equipment: [],
+      visitors: [],
+      additional_work: [],
+      daily_totals: {},
+    };
+  }
+
+  const text = transcript.trim();
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+
+  const result: DailyLogTranscriptData = {
+    summary: text.length > 500 ? text.substring(0, 500) + '...' : text,
+    tasks: [],
+    pending_issues: [],
+    inspection_notes: [],
+    materials: [],
+    equipment: [],
+    visitors: [],
+    additional_work: [],
+    daily_totals: {},
+  };
+
+  // Track what we've already extracted to avoid duplicates
+  const seenTasks = new Set<string>();
+  const seenIssues = new Set<string>();
+
+  // Extract tasks from sentences mentioning work activities
+  const workKeywords = /(?:installed|completed|finished|worked\s+on|continued|started|poured|framed|wired|plumbed|painted|set|placed|laid|hung|mounted)/i;
+
+  for (const sentence of sentences) {
+    const trimmed = sentence.trim();
+    if (!trimmed) continue;
+
+    // Check for work activity
+    if (workKeywords.test(trimmed)) {
+      // Try to extract company/trade name
+      let companyName: string | undefined;
+      for (const pattern of TRADE_COMPANY_PATTERNS) {
+        pattern.lastIndex = 0;
+        const match = pattern.exec(trimmed);
+        if (match && match[1]) {
+          companyName = match[1].trim();
+          break;
+        }
+      }
+
+      // Extract worker count and hours
+      const workersMatch = trimmed.match(NUMBER_PATTERNS.workers);
+      const hoursMatch = trimmed.match(NUMBER_PATTERNS.hours);
+
+      const taskKey = trimmed.toLowerCase().substring(0, 50);
+      if (!seenTasks.has(taskKey)) {
+        seenTasks.add(taskKey);
+        result.tasks.push({
+          company_name: companyName,
+          workers: workersMatch ? parseInt(workersMatch[1]) : undefined,
+          hours: hoursMatch ? parseFloat(hoursMatch[1]) : undefined,
+          task_description: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
+        });
+      }
+    }
+
+    // Check for issues/problems
+    for (const pattern of ISSUE_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(trimmed)) !== null) {
+        const issueText = match[1]?.trim();
+        if (issueText && issueText.length > 10) {
+          const issueKey = issueText.toLowerCase().substring(0, 50);
+          if (!seenIssues.has(issueKey)) {
+            seenIssues.add(issueKey);
+            result.pending_issues.push({
+              title: issueText.length > 60
+                ? issueText.substring(0, 60) + '...'
+                : issueText.charAt(0).toUpperCase() + issueText.slice(1),
+              description: trimmed,
+              category: detectIssueCategory(trimmed),
+              severity: detectIssueSeverity(trimmed),
+            });
+          }
+        }
+      }
+    }
+
+    // Check for inspections
+    if (/inspect/i.test(trimmed)) {
+      const resultMatch = trimmed.match(/(?:passed|failed|partial)/i);
+      const typeMatch = trimmed.match(/(\w+)\s+inspection/i);
+
+      result.inspection_notes.push({
+        inspection_type: typeMatch ? typeMatch[1] : 'General',
+        result: resultMatch ? resultMatch[0].charAt(0).toUpperCase() + resultMatch[0].slice(1).toLowerCase() : undefined,
+        notes: trimmed,
+        follow_up_needed: /failed|follow\s*up|reschedule/i.test(trimmed),
+      });
+    }
+
+    // Check for materials/deliveries
+    if (/deliver|received|arrived|got\s+in|shipment/i.test(trimmed)) {
+      const quantityMatch = trimmed.match(/(\d+)\s+(\w+)/);
+      result.materials.push({
+        material: trimmed.length > 100 ? trimmed.substring(0, 100) : trimmed,
+        quantity: quantityMatch ? parseInt(quantityMatch[1]) : undefined,
+        unit: quantityMatch ? quantityMatch[2] : undefined,
+      });
+    }
+
+    // Check for equipment
+    if (/crane|lift|loader|excavator|forklift|boom|scaffolding|equipment/i.test(trimmed)) {
+      const equipMatch = trimmed.match(/(crane|lift|loader|excavator|forklift|boom|scaffolding|backhoe|bulldozer)/i);
+      if (equipMatch) {
+        result.equipment.push({
+          equipment_type: equipMatch[1].charAt(0).toUpperCase() + equipMatch[1].slice(1).toLowerCase(),
+          notes: trimmed,
+        });
+      }
+    }
+
+    // Check for visitors
+    if (/visit|came\s+by|stopped\s+by|met\s+with|on\s+site/i.test(trimmed)) {
+      const visitorMatch = trimmed.match(/(?:visit\s+from|met\s+with|came\s+by)\s+([^,.\n]+)/i);
+      if (visitorMatch) {
+        result.visitors.push({
+          visitor_name: visitorMatch[1].trim(),
+          notes: trimmed,
+        });
+      }
+    }
+  }
+
+  // Calculate daily totals from tasks
+  let totalWorkers = 0;
+  let totalHours = 0;
+  for (const task of result.tasks) {
+    if (task.workers) totalWorkers += task.workers;
+    if (task.hours) totalHours += task.hours;
+  }
+
+  if (totalWorkers > 0 || totalHours > 0) {
+    result.daily_totals = {
+      workers: totalWorkers || undefined,
+      hours: totalHours || undefined,
+    };
+  }
+
+  // If no structured data extracted, add the whole transcript as a task description
+  if (result.tasks.length === 0 && result.pending_issues.length === 0 && text.length > 20) {
+    result.tasks.push({
+      task_description: text,
+      notes: 'Transcribed from voice recording',
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Detect issue category from text
+ */
+function detectIssueCategory(text: string): string {
+  const lower = text.toLowerCase();
+  if (/safety|hazard|osha|ppe|injur/i.test(lower)) return 'Safety';
+  if (/quality|defect|rework|punch/i.test(lower)) return 'QAQC';
+  if (/delay|schedule|behind|late|waiting/i.test(lower)) return 'Schedule';
+  if (/material|delivery|supply|order/i.test(lower)) return 'Procurement';
+  if (/inspect|code|permit/i.test(lower)) return 'Inspection';
+  if (/design|drawing|plan|spec/i.test(lower)) return 'Design';
+  if (/coordinat|conflict|clash/i.test(lower)) return 'Coordination';
+  return 'Other';
+}
+
+/**
+ * Detect issue severity from text
+ */
+function detectIssueSeverity(text: string): string {
+  const lower = text.toLowerCase();
+  if (/urgent|critical|emergency|stop\s+work|immediate|serious|major/i.test(lower)) return 'High';
+  if (/minor|small|slight|fyi|note/i.test(lower)) return 'Low';
+  return 'Medium';
+}
+
 export function analyzeTranscript(transcript: string): EventAnalysis {
   if (!transcript || !transcript.trim()) {
     return {
