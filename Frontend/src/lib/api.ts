@@ -631,6 +631,15 @@ export async function updateDailyLogApi(
 }
 
 /**
+ * Delete a daily log and all associated data
+ */
+export async function deleteDailyLogApi(id: string): Promise<void> {
+  await apiFetch(`/api/daily-logs/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
  * Create a new event
  */
 export async function createEvent(data: {
