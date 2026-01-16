@@ -540,6 +540,7 @@ export async function createDailyLog(data: {
   weather?: Record<string, unknown>;
   dailyTotalsWorkers?: number;
   dailyTotalsHours?: number;
+  transcript?: string; // Raw transcript for AI parsing
   tasks?: Array<{
     company_name?: string;
     workers?: number;
@@ -595,6 +596,7 @@ export async function createDailyLog(data: {
       weather: data.weather,
       daily_totals_workers: data.dailyTotalsWorkers,
       daily_totals_hours: data.dailyTotalsHours,
+      transcript: data.transcript, // Send transcript for AI parsing
       tasks: data.tasks,
       pending_issues: data.pending_issues,
       inspection_notes: data.inspection_notes,

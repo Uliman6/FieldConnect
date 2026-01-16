@@ -108,10 +108,11 @@ class DailyLogsController {
   /**
    * POST /api/daily-logs
    * Create a new daily log
+   * If transcript is provided, uses AI parsing to extract structured data
    */
   async create(req, res, next) {
     try {
-      const {
+      let {
         project_id,
         date,
         prepared_by,
@@ -125,7 +126,8 @@ class DailyLogsController {
         materials,
         pending_issues,
         inspection_notes,
-        additional_work_entries
+        additional_work_entries,
+        transcript // NEW: optional transcript for AI parsing
       } = req.body;
 
       if (!project_id) {
@@ -152,6 +154,53 @@ class DailyLogsController {
           error: 'Not Found',
           message: 'Project not found'
         });
+      }
+
+      // If transcript is provided and we don't have meaningful structured data, use AI parsing
+      const hasNoTasks = !tasks || tasks.length === 0;
+      const hasTranscript = transcript && transcript.trim().length > 20;
+
+      if (hasTranscript && hasNoTasks) {
+        console.log('[daily-logs] Using AI parsing for transcript, length:', transcript.length);
+
+        const parsed = await transcriptParser.parseTranscriptWithAI(transcript, {
+          projectName: project.name,
+          date: date
+        });
+
+        console.log('[daily-logs] AI parsed result:', {
+          tasks: parsed.tasks?.length || 0,
+          issues: parsed.pendingIssues?.length || 0,
+          weather: parsed.weather ? 'yes' : 'no',
+          totals: parsed.dailyTotals
+        });
+
+        // Use parsed data if we got results
+        if (parsed.tasks && parsed.tasks.length > 0) {
+          tasks = parsed.tasks;
+        }
+        if (parsed.pendingIssues && parsed.pendingIssues.length > 0) {
+          pending_issues = parsed.pendingIssues;
+        }
+        if (parsed.inspectionNotes && parsed.inspectionNotes.length > 0) {
+          inspection_notes = parsed.inspectionNotes;
+        }
+        if (parsed.visitors && parsed.visitors.length > 0) {
+          visitors = parsed.visitors;
+        }
+        if (parsed.equipment && parsed.equipment.length > 0) {
+          equipment = parsed.equipment;
+        }
+        if (parsed.materials && parsed.materials.length > 0) {
+          materials = parsed.materials;
+        }
+        if (parsed.weather) {
+          weather = parsed.weather;
+        }
+        if (parsed.dailyTotals) {
+          daily_totals_workers = parsed.dailyTotals.daily_totals_workers || daily_totals_workers;
+          daily_totals_hours = parsed.dailyTotals.daily_totals_hours || daily_totals_hours;
+        }
       }
 
       const dailyLog = await prisma.dailyLog.create({

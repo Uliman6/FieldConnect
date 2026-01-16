@@ -11,19 +11,28 @@ router.get('/', (req, res, next) => {
 });
 
 /**
- * GET /api/daily-logs/:id
- * Get a single daily log with all nested data
- */
-router.get('/:id', (req, res, next) => {
-  dailyLogsController.get(req, res, next);
-});
-
-/**
  * POST /api/daily-logs
  * Create a new daily log
  */
 router.post('/', (req, res, next) => {
   dailyLogsController.create(req, res, next);
+});
+
+/**
+ * POST /api/daily-logs/from-transcript
+ * Create a daily log from a voice transcript (AI-powered parsing)
+ * NOTE: Must be before /:id route to avoid conflicts
+ */
+router.post('/from-transcript', (req, res, next) => {
+  dailyLogsController.createFromTranscript(req, res, next);
+});
+
+/**
+ * GET /api/daily-logs/:id
+ * Get a single daily log with all nested data
+ */
+router.get('/:id', (req, res, next) => {
+  dailyLogsController.get(req, res, next);
 });
 
 /**
@@ -56,6 +65,14 @@ router.post('/:id/tasks', (req, res, next) => {
  */
 router.post('/:id/pending-issues', (req, res, next) => {
   dailyLogsController.addPendingIssue(req, res, next);
+});
+
+/**
+ * POST /api/daily-logs/:id/parse-transcript
+ * Parse a transcript and update an existing daily log with extracted data
+ */
+router.post('/:id/parse-transcript', (req, res, next) => {
+  dailyLogsController.parseAndUpdateFromTranscript(req, res, next);
 });
 
 module.exports = router;
