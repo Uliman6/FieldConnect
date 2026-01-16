@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Linking, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Linking, Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, isToday, parseISO } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -18,12 +18,14 @@ import {
   Clock,
   AlertCircle,
   CloudOff,
+  Trash2,
 } from 'lucide-react-native';
 import { cn } from '@/lib/cn';
 import {
   getDailyLogs,
   getProjects,
   fetchDailyLogPdf,
+  deleteDailyLogApi,
   queryKeys,
   DailyLogSummary,
   ProjectSummary,
@@ -32,8 +34,10 @@ import {
 export default function LogsHistoryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [showAllProjects, setShowAllProjects] = useState(true);
+  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
 
   // Fetch projects
   const projectsQuery = useQuery({
@@ -96,6 +100,53 @@ export default function LogsHistoryScreen() {
       // Could show an alert here
     }
   }, []);
+
+  const handleDeleteLog = useCallback(async (log: DailyLogSummary) => {
+    const confirmDelete = () => {
+      return new Promise<boolean>((resolve) => {
+        if (Platform.OS === 'web') {
+          const confirmed = window.confirm(
+            `Delete daily log for ${format(parseISO(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`
+          );
+          resolve(confirmed);
+        } else {
+          Alert.alert(
+            'Delete Daily Log',
+            `Delete the log for ${format(parseISO(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`,
+            [
+              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          );
+        }
+      });
+    };
+
+    const confirmed = await confirmDelete();
+    if (!confirmed) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setDeletingLogId(log.id);
+
+    try {
+      // Delete the daily log (backend handles linked events deletion)
+      await deleteDailyLogApi(log.id);
+      console.log('[delete] Daily log deleted successfully');
+
+      // Invalidate queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogs() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.events() });
+    } catch (error) {
+      console.error('[delete] Failed to delete daily log:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to delete daily log. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to delete daily log. Please try again.');
+      }
+    } finally {
+      setDeletingLogId(null);
+    }
+  }, [queryClient]);
 
   const isLoading = projectsQuery.isLoading || dailyLogsQuery.isLoading;
   const hasError = projectsQuery.isError || dailyLogsQuery.isError;
@@ -264,6 +315,8 @@ export default function LogsHistoryScreen() {
                     showProject={showAllProjects}
                     onViewPdf={() => handleViewPdf(log.id)}
                     onDownloadPdf={() => handleDownloadPdf(log.id)}
+                    onDelete={() => handleDeleteLog(log)}
+                    isDeleting={deletingLogId === log.id}
                   />
                 </Animated.View>
               ))
@@ -280,11 +333,15 @@ function DailyLogCard({
   showProject,
   onViewPdf,
   onDownloadPdf,
+  onDelete,
+  isDeleting,
 }: {
   log: DailyLogSummary;
   showProject: boolean;
   onViewPdf: () => void;
   onDownloadPdf: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const logDate = parseISO(log.date);
   const isLogToday = isToday(logDate);
@@ -377,9 +434,23 @@ function DailyLogCard({
           </Pressable>
           <Pressable
             onPress={onDownloadPdf}
-            className="bg-orange-500 p-2 rounded-lg"
+            className="bg-orange-500 p-2 rounded-lg mr-2"
           >
             <Download size={20} color="#FFF" />
+          </Pressable>
+          <Pressable
+            onPress={onDelete}
+            disabled={isDeleting}
+            className={cn(
+              "p-2 rounded-lg",
+              isDeleting ? "bg-gray-200 dark:bg-gray-700" : "bg-red-100 dark:bg-red-900/30"
+            )}
+          >
+            {isDeleting ? (
+              <ActivityIndicator size={20} color="#EF4444" />
+            ) : (
+              <Trash2 size={20} color="#EF4444" />
+            )}
           </Pressable>
         </View>
       </View>

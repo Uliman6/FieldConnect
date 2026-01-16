@@ -70,11 +70,14 @@ class PDFGeneratorService {
   }
 
   addHeader(doc, project, dailyLog) {
-    const date = new Date(dailyLog.date).toLocaleDateString('en-US', {
+    // Fix timezone issue: Use UTC date values to avoid day shift
+    const dateObj = new Date(dailyLog.date);
+    const date = dateObj.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC' // Use UTC to prevent timezone shifts
     });
 
     // Title

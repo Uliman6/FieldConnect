@@ -234,6 +234,9 @@ model Event {
   // Link to audio file if exists
   audioFileId String? @map("audio_file_id")
 
+  // Link to daily log if event was added to one
+  linkedDailyLogId String? @map("linked_daily_log_id")
+
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   index   EventIndex?
 
@@ -244,6 +247,7 @@ model Event {
   @@index([location])
   @@index([isResolved])
   @@index([createdAt])
+  @@index([linkedDailyLogId])
   @@map("events")
 }
 
