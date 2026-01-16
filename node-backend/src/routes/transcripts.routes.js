@@ -28,6 +28,15 @@ router.post('/parse', (req, res, next) => {
 });
 
 /**
+ * POST /api/transcripts/parse-event
+ * Parse an event transcript using AI for intelligent extraction
+ * Returns: title, event_type, severity, action_items, location, trade_vendor
+ */
+router.post('/parse-event', (req, res, next) => {
+  transcriptController.parseEvent(req, res, next);
+});
+
+/**
  * POST /api/transcripts/auto-fill/:dailyLogId
  * Auto-fill an existing daily log from a transcript
  */

@@ -19,7 +19,15 @@
       "Bash(node prisma/seed-admin.js:*)",
       "Bash(echo:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git stash drop:*)",
+      "Bash(node --check:*)",
+      "Bash(node test-parser.js:*)",
+      "Bash(node test-format.js:*)",
+      "Bash(node test-issues.js:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

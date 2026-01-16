@@ -196,10 +196,62 @@ export function generateTitleFromTranscript(
     }
   }
 
-  // Pattern: "creating a [issue]" or "causing [issue]"
-  const causingMatch = cleaned.match(/(?:creating|causing|resulting\s+in)\s+(?:a\s+)?([^,.!?]+(?:issue|problem|concern|hazard|delay))/i);
+  // Pattern: "creating/causing [impact]" - broader matching
+  const causingMatch = cleaned.match(/(?:will\s+)?(?:create|creating|cause|causing|result\s+in|resulting\s+in)\s+(?:a\s+|some\s+)?([^,.]+?(?:disruption|delay|issue|problem|concern|hazard|impact|interference)[^,.]*)/i);
   if (causingMatch && causingMatch[1]) {
-    const title = causingMatch[1].trim();
+    let title = causingMatch[1].trim();
+    // Clean up trailing phrases
+    title = title.replace(/\s+(?:in\s+the|that|which|for).*$/i, '').trim();
+    console.log('[generateTitle] Found causing pattern:', title);
+    if (title.length > 5 && title.length <= maxLength) {
+      return title.charAt(0).toUpperCase() + title.slice(1);
+    }
+  }
+
+  // Pattern: "disruption" with context - extract what's being disrupted
+  const disruptionMatch = cleaned.match(/(?:disruption|interference|impact)\s+(?:in\s+(?:the\s+)?|to\s+(?:the\s+)?|on\s+(?:the\s+)?)?([^,.]+?)(?:\s+that|\s+which|\s+for|$)/i);
+  if (disruptionMatch && disruptionMatch[1]) {
+    const context = disruptionMatch[1].trim();
+    const title = context.length > 3 ? `${context} disruption` : 'Work disruption';
+    console.log('[generateTitle] Found disruption pattern:', title);
+    if (title.length <= maxLength) {
+      return title.charAt(0).toUpperCase() + title.slice(1);
+    }
+  }
+
+  // Pattern: "taking away/removing [thing]"
+  const takingMatch = cleaned.match(/(?:taking\s+away|removing|reducing|blocking|occupying)\s+([^,.]+?)(?:\s+from|\s+which|\s+that|,|$)/i);
+  if (takingMatch && takingMatch[1]) {
+    const thing = takingMatch[1].trim();
+    const title = `${thing} affected`;
+    console.log('[generateTitle] Found taking-away pattern:', title);
+    if (title.length > 5 && title.length <= maxLength) {
+      return title.charAt(0).toUpperCase() + title.slice(1);
+    }
+  }
+
+  // Pattern: "[Company] needed to [action]" - extract consequence/impact
+  const companyActionMatch = cleaned.match(/(?:needed\s+to|had\s+to|will\s+need\s+to)\s+[^,]+,\s*which\s+(?:would\s+|will\s+)?(?:be\s+)?([^,]+)/i);
+  if (companyActionMatch && companyActionMatch[1]) {
+    let impact = companyActionMatch[1].trim();
+    // Clean it up
+    impact = impact.replace(/\s+(?:from|which|that).*$/i, '').trim();
+    console.log('[generateTitle] Found company-action pattern:', impact);
+    if (impact.length > 5 && impact.length <= maxLength) {
+      return impact.charAt(0).toUpperCase() + impact.slice(1);
+    }
+  }
+
+  // Pattern: duration mentioned "for the next X days/weeks"
+  const durationMatch = cleaned.match(/(?:for\s+(?:the\s+)?(?:next\s+)?)?(\d+)\s*(days?|weeks?|hours?)/i);
+  const hasDisruption = /disruption|delay|impact|interference/i.test(cleaned);
+  if (durationMatch && hasDisruption) {
+    const duration = `${durationMatch[1]}-${durationMatch[2].replace(/s$/, '')}`;
+    // Try to find what's being affected
+    const affectedMatch = cleaned.match(/(?:workstation|office|work\s*space|area|floor|level)/i);
+    const affected = affectedMatch ? affectedMatch[0] : 'work';
+    const title = `${duration} ${affected} disruption`;
+    console.log('[generateTitle] Found duration+disruption pattern:', title);
     if (title.length <= maxLength) {
       return title.charAt(0).toUpperCase() + title.slice(1);
     }

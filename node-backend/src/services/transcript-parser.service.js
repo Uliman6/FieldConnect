@@ -1218,6 +1218,200 @@ Return a JSON object with the structure described. Only include categories that 
     }
     return '';
   }
+
+  /**
+   * Parse an EVENT transcript using AI for intelligent extraction
+   * Returns: title, event_type, severity, action_items, location, trade_vendor
+   * @param {string} transcript - The voice transcript text
+   * @param {object} context - Optional context (project name)
+   * @returns {Promise<Object>} Structured event data
+   */
+  async parseEventWithAI(transcript, context = {}) {
+    if (!transcript || typeof transcript !== 'string') {
+      console.error('[event-parser] No transcript provided');
+      return { error: 'No transcript provided' };
+    }
+
+    console.log('[event-parser] Starting AI parse, length:', transcript.length);
+
+    // If no AI API key, return basic fallback
+    if (!PARSING_API_KEY) {
+      console.log('[event-parser] No AI key, using basic extraction');
+      return this.parseEventBasic(transcript);
+    }
+
+    try {
+      const systemPrompt = `You are a construction site event analyzer. Convert voice recordings into structured, actionable event data.
+
+OUTPUT FORMAT: Valid JSON with these fields:
+{
+  "title": "Brief, clear title describing the ISSUE/SITUATION (max 50 chars)",
+  "event_type": "One of: Delay, Quality, Safety, Inspection, Material, Equipment, Coordination, Other",
+  "severity": "One of: Low, Medium, High",
+  "action_items": ["Array of clear, actionable tasks"],
+  "location": "Where this is happening (floor, room, area)",
+  "trade_vendor": "Company/trade involved if mentioned",
+  "duration": "How long this will last if mentioned",
+  "summary": "One sentence professional summary"
+}
+
+═══════════════════════════════════════════════════════════════
+CRITICAL RULES FOR TITLE:
+═══════════════════════════════════════════════════════════════
+1. Title must describe the IMPACT or ISSUE, not the company or location
+2. Be specific about what's happening
+3. Keep under 50 characters
+
+Examples:
+❌ BAD: "The scaffolding company" (just mentions company)
+❌ BAD: "Bear Scaffold needs to upgrade" (describes action, not impact)
+❌ BAD: "Level one workstations" (just location)
+✅ GOOD: "10-day workstation disruption"
+✅ GOOD: "Scaffold upgrade blocking workspace"
+✅ GOOD: "Office area temporarily unavailable"
+
+❌ BAD: "The doors at the female bathrooms"
+❌ BAD: "Level 1 bathroom issue"
+✅ GOOD: "Bathroom doors not closing properly"
+✅ GOOD: "Privacy issue - doors not latching"
+
+═══════════════════════════════════════════════════════════════
+CRITICAL RULES FOR ACTION ITEMS:
+═══════════════════════════════════════════════════════════════
+1. Each action item must be a clear, standalone task
+2. Start with a verb (Contact, Notify, Schedule, Verify, etc.)
+3. NO duplicates - combine related items
+4. NO fragments like "they are aware of this"
+5. Maximum 3 action items - combine if needed
+
+Examples:
+❌ BAD: ["Get this resolved with DPR", "Make sure they are aware", "They are aware of this issue"]
+✅ GOOD: ["Contact DPR-DFH to resolve door closure issue"]
+
+❌ BAD: ["The scaffold company needs to upgrade", "Taking away workstation space"]
+✅ GOOD: ["Notify Level 1 staff of 10-day workspace reduction", "Coordinate with Bear Scaffold on timeline"]
+
+═══════════════════════════════════════════════════════════════
+SEVERITY GUIDELINES:
+═══════════════════════════════════════════════════════════════
+- High: Safety issues, work stoppages, significant delays, urgent deadlines
+- Medium: Schedule impacts, coordination issues, quality concerns
+- Low: Minor inconveniences, FYI items, future considerations`;
+
+      const userPrompt = `Parse this construction site event recording:
+
+${context.projectName ? `Project: ${context.projectName}` : ''}
+
+TRANSCRIPT:
+"""
+${transcript}
+"""
+
+Return a JSON object with: title, event_type, severity, action_items, location, trade_vendor, duration, summary`;
+
+      console.log('[event-parser] Calling AI...');
+
+      const response = await fetch(CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${PARSING_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: CHAT_MODEL,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[event-parser] AI API error:', response.status, errorText);
+        return this.parseEventBasic(transcript);
+      }
+
+      const result = await response.json();
+      const content = result.choices?.[0]?.message?.content;
+
+      if (!content) {
+        console.error('[event-parser] No content in AI response');
+        return this.parseEventBasic(transcript);
+      }
+
+      const parsed = JSON.parse(content);
+      console.log('[event-parser] AI result:', {
+        title: parsed.title,
+        type: parsed.event_type,
+        actions: parsed.action_items?.length || 0
+      });
+
+      // Normalize and validate the response
+      return {
+        title: parsed.title || 'Untitled Event',
+        event_type: this.normalizeEventType(parsed.event_type),
+        severity: this.normalizeSeverity(parsed.severity),
+        action_items: this.normalizeActionItems(parsed.action_items),
+        location: parsed.location || '',
+        trade_vendor: parsed.trade_vendor || '',
+        duration: parsed.duration || '',
+        summary: parsed.summary || ''
+      };
+
+    } catch (error) {
+      console.error('[event-parser] AI error:', error.message);
+      return this.parseEventBasic(transcript);
+    }
+  }
+
+  /**
+   * Basic fallback event parsing without AI
+   */
+  parseEventBasic(transcript) {
+    const firstSentence = transcript.match(/^[^.!?]+/)?.[0] || transcript.substring(0, 50);
+    return {
+      title: firstSentence.length > 50 ? firstSentence.substring(0, 47) + '...' : firstSentence,
+      event_type: 'Other',
+      severity: 'Medium',
+      action_items: [],
+      location: this.extractLocation(transcript),
+      trade_vendor: '',
+      duration: '',
+      summary: transcript.substring(0, 200)
+    };
+  }
+
+  normalizeEventType(type) {
+    const valid = ['Delay', 'Quality', 'Safety', 'Inspection', 'Material', 'Equipment', 'Coordination', 'Other'];
+    if (!type) return 'Other';
+    const normalized = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    return valid.includes(normalized) ? normalized : 'Other';
+  }
+
+  normalizeActionItems(items) {
+    if (!Array.isArray(items)) return [];
+
+    // Filter out fragments and duplicates
+    const seen = new Set();
+    return items
+      .filter(item => {
+        if (!item || typeof item !== 'string') return false;
+        if (item.length < 10) return false;
+        // Skip fragments
+        if (/^(they|we|he|she|it)\s+(is|are|was|were)\s+/i.test(item)) return false;
+        if (/^(aware|informed|notified)\s+(of|about)/i.test(item)) return false;
+
+        const key = item.toLowerCase().trim();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 3) // Max 3 action items
+      .map(item => item.charAt(0).toUpperCase() + item.slice(1));
+  }
 }
 
 module.exports = new TranscriptParserService();

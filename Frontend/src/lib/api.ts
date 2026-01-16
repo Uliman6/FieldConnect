@@ -789,6 +789,35 @@ export async function addPendingIssueApi(
   });
 }
 
+/**
+ * Parse an event transcript using AI for intelligent extraction
+ * Returns: title, event_type, severity, action_items, location, trade_vendor
+ */
+export interface ParsedEvent {
+  success: boolean;
+  title: string;
+  event_type: string;
+  severity: string;
+  action_items: string[];
+  location: string;
+  trade_vendor: string;
+  duration: string;
+  summary: string;
+}
+
+export async function parseEventWithAI(
+  transcript: string,
+  projectName?: string
+): Promise<ParsedEvent> {
+  return apiFetch('/api/transcripts/parse-event', {
+    method: 'POST',
+    body: JSON.stringify({
+      transcript,
+      projectName,
+    }),
+  });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   eventSearch: (query: string) => ['events', 'search', query] as const,

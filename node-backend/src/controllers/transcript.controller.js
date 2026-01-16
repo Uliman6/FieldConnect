@@ -98,6 +98,44 @@ class TranscriptController {
   }
 
   /**
+   * POST /api/transcripts/parse-event
+   * Parse an event transcript using AI for intelligent extraction
+   * Returns: title, event_type, severity, action_items, location, trade_vendor
+   */
+  async parseEvent(req, res, next) {
+    try {
+      const { transcript, projectName } = req.body;
+
+      if (!transcript) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'transcript is required'
+        });
+      }
+
+      console.log('[transcript] Parsing event, length:', transcript.length);
+
+      // Use AI-powered event parsing
+      const parsed = await transcriptParser.parseEventWithAI(transcript, {
+        projectName
+      });
+
+      console.log('[transcript] Event parsed:', {
+        title: parsed.title,
+        type: parsed.event_type,
+        actions: parsed.action_items?.length || 0
+      });
+
+      res.json({
+        success: true,
+        ...parsed
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * POST /api/transcripts/auto-fill/:dailyLogId
    * Parse transcript and update daily log with extracted data
    */
