@@ -140,9 +140,10 @@ export async function transcribeWithDefaults(
 
 /**
  * Generate a concise title from transcription text
+ * Extracts the PROBLEM/ISSUE, not the location
  * @param transcript - The full transcription text
  * @param maxLength - Maximum length for the title (default: 50)
- * @returns A concise title extracted from the transcription
+ * @returns A concise title describing the problem
  */
 export function generateTitleFromTranscript(
   transcript: string,
@@ -153,34 +154,95 @@ export function generateTitleFromTranscript(
   }
 
   const cleaned = transcript.trim();
+  const lower = cleaned.toLowerCase();
 
-  // If it's short enough, use it as is
-  if (cleaned.length <= maxLength) {
-    // Capitalize first letter
-    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  // Try to extract the actual PROBLEM from common patterns
+  // Pattern: "[location] do not/does not/doesn't [problem]"
+  const negativePatterns = [
+    /(?:do\s+not|does\s+not|doesn't|don't|won't|can't|cannot|isn't|aren't)\s+([^,.!?]+)/i,
+    /(?:not\s+)([^,.!?]+(?:properly|correctly|fully|completely))/i,
+    /(?:is|are|was|were)\s+([^,.!?]*(?:broken|damaged|missing|leaking|stuck|loose|cracked|defective)[^,.!?]*)/i,
+  ];
+
+  for (const pattern of negativePatterns) {
+    const match = cleaned.match(pattern);
+    if (match && match[1]) {
+      let problem = match[1].trim();
+      // Clean up the problem description
+      problem = problem
+        .replace(/^(fully\s+|properly\s+|correctly\s+)/i, '')
+        .replace(/,\s*creating.*$/i, '')
+        .trim();
+
+      // Format: "Not [doing something]" or "[thing] not working"
+      if (problem.length > 3 && problem.length <= maxLength) {
+        // Check if it starts with a verb - add "Not" prefix
+        if (/^(close|open|work|function|seal|lock|latch)/i.test(problem)) {
+          const title = 'Not ' + problem.toLowerCase() + ' properly';
+          return title.charAt(0).toUpperCase() + title.slice(1);
+        }
+        return problem.charAt(0).toUpperCase() + problem.slice(1);
+      }
+    }
   }
 
-  // Try to find a natural break point (sentence end or comma)
-  const firstSentence = cleaned.match(/^[^.!?]+[.!?]?/)?.[0] ?? '';
-  if (firstSentence.length > 0 && firstSentence.length <= maxLength) {
-    const title = firstSentence.trim().replace(/[.!?]+$/, '');
-    return title.charAt(0).toUpperCase() + title.slice(1);
+  // Pattern: "creating a [issue]" or "causing [issue]"
+  const causingMatch = cleaned.match(/(?:creating|causing|resulting\s+in)\s+(?:a\s+)?([^,.!?]+(?:issue|problem|concern|hazard|delay))/i);
+  if (causingMatch && causingMatch[1]) {
+    const title = causingMatch[1].trim();
+    if (title.length <= maxLength) {
+      return title.charAt(0).toUpperCase() + title.slice(1);
+    }
   }
 
-  // Find break at comma or natural pause
-  const firstClause = cleaned.match(/^[^,]+/)?.[0] ?? '';
-  if (firstClause.length > 0 && firstClause.length <= maxLength) {
-    return firstClause.charAt(0).toUpperCase() + firstClause.slice(1);
+  // Pattern: "[something] is/are [problem state]"
+  const stateMatch = cleaned.match(/(?:the\s+)?(\w+(?:\s+\w+)?)\s+(?:is|are)\s+([^,.!?]*(?:broken|damaged|missing|leaking|stuck|loose|blocked|clogged))/i);
+  if (stateMatch && stateMatch[1] && stateMatch[2]) {
+    const title = `${stateMatch[1]} ${stateMatch[2]}`.trim();
+    if (title.length <= maxLength) {
+      return title.charAt(0).toUpperCase() + title.slice(1);
+    }
   }
 
-  // Truncate at word boundary
+  // Fallback: If we can identify it's about a specific item, extract just the issue
+  // Remove location prefixes like "The [thing] at/on/in [location]"
+  const withoutLocation = cleaned
+    .replace(/^(?:the\s+)?(?:\w+\s+)?(?:at|on|in)\s+(?:the\s+)?(?:female|male|women'?s?|men'?s?)?\s*(?:bathroom|restroom|room|floor|level|area|building|wing)[^,.]*/i, '')
+    .replace(/^[,.\s]+/, '')
+    .trim();
+
+  if (withoutLocation.length > 10 && withoutLocation.length < cleaned.length) {
+    // Found something after removing location
+    const firstPart = withoutLocation.match(/^[^.!?]+/)?.[0] ?? '';
+    if (firstPart.length > 5 && firstPart.length <= maxLength) {
+      return firstPart.charAt(0).toUpperCase() + firstPart.slice(1);
+    }
+  }
+
+  // Last resort: take first meaningful clause but try to skip location-only starts
+  const sentences = cleaned.split(/[.!?]+/).filter(s => s.trim());
+  for (const sentence of sentences) {
+    const trimmed = sentence.trim();
+    // Skip if it's just a location reference
+    if (/^(?:the\s+)?(?:\w+\s+)?(?:at|on|in|near)\s+/i.test(trimmed) && trimmed.length < 30) {
+      continue;
+    }
+    if (trimmed.length > 5 && trimmed.length <= maxLength) {
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }
+    // Take first meaningful part
+    const firstClause = trimmed.match(/^[^,]+/)?.[0] ?? '';
+    if (firstClause.length > 5 && firstClause.length <= maxLength) {
+      return firstClause.charAt(0).toUpperCase() + firstClause.slice(1);
+    }
+  }
+
+  // Ultimate fallback: truncate intelligently
   let truncated = cleaned.substring(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
   if (lastSpace > maxLength * 0.5) {
     truncated = truncated.substring(0, lastSpace);
   }
-
-  // Remove trailing punctuation and add ellipsis
   truncated = truncated.replace(/[,.:;!?\s]+$/, '');
 
   return truncated.charAt(0).toUpperCase() + truncated.slice(1) + '...';
@@ -622,29 +684,74 @@ export function analyzeTranscript(transcript: string): EventAnalysis {
     severity = 'High';
   }
 
-  // Extract action items
+  // Extract action items with better deduplication
   const actionItems: string[] = [];
   const seenActions = new Set<string>();
+  const allMatches: Array<{ action: string; start: number; end: number }> = [];
 
+  // First, collect all potential action items with their positions
   for (const pattern of ACTION_ITEM_PATTERNS) {
     pattern.lastIndex = 0; // Reset regex state
     let match;
     while ((match = pattern.exec(transcript)) !== null) {
       const action = match[1].trim();
       // Clean up and normalize
-      const normalized = action
+      let normalized = action
         .replace(/^(that\s+|we\s+|they\s+|i\s+)/i, '')
         .replace(/\s+/g, ' ')
         .trim();
 
-      if (normalized.length > 5 && normalized.length < 200) {
-        const key = normalized.toLowerCase();
-        if (!seenActions.has(key)) {
-          seenActions.add(key);
-          // Capitalize first letter
-          actionItems.push(normalized.charAt(0).toUpperCase() + normalized.slice(1));
-        }
+      // Skip fragments that are just "they are aware" type phrases
+      if (/^(they|we|he|she|it)\s+(is|are|was|were)\s+/i.test(normalized)) {
+        continue;
       }
+
+      // Skip if it's just a continuation phrase
+      if (/^(aware|informed|notified|told)\s+(of|about)?\s*(this|that|the)?\s*(issue|problem)?$/i.test(normalized)) {
+        continue;
+      }
+
+      if (normalized.length > 10 && normalized.length < 200) {
+        allMatches.push({
+          action: normalized,
+          start: match.index,
+          end: match.index + match[0].length
+        });
+      }
+    }
+  }
+
+  // Sort by start position
+  allMatches.sort((a, b) => a.start - b.start);
+
+  // Remove overlapping matches (keep the longer/earlier one)
+  const filteredMatches: typeof allMatches = [];
+  for (const current of allMatches) {
+    // Check if this overlaps with any existing match
+    const overlaps = filteredMatches.some(existing =>
+      (current.start >= existing.start && current.start < existing.end) ||
+      (current.end > existing.start && current.end <= existing.end) ||
+      (current.start <= existing.start && current.end >= existing.end)
+    );
+
+    if (!overlaps) {
+      filteredMatches.push(current);
+    }
+  }
+
+  // Add unique action items
+  for (const { action } of filteredMatches) {
+    const key = action.toLowerCase();
+    // Also check if this is a substring of an existing action
+    const isSubstring = Array.from(seenActions).some(existing =>
+      existing.includes(key) || key.includes(existing)
+    );
+
+    if (!seenActions.has(key) && !isSubstring) {
+      seenActions.add(key);
+      // Capitalize first letter and format nicely
+      const formatted = action.charAt(0).toUpperCase() + action.slice(1);
+      actionItems.push(formatted);
     }
   }
 
