@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, L
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { format, isToday, parseISO } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
@@ -30,6 +30,22 @@ import {
   DailyLogSummary,
   ProjectSummary,
 } from '@/lib/api';
+
+/**
+ * Parse a date string as local date (not UTC)
+ * This prevents timezone issues where dates appear a day off
+ */
+function parseLocalDate(dateString: string): Date {
+  // If it's just a date (YYYY-MM-DD), parse as local date
+  if (dateString && dateString.length === 10) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  // If it has time component, parse and adjust for local
+  const date = new Date(dateString);
+  // Add timezone offset to treat as local
+  return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+}
 
 export default function LogsHistoryScreen() {
   const insets = useSafeAreaInsets();
@@ -106,13 +122,13 @@ export default function LogsHistoryScreen() {
       return new Promise<boolean>((resolve) => {
         if (Platform.OS === 'web') {
           const confirmed = window.confirm(
-            `Delete daily log for ${format(parseISO(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`
+            `Delete daily log for ${format(parseLocalDate(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`
           );
           resolve(confirmed);
         } else {
           Alert.alert(
             'Delete Daily Log',
-            `Delete the log for ${format(parseISO(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`,
+            `Delete the log for ${format(parseLocalDate(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`,
             [
               { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
               { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
@@ -343,7 +359,7 @@ function DailyLogCard({
   onDelete: () => void;
   isDeleting: boolean;
 }) {
-  const logDate = parseISO(log.date);
+  const logDate = parseLocalDate(log.date);
   const isLogToday = isToday(logDate);
   const issueCount = log._count.pendingIssues;
   const hasWeatherDelay = log.weather?.weather_delay;
