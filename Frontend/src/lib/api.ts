@@ -640,6 +640,32 @@ export async function deleteDailyLogApi(id: string): Promise<void> {
 }
 
 /**
+ * Create a daily log from transcript using AI parsing
+ * This sends the raw transcript to the backend for AI-powered parsing
+ */
+export async function createDailyLogFromTranscript(data: {
+  projectId: string;
+  transcript: string;
+  date?: string;
+  preparedBy?: string;
+}): Promise<DailyLogDetail> {
+  // Fix timezone issue: append T12:00:00 to date
+  const dateWithTime = data.date
+    ? (data.date.includes('T') ? data.date : `${data.date}T12:00:00`)
+    : undefined;
+
+  return apiFetch('/api/daily-logs/from-transcript', {
+    method: 'POST',
+    body: JSON.stringify({
+      project_id: data.projectId,
+      transcript: data.transcript,
+      date: dateWithTime,
+      prepared_by: data.preparedBy,
+    }),
+  });
+}
+
+/**
  * Create a new event
  */
 export async function createEvent(data: {
