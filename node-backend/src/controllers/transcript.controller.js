@@ -69,11 +69,11 @@ class TranscriptController {
 
   /**
    * POST /api/transcripts/parse
-   * Parse a transcript and return structured data
+   * Parse a transcript and return structured data using AI
    */
   async parseTranscript(req, res, next) {
     try {
-      const { transcript } = req.body;
+      const { transcript, projectName, date } = req.body;
 
       if (!transcript) {
         return res.status(400).json({
@@ -82,7 +82,11 @@ class TranscriptController {
         });
       }
 
-      const parsed = transcriptParser.parseTranscript(transcript);
+      // Use AI-powered parsing for better results
+      const parsed = await transcriptParser.parseTranscriptWithAI(transcript, {
+        projectName,
+        date
+      });
 
       res.json({
         success: true,
@@ -113,6 +117,7 @@ class TranscriptController {
       const dailyLog = await prisma.dailyLog.findUnique({
         where: { id: dailyLogId },
         include: {
+          project: true,
           tasks: true,
           inspectionNotes: true,
           pendingIssues: true
@@ -126,8 +131,11 @@ class TranscriptController {
         });
       }
 
-      // Parse the transcript
-      const parsed = transcriptParser.parseTranscript(transcript);
+      // Parse the transcript using AI for better extraction
+      const parsed = await transcriptParser.parseTranscriptWithAI(transcript, {
+        projectName: dailyLog.project?.name,
+        date: dailyLog.date?.toISOString()
+      });
 
       // Update weather
       if (parsed.weather) {
@@ -255,8 +263,11 @@ class TranscriptController {
         });
       }
 
-      // Parse the transcript
-      const parsed = transcriptParser.parseTranscript(transcript);
+      // Parse the transcript using AI for better extraction
+      const parsed = await transcriptParser.parseTranscriptWithAI(transcript, {
+        projectName: project.name,
+        date: date || new Date().toISOString()
+      });
 
       // Create daily log
       const dailyLog = await prisma.dailyLog.create({
