@@ -10,8 +10,9 @@ import { useRouter } from 'expo-router';
 import { useDailyLogStore } from '@/lib/store';
 import { Event, EventType, EventSeverity } from '@/lib/types';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
-import { generateTitleFromTranscript, transcribeAudio, analyzeTranscript } from '@/lib/transcription';
+import { transcribeAudio } from '@/lib/transcription';
 import { syncEventToBackend } from '@/lib/sync';
+import { parseEventWithAI } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import {
   Mic,
@@ -207,6 +208,10 @@ export default function EventsScreen() {
       // Navigate to event detail immediately
       router.push(`/event-detail?id=${newEvent.id}`);
 
+      // Get project name for context
+      const project = projects.find(p => p.id === currentProjectId);
+      const projectName = project?.name;
+
       // Trigger transcription in the background
       try {
         console.log('[events] Starting transcription for event:', newEvent.id);
@@ -214,25 +219,45 @@ export default function EventsScreen() {
 
         if (result.success && result.text) {
           const transcriptText = result.text.trim();
-          const autoTitle = generateTitleFromTranscript(transcriptText);
+          console.log('[events] Transcription done, calling AI parser...');
 
-          // Analyze transcript for intelligent categorization
-          const analysis = analyzeTranscript(transcriptText);
-          console.log('[events] Analysis:', analysis);
+          // Use AI-powered parsing for intelligent extraction
+          try {
+            const aiParsed = await parseEventWithAI(transcriptText, projectName);
+            console.log('[events] AI parsed result:', aiParsed);
 
-          updateEvent(newEvent.id, {
-            transcript_text: transcriptText,
-            status: 'transcribed',
-            title: autoTitle,
-            event_type: analysis.eventType,
-            severity: analysis.severity,
-            action_items: analysis.actionItems,
-            location: analysis.location || newEvent.location,
-            trade_vendor: analysis.tradeVendor || newEvent.trade_vendor,
-          });
-          console.log('[events] Transcription complete for event:', newEvent.id);
+            if (aiParsed.success) {
+              updateEvent(newEvent.id, {
+                transcript_text: transcriptText,
+                status: 'transcribed',
+                title: aiParsed.title,
+                event_type: aiParsed.event_type as any,
+                severity: aiParsed.severity as any,
+                action_items: aiParsed.action_items,
+                location: aiParsed.location || newEvent.location,
+                trade_vendor: aiParsed.trade_vendor || newEvent.trade_vendor,
+              });
+              console.log('[events] Event updated with AI-parsed data');
+            } else {
+              // Fallback: just save transcript without AI parsing
+              console.log('[events] AI parsing failed, saving transcript only');
+              updateEvent(newEvent.id, {
+                transcript_text: transcriptText,
+                status: 'transcribed',
+                title: transcriptText.substring(0, 50) + (transcriptText.length > 50 ? '...' : ''),
+              });
+            }
+          } catch (aiError) {
+            console.error('[events] AI parsing error:', aiError);
+            // Fallback: save transcript without AI parsing
+            updateEvent(newEvent.id, {
+              transcript_text: transcriptText,
+              status: 'transcribed',
+              title: transcriptText.substring(0, 50) + (transcriptText.length > 50 ? '...' : ''),
+            });
+          }
 
-          // Sync to backend after transcription
+          // Sync to backend after processing
           const updatedEvent = useDailyLogStore.getState().getEvent(newEvent.id);
           if (updatedEvent) {
             syncEventToBackend(updatedEvent).then(backendId => {
