@@ -120,6 +120,7 @@ class TranscriptionService {
 
   /**
    * Generate a concise title from transcription text
+   * Extracts the PROBLEM/ISSUE, not the location
    * @param {string} transcript - Full transcription text
    * @param {number} maxLength - Maximum title length
    * @returns {string}
@@ -131,11 +132,65 @@ class TranscriptionService {
 
     const cleaned = transcript.trim();
 
-    if (cleaned.length <= maxLength) {
-      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    // Try to extract the actual PROBLEM from common patterns
+    // Pattern: "do not/doesn't [verb]" - extract the problem
+    const negativePatterns = [
+      /(?:do\s+not|does\s+not|doesn't|don't|won't|can't|cannot|isn't|aren't)\s+([^,.!?]+)/i,
+      /(?:not\s+)([^,.!?]+(?:properly|correctly|fully|completely))/i,
+      /(?:is|are|was|were)\s+([^,.!?]*(?:broken|damaged|missing|leaking|stuck|loose|cracked|defective)[^,.!?]*)/i,
+    ];
+
+    for (const pattern of negativePatterns) {
+      const match = cleaned.match(pattern);
+      if (match && match[1]) {
+        let problem = match[1].trim()
+          .replace(/^(fully\s+|properly\s+|correctly\s+)/i, '')
+          .replace(/,\s*creating.*$/i, '')
+          .trim();
+
+        if (problem.length > 3 && problem.length <= maxLength) {
+          // If it starts with a verb, format as "Not [verb]ing properly"
+          if (/^(close|open|work|function|seal|lock|latch)/i.test(problem)) {
+            const title = 'Not ' + problem.toLowerCase() + ' properly';
+            return title.charAt(0).toUpperCase() + title.slice(1);
+          }
+          return problem.charAt(0).toUpperCase() + problem.slice(1);
+        }
+      }
     }
 
-    // Try to find a natural break point
+    // Pattern: "creating a [issue]"
+    const causingMatch = cleaned.match(/(?:creating|causing|resulting\s+in)\s+(?:a\s+)?([^,.!?]+(?:issue|problem|concern|hazard|delay))/i);
+    if (causingMatch && causingMatch[1]) {
+      const title = causingMatch[1].trim();
+      if (title.length <= maxLength) {
+        return title.charAt(0).toUpperCase() + title.slice(1);
+      }
+    }
+
+    // Pattern: "[thing] is [broken/damaged/etc]"
+    const stateMatch = cleaned.match(/(?:the\s+)?(\w+(?:\s+\w+)?)\s+(?:is|are)\s+([^,.!?]*(?:broken|damaged|missing|leaking|stuck|loose|blocked|clogged))/i);
+    if (stateMatch && stateMatch[1] && stateMatch[2]) {
+      const title = `${stateMatch[1]} ${stateMatch[2]}`.trim();
+      if (title.length <= maxLength) {
+        return title.charAt(0).toUpperCase() + title.slice(1);
+      }
+    }
+
+    // Remove location prefixes and try again
+    const withoutLocation = cleaned
+      .replace(/^(?:the\s+)?(?:\w+\s+)?(?:at|on|in)\s+(?:the\s+)?(?:female|male|women'?s?|men'?s?)?\s*(?:bathroom|restroom|room|floor|level|area|building|wing)[^,.]*/i, '')
+      .replace(/^[,.\s]+/, '')
+      .trim();
+
+    if (withoutLocation.length > 10 && withoutLocation.length < cleaned.length) {
+      const firstPart = withoutLocation.match(/^[^.!?]+/)?.[0] ?? '';
+      if (firstPart.length > 5 && firstPart.length <= maxLength) {
+        return firstPart.charAt(0).toUpperCase() + firstPart.slice(1);
+      }
+    }
+
+    // Fallback: first sentence, but skip if just location
     const firstSentence = cleaned.match(/^[^.!?]+[.!?]?/)?.[0] ?? '';
     if (firstSentence.length > 0 && firstSentence.length <= maxLength) {
       const title = firstSentence.trim().replace(/[.!?]+$/, '');
