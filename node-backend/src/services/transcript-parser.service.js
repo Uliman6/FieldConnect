@@ -106,43 +106,58 @@ CRITICAL: PROFESSIONAL DOCUMENTATION STANDARDS
    ✅ GOOD: "Electrical room inspection; 2 EIG Electric workers provided support"
 
 4. ISSUE TITLES - Extract the ACTUAL PROBLEM, not location:
-   The title should describe WHAT is wrong, not WHERE it is.
+   ═══════════════════════════════════════════════════════════════
+   CRITICAL: The title MUST describe WHAT IS WRONG, never WHERE.
+   NEVER put room names, floor numbers, or locations in the title.
+   Put all location info in the "location" field instead.
+   ═══════════════════════════════════════════════════════════════
+
    ❌ BAD: "Female bathroom on level 1 has an issue"
+   ❌ BAD: "The female bathroom on level 1"
    ❌ BAD: "Problem in the electrical room"
    ❌ BAD: "Third floor issue"
-   ❌ BAD: "Door issue"
-   ✅ GOOD: "Door not closing properly"
+   ❌ BAD: "Door issue" (too vague)
+   ❌ BAD: "Level 1 bathroom" (this is a location, not a problem!)
+
+   ✅ GOOD: "Door not latching properly" (with location: "Level 1 - Female Restroom")
    ✅ GOOD: "Water leak at ceiling penetration"
    ✅ GOOD: "Missing fire caulking at pipe sleeves"
-   ✅ GOOD: "HVAC duct damage from other trades"
-   ✅ GOOD: "Incorrect outlet placement per plans"
+   ✅ GOOD: "HVAC duct damaged by other trades"
+   ✅ GOOD: "Outlet spacing does not match plans"
+
+   Ask yourself: "What needs to be FIXED?" That's the title.
+   Ask yourself: "Where is it?" That goes in the location field.
 
    If a company is responsible, add prefix: "[Company] - [Problem]"
    ✅ GOOD: "DPR Concrete - Weather delay on foundation pour"
    ✅ GOOD: "EIG Electric - Rework needed for outlet spacing"
 
-5. ISSUE DESCRIPTIONS - Professional, specific details:
+5. DO NOT CREATE DUPLICATE ISSUES:
+   If the same problem is mentioned multiple times, create only ONE issue.
+   Combine related information into a single, comprehensive issue.
+
+6. ISSUE DESCRIPTIONS - Professional, specific details:
    Include: what's wrong, impact, what needs to happen
    ❌ BAD: "They will have to come back Saturday for overtime"
    ❌ BAD: "There's an issue with the door"
    ✅ GOOD: "Door in female restroom (Level 1) not latching properly. Hardware adjustment required."
    ✅ GOOD: "DPR Concrete returning Saturday for overtime to complete foundation work due to weather delay"
 
-6. ISSUE LOCATION - Always populate if mentioned:
+7. ISSUE LOCATION - Always populate if mentioned:
    Extract the specific location to the 'location' field
    ✅ GOOD: "Level 1 - Female Restroom"
    ✅ GOOD: "Third Floor - Electrical Room"
    ✅ GOOD: "Northwest corner - Grid A-3"
 
-7. REMOVE ALL FILLER LANGUAGE:
+8. REMOVE ALL FILLER LANGUAGE:
    Remove: "for the most part", "as well as", "kind of", "basically", "so", "um"
    Remove: "we had", "they were", "going to be"
 
-8. COMPLETE SENTENCES OR PROPER PHRASES:
+9. COMPLETE SENTENCES OR PROPER PHRASES:
    Every description must make sense on its own without context.
    Start with the work activity, not location.
 
-9. USE NULL for unknown values, never placeholder text.`;
+10. USE NULL for unknown values, never placeholder text.`;
 
       const userPrompt = `Parse this construction site daily log transcript:
 
@@ -537,19 +552,50 @@ Return a JSON object with the structure described. Only include categories that 
       })).filter(m => m.material);
     }
 
-    // Normalize pending issues
+    // Normalize pending issues with deduplication
     if (Array.isArray(parsed.pending_issues)) {
-      normalized.pendingIssues = parsed.pending_issues.map(i => {
+      const seenIssues = new Map(); // Track unique issues by normalized title
+
+      for (const i of parsed.pending_issues) {
         const assignee = i.assignee || '';
-        return {
-          title: this.cleanText(i.title || i.name || 'Untitled Issue', assignee),
-          description: this.cleanText(i.description || '', assignee),
-          category: i.category || 'Other',
-          severity: this.normalizeSeverity(i.severity),
-          assignee: assignee,
-          location: i.location || ''
-        };
-      }).filter(i => i.title || i.description);
+        const title = this.cleanText(i.title || i.name || 'Untitled Issue', assignee);
+        const description = this.cleanText(i.description || '', assignee);
+        const location = i.location || '';
+
+        // Skip if no meaningful content
+        if (!title && !description) continue;
+
+        // Create a normalized key for deduplication (lowercase, trimmed)
+        const titleKey = title.toLowerCase().trim();
+
+        // Check if we've seen a similar issue
+        if (seenIssues.has(titleKey)) {
+          // If this one has more info (longer description or has location), use it instead
+          const existing = seenIssues.get(titleKey);
+          if (description.length > existing.description.length ||
+              (location && !existing.location)) {
+            seenIssues.set(titleKey, {
+              title,
+              description: description.length > existing.description.length ? description : existing.description,
+              category: i.category || existing.category || 'Other',
+              severity: this.normalizeSeverity(i.severity || existing.severity),
+              assignee: assignee || existing.assignee,
+              location: location || existing.location
+            });
+          }
+        } else {
+          seenIssues.set(titleKey, {
+            title,
+            description,
+            category: i.category || 'Other',
+            severity: this.normalizeSeverity(i.severity),
+            assignee: assignee,
+            location: location
+          });
+        }
+      }
+
+      normalized.pendingIssues = Array.from(seenIssues.values());
     }
 
     // Normalize inspection notes
