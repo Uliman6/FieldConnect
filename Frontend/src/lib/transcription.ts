@@ -149,12 +149,17 @@ export function generateTitleFromTranscript(
   transcript: string,
   maxLength: number = 50
 ): string {
+  console.log('[generateTitle] Called with transcript length:', transcript?.length);
+
   if (!transcript || !transcript.trim()) {
+    console.log('[generateTitle] Empty transcript, returning Untitled');
     return 'Untitled Event';
   }
 
   const cleaned = transcript.trim();
   const lower = cleaned.toLowerCase();
+
+  console.log('[generateTitle] Processing:', cleaned.substring(0, 100) + '...');
 
   // Try to extract the actual PROBLEM from common patterns
   // Pattern: "[location] do not/does not/doesn't [problem]"
@@ -166,6 +171,7 @@ export function generateTitleFromTranscript(
 
   for (const pattern of negativePatterns) {
     const match = cleaned.match(pattern);
+    console.log('[generateTitle] Pattern match result:', match?.[0], '-> captured:', match?.[1]);
     if (match && match[1]) {
       let problem = match[1].trim();
       // Clean up the problem description
@@ -174,13 +180,17 @@ export function generateTitleFromTranscript(
         .replace(/,\s*creating.*$/i, '')
         .trim();
 
+      console.log('[generateTitle] Cleaned problem:', problem);
+
       // Format: "Not [doing something]" or "[thing] not working"
       if (problem.length > 3 && problem.length <= maxLength) {
         // Check if it starts with a verb - add "Not" prefix
         if (/^(close|open|work|function|seal|lock|latch)/i.test(problem)) {
-          const title = 'Not ' + problem.toLowerCase() + ' properly';
+          const title = 'Not ' + problem.toLowerCase() + 'ing properly';
+          console.log('[generateTitle] Returning verb-based title:', title);
           return title.charAt(0).toUpperCase() + title.slice(1);
         }
+        console.log('[generateTitle] Returning problem title:', problem);
         return problem.charAt(0).toUpperCase() + problem.slice(1);
       }
     }
