@@ -565,6 +565,355 @@ class DailyLogsController {
     }
   }
 
+  // ============================================
+  // NESTED ITEM CRUD METHODS
+  // ============================================
+
+  /**
+   * PATCH /api/daily-logs/:id/tasks/:taskId
+   * Update a task
+   */
+  async updateTask(req, res, next) {
+    try {
+      const { taskId } = req.params;
+      const { company_name, workers, hours, task_description, notes } = req.body;
+
+      const task = await prisma.task.update({
+        where: { id: taskId },
+        data: {
+          ...(company_name !== undefined && { companyName: company_name }),
+          ...(workers !== undefined && { workers }),
+          ...(hours !== undefined && { hours }),
+          ...(task_description !== undefined && { taskDescription: task_description }),
+          ...(notes !== undefined && { notes })
+        }
+      });
+
+      res.json(task);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/daily-logs/:id/tasks/:taskId
+   * Delete a task
+   */
+  async deleteTask(req, res, next) {
+    try {
+      const { taskId } = req.params;
+      await prisma.task.delete({ where: { id: taskId } });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PATCH /api/daily-logs/:id/pending-issues/:issueId
+   * Update a pending issue
+   */
+  async updatePendingIssue(req, res, next) {
+    try {
+      const { issueId } = req.params;
+      const { title, description, category, severity, assignee, due_date, external_entity, location } = req.body;
+
+      const issue = await prisma.pendingIssue.update({
+        where: { id: issueId },
+        data: {
+          ...(title !== undefined && { title }),
+          ...(description !== undefined && { description }),
+          ...(category !== undefined && { category }),
+          ...(severity !== undefined && { severity }),
+          ...(assignee !== undefined && { assignee }),
+          ...(due_date !== undefined && { dueDate: due_date ? new Date(due_date) : null }),
+          ...(external_entity !== undefined && { externalEntity: external_entity }),
+          ...(location !== undefined && { location })
+        }
+      });
+
+      res.json(issue);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/daily-logs/:id/pending-issues/:issueId
+   * Delete a pending issue
+   */
+  async deletePendingIssue(req, res, next) {
+    try {
+      const { issueId } = req.params;
+      await prisma.pendingIssue.delete({ where: { id: issueId } });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/daily-logs/:id/visitors
+   * Add a visitor
+   */
+  async addVisitor(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { time, company_name, visitor_name, notes } = req.body;
+
+      const visitor = await prisma.visitor.create({
+        data: {
+          dailyLogId: id,
+          time,
+          companyName: company_name,
+          visitorName: visitor_name,
+          notes
+        }
+      });
+
+      res.status(201).json(visitor);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PATCH /api/daily-logs/:id/visitors/:visitorId
+   * Update a visitor
+   */
+  async updateVisitor(req, res, next) {
+    try {
+      const { visitorId } = req.params;
+      const { time, company_name, visitor_name, notes } = req.body;
+
+      const visitor = await prisma.visitor.update({
+        where: { id: visitorId },
+        data: {
+          ...(time !== undefined && { time }),
+          ...(company_name !== undefined && { companyName: company_name }),
+          ...(visitor_name !== undefined && { visitorName: visitor_name }),
+          ...(notes !== undefined && { notes })
+        }
+      });
+
+      res.json(visitor);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/daily-logs/:id/visitors/:visitorId
+   * Delete a visitor
+   */
+  async deleteVisitor(req, res, next) {
+    try {
+      const { visitorId } = req.params;
+      await prisma.visitor.delete({ where: { id: visitorId } });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/daily-logs/:id/equipment
+   * Add equipment
+   */
+  async addEquipment(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { equipment_type, quantity, hours, notes } = req.body;
+
+      const equipment = await prisma.equipment.create({
+        data: {
+          dailyLogId: id,
+          equipmentType: equipment_type,
+          quantity,
+          hours,
+          notes
+        }
+      });
+
+      res.status(201).json(equipment);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PATCH /api/daily-logs/:id/equipment/:equipmentId
+   * Update equipment
+   */
+  async updateEquipment(req, res, next) {
+    try {
+      const { equipmentId } = req.params;
+      const { equipment_type, quantity, hours, notes } = req.body;
+
+      const equipment = await prisma.equipment.update({
+        where: { id: equipmentId },
+        data: {
+          ...(equipment_type !== undefined && { equipmentType: equipment_type }),
+          ...(quantity !== undefined && { quantity }),
+          ...(hours !== undefined && { hours }),
+          ...(notes !== undefined && { notes })
+        }
+      });
+
+      res.json(equipment);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/daily-logs/:id/equipment/:equipmentId
+   * Delete equipment
+   */
+  async deleteEquipment(req, res, next) {
+    try {
+      const { equipmentId } = req.params;
+      await prisma.equipment.delete({ where: { id: equipmentId } });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/daily-logs/:id/materials
+   * Add a material
+   */
+  async addMaterial(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { material, quantity, unit, supplier, notes } = req.body;
+
+      const mat = await prisma.material.create({
+        data: {
+          dailyLogId: id,
+          material,
+          quantity,
+          unit,
+          supplier,
+          notes
+        }
+      });
+
+      res.status(201).json(mat);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PATCH /api/daily-logs/:id/materials/:materialId
+   * Update a material
+   */
+  async updateMaterial(req, res, next) {
+    try {
+      const { materialId } = req.params;
+      const { material, quantity, unit, supplier, notes } = req.body;
+
+      const mat = await prisma.material.update({
+        where: { id: materialId },
+        data: {
+          ...(material !== undefined && { material }),
+          ...(quantity !== undefined && { quantity }),
+          ...(unit !== undefined && { unit }),
+          ...(supplier !== undefined && { supplier }),
+          ...(notes !== undefined && { notes })
+        }
+      });
+
+      res.json(mat);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/daily-logs/:id/materials/:materialId
+   * Delete a material
+   */
+  async deleteMaterial(req, res, next) {
+    try {
+      const { materialId } = req.params;
+      await prisma.material.delete({ where: { id: materialId } });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/daily-logs/:id/inspection-notes
+   * Add an inspection note
+   */
+  async addInspectionNote(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { inspector_name, ahj, inspection_type, result, notes, follow_up_needed } = req.body;
+
+      const note = await prisma.inspectionNote.create({
+        data: {
+          dailyLogId: id,
+          inspectorName: inspector_name,
+          ahj,
+          inspectionType: inspection_type,
+          result,
+          notes,
+          followUpNeeded: follow_up_needed
+        }
+      });
+
+      res.status(201).json(note);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PATCH /api/daily-logs/:id/inspection-notes/:noteId
+   * Update an inspection note
+   */
+  async updateInspectionNote(req, res, next) {
+    try {
+      const { noteId } = req.params;
+      const { inspector_name, ahj, inspection_type, result, notes, follow_up_needed } = req.body;
+
+      const note = await prisma.inspectionNote.update({
+        where: { id: noteId },
+        data: {
+          ...(inspector_name !== undefined && { inspectorName: inspector_name }),
+          ...(ahj !== undefined && { ahj }),
+          ...(inspection_type !== undefined && { inspectionType: inspection_type }),
+          ...(result !== undefined && { result }),
+          ...(notes !== undefined && { notes }),
+          ...(follow_up_needed !== undefined && { followUpNeeded: follow_up_needed })
+        }
+      });
+
+      res.json(note);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/daily-logs/:id/inspection-notes/:noteId
+   * Delete an inspection note
+   */
+  async deleteInspectionNote(req, res, next) {
+    try {
+      const { noteId } = req.params;
+      await prisma.inspectionNote.delete({ where: { id: noteId } });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
   /**
    * POST /api/daily-logs/:id/parse-transcript
    * Parse a transcript and update an existing daily log with extracted data
