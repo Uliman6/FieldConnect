@@ -25,6 +25,29 @@ function parseDate(dateInput) {
  */
 class DailyLogsController {
   /**
+   * Helper: Recalculate and update daily totals from all tasks
+   */
+  async recalculateDailyTotals(dailyLogId) {
+    const tasks = await prisma.task.findMany({
+      where: { dailyLogId },
+      select: { workers: true, hours: true }
+    });
+
+    const totalWorkers = tasks.reduce((sum, t) => sum + (t.workers || 0), 0);
+    const totalHours = tasks.reduce((sum, t) => sum + (t.hours || 0), 0);
+
+    await prisma.dailyLog.update({
+      where: { id: dailyLogId },
+      data: {
+        dailyTotalsWorkers: totalWorkers,
+        dailyTotalsHours: totalHours
+      }
+    });
+
+    return { totalWorkers, totalHours };
+  }
+
+  /**
    * GET /api/daily-logs
    * List daily logs (optionally filtered by project)
    */
@@ -386,6 +409,9 @@ class DailyLogsController {
         }
       });
 
+      // Recalculate daily totals
+      await this.recalculateDailyTotals(id);
+
       res.status(201).json(task);
     } catch (err) {
       next(err);
@@ -575,7 +601,7 @@ class DailyLogsController {
    */
   async updateTask(req, res, next) {
     try {
-      const { taskId } = req.params;
+      const { id, taskId } = req.params;
       const { company_name, workers, hours, task_description, notes } = req.body;
 
       const task = await prisma.task.update({
@@ -589,6 +615,11 @@ class DailyLogsController {
         }
       });
 
+      // Recalculate daily totals if workers or hours changed
+      if (workers !== undefined || hours !== undefined) {
+        await this.recalculateDailyTotals(id);
+      }
+
       res.json(task);
     } catch (err) {
       next(err);
@@ -601,8 +632,12 @@ class DailyLogsController {
    */
   async deleteTask(req, res, next) {
     try {
-      const { taskId } = req.params;
+      const { id, taskId } = req.params;
       await prisma.task.delete({ where: { id: taskId } });
+
+      // Recalculate daily totals after deletion
+      await this.recalculateDailyTotals(id);
+
       res.status(204).send();
     } catch (err) {
       next(err);
