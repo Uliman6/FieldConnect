@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Platform, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { format, parseISO } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import {
@@ -13,176 +14,154 @@ import {
   FileText,
   Copy,
   Check,
-  NotebookPen,
-  RefreshCw,
   ArrowLeft,
-  Download,
   Eye,
+  Download,
+  Users,
+  Clock,
+  AlertTriangle,
+  ClipboardList,
+  Truck,
+  Package,
+  UserCheck,
+  Building2,
+  Wind,
+  Droplets,
 } from 'lucide-react-native';
-import { useDailyLogStore } from '@/lib/store';
-import { SkyCondition, WeatherConditions } from '@/lib/types';
-import { SectionCard, InputField, Toggle, Button } from '@/components/ui';
-import { PendingIssuesSection } from '@/components/PendingIssues';
-import { TasksSection, VisitorsSection, EquipmentSection, MaterialsSection } from '@/components/RepeatingSections';
-import { InspectionNotesSection, AdditionalWorkSection } from '@/components/InsightSections';
-import { VoiceInputField } from '@/components/VoiceRecorder';
-import { SyncStatusBadge } from '@/components/SyncStatus';
-import { syncDailyLogs } from '@/lib/sync';
-import { fetchWeatherCached, weatherToConditions, clearWeatherCache } from '@/lib/weather';
-import { fetchDailyLogPdf } from '@/lib/api';
+import { getDailyLog, fetchDailyLogPdf, DailyLogDetail, queryKeys } from '@/lib/api';
 import { cn } from '@/lib/cn';
 
-const SKY_CONDITIONS: { label: string; value: SkyCondition; icon: React.ReactNode }[] = [
-  { label: 'Clear', value: 'Clear', icon: <Sun size={16} color="#F59E0B" /> },
-  { label: 'Partly Cloudy', value: 'Partly Cloudy', icon: <Cloud size={16} color="#9CA3AF" /> },
-  { label: 'Cloudy', value: 'Cloudy', icon: <Cloud size={16} color="#6B7280" /> },
-  { label: 'Overcast', value: 'Overcast', icon: <Cloud size={16} color="#4B5563" /> },
-  { label: 'Rainy', value: 'Rainy', icon: <CloudRain size={16} color="#3B82F6" /> },
-  { label: 'Stormy', value: 'Stormy', icon: <CloudRain size={16} color="#1E40AF" /> },
-];
+/**
+ * Parse a date string as local date (not UTC)
+ */
+function parseLocalDate(dateString: string): Date {
+  if (dateString && dateString.length === 10) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  const date = new Date(dateString);
+  return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+}
+
+function SectionHeader({ title, icon, count }: { title: string; icon: React.ReactNode; count?: number }) {
+  return (
+    <View className="flex-row items-center mb-3">
+      {icon}
+      <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">
+        {title}
+      </Text>
+      {count !== undefined && count > 0 && (
+        <View className="ml-2 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 rounded-full">
+          <Text className="text-xs font-medium text-orange-600 dark:text-orange-400">{count}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <Text className="text-sm text-gray-400 dark:text-gray-500 italic">{message}</Text>
+  );
+}
 
 export default function DailyLogDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  // Store selectors
-  const dailyLogs = useDailyLogStore((s) => s.dailyLogs);
-  const projects = useDailyLogStore((s) => s.projects);
-
-  const log = dailyLogs.find((l) => l.id === id);
-  const project = log ? projects.find((p) => p.id === log.project_id) : null;
-
-  // Store actions
-  const updateDailyLog = useDailyLogStore((s) => s.updateDailyLog);
-  const addTask = useDailyLogStore((s) => s.addTask);
-  const updateTask = useDailyLogStore((s) => s.updateTask);
-  const removeTask = useDailyLogStore((s) => s.removeTask);
-  const addVisitor = useDailyLogStore((s) => s.addVisitor);
-  const updateVisitor = useDailyLogStore((s) => s.updateVisitor);
-  const removeVisitor = useDailyLogStore((s) => s.removeVisitor);
-  const addEquipment = useDailyLogStore((s) => s.addEquipment);
-  const updateEquipment = useDailyLogStore((s) => s.updateEquipment);
-  const removeEquipment = useDailyLogStore((s) => s.removeEquipment);
-  const addMaterial = useDailyLogStore((s) => s.addMaterial);
-  const updateMaterial = useDailyLogStore((s) => s.updateMaterial);
-  const removeMaterial = useDailyLogStore((s) => s.removeMaterial);
-  const addIssue = useDailyLogStore((s) => s.addIssue);
-  const updateIssue = useDailyLogStore((s) => s.updateIssue);
-  const removeIssue = useDailyLogStore((s) => s.removeIssue);
-  const addInspectionNote = useDailyLogStore((s) => s.addInspectionNote);
-  const updateInspectionNote = useDailyLogStore((s) => s.updateInspectionNote);
-  const removeInspectionNote = useDailyLogStore((s) => s.removeInspectionNote);
-  const addAdditionalWork = useDailyLogStore((s) => s.addAdditionalWork);
-  const updateAdditionalWork = useDailyLogStore((s) => s.updateAdditionalWork);
-  const removeAdditionalWork = useDailyLogStore((s) => s.removeAdditionalWork);
-  const addVoiceArtifact = useDailyLogStore((s) => s.addVoiceArtifact);
-
-  // Collapsed states
-  const [collapsedSections, setCollapsedSections] = useState({
-    weather: false,
-    tasks: false,
-    visitors: true,
-    equipment: true,
-    materials: true,
-    issues: false,
-    inspections: true,
-    additionalWork: true,
-    dailySummary: true,
-  });
-
   const [copiedSummary, setCopiedSummary] = useState(false);
-  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
-  const toggleSection = (section: keyof typeof collapsedSections) => {
-    Haptics.selectionAsync();
-    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
-
-  // Weather update helper
-  const updateWeather = useCallback(
-    (updates: Partial<WeatherConditions>) => {
-      if (!log) return;
-      const newWeather = { ...log.weather, ...updates };
-      updateDailyLog(log.id, { weather: newWeather });
-    },
-    [log, updateDailyLog]
-  );
-
-  // Fetch weather
-  const fetchWeather = useCallback(
-    async (forceRefresh = false) => {
-      if (!log || !project?.address) return;
-
-      setIsLoadingWeather(true);
-      try {
-        if (forceRefresh) {
-          clearWeatherCache();
-        }
-        const weatherData = await fetchWeatherCached(project.address, log.date);
-        if (weatherData) {
-          const conditions = weatherToConditions(weatherData);
-          updateDailyLog(log.id, { weather: conditions });
-        }
-      } catch (error) {
-        console.error('Failed to fetch weather:', error);
-      } finally {
-        setIsLoadingWeather(false);
-      }
-    },
-    [log, project, updateDailyLog]
-  );
-
-  // Auto-fetch weather on load if empty
-  useEffect(() => {
-    if (log && project?.address && !log.weather.sky_condition) {
-      fetchWeather();
-    }
-  }, [log?.id, project?.address]);
+  // Fetch daily log from backend
+  const { data: log, isLoading, isError, error } = useQuery({
+    queryKey: [...queryKeys.dailyLogs(), id],
+    queryFn: () => getDailyLog(id!),
+    enabled: !!id,
+  });
 
   // View PDF
   const handleViewPdf = useCallback(async () => {
-    if (!log?.server_id) return;
+    if (!id) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsLoadingPdf(true);
     try {
-      const blobUrl = await fetchDailyLogPdf(log.server_id, true);
+      const blobUrl = await fetchDailyLogPdf(id, true);
       if (Platform.OS === 'web') {
         window.open(blobUrl, '_blank');
+      } else {
+        Linking.openURL(blobUrl);
       }
-    } catch (error) {
-      console.error('[pdf] Failed to fetch PDF:', error);
+    } catch (err) {
+      console.error('[pdf] Failed to fetch PDF:', err);
     } finally {
       setIsLoadingPdf(false);
     }
-  }, [log?.server_id]);
+  }, [id]);
+
+  // Download PDF
+  const handleDownloadPdf = useCallback(async () => {
+    if (!id) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const blobUrl = await fetchDailyLogPdf(id, false);
+      if (Platform.OS === 'web') {
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `daily-log-${id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        Linking.openURL(blobUrl);
+      }
+    } catch (err) {
+      console.error('[pdf] Failed to download PDF:', err);
+    }
+  }, [id]);
 
   // Copy summary
   const handleCopySummary = useCallback(async () => {
     if (!log) return;
-    const summary = `Daily Log - ${format(parseISO(log.date), 'MMM d, yyyy')}
-Project: ${project?.name || 'Unknown'}
-Weather: ${log.weather.sky_condition || 'N/A'}, ${log.weather.low_temp ?? '--'}° - ${log.weather.high_temp ?? '--'}°
-Tasks: ${log.tasks.length}
-Issues: ${log.pending_issues.length}
-Workers: ${log.daily_totals_workers}
-Hours: ${log.daily_totals_hours}`;
+    const logDate = parseLocalDate(log.date);
+    const summary = `Daily Log - ${format(logDate, 'MMM d, yyyy')}
+Project: ${log.project?.name || 'Unknown'}
+Weather: ${log.weather?.sky_condition || 'N/A'}, ${log.weather?.low_temp ?? '--'}° - ${log.weather?.high_temp ?? '--'}°
+Tasks: ${log.tasks?.length || 0}
+Issues: ${log.pendingIssues?.length || 0}
+Workers: ${log.dailyTotalsWorkers || 0}
+Hours: ${log.dailyTotalsHours || 0}`;
 
     await Clipboard.setStringAsync(summary);
     setCopiedSummary(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setTimeout(() => setCopiedSummary(false), 2000);
-  }, [log, project]);
+  }, [log]);
 
-  // No log found
-  if (!log) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
+        <ActivityIndicator size="large" color="#F97316" />
+        <Text className="mt-4 text-gray-500 dark:text-gray-400">Loading daily log...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (isError || !log) {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center p-8">
         <FileText size={48} color="#9CA3AF" />
         <Text className="mt-4 text-lg text-gray-500 dark:text-gray-400 text-center">
-          Daily log not found
+          {isError ? 'Failed to load daily log' : 'Daily log not found'}
         </Text>
+        {isError && (
+          <Text className="mt-2 text-sm text-red-500 text-center">
+            {error instanceof Error ? error.message : 'Unknown error'}
+          </Text>
+        )}
         <Pressable
           onPress={() => router.back()}
           className="mt-4 bg-orange-500 px-6 py-3 rounded-xl"
@@ -193,15 +172,13 @@ Hours: ${log.daily_totals_hours}`;
     );
   }
 
+  const logDate = parseLocalDate(log.date);
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-gray-50 dark:bg-gray-900"
-    >
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
-        keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
         <View
@@ -217,376 +194,498 @@ Hours: ${log.daily_totals_hours}`;
             </Pressable>
             <View className="flex-1">
               <Text className="text-xl font-bold text-gray-900 dark:text-white">
-                Edit Daily Log
+                Daily Log Details
               </Text>
               <Text className="text-sm text-gray-500 dark:text-gray-400">
-                {format(parseISO(log.date), 'EEEE, MMMM d, yyyy')}
+                {format(logDate, 'EEEE, MMMM d, yyyy')}
               </Text>
             </View>
-            <SyncStatusBadge
-              status={log.sync_status ?? 'pending'}
-              lastSyncedAt={log.last_synced_at}
-              onSync={() => syncDailyLogs([log.id])}
-            />
+            <View className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
+              <Text className="text-xs text-gray-600 dark:text-gray-300">{log.status || 'draft'}</Text>
+            </View>
           </View>
 
           {/* Project info */}
-          {project && (
-            <View className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
-              <Text className="text-base font-semibold text-gray-900 dark:text-white">
-                {project.name}
-              </Text>
-              <Text className="text-sm text-gray-500 dark:text-gray-400">
-                #{project.number} · {project.address}
-              </Text>
+          {log.project && (
+            <View className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 mb-3">
+              <View className="flex-row items-center">
+                <Building2 size={18} color="#F97316" />
+                <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">
+                  {log.project.name}
+                </Text>
+              </View>
+              {log.project.number && (
+                <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Project #{log.project.number}
+                </Text>
+              )}
             </View>
           )}
 
+          {/* Prepared By */}
+          {log.preparedBy && (
+            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              Prepared by: <Text className="font-medium text-gray-700 dark:text-gray-300">{log.preparedBy}</Text>
+            </Text>
+          )}
+
           {/* Quick Actions */}
-          <View className="flex-row mt-3 space-x-2">
-            {log.server_id && (
-              <Pressable
-                onPress={handleViewPdf}
-                disabled={isLoadingPdf}
-                className="flex-1 flex-row items-center justify-center py-3 bg-orange-500 rounded-xl"
-              >
-                {isLoadingPdf ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <>
-                    <Eye size={18} color="white" />
-                    <Text className="ml-2 text-white font-semibold">View PDF</Text>
-                  </>
-                )}
-              </Pressable>
-            )}
+          <View className="flex-row space-x-2">
             <Pressable
-              onPress={handleCopySummary}
-              className="flex-1 flex-row items-center justify-center py-3 bg-gray-200 dark:bg-gray-700 rounded-xl ml-2"
+              onPress={handleViewPdf}
+              disabled={isLoadingPdf}
+              className="flex-1 flex-row items-center justify-center py-3 bg-orange-500 rounded-xl"
             >
-              {copiedSummary ? (
-                <>
-                  <Check size={18} color="#22C55E" />
-                  <Text className="ml-2 text-green-600 font-semibold">Copied!</Text>
-                </>
+              {isLoadingPdf ? (
+                <ActivityIndicator size="small" color="white" />
               ) : (
                 <>
-                  <Copy size={18} color="#6B7280" />
-                  <Text className="ml-2 text-gray-700 dark:text-gray-300 font-semibold">Copy Summary</Text>
+                  <Eye size={18} color="white" />
+                  <Text className="ml-2 text-white font-semibold">View PDF</Text>
                 </>
               )}
             </Pressable>
+            <Pressable
+              onPress={handleDownloadPdf}
+              className="flex-1 flex-row items-center justify-center py-3 bg-gray-200 dark:bg-gray-700 rounded-xl ml-2"
+            >
+              <Download size={18} color="#6B7280" />
+              <Text className="ml-2 text-gray-700 dark:text-gray-300 font-semibold">Download</Text>
+            </Pressable>
+          </View>
+          <Pressable
+            onPress={handleCopySummary}
+            className="flex-row items-center justify-center py-3 bg-gray-100 dark:bg-gray-700 rounded-xl mt-2"
+          >
+            {copiedSummary ? (
+              <>
+                <Check size={18} color="#22C55E" />
+                <Text className="ml-2 text-green-600 font-semibold">Copied!</Text>
+              </>
+            ) : (
+              <>
+                <Copy size={18} color="#6B7280" />
+                <Text className="ml-2 text-gray-700 dark:text-gray-300 font-semibold">Copy Summary</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+
+        {/* Daily Totals */}
+        <View className="px-4 mt-4">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+            <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+              Daily Totals
+            </Text>
+            <View className="flex-row">
+              <View className="flex-1 items-center">
+                <View className="flex-row items-center">
+                  <Users size={20} color="#F97316" />
+                  <Text className="ml-2 text-2xl font-bold text-gray-900 dark:text-white">
+                    {log.dailyTotalsWorkers || 0}
+                  </Text>
+                </View>
+                <Text className="text-sm text-gray-500 dark:text-gray-400">Workers</Text>
+              </View>
+              <View className="w-px bg-gray-200 dark:bg-gray-700" />
+              <View className="flex-1 items-center">
+                <View className="flex-row items-center">
+                  <Clock size={20} color="#F97316" />
+                  <Text className="ml-2 text-2xl font-bold text-gray-900 dark:text-white">
+                    {log.dailyTotalsHours || 0}
+                  </Text>
+                </View>
+                <Text className="text-sm text-gray-500 dark:text-gray-400">Hours</Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* Prepared by */}
-        <View className="px-4 mt-4">
-          <InputField
-            label="Prepared By"
-            value={log.prepared_by}
-            onChangeText={(text) => updateDailyLog(log.id, { prepared_by: text })}
-            placeholder="Your name"
-          />
-        </View>
-
-        {/* Weather Section */}
-        <View className="px-4">
-          <SectionCard
-            title="Weather Conditions"
-            collapsed={collapsedSections.weather}
-            onToggle={() => toggleSection('weather')}
-            rightAction={
-              <View className="flex-row items-center">
-                {isLoadingWeather ? (
-                  <ActivityIndicator size="small" color="#F97316" />
-                ) : (
-                  <>
-                    <ThermometerSun size={16} color="#F97316" />
-                    <Text className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                      {log.weather.low_temp ?? '--'}° - {log.weather.high_temp ?? '--'}°
+        {/* Weather */}
+        {log.weather && (
+          <View className="px-4 mt-4">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+              <SectionHeader
+                title="Weather"
+                icon={<ThermometerSun size={20} color="#F97316" />}
+              />
+              <View className="flex-row flex-wrap">
+                {log.weather.sky_condition && (
+                  <View className="flex-row items-center mr-4 mb-2">
+                    {log.weather.sky_condition.includes('Rain') || log.weather.sky_condition.includes('Storm') ? (
+                      <CloudRain size={16} color="#3B82F6" />
+                    ) : log.weather.sky_condition.includes('Cloud') || log.weather.sky_condition === 'Overcast' ? (
+                      <Cloud size={16} color="#6B7280" />
+                    ) : (
+                      <Sun size={16} color="#F59E0B" />
+                    )}
+                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">{log.weather.sky_condition}</Text>
+                  </View>
+                )}
+                {(log.weather.low_temp != null || log.weather.high_temp != null) && (
+                  <View className="flex-row items-center mr-4 mb-2">
+                    <ThermometerSun size={16} color="#EF4444" />
+                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">
+                      {log.weather.low_temp ?? '--'}° - {log.weather.high_temp ?? '--'}°F
                     </Text>
-                  </>
+                  </View>
+                )}
+                {log.weather.wind && (
+                  <View className="flex-row items-center mr-4 mb-2">
+                    <Wind size={16} color="#6B7280" />
+                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">{log.weather.wind}</Text>
+                  </View>
+                )}
+                {log.weather.precipitation && (
+                  <View className="flex-row items-center mr-4 mb-2">
+                    <Droplets size={16} color="#3B82F6" />
+                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">{log.weather.precipitation}</Text>
+                  </View>
                 )}
               </View>
-            }
-          >
-            {/* Auto-fetch weather button */}
-            {project?.address && (
-              <Pressable
-                onPress={() => fetchWeather(true)}
-                disabled={isLoadingWeather}
-                className={cn(
-                  'flex-row items-center justify-center py-3 px-4 rounded-xl mb-4',
-                  isLoadingWeather ? 'bg-gray-100 dark:bg-gray-800' : 'bg-orange-100 dark:bg-orange-900/30'
-                )}
-              >
-                <RefreshCw
-                  size={18}
-                  color={isLoadingWeather ? '#9CA3AF' : '#F97316'}
-                  style={isLoadingWeather ? { transform: [{ rotate: '45deg' }] } : undefined}
-                />
-                <Text
+              {log.weather.weather_delay && (
+                <View className="mt-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                  <Text className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                    Weather Delay Reported
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Tasks */}
+        <View className="px-4 mt-4">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+            <SectionHeader
+              title="Tasks"
+              icon={<ClipboardList size={20} color="#F97316" />}
+              count={log.tasks?.length}
+            />
+            {!log.tasks || log.tasks.length === 0 ? (
+              <EmptyState message="No tasks recorded" />
+            ) : (
+              log.tasks.map((task, index) => (
+                <View
+                  key={task.id}
                   className={cn(
-                    'ml-2 font-medium',
-                    isLoadingWeather ? 'text-gray-400' : 'text-orange-600 dark:text-orange-400'
+                    "py-3",
+                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
                   )}
                 >
-                  {isLoadingWeather ? 'Fetching weather...' : 'Auto-fetch Weather'}
-                </Text>
-              </Pressable>
-            )}
-
-            {/* Temperature row */}
-            <View className="flex-row mb-3">
-              <View className="flex-1 mr-2">
-                <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase">
-                  Low Temp (°F)
-                </Text>
-                <TextInput
-                  value={log.weather.low_temp?.toString() ?? ''}
-                  onChangeText={(text) => updateWeather({ low_temp: parseInt(text) || null })}
-                  placeholder="--"
-                  keyboardType="numeric"
-                  placeholderTextColor="#9CA3AF"
-                  className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white"
-                />
-              </View>
-              <View className="flex-1 ml-2">
-                <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase">
-                  High Temp (°F)
-                </Text>
-                <TextInput
-                  value={log.weather.high_temp?.toString() ?? ''}
-                  onChangeText={(text) => updateWeather({ high_temp: parseInt(text) || null })}
-                  placeholder="--"
-                  keyboardType="numeric"
-                  placeholderTextColor="#9CA3AF"
-                  className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white"
-                />
-              </View>
-            </View>
-
-            <View className="mb-3">
-              <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase">
-                Sky Condition
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row">
-                  {SKY_CONDITIONS.map((cond) => (
-                    <Pressable
-                      key={cond.value}
-                      onPress={() => {
-                        Haptics.selectionAsync();
-                        updateWeather({ sky_condition: cond.value });
-                      }}
-                      className={cn(
-                        'flex-row items-center px-3 py-2 rounded-xl mr-2',
-                        log.weather.sky_condition === cond.value
-                          ? 'bg-orange-500'
-                          : 'bg-gray-200 dark:bg-gray-700'
+                  <View className="flex-row items-start justify-between">
+                    <View className="flex-1">
+                      {task.companyName && (
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {task.companyName}
+                        </Text>
                       )}
-                    >
-                      {cond.icon}
-                      <Text
-                        className={cn(
-                          'ml-1 text-sm font-medium',
-                          log.weather.sky_condition === cond.value
-                            ? 'text-white'
-                            : 'text-gray-700 dark:text-gray-300'
-                        )}
-                      >
-                        {cond.label}
-                      </Text>
-                    </Pressable>
-                  ))}
+                      {task.taskDescription && (
+                        <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {task.taskDescription}
+                        </Text>
+                      )}
+                      {task.notes && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1 italic">
+                          {task.notes}
+                        </Text>
+                      )}
+                    </View>
+                    <View className="items-end ml-3">
+                      {task.workers != null && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-400">
+                          {task.workers} workers
+                        </Text>
+                      )}
+                      {task.hours != null && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-400">
+                          {task.hours} hrs
+                        </Text>
+                      )}
+                    </View>
+                  </View>
                 </View>
-              </ScrollView>
-            </View>
-
-            <View className="flex-row mb-3">
-              <View className="flex-1 mr-2">
-                <InputField
-                  label="Precipitation"
-                  value={log.weather.precipitation}
-                  onChangeText={(text) => updateWeather({ precipitation: text })}
-                  placeholder="None, Light rain..."
-                  containerClassName="mb-0"
-                />
-              </View>
-              <View className="flex-1 ml-2">
-                <InputField
-                  label="Wind"
-                  value={log.weather.wind}
-                  onChangeText={(text) => updateWeather({ wind: text })}
-                  placeholder="Calm, 10 mph..."
-                  containerClassName="mb-0"
-                />
-              </View>
-            </View>
-
-            <Toggle
-              label="Weather Delay"
-              value={log.weather.weather_delay}
-              onChange={(value) => updateWeather({ weather_delay: value })}
-            />
-          </SectionCard>
+              ))
+            )}
+          </View>
         </View>
 
         {/* Pending Issues */}
-        <View className="px-4">
-          <SectionCard
-            title="Pending Issues"
-            collapsed={collapsedSections.issues}
-            onToggle={() => toggleSection('issues')}
-            className="border-2 border-orange-200 dark:border-orange-800"
-          >
-            <PendingIssuesSection
-              issues={log.pending_issues}
-              onAdd={(issue) => addIssue(log.id, issue)}
-              onUpdate={(issueId, updates) => updateIssue(log.id, issueId, updates)}
-              onRemove={(issueId) => removeIssue(log.id, issueId)}
+        <View className="px-4 mt-4">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 border-orange-200 dark:border-orange-800">
+            <SectionHeader
+              title="Pending Issues"
+              icon={<AlertTriangle size={20} color="#EF4444" />}
+              count={log.pendingIssues?.length}
             />
-          </SectionCard>
-        </View>
-
-        {/* Activity/Tasks */}
-        <View className="px-4">
-          <SectionCard
-            title="Activity / Tasks"
-            collapsed={collapsedSections.tasks}
-            onToggle={() => toggleSection('tasks')}
-          >
-            <TasksSection
-              tasks={log.tasks}
-              onAdd={(task) => addTask(log.id, task)}
-              onUpdate={(taskId, updates) => updateTask(log.id, taskId, updates)}
-              onRemove={(taskId) => removeTask(log.id, taskId)}
-              totalWorkers={log.daily_totals_workers}
-              totalHours={log.daily_totals_hours}
-              currentLogId={log.id}
-            />
-          </SectionCard>
+            {!log.pendingIssues || log.pendingIssues.length === 0 ? (
+              <EmptyState message="No pending issues" />
+            ) : (
+              log.pendingIssues.map((issue, index) => (
+                <View
+                  key={issue.id}
+                  className={cn(
+                    "py-3",
+                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
+                  )}
+                >
+                  <View className="flex-row items-start justify-between">
+                    <View className="flex-1">
+                      {issue.title && (
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {issue.title}
+                        </Text>
+                      )}
+                      {issue.description && (
+                        <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {issue.description}
+                        </Text>
+                      )}
+                      <View className="flex-row flex-wrap mt-2">
+                        {issue.category && (
+                          <View className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded mr-2 mb-1">
+                            <Text className="text-xs text-gray-600 dark:text-gray-400">{issue.category}</Text>
+                          </View>
+                        )}
+                        {issue.severity && (
+                          <View className={cn(
+                            "px-2 py-0.5 rounded mr-2 mb-1",
+                            issue.severity === 'High' ? 'bg-red-100 dark:bg-red-900/30' :
+                            issue.severity === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
+                            'bg-green-100 dark:bg-green-900/30'
+                          )}>
+                            <Text className={cn(
+                              "text-xs",
+                              issue.severity === 'High' ? 'text-red-600 dark:text-red-400' :
+                              issue.severity === 'Medium' ? 'text-yellow-600 dark:text-yellow-400' :
+                              'text-green-600 dark:text-green-400'
+                            )}>{issue.severity}</Text>
+                          </View>
+                        )}
+                        {issue.assignee && (
+                          <View className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded mr-2 mb-1">
+                            <Text className="text-xs text-blue-600 dark:text-blue-400">{issue.assignee}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
         </View>
 
         {/* Inspection Notes */}
-        <View className="px-4">
-          <SectionCard
-            title="Inspection Notes"
-            collapsed={collapsedSections.inspections}
-            onToggle={() => toggleSection('inspections')}
-          >
-            <InspectionNotesSection
-              notes={log.inspection_notes}
-              onAdd={(note) => addInspectionNote(log.id, note)}
-              onUpdate={(noteId, updates) => updateInspectionNote(log.id, noteId, updates)}
-              onRemove={(noteId) => removeInspectionNote(log.id, noteId)}
-            />
-          </SectionCard>
-        </View>
-
-        {/* Additional Work */}
-        <View className="px-4">
-          <SectionCard
-            title="Additional Work / Rework"
-            collapsed={collapsedSections.additionalWork}
-            onToggle={() => toggleSection('additionalWork')}
-          >
-            <AdditionalWorkSection
-              work={log.additional_work}
-              onAdd={(work) => addAdditionalWork(log.id, work)}
-              onUpdate={(workId, updates) => updateAdditionalWork(log.id, workId, updates)}
-              onRemove={(workId) => removeAdditionalWork(log.id, workId)}
-            />
-          </SectionCard>
-        </View>
-
-        {/* Daily Summary Notes */}
-        <View className="px-4">
-          <SectionCard
-            title="Daily Summary Notes"
-            collapsed={collapsedSections.dailySummary}
-            onToggle={() => toggleSection('dailySummary')}
-            rightAction={
-              <View className="flex-row items-center">
-                <NotebookPen size={16} color="#F97316" />
-                {(log.daily_summary_notes?.length ?? 0) > 0 && (
-                  <View className="ml-1 w-2 h-2 rounded-full bg-green-500" />
-                )}
-              </View>
-            }
-          >
-            <View>
-              <Text className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                Additional notes or observations not captured elsewhere.
-              </Text>
-              <VoiceInputField
-                value={log.daily_summary_notes ?? ''}
-                onChangeText={(text) => updateDailyLog(log.id, { daily_summary_notes: text })}
-                onAudioRecorded={(uri) => {
-                  updateDailyLog(log.id, { daily_summary_audio_uri: uri });
-                  addVoiceArtifact(log.id, 'daily_summary', uri);
-                }}
-                placeholder="Dictate or type your daily summary..."
+        {log.inspectionNotes && log.inspectionNotes.length > 0 && (
+          <View className="px-4 mt-4">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+              <SectionHeader
+                title="Inspections"
+                icon={<ClipboardList size={20} color="#8B5CF6" />}
+                count={log.inspectionNotes.length}
               />
+              {log.inspectionNotes.map((note, index) => (
+                <View
+                  key={note.id}
+                  className={cn(
+                    "py-3",
+                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
+                  )}
+                >
+                  <View className="flex-row items-start justify-between">
+                    <View className="flex-1">
+                      {note.inspectionType && (
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {note.inspectionType}
+                        </Text>
+                      )}
+                      {note.inspectorName && (
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                          Inspector: {note.inspectorName}
+                        </Text>
+                      )}
+                      {note.ahj && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-500">
+                          AHJ: {note.ahj}
+                        </Text>
+                      )}
+                      {note.notes && (
+                        <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {note.notes}
+                        </Text>
+                      )}
+                    </View>
+                    {note.result && (
+                      <View className={cn(
+                        "px-2 py-1 rounded",
+                        note.result.toLowerCase().includes('pass') ? 'bg-green-100 dark:bg-green-900/30' :
+                        note.result.toLowerCase().includes('fail') ? 'bg-red-100 dark:bg-red-900/30' :
+                        'bg-gray-100 dark:bg-gray-700'
+                      )}>
+                        <Text className={cn(
+                          "text-xs font-medium",
+                          note.result.toLowerCase().includes('pass') ? 'text-green-600 dark:text-green-400' :
+                          note.result.toLowerCase().includes('fail') ? 'text-red-600 dark:text-red-400' :
+                          'text-gray-600 dark:text-gray-400'
+                        )}>{note.result}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
             </View>
-          </SectionCard>
-        </View>
+          </View>
+        )}
 
         {/* Visitors */}
-        <View className="px-4">
-          <SectionCard
-            title="Visitors"
-            collapsed={collapsedSections.visitors}
-            onToggle={() => toggleSection('visitors')}
-          >
-            <VisitorsSection
-              visitors={log.visitors}
-              onAdd={(visitor) => addVisitor(log.id, visitor)}
-              onUpdate={(visitorId, updates) => updateVisitor(log.id, visitorId, updates)}
-              onRemove={(visitorId) => removeVisitor(log.id, visitorId)}
-            />
-          </SectionCard>
-        </View>
+        {log.visitors && log.visitors.length > 0 && (
+          <View className="px-4 mt-4">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+              <SectionHeader
+                title="Visitors"
+                icon={<UserCheck size={20} color="#10B981" />}
+                count={log.visitors.length}
+              />
+              {log.visitors.map((visitor, index) => (
+                <View
+                  key={visitor.id}
+                  className={cn(
+                    "py-3",
+                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
+                  )}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      {visitor.visitorName && (
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {visitor.visitorName}
+                        </Text>
+                      )}
+                      {visitor.companyName && (
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                          {visitor.companyName}
+                        </Text>
+                      )}
+                      {visitor.notes && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          {visitor.notes}
+                        </Text>
+                      )}
+                    </View>
+                    {visitor.time && (
+                      <Text className="text-xs text-gray-400">{visitor.time}</Text>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Equipment */}
-        <View className="px-4">
-          <SectionCard
-            title="Equipment"
-            collapsed={collapsedSections.equipment}
-            onToggle={() => toggleSection('equipment')}
-          >
-            <EquipmentSection
-              equipment={log.equipment}
-              onAdd={(eq) => addEquipment(log.id, eq)}
-              onUpdate={(eqId, updates) => updateEquipment(log.id, eqId, updates)}
-              onRemove={(eqId) => removeEquipment(log.id, eqId)}
-            />
-          </SectionCard>
-        </View>
+        {log.equipment && log.equipment.length > 0 && (
+          <View className="px-4 mt-4">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+              <SectionHeader
+                title="Equipment"
+                icon={<Truck size={20} color="#6B7280" />}
+                count={log.equipment.length}
+              />
+              {log.equipment.map((eq, index) => (
+                <View
+                  key={eq.id}
+                  className={cn(
+                    "py-3",
+                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
+                  )}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      {eq.equipmentType && (
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {eq.equipmentType}
+                        </Text>
+                      )}
+                      {eq.notes && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          {eq.notes}
+                        </Text>
+                      )}
+                    </View>
+                    <View className="items-end">
+                      {eq.quantity != null && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-400">
+                          Qty: {eq.quantity}
+                        </Text>
+                      )}
+                      {eq.hours != null && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-400">
+                          {eq.hours} hrs
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Materials */}
-        <View className="px-4">
-          <SectionCard
-            title="Materials"
-            collapsed={collapsedSections.materials}
-            onToggle={() => toggleSection('materials')}
-          >
-            <MaterialsSection
-              materials={log.materials}
-              onAdd={(mat) => addMaterial(log.id, mat)}
-              onUpdate={(matId, updates) => updateMaterial(log.id, matId, updates)}
-              onRemove={(matId) => removeMaterial(log.id, matId)}
-            />
-          </SectionCard>
-        </View>
+        {log.materials && log.materials.length > 0 && (
+          <View className="px-4 mt-4">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+              <SectionHeader
+                title="Materials"
+                icon={<Package size={20} color="#3B82F6" />}
+                count={log.materials.length}
+              />
+              {log.materials.map((mat, index) => (
+                <View
+                  key={mat.id}
+                  className={cn(
+                    "py-3",
+                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
+                  )}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      {mat.material && (
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {mat.material}
+                        </Text>
+                      )}
+                      {mat.supplier && (
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                          Supplier: {mat.supplier}
+                        </Text>
+                      )}
+                      {mat.notes && (
+                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          {mat.notes}
+                        </Text>
+                      )}
+                    </View>
+                    {(mat.quantity != null || mat.unit) && (
+                      <Text className="text-sm text-gray-500 dark:text-gray-400">
+                        {mat.quantity ?? ''} {mat.unit ?? ''}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
-        {/* Auto-save indicator */}
-        <View className="px-4 py-4 items-center">
+        {/* Footer */}
+        <View className="px-4 py-6 items-center">
           <Text className="text-xs text-gray-400 dark:text-gray-500">
-            Auto-saved · Last updated {format(new Date(log.updated_at), 'h:mm a')}
+            Log ID: {log.id}
           </Text>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
