@@ -19,6 +19,7 @@ import {
   AlertCircle,
   CloudOff,
   Trash2,
+  Pencil,
 } from 'lucide-react-native';
 import { cn } from '@/lib/cn';
 import {
@@ -94,6 +95,11 @@ export default function LogsHistoryScreen() {
       // Could show an alert here
     }
   }, []);
+
+  const handleEditLog = useCallback((logId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(`/daily-log-detail?id=${logId}`);
+  }, [router]);
 
   const handleDownloadPdf = useCallback(async (logId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -331,6 +337,7 @@ export default function LogsHistoryScreen() {
                     showProject={showAllProjects}
                     onViewPdf={() => handleViewPdf(log.id)}
                     onDownloadPdf={() => handleDownloadPdf(log.id)}
+                    onEdit={() => handleEditLog(log.id)}
                     onDelete={() => handleDeleteLog(log)}
                     isDeleting={deletingLogId === log.id}
                   />
@@ -349,6 +356,7 @@ function DailyLogCard({
   showProject,
   onViewPdf,
   onDownloadPdf,
+  onEdit,
   onDelete,
   isDeleting,
 }: {
@@ -356,6 +364,7 @@ function DailyLogCard({
   showProject: boolean;
   onViewPdf: () => void;
   onDownloadPdf: () => void;
+  onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
 }) {
@@ -440,8 +449,14 @@ function DailyLogCard({
           )}
         </View>
 
-        {/* PDF Actions */}
+        {/* Actions */}
         <View className="flex-row items-center ml-2">
+          <Pressable
+            onPress={onEdit}
+            className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg mr-2"
+          >
+            <Pencil size={20} color="#3B82F6" />
+          </Pressable>
           <Pressable
             onPress={onViewPdf}
             className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-2"
@@ -478,13 +493,13 @@ function DailyLogCard({
           {' · '}
           {log.status || 'draft'}
         </Text>
-        <View className="flex-row items-center">
-          <FileText size={14} color="#F97316" />
-          <Text className="ml-1 text-xs font-medium text-orange-500">
-            View PDF
+        <Pressable onPress={onEdit} className="flex-row items-center">
+          <Pencil size={14} color="#3B82F6" />
+          <Text className="ml-1 text-xs font-medium text-blue-500">
+            Edit Report
           </Text>
-          <ChevronRight size={14} color="#F97316" />
-        </View>
+          <ChevronRight size={14} color="#3B82F6" />
+        </Pressable>
       </View>
     </View>
   );
