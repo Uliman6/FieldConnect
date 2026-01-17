@@ -1,121 +1,205 @@
 /**
  * Transcription Service - Audio to text using Whisper
- * Supports Groq (free, fast) and OpenAI as fallback
+ * Supports Groq (free, fast) with OpenAI as automatic fallback
  */
 
 // Groq is preferred (free tier), OpenAI as fallback
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// Determine which provider to use
-const useGroq = !!GROQ_API_KEY;
-const API_KEY = GROQ_API_KEY || OPENAI_API_KEY;
-const TRANSCRIPTION_ENDPOINT = useGroq
-  ? 'https://api.groq.com/openai/v1/audio/transcriptions'
-  : 'https://api.openai.com/v1/audio/transcriptions';
-const WHISPER_MODEL = useGroq ? 'whisper-large-v3' : 'whisper-1';
-const PROVIDER_NAME = useGroq ? 'Groq' : 'OpenAI';
+// Provider configurations
+const PROVIDERS = {
+  groq: {
+    name: 'Groq',
+    endpoint: 'https://api.groq.com/openai/v1/audio/transcriptions',
+    model: 'whisper-large-v3',
+    apiKey: GROQ_API_KEY,
+  },
+  openai: {
+    name: 'OpenAI',
+    endpoint: 'https://api.openai.com/v1/audio/transcriptions',
+    model: 'whisper-1',
+    apiKey: OPENAI_API_KEY,
+  },
+};
+
+// Suspicious responses that indicate rate limiting or errors
+const SUSPICIOUS_RESPONSES = [
+  'thank you',
+  'thanks',
+  'you',
+  'bye',
+  'hello',
+  'hi',
+  '',
+];
+
+// Minimum expected transcript length for audio > 1 second
+const MIN_TRANSCRIPT_LENGTH = 15;
 
 class TranscriptionService {
   /**
    * Check if transcription is available (API key configured)
    */
   isAvailable() {
-    return !!API_KEY;
+    return !!(GROQ_API_KEY || OPENAI_API_KEY);
   }
 
   /**
    * Get current provider info
    */
   getProviderInfo() {
+    const primaryProvider = GROQ_API_KEY ? 'Groq' : OPENAI_API_KEY ? 'OpenAI' : 'None';
+    const hasBackup = GROQ_API_KEY && OPENAI_API_KEY;
     return {
-      provider: PROVIDER_NAME,
-      model: WHISPER_MODEL,
-      available: this.isAvailable()
+      provider: primaryProvider,
+      model: GROQ_API_KEY ? PROVIDERS.groq.model : PROVIDERS.openai.model,
+      available: this.isAvailable(),
+      hasBackup,
     };
   }
 
   /**
-   * Transcribe audio buffer using Whisper (Groq or OpenAI)
+   * Check if a transcript looks suspicious (rate limited or error)
+   */
+  isSuspiciousTranscript(text, audioSize) {
+    if (!text) return true;
+
+    const normalizedText = text.toLowerCase().trim();
+
+    // Check against known suspicious responses
+    if (SUSPICIOUS_RESPONSES.includes(normalizedText)) {
+      console.log(`[transcription] Suspicious response detected: "${text}"`);
+      return true;
+    }
+
+    // If audio is larger than 10KB, expect more than 15 chars
+    if (audioSize > 10000 && text.length < MIN_TRANSCRIPT_LENGTH) {
+      console.log(`[transcription] Transcript too short (${text.length} chars) for audio size (${audioSize} bytes)`);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Make transcription request to a specific provider
+   */
+  async transcribeWithProvider(provider, audioBuffer, filename, mimeType, options = {}) {
+    if (!provider.apiKey) {
+      return { success: false, error: `No API key for ${provider.name}` };
+    }
+
+    const formData = new FormData();
+    const audioBlob = new Blob([audioBuffer], { type: mimeType });
+    formData.append('file', audioBlob, filename);
+    formData.append('model', provider.model);
+    formData.append('response_format', 'json');
+
+    if (options.language) {
+      formData.append('language', options.language);
+    }
+
+    console.log(`[transcription] Sending ${audioBuffer.length} bytes to ${provider.name} (${provider.model})`);
+
+    const response = await fetch(provider.endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${provider.apiKey}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[transcription] ${provider.name} API error:`, response.status, errorText);
+
+      // Check for rate limit
+      if (response.status === 429) {
+        return { success: false, error: 'Rate limited', rateLimited: true };
+      }
+
+      return { success: false, error: `${response.status} - ${errorText}` };
+    }
+
+    const result = await response.json();
+    const transcribedText = result.text?.trim() ?? '';
+
+    console.log(`[transcription] ${provider.name} returned: "${transcribedText.substring(0, 50)}..." (${transcribedText.length} chars)`);
+
+    return { success: true, text: transcribedText };
+  }
+
+  /**
+   * Transcribe audio buffer using Whisper (Groq with OpenAI fallback)
    * @param {Buffer} audioBuffer - Audio file buffer
    * @param {string} filename - Original filename (for mime type detection)
    * @param {object} options - Optional settings
-   * @returns {Promise<{success: boolean, text?: string, error?: string}>}
+   * @returns {Promise<{success: boolean, text?: string, error?: string, provider?: string}>}
    */
   async transcribe(audioBuffer, filename, options = {}) {
-    if (!API_KEY) {
+    if (!this.isAvailable()) {
       return {
         success: false,
         error: 'No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY environment variable.'
       };
     }
 
-    try {
-      // Determine mime type from filename
-      const ext = filename.toLowerCase().split('.').pop();
-      const mimeTypes = {
-        'webm': 'audio/webm',
-        'mp4': 'audio/mp4',
-        'm4a': 'audio/m4a',
-        'mp3': 'audio/mpeg',
-        'wav': 'audio/wav',
-        'ogg': 'audio/ogg',
-        'aac': 'audio/aac'
-      };
-      const mimeType = mimeTypes[ext] || 'audio/webm';
+    // Determine mime type from filename
+    const ext = filename.toLowerCase().split('.').pop();
+    const mimeTypes = {
+      'webm': 'audio/webm',
+      'mp4': 'audio/mp4',
+      'm4a': 'audio/m4a',
+      'mp3': 'audio/mpeg',
+      'wav': 'audio/wav',
+      'ogg': 'audio/ogg',
+      'aac': 'audio/aac'
+    };
+    const mimeType = mimeTypes[ext] || 'audio/webm';
 
-      // Use native FormData and Blob (Node.js 18+) for compatibility with native fetch
-      const formData = new FormData();
+    // Determine provider order (Groq first if available, then OpenAI)
+    const providers = [];
+    if (GROQ_API_KEY) providers.push(PROVIDERS.groq);
+    if (OPENAI_API_KEY) providers.push(PROVIDERS.openai);
 
-      // Create a Blob from the buffer and append to form
-      const audioBlob = new Blob([audioBuffer], { type: mimeType });
-      formData.append('file', audioBlob, filename);
+    let lastError = null;
 
-      // Use appropriate Whisper model
-      formData.append('model', WHISPER_MODEL);
-      formData.append('response_format', 'json');
+    for (const provider of providers) {
+      try {
+        const result = await this.transcribeWithProvider(provider, audioBuffer, filename, mimeType, options);
 
-      // Add language hint if provided
-      if (options.language) {
-        formData.append('language', options.language);
+        if (result.success) {
+          // Check if result looks suspicious
+          if (this.isSuspiciousTranscript(result.text, audioBuffer.length)) {
+            console.log(`[transcription] ${provider.name} returned suspicious result, trying fallback...`);
+            lastError = `${provider.name} returned suspicious response: "${result.text}"`;
+            continue; // Try next provider
+          }
+
+          console.log(`[transcription] Success via ${provider.name}, text length: ${result.text.length}`);
+          return {
+            success: true,
+            text: result.text,
+            provider: provider.name,
+          };
+        }
+
+        // If rate limited or error, try next provider
+        lastError = result.error;
+        console.log(`[transcription] ${provider.name} failed: ${result.error}, trying fallback...`);
+      } catch (error) {
+        lastError = error.message;
+        console.error(`[transcription] ${provider.name} exception:`, error.message);
       }
-
-      console.log(`[transcription] Sending ${audioBuffer.length} bytes to ${PROVIDER_NAME} Whisper (${WHISPER_MODEL})`);
-
-      // Make the API request using native fetch with native FormData
-      const response = await fetch(TRANSCRIPTION_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${API_KEY}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[transcription] ${PROVIDER_NAME} API error:`, response.status, errorText);
-        return {
-          success: false,
-          error: `Transcription failed: ${response.status} - ${errorText}`
-        };
-      }
-
-      const result = await response.json();
-      const transcribedText = result.text?.trim() ?? '';
-
-      console.log(`[transcription] Success via ${PROVIDER_NAME}, text length:`, transcribedText.length);
-
-      return {
-        success: true,
-        text: transcribedText
-      };
-    } catch (error) {
-      console.error('[transcription] Error:', error);
-      return {
-        success: false,
-        error: error.message || 'Transcription failed'
-      };
     }
+
+    // All providers failed
+    console.error('[transcription] All providers failed. Last error:', lastError);
+    return {
+      success: false,
+      error: lastError || 'All transcription providers failed'
+    };
   }
 
   /**
