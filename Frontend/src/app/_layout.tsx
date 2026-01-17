@@ -3,12 +3,13 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useAuthStore } from '@/lib/auth-store';
+import { DataProvider, useDataProvider } from '@/lib/data-provider';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -39,6 +40,40 @@ function useProtectedRoute() {
   }, [isAuthenticated, isLoading, segments]);
 }
 
+function SyncStatusBanner() {
+  const { isSyncing, isOnline, pendingCount, error } = useDataProvider();
+
+  if (!isSyncing && isOnline && pendingCount === 0 && !error) {
+    return null;
+  }
+
+  return (
+    <View style={styles.syncBanner}>
+      {!isOnline && (
+        <View style={[styles.syncIndicator, { backgroundColor: '#F59E0B' }]}>
+          <Text style={styles.syncText}>Offline - changes will sync when connected</Text>
+        </View>
+      )}
+      {isOnline && isSyncing && (
+        <View style={[styles.syncIndicator, { backgroundColor: '#3B82F6' }]}>
+          <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.syncText}>Syncing...</Text>
+        </View>
+      )}
+      {isOnline && pendingCount > 0 && !isSyncing && (
+        <View style={[styles.syncIndicator, { backgroundColor: '#F97316' }]}>
+          <Text style={styles.syncText}>{pendingCount} pending changes</Text>
+        </View>
+      )}
+      {error && (
+        <View style={[styles.syncIndicator, { backgroundColor: '#EF4444' }]}>
+          <Text style={styles.syncText}>Sync error: {error}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 function RootLayoutNav({ colorScheme }: { colorScheme: 'light' | 'dark' | null | undefined }) {
   useProtectedRoute();
   const { isLoading } = useAuthStore();
@@ -53,16 +88,20 @@ function RootLayoutNav({ colorScheme }: { colorScheme: 'light' | 'dark' | null |
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="export" options={{ headerShown: false, presentation: 'modal' }} />
-        <Stack.Screen name="event-detail" options={{ headerShown: false }} />
-        <Stack.Screen name="exports" options={{ headerShown: false }} />
-        <Stack.Screen name="import" options={{ headerShown: false }} />
-        <Stack.Screen name="insights" options={{ headerShown: false, presentation: 'modal' }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
+      <DataProvider>
+        <SyncStatusBanner />
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="export" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen name="event-detail" options={{ headerShown: false }} />
+          <Stack.Screen name="exports" options={{ headerShown: false }} />
+          <Stack.Screen name="import" options={{ headerShown: false }} />
+          <Stack.Screen name="insights" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen name="daily-log-detail" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </DataProvider>
     </ThemeProvider>
   );
 }
@@ -94,5 +133,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  syncBanner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  syncIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  syncText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
