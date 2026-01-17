@@ -296,11 +296,29 @@ function EditTaskModal({
   initialData?: any;
   isNew?: boolean;
 }) {
-  const [companyName, setCompanyName] = useState(initialData?.companyName || '');
-  const [taskDescription, setTaskDescription] = useState(initialData?.taskDescription || '');
-  const [workers, setWorkers] = useState(initialData?.workers?.toString() || '');
-  const [hours, setHours] = useState(initialData?.hours?.toString() || '');
-  const [notes, setNotes] = useState(initialData?.notes || '');
+  const [companyName, setCompanyName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [workers, setWorkers] = useState('');
+  const [hours, setHours] = useState('');
+  const [notes, setNotes] = useState('');
+
+  // Sync state when initialData changes (when modal opens with different task)
+  React.useEffect(() => {
+    if (visible && initialData) {
+      setCompanyName(initialData.companyName || '');
+      setTaskDescription(initialData.taskDescription || '');
+      setWorkers(initialData.workers?.toString() || '');
+      setHours(initialData.hours?.toString() || '');
+      setNotes(initialData.notes || '');
+    } else if (visible && !initialData) {
+      // Reset for new task
+      setCompanyName('');
+      setTaskDescription('');
+      setWorkers('');
+      setHours('');
+      setNotes('');
+    }
+  }, [visible, initialData]);
 
   const handleSave = () => {
     onSave({
@@ -364,12 +382,30 @@ function EditIssueModal({
   initialData?: any;
   isNew?: boolean;
 }) {
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [description, setDescription] = useState(initialData?.description || '');
-  const [category, setCategory] = useState(initialData?.category || '');
-  const [severity, setSeverity] = useState(initialData?.severity || 'Medium');
-  const [assignee, setAssignee] = useState(initialData?.assignee || '');
-  const [location, setLocation] = useState(initialData?.location || '');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [severity, setSeverity] = useState('Medium');
+  const [assignee, setAssignee] = useState('');
+  const [location, setLocation] = useState('');
+
+  React.useEffect(() => {
+    if (visible && initialData) {
+      setTitle(initialData.title || '');
+      setDescription(initialData.description || '');
+      setCategory(initialData.category || '');
+      setSeverity(initialData.severity || 'Medium');
+      setAssignee(initialData.assignee || '');
+      setLocation(initialData.location || '');
+    } else if (visible && !initialData) {
+      setTitle('');
+      setDescription('');
+      setCategory('');
+      setSeverity('Medium');
+      setAssignee('');
+      setLocation('');
+    }
+  }, [visible, initialData]);
 
   const handleSave = () => {
     onSave({ title, description, category, severity, assignee, location });
@@ -440,10 +476,24 @@ function EditVisitorModal({
   initialData?: any;
   isNew?: boolean;
 }) {
-  const [visitorName, setVisitorName] = useState(initialData?.visitorName || '');
-  const [companyName, setCompanyName] = useState(initialData?.companyName || '');
-  const [time, setTime] = useState(initialData?.time || '');
-  const [notes, setNotes] = useState(initialData?.notes || '');
+  const [visitorName, setVisitorName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [time, setTime] = useState('');
+  const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    if (visible && initialData) {
+      setVisitorName(initialData.visitorName || '');
+      setCompanyName(initialData.companyName || '');
+      setTime(initialData.time || '');
+      setNotes(initialData.notes || '');
+    } else if (visible && !initialData) {
+      setVisitorName('');
+      setCompanyName('');
+      setTime('');
+      setNotes('');
+    }
+  }, [visible, initialData]);
 
   const handleSave = () => {
     onSave({ visitorName, companyName, time, notes });
@@ -494,10 +544,24 @@ function EditEquipmentModal({
   initialData?: any;
   isNew?: boolean;
 }) {
-  const [equipmentType, setEquipmentType] = useState(initialData?.equipmentType || '');
-  const [quantity, setQuantity] = useState(initialData?.quantity?.toString() || '');
-  const [hours, setHours] = useState(initialData?.hours?.toString() || '');
-  const [notes, setNotes] = useState(initialData?.notes || '');
+  const [equipmentType, setEquipmentType] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [hours, setHours] = useState('');
+  const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    if (visible && initialData) {
+      setEquipmentType(initialData.equipmentType || '');
+      setQuantity(initialData.quantity?.toString() || '');
+      setHours(initialData.hours?.toString() || '');
+      setNotes(initialData.notes || '');
+    } else if (visible && !initialData) {
+      setEquipmentType('');
+      setQuantity('');
+      setHours('');
+      setNotes('');
+    }
+  }, [visible, initialData]);
 
   const handleSave = () => {
     onSave({
@@ -559,11 +623,27 @@ function EditMaterialModal({
   initialData?: any;
   isNew?: boolean;
 }) {
-  const [material, setMaterial] = useState(initialData?.material || '');
-  const [quantity, setQuantity] = useState(initialData?.quantity?.toString() || '');
-  const [unit, setUnit] = useState(initialData?.unit || '');
-  const [supplier, setSupplier] = useState(initialData?.supplier || '');
-  const [notes, setNotes] = useState(initialData?.notes || '');
+  const [material, setMaterial] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [unit, setUnit] = useState('');
+  const [supplier, setSupplier] = useState('');
+  const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    if (visible && initialData) {
+      setMaterial(initialData.material || '');
+      setQuantity(initialData.quantity?.toString() || '');
+      setUnit(initialData.unit || '');
+      setSupplier(initialData.supplier || '');
+      setNotes(initialData.notes || '');
+    } else if (visible && !initialData) {
+      setMaterial('');
+      setQuantity('');
+      setUnit('');
+      setSupplier('');
+      setNotes('');
+    }
+  }, [visible, initialData]);
 
   const handleSave = () => {
     onSave({
@@ -627,11 +707,27 @@ function EditInspectionModal({
   initialData?: any;
   isNew?: boolean;
 }) {
-  const [inspectorName, setInspectorName] = useState(initialData?.inspectorName || '');
-  const [ahj, setAhj] = useState(initialData?.ahj || '');
-  const [inspectionType, setInspectionType] = useState(initialData?.inspectionType || '');
-  const [result, setResult] = useState(initialData?.result || '');
-  const [notes, setNotes] = useState(initialData?.notes || '');
+  const [inspectorName, setInspectorName] = useState('');
+  const [ahj, setAhj] = useState('');
+  const [inspectionType, setInspectionType] = useState('');
+  const [result, setResult] = useState('');
+  const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    if (visible && initialData) {
+      setInspectorName(initialData.inspectorName || '');
+      setAhj(initialData.ahj || '');
+      setInspectionType(initialData.inspectionType || '');
+      setResult(initialData.result || '');
+      setNotes(initialData.notes || '');
+    } else if (visible && !initialData) {
+      setInspectorName('');
+      setAhj('');
+      setInspectionType('');
+      setResult('');
+      setNotes('');
+    }
+  }, [visible, initialData]);
 
   const handleSave = () => {
     onSave({ inspectorName, ahj, inspectionType, result, notes });
