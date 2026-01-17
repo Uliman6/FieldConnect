@@ -1,8 +1,19 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Platform, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Platform,
+  Linking,
+  Modal,
+  KeyboardAvoidingView,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
@@ -27,13 +38,66 @@ import {
   Building2,
   Wind,
   Droplets,
+  Plus,
+  X,
+  Trash2,
+  Edit3,
+  Save,
+  ChevronDown,
 } from 'lucide-react-native';
-import { getDailyLog, fetchDailyLogPdf, DailyLogDetail, queryKeys } from '@/lib/api';
+import {
+  getDailyLog,
+  fetchDailyLogPdf,
+  updateDailyLogApi,
+  addTaskApi,
+  updateTaskApi,
+  deleteTaskApi,
+  addPendingIssueApi,
+  updatePendingIssueApi,
+  deletePendingIssueApi,
+  addVisitorApi,
+  updateVisitorApi,
+  deleteVisitorApi,
+  addEquipmentApi,
+  updateEquipmentApi,
+  deleteEquipmentApi,
+  addMaterialApi,
+  updateMaterialApi,
+  deleteMaterialApi,
+  addInspectionNoteApi,
+  updateInspectionNoteApi,
+  deleteInspectionNoteApi,
+  DailyLogDetail,
+  queryKeys,
+} from '@/lib/api';
 import { cn } from '@/lib/cn';
 
-/**
- * Parse a date string as local date (not UTC)
- */
+// ============================================
+// TYPES
+// ============================================
+
+type SectionType = 'tasks' | 'issues' | 'visitors' | 'equipment' | 'materials' | 'inspections';
+
+interface SectionConfig {
+  key: SectionType;
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const SECTION_CONFIGS: SectionConfig[] = [
+  { key: 'tasks', title: 'Tasks', icon: <ClipboardList size={20} color="#F97316" />, color: '#F97316' },
+  { key: 'issues', title: 'Pending Issues', icon: <AlertTriangle size={20} color="#EF4444" />, color: '#EF4444' },
+  { key: 'visitors', title: 'Visitors', icon: <UserCheck size={20} color="#10B981" />, color: '#10B981' },
+  { key: 'equipment', title: 'Equipment', icon: <Truck size={20} color="#6B7280" />, color: '#6B7280' },
+  { key: 'materials', title: 'Materials', icon: <Package size={20} color="#3B82F6" />, color: '#3B82F6' },
+  { key: 'inspections', title: 'Inspections', icon: <ClipboardList size={20} color="#8B5CF6" />, color: '#8B5CF6' },
+];
+
+// ============================================
+// HELPERS
+// ============================================
+
 function parseLocalDate(dateString: string): Date {
   if (dateString && dateString.length === 10) {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -43,44 +107,711 @@ function parseLocalDate(dateString: string): Date {
   return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 }
 
-function SectionHeader({ title, icon, count }: { title: string; icon: React.ReactNode; count?: number }) {
+// ============================================
+// COMPONENTS
+// ============================================
+
+function SectionHeader({
+  title,
+  icon,
+  count,
+  onAdd,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  count?: number;
+  onAdd?: () => void;
+}) {
   return (
-    <View className="flex-row items-center mb-3">
-      {icon}
-      <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">
-        {title}
-      </Text>
-      {count !== undefined && count > 0 && (
-        <View className="ml-2 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 rounded-full">
-          <Text className="text-xs font-medium text-orange-600 dark:text-orange-400">{count}</Text>
-        </View>
+    <View className="flex-row items-center justify-between mb-3">
+      <View className="flex-row items-center">
+        {icon}
+        <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">{title}</Text>
+        {count !== undefined && count > 0 && (
+          <View className="ml-2 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 rounded-full">
+            <Text className="text-xs font-medium text-orange-600 dark:text-orange-400">{count}</Text>
+          </View>
+        )}
+      </View>
+      {onAdd && (
+        <Pressable
+          onPress={onAdd}
+          className="flex-row items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg"
+        >
+          <Plus size={16} color="#F97316" />
+          <Text className="ml-1 text-sm font-medium text-orange-500">Add</Text>
+        </Pressable>
       )}
     </View>
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+function EditableField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  multiline,
+  keyboardType,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  multiline?: boolean;
+  keyboardType?: 'default' | 'numeric';
+}) {
   return (
-    <Text className="text-sm text-gray-400 dark:text-gray-500 italic">{message}</Text>
+    <View className="mb-3">
+      <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase">{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#9CA3AF"
+        keyboardType={keyboardType}
+        multiline={multiline}
+        className={cn(
+          'bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white',
+          multiline && 'min-h-[80px] text-base'
+        )}
+        style={multiline ? { textAlignVertical: 'top' } : undefined}
+      />
+    </View>
   );
 }
+
+function ItemCard({
+  children,
+  onEdit,
+  onDelete,
+  isEditing,
+}: {
+  children: React.ReactNode;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isEditing?: boolean;
+}) {
+  return (
+    <View
+      className={cn(
+        'bg-gray-50 dark:bg-gray-900 rounded-xl p-3 mb-2',
+        isEditing && 'border-2 border-orange-300 dark:border-orange-700'
+      )}
+    >
+      <View className="flex-row items-start">
+        <View className="flex-1">{children}</View>
+        <View className="flex-row ml-2">
+          {onEdit && (
+            <Pressable onPress={onEdit} className="p-2">
+              <Edit3 size={16} color="#6B7280" />
+            </Pressable>
+          )}
+          {onDelete && (
+            <Pressable onPress={onDelete} className="p-2">
+              <Trash2 size={16} color="#EF4444" />
+            </Pressable>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ============================================
+// ADD SECTION MODAL
+// ============================================
+
+function AddSectionModal({
+  visible,
+  onClose,
+  onSelectSection,
+  existingSections,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelectSection: (section: SectionType) => void;
+  existingSections: Set<SectionType>;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
+        <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
+          <View className="p-6">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-xl font-bold text-gray-900 dark:text-white">Add Section</Text>
+              <Pressable onPress={onClose} className="p-2">
+                <X size={24} color="#6B7280" />
+              </Pressable>
+            </View>
+            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Select a section to add to this daily log
+            </Text>
+            {SECTION_CONFIGS.map((config) => {
+              const hasItems = existingSections.has(config.key);
+              return (
+                <Pressable
+                  key={config.key}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    onSelectSection(config.key);
+                  }}
+                  className="flex-row items-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl mb-2"
+                >
+                  {config.icon}
+                  <Text className="ml-3 text-base font-medium text-gray-900 dark:text-white flex-1">
+                    {config.title}
+                  </Text>
+                  {hasItems && (
+                    <View className="px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded">
+                      <Text className="text-xs text-green-600 dark:text-green-400">Has items</Text>
+                    </View>
+                  )}
+                  <Plus size={20} color={config.color} className="ml-2" />
+                </Pressable>
+              );
+            })}
+          </View>
+          <View className="h-8" />
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+// ============================================
+// EDIT ITEM MODALS
+// ============================================
+
+function EditTaskModal({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  isNew,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+  initialData?: any;
+  isNew?: boolean;
+}) {
+  const [companyName, setCompanyName] = useState(initialData?.companyName || '');
+  const [taskDescription, setTaskDescription] = useState(initialData?.taskDescription || '');
+  const [workers, setWorkers] = useState(initialData?.workers?.toString() || '');
+  const [hours, setHours] = useState(initialData?.hours?.toString() || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
+
+  const handleSave = () => {
+    onSave({
+      companyName,
+      taskDescription,
+      workers: workers ? parseInt(workers) : undefined,
+      hours: hours ? parseFloat(hours) : undefined,
+      notes,
+    });
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[80%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  {isNew ? 'Add Task' : 'Edit Task'}
+                </Text>
+                <Pressable onPress={onClose} className="p-2">
+                  <X size={24} color="#6B7280" />
+                </Pressable>
+              </View>
+              <EditableField label="Company/Trade" value={companyName} onChangeText={setCompanyName} placeholder="e.g., ABC Electric" />
+              <EditableField label="Task Description" value={taskDescription} onChangeText={setTaskDescription} placeholder="What was done?" multiline />
+              <View className="flex-row">
+                <View className="flex-1 mr-2">
+                  <EditableField label="Workers" value={workers} onChangeText={setWorkers} placeholder="0" keyboardType="numeric" />
+                </View>
+                <View className="flex-1 ml-2">
+                  <EditableField label="Hours" value={hours} onChangeText={setHours} placeholder="0" keyboardType="numeric" />
+                </View>
+              </View>
+              <EditableField label="Notes" value={notes} onChangeText={setNotes} placeholder="Additional notes..." multiline />
+              <Pressable onPress={handleSave} className="bg-orange-500 py-4 rounded-xl mt-4">
+                <Text className="text-center text-white font-semibold text-base">
+                  {isNew ? 'Add Task' : 'Save Changes'}
+                </Text>
+              </Pressable>
+            </ScrollView>
+            <View className="h-8" />
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function EditIssueModal({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  isNew,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+  initialData?: any;
+  isNew?: boolean;
+}) {
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [category, setCategory] = useState(initialData?.category || '');
+  const [severity, setSeverity] = useState(initialData?.severity || 'Medium');
+  const [assignee, setAssignee] = useState(initialData?.assignee || '');
+  const [location, setLocation] = useState(initialData?.location || '');
+
+  const handleSave = () => {
+    onSave({ title, description, category, severity, assignee, location });
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[80%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  {isNew ? 'Add Issue' : 'Edit Issue'}
+                </Text>
+                <Pressable onPress={onClose} className="p-2">
+                  <X size={24} color="#6B7280" />
+                </Pressable>
+              </View>
+              <EditableField label="Title" value={title} onChangeText={setTitle} placeholder="Issue title" />
+              <EditableField label="Description" value={description} onChangeText={setDescription} placeholder="Describe the issue..." multiline />
+              <EditableField label="Category" value={category} onChangeText={setCategory} placeholder="e.g., Safety, Quality" />
+              <View className="mb-3">
+                <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase">Severity</Text>
+                <View className="flex-row">
+                  {['Low', 'Medium', 'High'].map((s) => (
+                    <Pressable
+                      key={s}
+                      onPress={() => setSeverity(s)}
+                      className={cn(
+                        'flex-1 py-2 rounded-lg mr-2',
+                        severity === s
+                          ? s === 'High' ? 'bg-red-500' : s === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
+                          : 'bg-gray-200 dark:bg-gray-700'
+                      )}
+                    >
+                      <Text className={cn('text-center font-medium', severity === s ? 'text-white' : 'text-gray-600 dark:text-gray-400')}>{s}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+              <EditableField label="Assignee" value={assignee} onChangeText={setAssignee} placeholder="Who is responsible?" />
+              <EditableField label="Location" value={location} onChangeText={setLocation} placeholder="Where is this issue?" />
+              <Pressable onPress={handleSave} className="bg-orange-500 py-4 rounded-xl mt-4">
+                <Text className="text-center text-white font-semibold text-base">
+                  {isNew ? 'Add Issue' : 'Save Changes'}
+                </Text>
+              </Pressable>
+            </ScrollView>
+            <View className="h-8" />
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function EditVisitorModal({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  isNew,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+  initialData?: any;
+  isNew?: boolean;
+}) {
+  const [visitorName, setVisitorName] = useState(initialData?.visitorName || '');
+  const [companyName, setCompanyName] = useState(initialData?.companyName || '');
+  const [time, setTime] = useState(initialData?.time || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
+
+  const handleSave = () => {
+    onSave({ visitorName, companyName, time, notes });
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
+            <View className="p-6">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  {isNew ? 'Add Visitor' : 'Edit Visitor'}
+                </Text>
+                <Pressable onPress={onClose} className="p-2">
+                  <X size={24} color="#6B7280" />
+                </Pressable>
+              </View>
+              <EditableField label="Visitor Name" value={visitorName} onChangeText={setVisitorName} placeholder="Name" />
+              <EditableField label="Company" value={companyName} onChangeText={setCompanyName} placeholder="Company name" />
+              <EditableField label="Time" value={time} onChangeText={setTime} placeholder="e.g., 10:00 AM" />
+              <EditableField label="Notes" value={notes} onChangeText={setNotes} placeholder="Purpose of visit..." multiline />
+              <Pressable onPress={handleSave} className="bg-orange-500 py-4 rounded-xl mt-4">
+                <Text className="text-center text-white font-semibold text-base">
+                  {isNew ? 'Add Visitor' : 'Save Changes'}
+                </Text>
+              </Pressable>
+            </View>
+            <View className="h-8" />
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function EditEquipmentModal({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  isNew,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+  initialData?: any;
+  isNew?: boolean;
+}) {
+  const [equipmentType, setEquipmentType] = useState(initialData?.equipmentType || '');
+  const [quantity, setQuantity] = useState(initialData?.quantity?.toString() || '');
+  const [hours, setHours] = useState(initialData?.hours?.toString() || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
+
+  const handleSave = () => {
+    onSave({
+      equipmentType,
+      quantity: quantity ? parseInt(quantity) : undefined,
+      hours: hours ? parseFloat(hours) : undefined,
+      notes,
+    });
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
+            <View className="p-6">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  {isNew ? 'Add Equipment' : 'Edit Equipment'}
+                </Text>
+                <Pressable onPress={onClose} className="p-2">
+                  <X size={24} color="#6B7280" />
+                </Pressable>
+              </View>
+              <EditableField label="Equipment Type" value={equipmentType} onChangeText={setEquipmentType} placeholder="e.g., Crane, Forklift" />
+              <View className="flex-row">
+                <View className="flex-1 mr-2">
+                  <EditableField label="Quantity" value={quantity} onChangeText={setQuantity} placeholder="0" keyboardType="numeric" />
+                </View>
+                <View className="flex-1 ml-2">
+                  <EditableField label="Hours" value={hours} onChangeText={setHours} placeholder="0" keyboardType="numeric" />
+                </View>
+              </View>
+              <EditableField label="Notes" value={notes} onChangeText={setNotes} placeholder="Additional notes..." multiline />
+              <Pressable onPress={handleSave} className="bg-orange-500 py-4 rounded-xl mt-4">
+                <Text className="text-center text-white font-semibold text-base">
+                  {isNew ? 'Add Equipment' : 'Save Changes'}
+                </Text>
+              </Pressable>
+            </View>
+            <View className="h-8" />
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function EditMaterialModal({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  isNew,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+  initialData?: any;
+  isNew?: boolean;
+}) {
+  const [material, setMaterial] = useState(initialData?.material || '');
+  const [quantity, setQuantity] = useState(initialData?.quantity?.toString() || '');
+  const [unit, setUnit] = useState(initialData?.unit || '');
+  const [supplier, setSupplier] = useState(initialData?.supplier || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
+
+  const handleSave = () => {
+    onSave({
+      material,
+      quantity: quantity ? parseFloat(quantity) : undefined,
+      unit,
+      supplier,
+      notes,
+    });
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
+            <View className="p-6">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  {isNew ? 'Add Material' : 'Edit Material'}
+                </Text>
+                <Pressable onPress={onClose} className="p-2">
+                  <X size={24} color="#6B7280" />
+                </Pressable>
+              </View>
+              <EditableField label="Material" value={material} onChangeText={setMaterial} placeholder="e.g., Concrete, Rebar" />
+              <View className="flex-row">
+                <View className="flex-1 mr-2">
+                  <EditableField label="Quantity" value={quantity} onChangeText={setQuantity} placeholder="0" keyboardType="numeric" />
+                </View>
+                <View className="flex-1 ml-2">
+                  <EditableField label="Unit" value={unit} onChangeText={setUnit} placeholder="e.g., yards, lbs" />
+                </View>
+              </View>
+              <EditableField label="Supplier" value={supplier} onChangeText={setSupplier} placeholder="Supplier name" />
+              <EditableField label="Notes" value={notes} onChangeText={setNotes} placeholder="Additional notes..." multiline />
+              <Pressable onPress={handleSave} className="bg-orange-500 py-4 rounded-xl mt-4">
+                <Text className="text-center text-white font-semibold text-base">
+                  {isNew ? 'Add Material' : 'Save Changes'}
+                </Text>
+              </Pressable>
+            </View>
+            <View className="h-8" />
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function EditInspectionModal({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  isNew,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+  initialData?: any;
+  isNew?: boolean;
+}) {
+  const [inspectorName, setInspectorName] = useState(initialData?.inspectorName || '');
+  const [ahj, setAhj] = useState(initialData?.ahj || '');
+  const [inspectionType, setInspectionType] = useState(initialData?.inspectionType || '');
+  const [result, setResult] = useState(initialData?.result || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
+
+  const handleSave = () => {
+    onSave({ inspectorName, ahj, inspectionType, result, notes });
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
+            <View className="p-6">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  {isNew ? 'Add Inspection' : 'Edit Inspection'}
+                </Text>
+                <Pressable onPress={onClose} className="p-2">
+                  <X size={24} color="#6B7280" />
+                </Pressable>
+              </View>
+              <EditableField label="Inspection Type" value={inspectionType} onChangeText={setInspectionType} placeholder="e.g., Electrical, Plumbing" />
+              <EditableField label="Inspector Name" value={inspectorName} onChangeText={setInspectorName} placeholder="Inspector's name" />
+              <EditableField label="AHJ (Authority)" value={ahj} onChangeText={setAhj} placeholder="e.g., City of..." />
+              <View className="mb-3">
+                <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase">Result</Text>
+                <View className="flex-row">
+                  {['Pass', 'Fail', 'Pending'].map((r) => (
+                    <Pressable
+                      key={r}
+                      onPress={() => setResult(r)}
+                      className={cn(
+                        'flex-1 py-2 rounded-lg mr-2',
+                        result === r
+                          ? r === 'Pass' ? 'bg-green-500' : r === 'Fail' ? 'bg-red-500' : 'bg-yellow-500'
+                          : 'bg-gray-200 dark:bg-gray-700'
+                      )}
+                    >
+                      <Text className={cn('text-center font-medium', result === r ? 'text-white' : 'text-gray-600 dark:text-gray-400')}>{r}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+              <EditableField label="Notes" value={notes} onChangeText={setNotes} placeholder="Inspection notes..." multiline />
+              <Pressable onPress={handleSave} className="bg-orange-500 py-4 rounded-xl mt-4">
+                <Text className="text-center text-white font-semibold text-base">
+                  {isNew ? 'Add Inspection' : 'Save Changes'}
+                </Text>
+              </Pressable>
+            </View>
+            <View className="h-8" />
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
 
 export default function DailyLogDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
 
+  // UI State
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+  const [showAddSection, setShowAddSection] = useState(false);
+
+  // Edit modals
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [editingIssue, setEditingIssue] = useState<any>(null);
+  const [editingVisitor, setEditingVisitor] = useState<any>(null);
+  const [editingEquipment, setEditingEquipment] = useState<any>(null);
+  const [editingMaterial, setEditingMaterial] = useState<any>(null);
+  const [editingInspection, setEditingInspection] = useState<any>(null);
 
   // Fetch daily log from backend
-  const { data: log, isLoading, isError, error } = useQuery({
-    queryKey: [...queryKeys.dailyLogs(), id],
+  const { data: log, isLoading, isError, error, refetch } = useQuery({
+    queryKey: queryKeys.dailyLog(id!),
     queryFn: () => getDailyLog(id!),
     enabled: !!id,
   });
 
-  // View PDF
+  // Mutations
+  const invalidateLog = () => queryClient.invalidateQueries({ queryKey: queryKeys.dailyLog(id!) });
+
+  const addTaskMutation = useMutation({
+    mutationFn: (data: any) => addTaskApi(id!, data),
+    onSuccess: () => { invalidateLog(); setEditingTask(null); },
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ taskId, data }: { taskId: string; data: any }) => updateTaskApi(id!, taskId, data),
+    onSuccess: () => { invalidateLog(); setEditingTask(null); },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: (taskId: string) => deleteTaskApi(id!, taskId),
+    onSuccess: invalidateLog,
+  });
+
+  const addIssueMutation = useMutation({
+    mutationFn: (data: any) => addPendingIssueApi(id!, data),
+    onSuccess: () => { invalidateLog(); setEditingIssue(null); },
+  });
+
+  const updateIssueMutation = useMutation({
+    mutationFn: ({ issueId, data }: { issueId: string; data: any }) => updatePendingIssueApi(id!, issueId, data),
+    onSuccess: () => { invalidateLog(); setEditingIssue(null); },
+  });
+
+  const deleteIssueMutation = useMutation({
+    mutationFn: (issueId: string) => deletePendingIssueApi(id!, issueId),
+    onSuccess: invalidateLog,
+  });
+
+  const addVisitorMutation = useMutation({
+    mutationFn: (data: any) => addVisitorApi(id!, data),
+    onSuccess: () => { invalidateLog(); setEditingVisitor(null); },
+  });
+
+  const updateVisitorMutation = useMutation({
+    mutationFn: ({ visitorId, data }: { visitorId: string; data: any }) => updateVisitorApi(id!, visitorId, data),
+    onSuccess: () => { invalidateLog(); setEditingVisitor(null); },
+  });
+
+  const deleteVisitorMutation = useMutation({
+    mutationFn: (visitorId: string) => deleteVisitorApi(id!, visitorId),
+    onSuccess: invalidateLog,
+  });
+
+  const addEquipmentMutation = useMutation({
+    mutationFn: (data: any) => addEquipmentApi(id!, data),
+    onSuccess: () => { invalidateLog(); setEditingEquipment(null); },
+  });
+
+  const updateEquipmentMutation = useMutation({
+    mutationFn: ({ equipmentId, data }: { equipmentId: string; data: any }) => updateEquipmentApi(id!, equipmentId, data),
+    onSuccess: () => { invalidateLog(); setEditingEquipment(null); },
+  });
+
+  const deleteEquipmentMutation = useMutation({
+    mutationFn: (equipmentId: string) => deleteEquipmentApi(id!, equipmentId),
+    onSuccess: invalidateLog,
+  });
+
+  const addMaterialMutation = useMutation({
+    mutationFn: (data: any) => addMaterialApi(id!, data),
+    onSuccess: () => { invalidateLog(); setEditingMaterial(null); },
+  });
+
+  const updateMaterialMutation = useMutation({
+    mutationFn: ({ materialId, data }: { materialId: string; data: any }) => updateMaterialApi(id!, materialId, data),
+    onSuccess: () => { invalidateLog(); setEditingMaterial(null); },
+  });
+
+  const deleteMaterialMutation = useMutation({
+    mutationFn: (materialId: string) => deleteMaterialApi(id!, materialId),
+    onSuccess: invalidateLog,
+  });
+
+  const addInspectionMutation = useMutation({
+    mutationFn: (data: any) => addInspectionNoteApi(id!, data),
+    onSuccess: () => { invalidateLog(); setEditingInspection(null); },
+  });
+
+  const updateInspectionMutation = useMutation({
+    mutationFn: ({ noteId, data }: { noteId: string; data: any }) => updateInspectionNoteApi(id!, noteId, data),
+    onSuccess: () => { invalidateLog(); setEditingInspection(null); },
+  });
+
+  const deleteInspectionMutation = useMutation({
+    mutationFn: (noteId: string) => deleteInspectionNoteApi(id!, noteId),
+    onSuccess: invalidateLog,
+  });
+
+  // Handlers
   const handleViewPdf = useCallback(async () => {
     if (!id) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -99,35 +830,11 @@ export default function DailyLogDetailScreen() {
     }
   }, [id]);
 
-  // Download PDF
-  const handleDownloadPdf = useCallback(async () => {
-    if (!id) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      const blobUrl = await fetchDailyLogPdf(id, false);
-      if (Platform.OS === 'web') {
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = `daily-log-${id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      } else {
-        Linking.openURL(blobUrl);
-      }
-    } catch (err) {
-      console.error('[pdf] Failed to download PDF:', err);
-    }
-  }, [id]);
-
-  // Copy summary
   const handleCopySummary = useCallback(async () => {
     if (!log) return;
     const logDate = parseLocalDate(log.date);
     const summary = `Daily Log - ${format(logDate, 'MMM d, yyyy')}
 Project: ${log.project?.name || 'Unknown'}
-Weather: ${log.weather?.sky_condition || 'N/A'}, ${log.weather?.low_temp ?? '--'}° - ${log.weather?.high_temp ?? '--'}°
 Tasks: ${log.tasks?.length || 0}
 Issues: ${log.pendingIssues?.length || 0}
 Workers: ${log.dailyTotalsWorkers || 0}
@@ -138,6 +845,32 @@ Hours: ${log.dailyTotalsHours || 0}`;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setTimeout(() => setCopiedSummary(false), 2000);
   }, [log]);
+
+  const handleSelectSection = (section: SectionType) => {
+    setShowAddSection(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    switch (section) {
+      case 'tasks':
+        setEditingTask({ isNew: true });
+        break;
+      case 'issues':
+        setEditingIssue({ isNew: true });
+        break;
+      case 'visitors':
+        setEditingVisitor({ isNew: true });
+        break;
+      case 'equipment':
+        setEditingEquipment({ isNew: true });
+        break;
+      case 'materials':
+        setEditingMaterial({ isNew: true });
+        break;
+      case 'inspections':
+        setEditingInspection({ isNew: true });
+        break;
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -157,15 +890,7 @@ Hours: ${log.dailyTotalsHours || 0}`;
         <Text className="mt-4 text-lg text-gray-500 dark:text-gray-400 text-center">
           {isError ? 'Failed to load daily log' : 'Daily log not found'}
         </Text>
-        {isError && (
-          <Text className="mt-2 text-sm text-red-500 text-center">
-            {error instanceof Error ? error.message : 'Unknown error'}
-          </Text>
-        )}
-        <Pressable
-          onPress={() => router.back()}
-          className="mt-4 bg-orange-500 px-6 py-3 rounded-xl"
-        >
+        <Pressable onPress={() => router.back()} className="mt-4 bg-orange-500 px-6 py-3 rounded-xl">
           <Text className="text-white font-semibold">Go Back</Text>
         </Pressable>
       </View>
@@ -173,39 +898,31 @@ Hours: ${log.dailyTotalsHours || 0}`;
   }
 
   const logDate = parseLocalDate(log.date);
+  const existingSections = new Set<SectionType>();
+  if (log.tasks?.length) existingSections.add('tasks');
+  if (log.pendingIssues?.length) existingSections.add('issues');
+  if (log.visitors?.length) existingSections.add('visitors');
+  if (log.equipment?.length) existingSections.add('equipment');
+  if (log.materials?.length) existingSections.add('materials');
+  if (log.inspectionNotes?.length) existingSections.add('inspections');
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
-        <View
-          className="bg-white dark:bg-gray-800 px-4 pb-4"
-          style={{ paddingTop: insets.top + 8 }}
-        >
+        <View className="bg-white dark:bg-gray-800 px-4 pb-4" style={{ paddingTop: insets.top + 8 }}>
           <View className="flex-row items-center mb-3">
-            <Pressable
-              onPress={() => router.back()}
-              className="p-2 -ml-2 mr-2"
-            >
+            <Pressable onPress={() => router.back()} className="p-2 -ml-2 mr-2">
               <ArrowLeft size={24} color="#6B7280" />
             </Pressable>
             <View className="flex-1">
-              <Text className="text-xl font-bold text-gray-900 dark:text-white">
-                Daily Log Details
-              </Text>
+              <Text className="text-xl font-bold text-gray-900 dark:text-white">Edit Daily Log</Text>
               <Text className="text-sm text-gray-500 dark:text-gray-400">
                 {format(logDate, 'EEEE, MMMM d, yyyy')}
               </Text>
             </View>
-            <View className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
-              <Text className="text-xs text-gray-600 dark:text-gray-300">{log.status || 'draft'}</Text>
-            </View>
           </View>
 
-          {/* Project info */}
           {log.project && (
             <View className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 mb-3">
               <View className="flex-row items-center">
@@ -214,23 +931,11 @@ Hours: ${log.dailyTotalsHours || 0}`;
                   {log.project.name}
                 </Text>
               </View>
-              {log.project.number && (
-                <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Project #{log.project.number}
-                </Text>
-              )}
             </View>
           )}
 
-          {/* Prepared By */}
-          {log.preparedBy && (
-            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-              Prepared by: <Text className="font-medium text-gray-700 dark:text-gray-300">{log.preparedBy}</Text>
-            </Text>
-          )}
-
           {/* Quick Actions */}
-          <View className="flex-row space-x-2">
+          <View className="flex-row">
             <Pressable
               onPress={handleViewPdf}
               disabled={isLoadingPdf}
@@ -246,37 +951,28 @@ Hours: ${log.dailyTotalsHours || 0}`;
               )}
             </Pressable>
             <Pressable
-              onPress={handleDownloadPdf}
+              onPress={handleCopySummary}
               className="flex-1 flex-row items-center justify-center py-3 bg-gray-200 dark:bg-gray-700 rounded-xl ml-2"
             >
-              <Download size={18} color="#6B7280" />
-              <Text className="ml-2 text-gray-700 dark:text-gray-300 font-semibold">Download</Text>
+              {copiedSummary ? (
+                <>
+                  <Check size={18} color="#22C55E" />
+                  <Text className="ml-2 text-green-600 font-semibold">Copied!</Text>
+                </>
+              ) : (
+                <>
+                  <Copy size={18} color="#6B7280" />
+                  <Text className="ml-2 text-gray-700 dark:text-gray-300 font-semibold">Copy</Text>
+                </>
+              )}
             </Pressable>
           </View>
-          <Pressable
-            onPress={handleCopySummary}
-            className="flex-row items-center justify-center py-3 bg-gray-100 dark:bg-gray-700 rounded-xl mt-2"
-          >
-            {copiedSummary ? (
-              <>
-                <Check size={18} color="#22C55E" />
-                <Text className="ml-2 text-green-600 font-semibold">Copied!</Text>
-              </>
-            ) : (
-              <>
-                <Copy size={18} color="#6B7280" />
-                <Text className="ml-2 text-gray-700 dark:text-gray-300 font-semibold">Copy Summary</Text>
-              </>
-            )}
-          </Pressable>
         </View>
 
         {/* Daily Totals */}
         <View className="px-4 mt-4">
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
-            <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              Daily Totals
-            </Text>
+            <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">Daily Totals</Text>
             <View className="flex-row">
               <View className="flex-1 items-center">
                 <View className="flex-row items-center">
@@ -301,391 +997,354 @@ Hours: ${log.dailyTotalsHours || 0}`;
           </View>
         </View>
 
-        {/* Weather */}
-        {log.weather && (
-          <View className="px-4 mt-4">
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
-              <SectionHeader
-                title="Weather"
-                icon={<ThermometerSun size={20} color="#F97316" />}
-              />
-              <View className="flex-row flex-wrap">
-                {log.weather.sky_condition && (
-                  <View className="flex-row items-center mr-4 mb-2">
-                    {log.weather.sky_condition.includes('Rain') || log.weather.sky_condition.includes('Storm') ? (
-                      <CloudRain size={16} color="#3B82F6" />
-                    ) : log.weather.sky_condition.includes('Cloud') || log.weather.sky_condition === 'Overcast' ? (
-                      <Cloud size={16} color="#6B7280" />
-                    ) : (
-                      <Sun size={16} color="#F59E0B" />
-                    )}
-                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">{log.weather.sky_condition}</Text>
-                  </View>
-                )}
-                {(log.weather.low_temp != null || log.weather.high_temp != null) && (
-                  <View className="flex-row items-center mr-4 mb-2">
-                    <ThermometerSun size={16} color="#EF4444" />
-                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">
-                      {log.weather.low_temp ?? '--'}° - {log.weather.high_temp ?? '--'}°F
-                    </Text>
-                  </View>
-                )}
-                {log.weather.wind && (
-                  <View className="flex-row items-center mr-4 mb-2">
-                    <Wind size={16} color="#6B7280" />
-                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">{log.weather.wind}</Text>
-                  </View>
-                )}
-                {log.weather.precipitation && (
-                  <View className="flex-row items-center mr-4 mb-2">
-                    <Droplets size={16} color="#3B82F6" />
-                    <Text className="ml-1 text-sm text-gray-700 dark:text-gray-300">{log.weather.precipitation}</Text>
-                  </View>
-                )}
-              </View>
-              {log.weather.weather_delay && (
-                <View className="mt-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                  <Text className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                    Weather Delay Reported
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Tasks */}
+        {/* Tasks Section */}
         <View className="px-4 mt-4">
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
             <SectionHeader
               title="Tasks"
               icon={<ClipboardList size={20} color="#F97316" />}
               count={log.tasks?.length}
+              onAdd={() => setEditingTask({ isNew: true })}
             />
-            {!log.tasks || log.tasks.length === 0 ? (
-              <EmptyState message="No tasks recorded" />
-            ) : (
-              log.tasks.map((task, index) => (
-                <View
-                  key={task.id}
-                  className={cn(
-                    "py-3",
-                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
+            {log.tasks?.map((task) => (
+              <ItemCard
+                key={task.id}
+                onEdit={() => setEditingTask(task)}
+                onDelete={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  deleteTaskMutation.mutate(task.id);
+                }}
+              >
+                {task.companyName && (
+                  <Text className="text-sm font-semibold text-gray-900 dark:text-white">{task.companyName}</Text>
+                )}
+                {task.taskDescription && (
+                  <Text className="text-sm text-gray-600 dark:text-gray-400">{task.taskDescription}</Text>
+                )}
+                <View className="flex-row mt-1">
+                  {task.workers != null && (
+                    <Text className="text-xs text-gray-500 mr-3">{task.workers} workers</Text>
                   )}
-                >
-                  <View className="flex-row items-start justify-between">
-                    <View className="flex-1">
-                      {task.companyName && (
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {task.companyName}
-                        </Text>
-                      )}
-                      {task.taskDescription && (
-                        <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {task.taskDescription}
-                        </Text>
-                      )}
-                      {task.notes && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1 italic">
-                          {task.notes}
-                        </Text>
-                      )}
-                    </View>
-                    <View className="items-end ml-3">
-                      {task.workers != null && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">
-                          {task.workers} workers
-                        </Text>
-                      )}
-                      {task.hours != null && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">
-                          {task.hours} hrs
-                        </Text>
-                      )}
-                    </View>
-                  </View>
+                  {task.hours != null && <Text className="text-xs text-gray-500">{task.hours} hrs</Text>}
                 </View>
-              ))
+              </ItemCard>
+            ))}
+            {(!log.tasks || log.tasks.length === 0) && (
+              <Text className="text-sm text-gray-400 italic">No tasks recorded</Text>
             )}
           </View>
         </View>
 
-        {/* Pending Issues */}
+        {/* Issues Section */}
         <View className="px-4 mt-4">
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 border-orange-200 dark:border-orange-800">
             <SectionHeader
               title="Pending Issues"
               icon={<AlertTriangle size={20} color="#EF4444" />}
               count={log.pendingIssues?.length}
+              onAdd={() => setEditingIssue({ isNew: true })}
             />
-            {!log.pendingIssues || log.pendingIssues.length === 0 ? (
-              <EmptyState message="No pending issues" />
-            ) : (
-              log.pendingIssues.map((issue, index) => (
-                <View
-                  key={issue.id}
-                  className={cn(
-                    "py-3",
-                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
-                  )}
-                >
-                  <View className="flex-row items-start justify-between">
-                    <View className="flex-1">
-                      {issue.title && (
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {issue.title}
-                        </Text>
+            {log.pendingIssues?.map((issue) => (
+              <ItemCard
+                key={issue.id}
+                onEdit={() => setEditingIssue(issue)}
+                onDelete={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  deleteIssueMutation.mutate(issue.id);
+                }}
+              >
+                {issue.title && (
+                  <Text className="text-sm font-semibold text-gray-900 dark:text-white">{issue.title}</Text>
+                )}
+                {issue.description && (
+                  <Text className="text-sm text-gray-600 dark:text-gray-400">{issue.description}</Text>
+                )}
+                <View className="flex-row mt-1">
+                  {issue.severity && (
+                    <View
+                      className={cn(
+                        'px-2 py-0.5 rounded mr-2',
+                        issue.severity === 'High'
+                          ? 'bg-red-100'
+                          : issue.severity === 'Medium'
+                          ? 'bg-yellow-100'
+                          : 'bg-green-100'
                       )}
-                      {issue.description && (
-                        <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {issue.description}
-                        </Text>
-                      )}
-                      <View className="flex-row flex-wrap mt-2">
-                        {issue.category && (
-                          <View className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded mr-2 mb-1">
-                            <Text className="text-xs text-gray-600 dark:text-gray-400">{issue.category}</Text>
-                          </View>
+                    >
+                      <Text
+                        className={cn(
+                          'text-xs',
+                          issue.severity === 'High'
+                            ? 'text-red-600'
+                            : issue.severity === 'Medium'
+                            ? 'text-yellow-600'
+                            : 'text-green-600'
                         )}
-                        {issue.severity && (
-                          <View className={cn(
-                            "px-2 py-0.5 rounded mr-2 mb-1",
-                            issue.severity === 'High' ? 'bg-red-100 dark:bg-red-900/30' :
-                            issue.severity === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
-                            'bg-green-100 dark:bg-green-900/30'
-                          )}>
-                            <Text className={cn(
-                              "text-xs",
-                              issue.severity === 'High' ? 'text-red-600 dark:text-red-400' :
-                              issue.severity === 'Medium' ? 'text-yellow-600 dark:text-yellow-400' :
-                              'text-green-600 dark:text-green-400'
-                            )}>{issue.severity}</Text>
-                          </View>
-                        )}
-                        {issue.assignee && (
-                          <View className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded mr-2 mb-1">
-                            <Text className="text-xs text-blue-600 dark:text-blue-400">{issue.assignee}</Text>
-                          </View>
-                        )}
-                      </View>
+                      >
+                        {issue.severity}
+                      </Text>
                     </View>
-                  </View>
+                  )}
+                  {issue.assignee && <Text className="text-xs text-gray-500">{issue.assignee}</Text>}
                 </View>
-              ))
+              </ItemCard>
+            ))}
+            {(!log.pendingIssues || log.pendingIssues.length === 0) && (
+              <Text className="text-sm text-gray-400 italic">No pending issues</Text>
             )}
           </View>
         </View>
 
-        {/* Inspection Notes */}
-        {log.inspectionNotes && log.inspectionNotes.length > 0 && (
-          <View className="px-4 mt-4">
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
-              <SectionHeader
-                title="Inspections"
-                icon={<ClipboardList size={20} color="#8B5CF6" />}
-                count={log.inspectionNotes.length}
-              />
-              {log.inspectionNotes.map((note, index) => (
-                <View
-                  key={note.id}
-                  className={cn(
-                    "py-3",
-                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
-                  )}
-                >
-                  <View className="flex-row items-start justify-between">
-                    <View className="flex-1">
-                      {note.inspectionType && (
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {note.inspectionType}
-                        </Text>
-                      )}
-                      {note.inspectorName && (
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
-                          Inspector: {note.inspectorName}
-                        </Text>
-                      )}
-                      {note.ahj && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-500">
-                          AHJ: {note.ahj}
-                        </Text>
-                      )}
-                      {note.notes && (
-                        <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {note.notes}
-                        </Text>
-                      )}
-                    </View>
-                    {note.result && (
-                      <View className={cn(
-                        "px-2 py-1 rounded",
-                        note.result.toLowerCase().includes('pass') ? 'bg-green-100 dark:bg-green-900/30' :
-                        note.result.toLowerCase().includes('fail') ? 'bg-red-100 dark:bg-red-900/30' :
-                        'bg-gray-100 dark:bg-gray-700'
-                      )}>
-                        <Text className={cn(
-                          "text-xs font-medium",
-                          note.result.toLowerCase().includes('pass') ? 'text-green-600 dark:text-green-400' :
-                          note.result.toLowerCase().includes('fail') ? 'text-red-600 dark:text-red-400' :
-                          'text-gray-600 dark:text-gray-400'
-                        )}>{note.result}</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Visitors */}
-        {log.visitors && log.visitors.length > 0 && (
+        {/* Visitors Section */}
+        {(log.visitors?.length || 0) > 0 && (
           <View className="px-4 mt-4">
             <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
               <SectionHeader
                 title="Visitors"
                 icon={<UserCheck size={20} color="#10B981" />}
-                count={log.visitors.length}
+                count={log.visitors?.length}
+                onAdd={() => setEditingVisitor({ isNew: true })}
               />
-              {log.visitors.map((visitor, index) => (
-                <View
+              {log.visitors?.map((visitor) => (
+                <ItemCard
                   key={visitor.id}
-                  className={cn(
-                    "py-3",
-                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
-                  )}
+                  onEdit={() => setEditingVisitor(visitor)}
+                  onDelete={() => deleteVisitorMutation.mutate(visitor.id)}
                 >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      {visitor.visitorName && (
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {visitor.visitorName}
-                        </Text>
-                      )}
-                      {visitor.companyName && (
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
-                          {visitor.companyName}
-                        </Text>
-                      )}
-                      {visitor.notes && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                          {visitor.notes}
-                        </Text>
-                      )}
-                    </View>
-                    {visitor.time && (
-                      <Text className="text-xs text-gray-400">{visitor.time}</Text>
-                    )}
-                  </View>
-                </View>
+                  {visitor.visitorName && (
+                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">{visitor.visitorName}</Text>
+                  )}
+                  {visitor.companyName && (
+                    <Text className="text-sm text-gray-600 dark:text-gray-400">{visitor.companyName}</Text>
+                  )}
+                  {visitor.time && <Text className="text-xs text-gray-500">{visitor.time}</Text>}
+                </ItemCard>
               ))}
             </View>
           </View>
         )}
 
-        {/* Equipment */}
-        {log.equipment && log.equipment.length > 0 && (
+        {/* Equipment Section */}
+        {(log.equipment?.length || 0) > 0 && (
           <View className="px-4 mt-4">
             <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
               <SectionHeader
                 title="Equipment"
                 icon={<Truck size={20} color="#6B7280" />}
-                count={log.equipment.length}
+                count={log.equipment?.length}
+                onAdd={() => setEditingEquipment({ isNew: true })}
               />
-              {log.equipment.map((eq, index) => (
-                <View
+              {log.equipment?.map((eq) => (
+                <ItemCard
                   key={eq.id}
-                  className={cn(
-                    "py-3",
-                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
-                  )}
+                  onEdit={() => setEditingEquipment(eq)}
+                  onDelete={() => deleteEquipmentMutation.mutate(eq.id)}
                 >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      {eq.equipmentType && (
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {eq.equipmentType}
-                        </Text>
-                      )}
-                      {eq.notes && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                          {eq.notes}
-                        </Text>
-                      )}
-                    </View>
-                    <View className="items-end">
-                      {eq.quantity != null && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">
-                          Qty: {eq.quantity}
-                        </Text>
-                      )}
-                      {eq.hours != null && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">
-                          {eq.hours} hrs
-                        </Text>
-                      )}
-                    </View>
+                  {eq.equipmentType && (
+                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">{eq.equipmentType}</Text>
+                  )}
+                  <View className="flex-row mt-1">
+                    {eq.quantity != null && <Text className="text-xs text-gray-500 mr-3">Qty: {eq.quantity}</Text>}
+                    {eq.hours != null && <Text className="text-xs text-gray-500">{eq.hours} hrs</Text>}
                   </View>
-                </View>
+                </ItemCard>
               ))}
             </View>
           </View>
         )}
 
-        {/* Materials */}
-        {log.materials && log.materials.length > 0 && (
+        {/* Materials Section */}
+        {(log.materials?.length || 0) > 0 && (
           <View className="px-4 mt-4">
             <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
               <SectionHeader
                 title="Materials"
                 icon={<Package size={20} color="#3B82F6" />}
-                count={log.materials.length}
+                count={log.materials?.length}
+                onAdd={() => setEditingMaterial({ isNew: true })}
               />
-              {log.materials.map((mat, index) => (
-                <View
+              {log.materials?.map((mat) => (
+                <ItemCard
                   key={mat.id}
-                  className={cn(
-                    "py-3",
-                    index > 0 && "border-t border-gray-100 dark:border-gray-700"
-                  )}
+                  onEdit={() => setEditingMaterial(mat)}
+                  onDelete={() => deleteMaterialMutation.mutate(mat.id)}
                 >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      {mat.material && (
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {mat.material}
-                        </Text>
-                      )}
-                      {mat.supplier && (
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
-                          Supplier: {mat.supplier}
-                        </Text>
-                      )}
-                      {mat.notes && (
-                        <Text className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                          {mat.notes}
-                        </Text>
-                      )}
-                    </View>
-                    {(mat.quantity != null || mat.unit) && (
-                      <Text className="text-sm text-gray-500 dark:text-gray-400">
-                        {mat.quantity ?? ''} {mat.unit ?? ''}
+                  {mat.material && (
+                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">{mat.material}</Text>
+                  )}
+                  <View className="flex-row mt-1">
+                    {mat.quantity != null && (
+                      <Text className="text-xs text-gray-500">
+                        {mat.quantity} {mat.unit || ''}
                       </Text>
                     )}
+                    {mat.supplier && <Text className="text-xs text-gray-500 ml-3">from {mat.supplier}</Text>}
                   </View>
-                </View>
+                </ItemCard>
               ))}
             </View>
           </View>
         )}
 
-        {/* Footer */}
-        <View className="px-4 py-6 items-center">
-          <Text className="text-xs text-gray-400 dark:text-gray-500">
-            Log ID: {log.id}
-          </Text>
-        </View>
+        {/* Inspections Section */}
+        {(log.inspectionNotes?.length || 0) > 0 && (
+          <View className="px-4 mt-4">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+              <SectionHeader
+                title="Inspections"
+                icon={<ClipboardList size={20} color="#8B5CF6" />}
+                count={log.inspectionNotes?.length}
+                onAdd={() => setEditingInspection({ isNew: true })}
+              />
+              {log.inspectionNotes?.map((note) => (
+                <ItemCard
+                  key={note.id}
+                  onEdit={() => setEditingInspection(note)}
+                  onDelete={() => deleteInspectionMutation.mutate(note.id)}
+                >
+                  {note.inspectionType && (
+                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">{note.inspectionType}</Text>
+                  )}
+                  {note.inspectorName && (
+                    <Text className="text-sm text-gray-600 dark:text-gray-400">By: {note.inspectorName}</Text>
+                  )}
+                  {note.result && (
+                    <View
+                      className={cn(
+                        'px-2 py-0.5 rounded mt-1 self-start',
+                        note.result.toLowerCase().includes('pass')
+                          ? 'bg-green-100'
+                          : note.result.toLowerCase().includes('fail')
+                          ? 'bg-red-100'
+                          : 'bg-gray-100'
+                      )}
+                    >
+                      <Text
+                        className={cn(
+                          'text-xs',
+                          note.result.toLowerCase().includes('pass')
+                            ? 'text-green-600'
+                            : note.result.toLowerCase().includes('fail')
+                            ? 'text-red-600'
+                            : 'text-gray-600'
+                        )}
+                      >
+                        {note.result}
+                      </Text>
+                    </View>
+                  )}
+                </ItemCard>
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
+
+      {/* Floating Add Section Button */}
+      <View className="absolute bottom-6 left-4 right-4" style={{ marginBottom: insets.bottom }}>
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setShowAddSection(true);
+          }}
+          className="bg-orange-500 flex-row items-center justify-center py-4 rounded-2xl shadow-lg"
+        >
+          <Plus size={24} color="white" />
+          <Text className="ml-2 text-white font-bold text-base">Add Section</Text>
+        </Pressable>
+      </View>
+
+      {/* Modals */}
+      <AddSectionModal
+        visible={showAddSection}
+        onClose={() => setShowAddSection(false)}
+        onSelectSection={handleSelectSection}
+        existingSections={existingSections}
+      />
+
+      <EditTaskModal
+        visible={!!editingTask}
+        onClose={() => setEditingTask(null)}
+        onSave={(data) => {
+          if (editingTask?.isNew) {
+            addTaskMutation.mutate(data);
+          } else {
+            updateTaskMutation.mutate({ taskId: editingTask.id, data });
+          }
+        }}
+        initialData={editingTask}
+        isNew={editingTask?.isNew}
+      />
+
+      <EditIssueModal
+        visible={!!editingIssue}
+        onClose={() => setEditingIssue(null)}
+        onSave={(data) => {
+          if (editingIssue?.isNew) {
+            addIssueMutation.mutate(data);
+          } else {
+            updateIssueMutation.mutate({ issueId: editingIssue.id, data });
+          }
+        }}
+        initialData={editingIssue}
+        isNew={editingIssue?.isNew}
+      />
+
+      <EditVisitorModal
+        visible={!!editingVisitor}
+        onClose={() => setEditingVisitor(null)}
+        onSave={(data) => {
+          if (editingVisitor?.isNew) {
+            addVisitorMutation.mutate(data);
+          } else {
+            updateVisitorMutation.mutate({ visitorId: editingVisitor.id, data });
+          }
+        }}
+        initialData={editingVisitor}
+        isNew={editingVisitor?.isNew}
+      />
+
+      <EditEquipmentModal
+        visible={!!editingEquipment}
+        onClose={() => setEditingEquipment(null)}
+        onSave={(data) => {
+          if (editingEquipment?.isNew) {
+            addEquipmentMutation.mutate(data);
+          } else {
+            updateEquipmentMutation.mutate({ equipmentId: editingEquipment.id, data });
+          }
+        }}
+        initialData={editingEquipment}
+        isNew={editingEquipment?.isNew}
+      />
+
+      <EditMaterialModal
+        visible={!!editingMaterial}
+        onClose={() => setEditingMaterial(null)}
+        onSave={(data) => {
+          if (editingMaterial?.isNew) {
+            addMaterialMutation.mutate(data);
+          } else {
+            updateMaterialMutation.mutate({ materialId: editingMaterial.id, data });
+          }
+        }}
+        initialData={editingMaterial}
+        isNew={editingMaterial?.isNew}
+      />
+
+      <EditInspectionModal
+        visible={!!editingInspection}
+        onClose={() => setEditingInspection(null)}
+        onSave={(data) => {
+          if (editingInspection?.isNew) {
+            addInspectionMutation.mutate(data);
+          } else {
+            updateInspectionMutation.mutate({ noteId: editingInspection.id, data });
+          }
+        }}
+        initialData={editingInspection}
+        isNew={editingInspection?.isNew}
+      />
     </View>
   );
 }

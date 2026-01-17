@@ -75,4 +75,68 @@ router.post('/:id/parse-transcript', (req, res, next) => {
   dailyLogsController.parseAndUpdateFromTranscript(req, res, next);
 });
 
+// ============================================
+// NESTED ITEM CRUD ROUTES
+// ============================================
+
+// Tasks
+router.patch('/:id/tasks/:taskId', (req, res, next) => {
+  dailyLogsController.updateTask(req, res, next);
+});
+router.delete('/:id/tasks/:taskId', (req, res, next) => {
+  dailyLogsController.deleteTask(req, res, next);
+});
+
+// Pending Issues
+router.patch('/:id/pending-issues/:issueId', (req, res, next) => {
+  dailyLogsController.updatePendingIssue(req, res, next);
+});
+router.delete('/:id/pending-issues/:issueId', (req, res, next) => {
+  dailyLogsController.deletePendingIssue(req, res, next);
+});
+
+// Visitors
+router.post('/:id/visitors', (req, res, next) => {
+  dailyLogsController.addVisitor(req, res, next);
+});
+router.patch('/:id/visitors/:visitorId', (req, res, next) => {
+  dailyLogsController.updateVisitor(req, res, next);
+});
+router.delete('/:id/visitors/:visitorId', (req, res, next) => {
+  dailyLogsController.deleteVisitor(req, res, next);
+});
+
+// Equipment
+router.post('/:id/equipment', (req, res, next) => {
+  dailyLogsController.addEquipment(req, res, next);
+});
+router.patch('/:id/equipment/:equipmentId', (req, res, next) => {
+  dailyLogsController.updateEquipment(req, res, next);
+});
+router.delete('/:id/equipment/:equipmentId', (req, res, next) => {
+  dailyLogsController.deleteEquipment(req, res, next);
+});
+
+// Materials
+router.post('/:id/materials', (req, res, next) => {
+  dailyLogsController.addMaterial(req, res, next);
+});
+router.patch('/:id/materials/:materialId', (req, res, next) => {
+  dailyLogsController.updateMaterial(req, res, next);
+});
+router.delete('/:id/materials/:materialId', (req, res, next) => {
+  dailyLogsController.deleteMaterial(req, res, next);
+});
+
+// Inspection Notes
+router.post('/:id/inspection-notes', (req, res, next) => {
+  dailyLogsController.addInspectionNote(req, res, next);
+});
+router.patch('/:id/inspection-notes/:noteId', (req, res, next) => {
+  dailyLogsController.updateInspectionNote(req, res, next);
+});
+router.delete('/:id/inspection-notes/:noteId', (req, res, next) => {
+  dailyLogsController.deleteInspectionNote(req, res, next);
+});
+
 module.exports = router;

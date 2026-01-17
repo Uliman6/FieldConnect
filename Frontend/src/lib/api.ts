@@ -789,6 +789,276 @@ export async function addPendingIssueApi(
   });
 }
 
+// ============================================
+// NESTED ITEM CRUD FUNCTIONS
+// ============================================
+
+// Tasks
+export async function updateTaskApi(
+  dailyLogId: string,
+  taskId: string,
+  data: {
+    companyName?: string;
+    workers?: number;
+    hours?: number;
+    taskDescription?: string;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/tasks/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      company_name: data.companyName,
+      workers: data.workers,
+      hours: data.hours,
+      task_description: data.taskDescription,
+      notes: data.notes,
+    }),
+  });
+}
+
+export async function deleteTaskApi(dailyLogId: string, taskId: string): Promise<void> {
+  await apiFetch(`/api/daily-logs/${dailyLogId}/tasks/${taskId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Pending Issues
+export async function updatePendingIssueApi(
+  dailyLogId: string,
+  issueId: string,
+  data: {
+    title?: string;
+    description?: string;
+    category?: string;
+    severity?: string;
+    assignee?: string;
+    location?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/pending-issues/${issueId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      severity: data.severity,
+      assignee: data.assignee,
+      location: data.location,
+    }),
+  });
+}
+
+export async function deletePendingIssueApi(dailyLogId: string, issueId: string): Promise<void> {
+  await apiFetch(`/api/daily-logs/${dailyLogId}/pending-issues/${issueId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Visitors
+export async function addVisitorApi(
+  dailyLogId: string,
+  data: {
+    time?: string;
+    companyName?: string;
+    visitorName?: string;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/visitors`, {
+    method: 'POST',
+    body: JSON.stringify({
+      time: data.time,
+      company_name: data.companyName,
+      visitor_name: data.visitorName,
+      notes: data.notes,
+    }),
+  });
+}
+
+export async function updateVisitorApi(
+  dailyLogId: string,
+  visitorId: string,
+  data: {
+    time?: string;
+    companyName?: string;
+    visitorName?: string;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/visitors/${visitorId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      time: data.time,
+      company_name: data.companyName,
+      visitor_name: data.visitorName,
+      notes: data.notes,
+    }),
+  });
+}
+
+export async function deleteVisitorApi(dailyLogId: string, visitorId: string): Promise<void> {
+  await apiFetch(`/api/daily-logs/${dailyLogId}/visitors/${visitorId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Equipment
+export async function addEquipmentApi(
+  dailyLogId: string,
+  data: {
+    equipmentType?: string;
+    quantity?: number;
+    hours?: number;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/equipment`, {
+    method: 'POST',
+    body: JSON.stringify({
+      equipment_type: data.equipmentType,
+      quantity: data.quantity,
+      hours: data.hours,
+      notes: data.notes,
+    }),
+  });
+}
+
+export async function updateEquipmentApi(
+  dailyLogId: string,
+  equipmentId: string,
+  data: {
+    equipmentType?: string;
+    quantity?: number;
+    hours?: number;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/equipment/${equipmentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      equipment_type: data.equipmentType,
+      quantity: data.quantity,
+      hours: data.hours,
+      notes: data.notes,
+    }),
+  });
+}
+
+export async function deleteEquipmentApi(dailyLogId: string, equipmentId: string): Promise<void> {
+  await apiFetch(`/api/daily-logs/${dailyLogId}/equipment/${equipmentId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Materials
+export async function addMaterialApi(
+  dailyLogId: string,
+  data: {
+    material?: string;
+    quantity?: number;
+    unit?: string;
+    supplier?: string;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/materials`, {
+    method: 'POST',
+    body: JSON.stringify({
+      material: data.material,
+      quantity: data.quantity,
+      unit: data.unit,
+      supplier: data.supplier,
+      notes: data.notes,
+    }),
+  });
+}
+
+export async function updateMaterialApi(
+  dailyLogId: string,
+  materialId: string,
+  data: {
+    material?: string;
+    quantity?: number;
+    unit?: string;
+    supplier?: string;
+    notes?: string;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/materials/${materialId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      material: data.material,
+      quantity: data.quantity,
+      unit: data.unit,
+      supplier: data.supplier,
+      notes: data.notes,
+    }),
+  });
+}
+
+export async function deleteMaterialApi(dailyLogId: string, materialId: string): Promise<void> {
+  await apiFetch(`/api/daily-logs/${dailyLogId}/materials/${materialId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Inspection Notes
+export async function addInspectionNoteApi(
+  dailyLogId: string,
+  data: {
+    inspectorName?: string;
+    ahj?: string;
+    inspectionType?: string;
+    result?: string;
+    notes?: string;
+    followUpNeeded?: boolean;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/inspection-notes`, {
+    method: 'POST',
+    body: JSON.stringify({
+      inspector_name: data.inspectorName,
+      ahj: data.ahj,
+      inspection_type: data.inspectionType,
+      result: data.result,
+      notes: data.notes,
+      follow_up_needed: data.followUpNeeded,
+    }),
+  });
+}
+
+export async function updateInspectionNoteApi(
+  dailyLogId: string,
+  noteId: string,
+  data: {
+    inspectorName?: string;
+    ahj?: string;
+    inspectionType?: string;
+    result?: string;
+    notes?: string;
+    followUpNeeded?: boolean;
+  }
+): Promise<{ id: string }> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/inspection-notes/${noteId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      inspector_name: data.inspectorName,
+      ahj: data.ahj,
+      inspection_type: data.inspectionType,
+      result: data.result,
+      notes: data.notes,
+      follow_up_needed: data.followUpNeeded,
+    }),
+  });
+}
+
+export async function deleteInspectionNoteApi(dailyLogId: string, noteId: string): Promise<void> {
+  await apiFetch(`/api/daily-logs/${dailyLogId}/inspection-notes/${noteId}`, {
+    method: 'DELETE',
+  });
+}
+
 /**
  * Parse an event transcript using AI for intelligent extraction
  * Returns: title, event_type, severity, action_items, location, trade_vendor
