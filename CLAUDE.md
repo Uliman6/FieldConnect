@@ -58,10 +58,12 @@ FieldConnect (formerly SiteSpeak) is a construction daily log application for fi
 2. **Transcription** - Backend service using OpenAI Whisper (`src/services/transcription.service.js`)
 3. **Data Import** - `/api/import/json` endpoint for importing existing data
 
-## Current Storage Architecture (NEEDS IMPROVEMENT)
-- Data is stored locally using Zustand + localStorage
-- **Problem**: Data clears on browser refresh
-- **Next Priority**: Implement cloud storage to sync with backend database
+## Current Storage Architecture
+- **Local State**: Zustand store with AsyncStorage persistence
+- **Backend Sync**: DataProvider component hydrates from backend on startup
+- **Offline Support**: IndexedDB queue for offline operations (web platform)
+- **Project Persistence**: Current project saved to localStorage for web
+- **Source of Truth**: Backend database (PostgreSQL) - history pages fetch directly from API
 
 ## Important Technical Decisions
 1. **Dockerfile uses Debian-slim** (not Alpine) due to Prisma OpenSSL compatibility issues
@@ -96,5 +98,66 @@ Backend/
 - **npm peer conflicts**: Use --legacy-peer-deps flag
 - **Database tables not created**: Ensure `prisma db push` runs on container startup
 
-## Next Session Priority
-Implement cloud storage to replace local storage - data should persist in backend database and sync across devices/sessions.
+## Git Workflow
+
+### Branch Strategy
+```
+main                    # Production-ready code, auto-deploys to Vercel/Render
+├── feature/xyz         # New features (e.g., feature/punch-list)
+├── fix/xyz             # Bug fixes (e.g., fix/date-navigation)
+└── refactor/xyz        # Code refactoring (e.g., refactor/auth-flow)
+```
+
+### Development Process
+1. **Create feature branch** from main:
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Develop and test locally**:
+   - Frontend: `cd Frontend && npm run web`
+   - Backend: `cd node-backend && npm run dev`
+
+3. **Commit with clear messages**:
+   ```bash
+   git add .
+   git commit -m "Add feature description
+
+   - Detail 1
+   - Detail 2
+
+   Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+   ```
+
+4. **Push and create PR**:
+   ```bash
+   git push -u origin feature/your-feature-name
+   gh pr create --title "Feature: Your Feature" --body "Description..."
+   ```
+
+5. **Test on preview deployment** (Vercel creates preview for PRs)
+
+6. **Merge to main** after testing:
+   ```bash
+   gh pr merge --squash
+   ```
+
+### Branch Naming Conventions
+- `feature/` - New functionality (e.g., `feature/punch-list-photos`)
+- `fix/` - Bug fixes (e.g., `fix/transcription-fallback`)
+- `refactor/` - Code improvements (e.g., `refactor/api-error-handling`)
+- `docs/` - Documentation updates
+- `test/` - Test additions
+
+### Before Merging Checklist
+- [ ] Feature works locally (frontend + backend)
+- [ ] No console errors
+- [ ] Tested on Vercel preview (for frontend changes)
+- [ ] Backend changes tested with local database
+- [ ] Code is clean (no debug console.logs left)
+
+## Next Priority
+- Punch list feature with photo capability
+- Full offline queue testing
