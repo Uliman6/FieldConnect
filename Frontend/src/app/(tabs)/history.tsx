@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Linking, Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, isToday } from 'date-fns';
 import * as Haptics from 'expo-haptics';
@@ -56,11 +57,11 @@ export default function LogsHistoryScreen() {
   const [showAllProjects, setShowAllProjects] = useState(true);
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
 
-  // Fetch projects
+  // Fetch projects - always refetch fresh data (staleTime: 0)
   const projectsQuery = useQuery({
     queryKey: queryKeys.projects,
     queryFn: () => getProjects(),
-    staleTime: 60000,
+    staleTime: 0,
   });
 
   // Fetch daily logs
@@ -70,11 +71,19 @@ export default function LogsHistoryScreen() {
       project_id: showAllProjects ? undefined : selectedProjectId || undefined,
       limit: 100,
     }),
-    staleTime: 30000,
+    staleTime: 0,
   });
 
   const projects = projectsQuery.data || [];
   const dailyLogs = dailyLogsQuery.data || [];
+
+  // Refetch data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      projectsQuery.refetch();
+      dailyLogsQuery.refetch();
+    }, [])
+  );
 
   const handleRefresh = useCallback(() => {
     projectsQuery.refetch();
