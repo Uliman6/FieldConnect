@@ -163,6 +163,7 @@ async function clearOfflineQueue(): Promise<void> {
 
 // Maps local IDs to backend IDs (persisted in localStorage)
 const BACKEND_ID_MAP_KEY = 'fieldconnect-backend-ids';
+const CURRENT_PROJECT_KEY = 'fieldconnect-current-project';
 
 interface BackendIdMap {
   projects: Record<string, string>;
@@ -207,6 +208,39 @@ export function getBackendId(type: keyof BackendIdMap, localId: string): string 
 export function setBackendId(type: keyof BackendIdMap, localId: string, backendId: string): void {
   backendIdMap[type][localId] = backendId;
   saveBackendIdMap(backendIdMap);
+}
+
+// ============================================
+// CURRENT PROJECT PERSISTENCE
+// ============================================
+
+function loadCurrentProjectName(): string | null {
+  if (Platform.OS !== 'web') {
+    return null;
+  }
+
+  try {
+    return localStorage.getItem(CURRENT_PROJECT_KEY);
+  } catch (error) {
+    console.error('[data] Failed to load current project:', error);
+    return null;
+  }
+}
+
+function saveCurrentProjectName(projectName: string | null): void {
+  if (Platform.OS !== 'web') {
+    return;
+  }
+
+  try {
+    if (projectName) {
+      localStorage.setItem(CURRENT_PROJECT_KEY, projectName);
+    } else {
+      localStorage.removeItem(CURRENT_PROJECT_KEY);
+    }
+  } catch (error) {
+    console.error('[data] Failed to save current project:', error);
+  }
 }
 
 // ============================================
@@ -280,27 +314,77 @@ export function DataProvider({ children }: DataProviderProps) {
           // Add new project from backend
           const newProject = store.addProject(bp.name, bp.number || '', bp.address || '');
           setBackendId('projects', newProject.id, bp.id);
+          console.log('[data] Added project from backend:', bp.name, '->', newProject.id);
         } else {
           // Update mapping
           setBackendId('projects', existingLocal.id, bp.id);
         }
       }
 
-      // Fetch daily logs for all projects
+      // Check if current project is valid AFTER hydration
+      const updatedStore = useDailyLogStore.getState();
+      const currentProjectValid = updatedStore.currentProjectId &&
+        updatedStore.projects.some((p) => p.id === updatedStore.currentProjectId);
+
+      // Also check if current log belongs to the current project
+      const currentLogValid = updatedStore.currentLogId &&
+        updatedStore.dailyLogs.some((l) =>
+          l.id === updatedStore.currentLogId &&
+          l.project_id === updatedStore.currentProjectId
+        );
+
+      const shouldAutoSelectProject = !updatedStore.currentProjectId || !currentProjectValid;
+
+      if (!currentProjectValid && store.currentProjectId) {
+        console.log('[data] Current project ID is stale, will auto-select');
+      }
+      if (!currentLogValid && updatedStore.currentLogId) {
+        console.log('[data] Current log ID is stale or mismatched');
+      }
+
+      // Auto-select project if none selected or invalid
+      if (shouldAutoSelectProject) {
+        if (updatedStore.projects.length > 0) {
+          // Try to restore last used project from localStorage
+          const savedProjectName = loadCurrentProjectName();
+          let projectToSelect = savedProjectName
+            ? updatedStore.projects.find((p) => p.name === savedProjectName)
+            : null;
+
+          // Fall back to first project if saved project not found
+          if (!projectToSelect) {
+            projectToSelect = updatedStore.projects[0];
+          }
+
+          console.log('[data] Selecting project:', projectToSelect.name);
+          updatedStore.setCurrentProject(projectToSelect.id);
+          saveCurrentProjectName(projectToSelect.name);
+
+          // Also create a daily log for today if none exists
+          const today = new Date().toISOString().split('T')[0];
+          const existingLog = updatedStore.dailyLogs.find(
+            (l) => l.project_id === projectToSelect!.id && l.date === today
+          );
+          if (!existingLog) {
+            console.log('[data] Creating daily log for today');
+            updatedStore.createDailyLog(projectToSelect.id);
+          }
+        }
+      }
+
+      // Fetch daily logs count (detail pages fetch on-demand)
       let totalLogs = 0;
       for (const bp of backendProjects) {
         try {
           const logs = await getDailyLogs({ project_id: bp.id, limit: 100 });
           totalLogs += logs.length;
-          // Note: Daily logs are fetched on-demand in history/detail pages
-          // This just confirms connectivity
         } catch (err) {
           console.warn('[data] Failed to fetch logs for project:', bp.id, err);
         }
       }
       console.log('[data] Found daily logs:', totalLogs);
 
-      // Fetch events
+      // Fetch events count
       const events = await getEvents({ limit: 100 });
       console.log('[data] Fetched events:', events.length);
 
@@ -450,4 +534,5 @@ export {
   getOfflineQueue,
   removeFromOfflineQueue,
   clearOfflineQueue,
+  saveCurrentProjectName,
 };

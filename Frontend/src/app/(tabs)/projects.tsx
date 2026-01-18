@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, Pressable, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import {
@@ -19,10 +20,13 @@ import { Button, InputField } from '@/components/ui';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { cn } from '@/lib/cn';
 import { Project } from '@/lib/types';
+import { saveCurrentProjectName, getBackendId } from '@/lib/data-provider';
+import { deleteProjectApi, queryKeys } from '@/lib/api';
 
 export default function ProjectsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const projects = useDailyLogStore((s) => s.projects);
   const dailyLogs = useDailyLogStore((s) => s.dailyLogs);
@@ -48,6 +52,9 @@ export default function ProjectsScreen() {
     // Automatically create a daily log for this project
     createDailyLog(project.id);
 
+    // Save project name to localStorage for persistence
+    saveCurrentProjectName(project.name);
+
     setNewProjectName('');
     setNewProjectNumber('');
     setNewProjectAddress('');
@@ -60,6 +67,12 @@ export default function ProjectsScreen() {
   const handleSelectProject = (projectId: string) => {
     Haptics.selectionAsync();
     setCurrentProject(projectId);
+
+    // Save project name to localStorage for persistence
+    const project = projects.find((p) => p.id === projectId);
+    if (project) {
+      saveCurrentProjectName(project.name);
+    }
 
     // Check if there's a log for today, if not create one
     const today = new Date().toISOString().split('T')[0];
@@ -88,8 +101,26 @@ export default function ProjectsScreen() {
     return projectLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
   };
 
-  const handleDeleteProject = () => {
+  const handleDeleteProject = async () => {
     if (!projectToDelete) return;
+
+    // Delete from backend first (if synced)
+    const backendId = getBackendId('projects', projectToDelete.id);
+    if (backendId) {
+      try {
+        await deleteProjectApi(backendId);
+        console.log('[projects] Deleted from backend:', backendId);
+
+        // Invalidate React Query cache so history page refreshes
+        queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+        queryClient.invalidateQueries({ queryKey: ['daily-logs'] });
+      } catch (error) {
+        console.error('[projects] Failed to delete from backend:', error);
+        // Continue with local delete even if backend fails
+      }
+    }
+
+    // Delete locally
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     deleteProject(projectToDelete.id);
     setProjectToDelete(null);
