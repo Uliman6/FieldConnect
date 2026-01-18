@@ -21,7 +21,7 @@ import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { cn } from '@/lib/cn';
 import { Project } from '@/lib/types';
 import { saveCurrentProjectName, getBackendId } from '@/lib/data-provider';
-import { deleteProjectApi, queryKeys } from '@/lib/api';
+import { deleteProjectApi, getProjects, queryKeys } from '@/lib/api';
 
 export default function ProjectsScreen() {
   const insets = useSafeAreaInsets();
@@ -104,20 +104,40 @@ export default function ProjectsScreen() {
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
 
-    // Delete from backend first (if synced)
-    const backendId = getBackendId('projects', projectToDelete.id);
-    if (backendId) {
-      try {
+    let deletedFromBackend = false;
+
+    // Try to delete from backend
+    try {
+      // First, try using the backend ID mapping
+      let backendId = getBackendId('projects', projectToDelete.id);
+
+      // If no mapping, search for project by name on backend
+      if (!backendId) {
+        console.log('[projects] No backend ID mapping, searching by name:', projectToDelete.name);
+        const backendProjects = await getProjects();
+        const matchingProject = backendProjects.find(
+          (p) => p.name === projectToDelete.name
+        );
+        if (matchingProject) {
+          backendId = matchingProject.id;
+          console.log('[projects] Found backend project by name:', backendId);
+        }
+      }
+
+      if (backendId) {
         await deleteProjectApi(backendId);
         console.log('[projects] Deleted from backend:', backendId);
+        deletedFromBackend = true;
 
         // Invalidate React Query cache so history page refreshes
         queryClient.invalidateQueries({ queryKey: queryKeys.projects });
         queryClient.invalidateQueries({ queryKey: ['daily-logs'] });
-      } catch (error) {
-        console.error('[projects] Failed to delete from backend:', error);
-        // Continue with local delete even if backend fails
+      } else {
+        console.log('[projects] Project not found on backend, only deleting locally');
       }
+    } catch (error) {
+      console.error('[projects] Failed to delete from backend:', error);
+      // Continue with local delete even if backend fails
     }
 
     // Delete locally

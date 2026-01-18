@@ -58,7 +58,6 @@ export default function DailyLogScreen() {
   const transcriptText = masterRecordingArtifact?.transcript_text ?? '';
 
   // Ensure a log exists when a project is selected but no log exists
-  // Only runs when there's NO log - does NOT interfere with date navigation
   useEffect(() => {
     // Only act if we have a project selected but NO log at all
     if (currentProjectId && !log) {
@@ -77,15 +76,6 @@ export default function DailyLogScreen() {
       }
     }
   }, [currentProjectId, log, dailyLogs, setCurrentLogId, createDailyLog]);
-
-  // Sync currentProjectId with the log's project when they differ
-  // This ensures consistency after navigation or hydration
-  useEffect(() => {
-    if (log && log.project_id && log.project_id !== currentProjectId) {
-      console.log('[daily-log] Syncing currentProjectId to match log:', log.project_id);
-      setCurrentProject(log.project_id);
-    }
-  }, [log, currentProjectId, setCurrentProject]);
 
   // Handle date navigation
   // Use the log's project_id to ensure consistency (in case currentProjectId is stale)
