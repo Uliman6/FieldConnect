@@ -69,13 +69,13 @@ class TranscriptionService {
 
     // Check against known suspicious responses
     if (SUSPICIOUS_RESPONSES.includes(normalizedText)) {
-      console.log(`[transcription] Suspicious response detected: "${text}"`);
+      console.log(`[transcription] ⚠️  SUSPICIOUS RESPONSE: "${text}" - likely rate limited or audio issue`);
       return true;
     }
 
     // If audio is larger than 10KB, expect more than 15 chars
     if (audioSize > 10000 && text.length < MIN_TRANSCRIPT_LENGTH) {
-      console.log(`[transcription] Transcript too short (${text.length} chars) for audio size (${audioSize} bytes)`);
+      console.log(`[transcription] ⚠️  TRANSCRIPT TOO SHORT: ${text.length} chars for ${audioSize} bytes audio - possible rate limit`);
       return true;
     }
 
@@ -116,6 +116,7 @@ class TranscriptionService {
 
       // Check for rate limit
       if (response.status === 429) {
+        console.log(`[transcription] 🚫 ${provider.name} RATE LIMITED (429) - will try fallback if available`);
         return { success: false, error: 'Rate limited', rateLimited: true };
       }
 
@@ -163,21 +164,39 @@ class TranscriptionService {
     if (GROQ_API_KEY) providers.push(PROVIDERS.groq);
     if (OPENAI_API_KEY) providers.push(PROVIDERS.openai);
 
+    console.log(`[transcription] Available providers: ${providers.map(p => p.name).join(', ') || 'NONE'}`);
+
+    if (providers.length === 0) {
+      console.error('[transcription] ❌ No transcription providers configured!');
+      return {
+        success: false,
+        error: 'No transcription API keys configured'
+      };
+    }
+
     let lastError = null;
+    let providerIndex = 0;
 
     for (const provider of providers) {
+      providerIndex++;
+      const isLastProvider = providerIndex === providers.length;
+
       try {
         const result = await this.transcribeWithProvider(provider, audioBuffer, filename, mimeType, options);
 
         if (result.success) {
           // Check if result looks suspicious
           if (this.isSuspiciousTranscript(result.text, audioBuffer.length)) {
-            console.log(`[transcription] ${provider.name} returned suspicious result, trying fallback...`);
+            if (isLastProvider) {
+              console.log(`[transcription] ⚠️  ${provider.name} returned suspicious result, NO MORE FALLBACKS available`);
+            } else {
+              console.log(`[transcription] ⚠️  ${provider.name} returned suspicious result, trying next provider...`);
+            }
             lastError = `${provider.name} returned suspicious response: "${result.text}"`;
             continue; // Try next provider
           }
 
-          console.log(`[transcription] Success via ${provider.name}, text length: ${result.text.length}`);
+          console.log(`[transcription] ✅ SUCCESS via ${provider.name}, text length: ${result.text.length}`);
           return {
             success: true,
             text: result.text,
@@ -187,15 +206,19 @@ class TranscriptionService {
 
         // If rate limited or error, try next provider
         lastError = result.error;
-        console.log(`[transcription] ${provider.name} failed: ${result.error}, trying fallback...`);
+        if (isLastProvider) {
+          console.log(`[transcription] ❌ ${provider.name} failed: ${result.error}, NO MORE FALLBACKS`);
+        } else {
+          console.log(`[transcription] ⚠️  ${provider.name} failed: ${result.error}, trying next provider...`);
+        }
       } catch (error) {
         lastError = error.message;
-        console.error(`[transcription] ${provider.name} exception:`, error.message);
+        console.error(`[transcription] ❌ ${provider.name} exception:`, error.message);
       }
     }
 
     // All providers failed
-    console.error('[transcription] All providers failed. Last error:', lastError);
+    console.error('[transcription] ❌ ALL PROVIDERS FAILED. Last error:', lastError);
     return {
       success: false,
       error: lastError || 'All transcription providers failed'

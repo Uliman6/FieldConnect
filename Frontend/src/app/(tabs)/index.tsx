@@ -38,6 +38,7 @@ export default function DailyLogScreen() {
   // Store actions
   const updateDailyLog = useDailyLogStore((s) => s.updateDailyLog);
   const setCurrentLogId = useDailyLogStore((s) => s.setCurrentLogId);
+  const setCurrentProject = useDailyLogStore((s) => s.setCurrentProject);
   const createDailyLog = useDailyLogStore((s) => s.createDailyLog);
   const addVoiceArtifact = useDailyLogStore((s) => s.addVoiceArtifact);
   const updateVoiceArtifact = useDailyLogStore((s) => s.updateVoiceArtifact);
@@ -56,59 +57,122 @@ export default function DailyLogScreen() {
   );
   const transcriptText = masterRecordingArtifact?.transcript_text ?? '';
 
+  // Ensure a log exists when a project is selected but no log exists
+  // Only runs when there's NO log - does NOT interfere with date navigation
+  useEffect(() => {
+    // Only act if we have a project selected but NO log at all
+    if (currentProjectId && !log) {
+      // Check if there's any log for today in the selected project
+      const today = new Date().toISOString().split('T')[0];
+      const existingLog = dailyLogs.find(
+        (l) => l.project_id === currentProjectId && l.date === today
+      );
+
+      if (existingLog) {
+        console.log('[daily-log] Found existing log for today:', existingLog.id);
+        setCurrentLogId(existingLog.id);
+      } else {
+        console.log('[daily-log] Creating new log for project:', currentProjectId);
+        createDailyLog(currentProjectId);
+      }
+    }
+  }, [currentProjectId, log, dailyLogs, setCurrentLogId, createDailyLog]);
+
+  // Sync currentProjectId with the log's project when they differ
+  // This ensures consistency after navigation or hydration
+  useEffect(() => {
+    if (log && log.project_id && log.project_id !== currentProjectId) {
+      console.log('[daily-log] Syncing currentProjectId to match log:', log.project_id);
+      setCurrentProject(log.project_id);
+    }
+  }, [log, currentProjectId, setCurrentProject]);
+
   // Handle date navigation
+  // Use the log's project_id to ensure consistency (in case currentProjectId is stale)
   const handlePrevDay = useCallback(() => {
-    if (!log || !currentProjectId) return;
+    if (!log) {
+      console.warn('[daily-log] Cannot navigate: no current log');
+      return;
+    }
+
+    const projectId = log.project_id;
+    if (!projectId) {
+      console.warn('[daily-log] Cannot navigate: log has no project_id');
+      return;
+    }
+
     Haptics.selectionAsync();
     const newDate = format(subDays(parseISO(log.date), 1), 'yyyy-MM-dd');
 
-    // Find or create log for this date
+    // Find or create log for this date within the SAME project as current log
     const existingLog = dailyLogs.find(
-      (l) => l.project_id === currentProjectId && l.date === newDate
+      (l) => l.project_id === projectId && l.date === newDate
     );
 
     if (existingLog) {
       setCurrentLogId(existingLog.id);
     } else {
-      const newLog = createDailyLog(currentProjectId);
+      const newLog = createDailyLog(projectId);
       updateDailyLog(newLog.id, { date: newDate });
     }
-  }, [log, currentProjectId, dailyLogs, setCurrentLogId, createDailyLog, updateDailyLog]);
+  }, [log, dailyLogs, setCurrentLogId, createDailyLog, updateDailyLog]);
 
   const handleNextDay = useCallback(() => {
-    if (!log || !currentProjectId) return;
+    if (!log) {
+      console.warn('[daily-log] Cannot navigate: no current log');
+      return;
+    }
+
+    const projectId = log.project_id;
+    if (!projectId) {
+      console.warn('[daily-log] Cannot navigate: log has no project_id');
+      return;
+    }
+
     Haptics.selectionAsync();
     const newDate = format(addDays(parseISO(log.date), 1), 'yyyy-MM-dd');
 
+    // Find or create log for this date within the SAME project as current log
     const existingLog = dailyLogs.find(
-      (l) => l.project_id === currentProjectId && l.date === newDate
+      (l) => l.project_id === projectId && l.date === newDate
     );
 
     if (existingLog) {
       setCurrentLogId(existingLog.id);
     } else {
-      const newLog = createDailyLog(currentProjectId);
+      const newLog = createDailyLog(projectId);
       updateDailyLog(newLog.id, { date: newDate });
     }
-  }, [log, currentProjectId, dailyLogs, setCurrentLogId, createDailyLog, updateDailyLog]);
+  }, [log, dailyLogs, setCurrentLogId, createDailyLog, updateDailyLog]);
 
   const handleDateChange = useCallback((selectedDate: Date) => {
-    if (!log || !currentProjectId) return;
+    if (!log) {
+      console.warn('[daily-log] Cannot change date: no current log');
+      return;
+    }
+
+    const projectId = log.project_id;
+    if (!projectId) {
+      console.warn('[daily-log] Cannot change date: log has no project_id');
+      return;
+    }
+
     const newDate = format(selectedDate, 'yyyy-MM-dd');
 
+    // Find or create log for this date within the SAME project as current log
     const existingLog = dailyLogs.find(
-      (l) => l.project_id === currentProjectId && l.date === newDate
+      (l) => l.project_id === projectId && l.date === newDate
     );
 
     if (existingLog) {
       setCurrentLogId(existingLog.id);
     } else {
-      const newLog = createDailyLog(currentProjectId);
+      const newLog = createDailyLog(projectId);
       updateDailyLog(newLog.id, { date: newDate });
     }
     setShowDatePicker(false);
     setTempDate(null);
-  }, [log, currentProjectId, dailyLogs, setCurrentLogId, createDailyLog, updateDailyLog]);
+  }, [log, dailyLogs, setCurrentLogId, createDailyLog, updateDailyLog]);
 
   const openDatePicker = () => {
     Haptics.selectionAsync();

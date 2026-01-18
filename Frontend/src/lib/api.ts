@@ -530,6 +530,15 @@ export async function createProject(data: {
 }
 
 /**
+ * Delete a project and all associated daily logs
+ */
+export async function deleteProjectApi(id: string): Promise<void> {
+  await apiFetch(`/api/projects/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
  * Create a new daily log with nested data
  */
 export async function createDailyLog(data: {
