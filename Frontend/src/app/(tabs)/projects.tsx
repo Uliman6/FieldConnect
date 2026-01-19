@@ -20,8 +20,8 @@ import { Button, InputField } from '@/components/ui';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { cn } from '@/lib/cn';
 import { Project } from '@/lib/types';
-import { saveCurrentProjectName, getBackendId } from '@/lib/data-provider';
-import { deleteProjectApi, getProjects, queryKeys } from '@/lib/api';
+import { saveCurrentProjectName, getBackendId, setBackendId } from '@/lib/data-provider';
+import { deleteProjectApi, getProjects, queryKeys, createProject as createProjectApi } from '@/lib/api';
 
 export default function ProjectsScreen() {
   const insets = useSafeAreaInsets();
@@ -43,11 +43,28 @@ export default function ProjectsScreen() {
   const [newProjectAddress, setNewProjectAddress] = useState('');
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (!newProjectName.trim()) return;
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const project = addProject(newProjectName.trim(), newProjectNumber.trim(), newProjectAddress.trim());
+
+    // Sync to backend immediately
+    try {
+      const backendProject = await createProjectApi({
+        name: newProjectName.trim(),
+        number: newProjectNumber.trim() || undefined,
+        address: newProjectAddress.trim() || undefined,
+      });
+      setBackendId('projects', project.id, backendProject.id);
+      console.log('[projects] Synced new project to backend:', backendProject.id);
+
+      // Invalidate React Query cache
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+    } catch (error) {
+      console.error('[projects] Failed to sync project to backend:', error);
+      // Project still exists locally, will sync later
+    }
 
     // Automatically create a daily log for this project
     createDailyLog(project.id);

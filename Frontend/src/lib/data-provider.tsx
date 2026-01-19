@@ -7,10 +7,13 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { useDailyLogStore } from './store';
+import { Event as LocalEvent, Project as LocalProject, EventType, EventSeverity } from './types';
 import {
   getProjects,
   getDailyLogs,
   getEvents,
+  IndexedEvent,
+  ProjectSummary,
   createProject as createProjectApi,
   createDailyLog as createDailyLogApi,
   createEvent as createEventApi,
@@ -297,96 +300,131 @@ export function DataProvider({ children }: DataProviderProps) {
     setState((s) => ({ ...s, isSyncing: true, error: null }));
 
     try {
-      // Fetch projects from backend
-      const backendProjects = await getProjects();
-      console.log('[data] Fetched projects:', backendProjects.length);
-
-      // Update store with backend projects
       const store = useDailyLogStore.getState();
 
-      // Merge backend projects with local (backend is source of truth)
-      for (const bp of backendProjects) {
-        const existingLocal = store.projects.find(
-          (p) => p.name === bp.name || backendIdMap.projects[p.id] === bp.id
-        );
+      // ============================================
+      // STEP 1: Fetch and sync PROJECTS
+      // ============================================
+      const backendProjects = await getProjects();
+      console.log('[data] Fetched projects from backend:', backendProjects.length);
 
-        if (!existingLocal) {
-          // Add new project from backend
-          const newProject = store.addProject(bp.name, bp.number || '', bp.address || '');
-          setBackendId('projects', newProject.id, bp.id);
-          console.log('[data] Added project from backend:', bp.name, '->', newProject.id);
+      // Build a set of backend project IDs we've seen
+      const backendProjectIds = new Set(backendProjects.map((bp) => bp.id));
+
+      // For each backend project, either update existing or add new
+      for (const bp of backendProjects) {
+        // Check if we already have this project (by backend ID mapping or by name)
+        const existingByMapping = Object.entries(backendIdMap.projects).find(
+          ([, backendId]) => backendId === bp.id
+        );
+        const existingByName = store.projects.find((p) => p.name === bp.name);
+
+        if (existingByMapping) {
+          // Already mapped, update mapping
+          setBackendId('projects', existingByMapping[0], bp.id);
+        } else if (existingByName) {
+          // Found by name, create mapping
+          setBackendId('projects', existingByName.id, bp.id);
+          console.log('[data] Mapped existing project:', existingByName.name);
         } else {
-          // Update mapping
-          setBackendId('projects', existingLocal.id, bp.id);
+          // New project from backend - add directly to store with backend ID
+          const converted = convertBackendProjectToLocal(bp);
+          // Directly set the project in store using the backend ID
+          useDailyLogStore.setState((s) => ({
+            projects: [...s.projects, converted],
+          }));
+          setBackendId('projects', bp.id, bp.id);
+          console.log('[data] Added project from backend:', bp.name);
         }
       }
 
-      // Check if current project is valid AFTER hydration
+      // ============================================
+      // STEP 2: Fetch and sync EVENTS
+      // ============================================
+      const backendEvents = await getEvents({ limit: 200 });
+      console.log('[data] Fetched events from backend:', backendEvents.length);
+
+      // Get current local events
+      const currentStore = useDailyLogStore.getState();
+      const localEventIds = new Set(currentStore.events.map((e) => e.id));
+
+      // Track which backend events we've added
+      const addedEventIds = new Set<string>();
+
+      for (const be of backendEvents) {
+        // Skip if we already have this event locally (by ID or by backend mapping)
+        const existingByMapping = Object.entries(backendIdMap.events).find(
+          ([, backendId]) => backendId === be.id
+        );
+
+        if (localEventIds.has(be.id) || existingByMapping) {
+          continue;
+        }
+
+        // Get the project ID (use backend project ID directly)
+        const projectId = be.project?.id || '';
+
+        if (projectId) {
+          // Convert and add to store
+          const localEvent = convertBackendEventToLocal(be, projectId);
+          useDailyLogStore.setState((s) => ({
+            events: [...s.events, localEvent],
+          }));
+          setBackendId('events', be.id, be.id);
+          addedEventIds.add(be.id);
+        }
+      }
+
+      if (addedEventIds.size > 0) {
+        console.log('[data] Added events from backend:', addedEventIds.size);
+      }
+
+      // ============================================
+      // STEP 3: Auto-select project if needed
+      // ============================================
       const updatedStore = useDailyLogStore.getState();
       const currentProjectValid = updatedStore.currentProjectId &&
         updatedStore.projects.some((p) => p.id === updatedStore.currentProjectId);
 
-      // Also check if current log belongs to the current project
-      const currentLogValid = updatedStore.currentLogId &&
-        updatedStore.dailyLogs.some((l) =>
-          l.id === updatedStore.currentLogId &&
-          l.project_id === updatedStore.currentProjectId
+      if (!currentProjectValid && updatedStore.projects.length > 0) {
+        // Try to restore last used project from localStorage
+        const savedProjectName = loadCurrentProjectName();
+        let projectToSelect = savedProjectName
+          ? updatedStore.projects.find((p) => p.name === savedProjectName)
+          : null;
+
+        // Fall back to first project if saved project not found
+        if (!projectToSelect) {
+          projectToSelect = updatedStore.projects[0];
+        }
+
+        console.log('[data] Selecting project:', projectToSelect.name);
+        updatedStore.setCurrentProject(projectToSelect.id);
+        saveCurrentProjectName(projectToSelect.name);
+
+        // Also create a daily log for today if none exists
+        const today = new Date().toISOString().split('T')[0];
+        const storeAfterSelect = useDailyLogStore.getState();
+        const existingLog = storeAfterSelect.dailyLogs.find(
+          (l) => l.project_id === projectToSelect!.id && l.date === today
         );
-
-      const shouldAutoSelectProject = !updatedStore.currentProjectId || !currentProjectValid;
-
-      if (!currentProjectValid && store.currentProjectId) {
-        console.log('[data] Current project ID is stale, will auto-select');
-      }
-      if (!currentLogValid && updatedStore.currentLogId) {
-        console.log('[data] Current log ID is stale or mismatched');
-      }
-
-      // Auto-select project if none selected or invalid
-      if (shouldAutoSelectProject) {
-        if (updatedStore.projects.length > 0) {
-          // Try to restore last used project from localStorage
-          const savedProjectName = loadCurrentProjectName();
-          let projectToSelect = savedProjectName
-            ? updatedStore.projects.find((p) => p.name === savedProjectName)
-            : null;
-
-          // Fall back to first project if saved project not found
-          if (!projectToSelect) {
-            projectToSelect = updatedStore.projects[0];
-          }
-
-          console.log('[data] Selecting project:', projectToSelect.name);
-          updatedStore.setCurrentProject(projectToSelect.id);
-          saveCurrentProjectName(projectToSelect.name);
-
-          // Also create a daily log for today if none exists
-          const today = new Date().toISOString().split('T')[0];
-          const existingLog = updatedStore.dailyLogs.find(
-            (l) => l.project_id === projectToSelect!.id && l.date === today
-          );
-          if (!existingLog) {
-            console.log('[data] Creating daily log for today');
-            updatedStore.createDailyLog(projectToSelect.id);
-          }
+        if (!existingLog) {
+          console.log('[data] Creating daily log for today');
+          storeAfterSelect.createDailyLog(projectToSelect.id);
+        } else {
+          storeAfterSelect.setCurrentLog(existingLog.id);
         }
       }
 
-      // Fetch daily logs count (detail pages fetch on-demand)
-      let totalLogs = 0;
-      for (const bp of backendProjects) {
-        try {
-          const logs = await getDailyLogs({ project_id: bp.id, limit: 100 });
-          totalLogs += logs.length;
-        } catch (err) {
-          console.warn('[data] Failed to fetch logs for project:', bp.id, err);
-        }
-      }
-      console.log('[data] Found daily logs:', totalLogs);
-
-      // Fetch events count
-      const events = await getEvents({ limit: 100 });
-      console.log('[data] Fetched events:', events.length);
+      // ============================================
+      // STEP 4: Update state
+      // ============================================
+      const finalStore = useDailyLogStore.getState();
+      console.log('[data] Hydration complete:', {
+        projects: finalStore.projects.length,
+        events: finalStore.events.length,
+        dailyLogs: finalStore.dailyLogs.length,
+      });
 
       setState((s) => ({
         ...s,
@@ -394,8 +432,6 @@ export function DataProvider({ children }: DataProviderProps) {
         isSyncing: false,
         lastSyncAt: new Date().toISOString(),
       }));
-
-      console.log('[data] Hydration complete');
     } catch (error) {
       console.error('[data] Hydration failed:', error);
       setState((s) => ({
@@ -536,3 +572,44 @@ export {
   clearOfflineQueue,
   saveCurrentProjectName,
 };
+
+// ============================================
+// DATA CONVERSION HELPERS
+// ============================================
+
+/**
+ * Convert backend project to local format
+ */
+function convertBackendProjectToLocal(bp: ProjectSummary): LocalProject {
+  return {
+    id: bp.id,
+    name: bp.name,
+    number: bp.number || '',
+    address: bp.address || '',
+    created_at: bp.createdAt,
+    updated_at: bp.updatedAt,
+  };
+}
+
+/**
+ * Convert backend event to local format
+ */
+function convertBackendEventToLocal(be: IndexedEvent, projectId: string): LocalEvent {
+  return {
+    id: be.id,
+    project_id: projectId,
+    created_at: be.createdAt,
+    local_audio_uri: '', // Backend events don't have local audio
+    transcript_text: be.transcriptText,
+    status: 'completed',
+    event_type: (be.eventType as EventType) || 'Other',
+    severity: (be.severity as EventSeverity) || 'Medium',
+    title: be.title || 'Untitled Event',
+    notes: '',
+    location: '',
+    trade_vendor: '',
+    is_resolved: be.isResolved || false,
+    resolved_at: null,
+    linked_daily_log_id: null,
+  };
+}
