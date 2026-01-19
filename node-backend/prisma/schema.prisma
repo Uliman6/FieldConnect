@@ -54,6 +54,7 @@ model Project {
 
   dailyLogs DailyLog[]
   events    Event[]
+  insights  Insight[]
 
   @@index([name])
   @@index([number])
@@ -284,6 +285,130 @@ model EventIndex {
   @@index([needsFollowUp])
   @@index([costImpact])
   @@map("event_indexes")
+}
+
+// ============================================
+// UNIFIED INSIGHTS SYSTEM
+// ============================================
+// Captures learnings, issues, observations from all sources
+// for pattern matching and proactive issue surfacing
+
+enum InsightSourceType {
+  event
+  pending_issue
+  inspection_note
+  additional_work
+  manual
+}
+
+enum InsightCategory {
+  issue
+  learning
+  observation
+  safety
+  quality
+  cost_impact
+  delay
+  rework
+}
+
+model Insight {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Source tracking - where did this insight come from?
+  sourceType  InsightSourceType @map("source_type")
+  sourceId    String?  @map("source_id") // Original record ID if from another table
+  projectId   String   @map("project_id")
+  dailyLogId  String?  @map("daily_log_id")
+  dailyLogDate DateTime? @map("daily_log_date") @db.Date
+
+  // Core content
+  title       String
+  description String?  @db.Text
+  rawText     String?  @map("raw_text") @db.Text // Original transcript/notes
+
+  // Classification
+  category    InsightCategory @default(issue)
+  severity    String?  // 'low', 'medium', 'high', 'critical'
+
+  // Extracted entities (JSON arrays for flexible querying)
+  inspectors  Json?    // ["John Nathan", "Jane Smith"]
+  trades      Json?    // ["electricians", "plumbers", "HVAC"]
+  materials   Json?    // ["concrete", "metal panels"]
+  issueTypes  Json?    // ["cost_impact", "code_violation", "rework"]
+  locations   Json?    // ["level 1", "basement", "roof"]
+  ahj         Json?    // Authority Having Jurisdiction
+  systems     Json?    // ["BMS", "HVAC", "sprinkler"]
+  costImpact  Float?   @map("cost_impact")
+
+  // Follow-up tracking
+  needsFollowUp  Boolean  @default(false) @map("needs_follow_up")
+  followUpReason String?  @map("follow_up_reason") @db.Text
+  followUpDueDate DateTime? @map("follow_up_due_date")
+  isResolved     Boolean  @default(false) @map("is_resolved")
+  resolvedAt     DateTime? @map("resolved_at")
+
+  // Pattern matching - full-text searchable summary
+  keywordsSummary String? @map("keywords_summary") @db.Text
+
+  // Test environment flag - separates test data from production
+  isTest      Boolean  @default(false) @map("is_test")
+
+  // Relations
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([sourceType])
+  @@index([sourceId])
+  @@index([category])
+  @@index([severity])
+  @@index([needsFollowUp])
+  @@index([isResolved])
+  @@index([isTest])
+  @@index([createdAt])
+  @@index([dailyLogDate])
+  @@map("insights")
+}
+
+// ============================================
+// INSIGHT PATTERNS (for pattern detection)
+// ============================================
+// Stores detected patterns across insights for proactive alerting
+
+model InsightPattern {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Pattern definition
+  name        String   // "Recurring stair code issues"
+  description String?  @db.Text
+  patternType String   @map("pattern_type") // 'recurring_issue', 'trade_correlation', 'location_hotspot'
+
+  // Matching criteria (JSON for flexibility)
+  matchCriteria Json   @map("match_criteria") // {trades: ["electrician"], issueTypes: ["code_violation"]}
+
+  // Statistics
+  occurrenceCount Int  @default(0) @map("occurrence_count")
+  lastSeenAt     DateTime? @map("last_seen_at")
+  firstSeenAt    DateTime? @map("first_seen_at")
+
+  // Related insights (JSON array of insight IDs)
+  relatedInsightIds Json? @map("related_insight_ids")
+
+  // Alerting
+  isActive    Boolean  @default(true) @map("is_active")
+  alertThreshold Int?  @map("alert_threshold") // Alert when count exceeds this
+
+  // Test flag
+  isTest      Boolean  @default(false) @map("is_test")
+
+  @@index([patternType])
+  @@index([isActive])
+  @@index([isTest])
+  @@map("insight_patterns")
 }
 
 // ============================================
