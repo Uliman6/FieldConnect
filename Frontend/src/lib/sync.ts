@@ -854,6 +854,14 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
         dailyTotalsWorkers: dailyLog.daily_totals_workers || undefined,
         dailyTotalsHours: dailyLog.daily_totals_hours || undefined,
       });
+
+      // Update sync status
+      const store = useDailyLogStore.getState();
+      store.updateDailyLog(dailyLog.id, {
+        sync_status: 'synced',
+        last_synced_at: new Date().toISOString(),
+      });
+
       return backendId;
     }
 
@@ -979,9 +987,24 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
 
     backendIdMap.dailyLogs.set(dailyLog.id, result.id);
     console.log('[sync] Daily log synced:', dailyLog.id, '->', result.id);
+
+    // Update sync status in store
+    const store = useDailyLogStore.getState();
+    store.updateDailyLog(dailyLog.id, {
+      sync_status: 'synced',
+      last_synced_at: new Date().toISOString(),
+    });
+
     return result.id;
   } catch (error) {
     console.error('[sync] Failed to sync daily log:', error);
+
+    // Update sync status to error
+    const store = useDailyLogStore.getState();
+    store.updateDailyLog(dailyLog.id, {
+      sync_status: 'error',
+    });
+
     return null;
   }
 }

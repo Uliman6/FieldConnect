@@ -1,0 +1,731 @@
+const prisma = require('./prisma');
+const eventIndexer = require('./event-indexer.service');
+const similarityService = require('./similarity.service');
+
+/**
+ * Insights Service
+ * Unified system for capturing, indexing, and finding patterns in construction insights
+ * from events, pending issues, inspection notes, and manual entries.
+ */
+class InsightsService {
+  /**
+   * Create an insight from an event
+   * @param {string} eventId - Event ID to create insight from
+   * @param {boolean} isTest - Whether this is test data
+   * @returns {Object} Created insight
+   */
+  async createFromEvent(eventId, isTest = false) {
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { project: true }
+    });
+
+    if (!event) {
+      throw new Error(`Event not found: ${eventId}`);
+    }
+
+    // Check if insight already exists for this event
+    const existing = await prisma.insight.findFirst({
+      where: { sourceType: 'event', sourceId: eventId }
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    // Extract keywords using the event indexer
+    const text = `${event.transcriptText || ''} ${event.title || ''} ${event.notes || ''}`;
+    const extracted = eventIndexer.extractAllKeywords(text);
+
+    // Determine category based on extracted issue types
+    const category = this.determineCategory(extracted.issueTypes);
+
+    // Build keywords summary
+    const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
+
+    // Generate title if needed
+    const title = event.title && event.title !== 'Untitled Event'
+      ? event.title
+      : eventIndexer.generateSmartTitle(event.transcriptText);
+
+    const insight = await prisma.insight.create({
+      data: {
+        sourceType: 'event',
+        sourceId: eventId,
+        projectId: event.projectId,
+        dailyLogId: event.linkedDailyLogId,
+        title,
+        description: event.notes,
+        rawText: event.transcriptText,
+        category,
+        severity: event.severity,
+        inspectors: extracted.inspectors,
+        trades: extracted.trades,
+        materials: extracted.materials,
+        issueTypes: extracted.issueTypes,
+        locations: extracted.locations,
+        ahj: extracted.ahj,
+        systems: extracted.systems,
+        costImpact: extracted.costImpact,
+        needsFollowUp: extracted.needsFollowUp,
+        followUpReason: extracted.followUpReason,
+        isResolved: event.isResolved || false,
+        keywordsSummary,
+        isTest
+      }
+    });
+
+    console.log(`[insights] Created insight from event: ${insight.id}`);
+    return insight;
+  }
+
+  /**
+   * Create an insight from a pending issue
+   * @param {string} pendingIssueId - PendingIssue ID
+   * @param {boolean} isTest - Whether this is test data
+   * @returns {Object} Created insight
+   */
+  async createFromPendingIssue(pendingIssueId, isTest = false) {
+    const issue = await prisma.pendingIssue.findUnique({
+      where: { id: pendingIssueId },
+      include: {
+        dailyLog: {
+          include: { project: true }
+        }
+      }
+    });
+
+    if (!issue) {
+      throw new Error(`Pending issue not found: ${pendingIssueId}`);
+    }
+
+    // Check if insight already exists
+    const existing = await prisma.insight.findFirst({
+      where: { sourceType: 'pending_issue', sourceId: pendingIssueId }
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    // Extract keywords from description
+    const text = `${issue.title || ''} ${issue.description || ''}`;
+    const extracted = eventIndexer.extractAllKeywords(text);
+
+    // Add the issue's category to extracted issue types
+    if (issue.category && !extracted.issueTypes.includes(issue.category)) {
+      extracted.issueTypes.push(issue.category);
+    }
+
+    // Add location if not extracted
+    if (issue.location && !extracted.locations.includes(issue.location.toLowerCase())) {
+      extracted.locations.push(issue.location.toLowerCase());
+    }
+
+    const category = this.determineCategory(extracted.issueTypes);
+    const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
+
+    const insight = await prisma.insight.create({
+      data: {
+        sourceType: 'pending_issue',
+        sourceId: pendingIssueId,
+        projectId: issue.dailyLog.projectId,
+        dailyLogId: issue.dailyLogId,
+        dailyLogDate: issue.dailyLog.date,
+        title: issue.title || 'Pending Issue',
+        description: issue.description,
+        rawText: issue.description,
+        category,
+        severity: issue.severity,
+        inspectors: extracted.inspectors,
+        trades: extracted.trades,
+        materials: extracted.materials,
+        issueTypes: extracted.issueTypes,
+        locations: extracted.locations,
+        ahj: extracted.ahj,
+        systems: extracted.systems,
+        costImpact: extracted.costImpact,
+        needsFollowUp: true, // Pending issues always need follow-up
+        followUpReason: issue.description,
+        followUpDueDate: issue.dueDate,
+        isResolved: false,
+        keywordsSummary,
+        isTest
+      }
+    });
+
+    console.log(`[insights] Created insight from pending issue: ${insight.id}`);
+    return insight;
+  }
+
+  /**
+   * Create an insight from an inspection note
+   * @param {string} inspectionNoteId - InspectionNote ID
+   * @param {boolean} isTest - Whether this is test data
+   * @returns {Object} Created insight
+   */
+  async createFromInspectionNote(inspectionNoteId, isTest = false) {
+    const note = await prisma.inspectionNote.findUnique({
+      where: { id: inspectionNoteId },
+      include: {
+        dailyLog: {
+          include: { project: true }
+        }
+      }
+    });
+
+    if (!note) {
+      throw new Error(`Inspection note not found: ${inspectionNoteId}`);
+    }
+
+    // Check if insight already exists
+    const existing = await prisma.insight.findFirst({
+      where: { sourceType: 'inspection_note', sourceId: inspectionNoteId }
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    // Extract keywords
+    const text = `${note.inspectionType || ''} ${note.notes || ''} ${note.result || ''}`;
+    const extracted = eventIndexer.extractAllKeywords(text);
+
+    // Add inspector if present
+    if (note.inspectorName && !extracted.inspectors.includes(note.inspectorName)) {
+      extracted.inspectors.push(note.inspectorName);
+    }
+
+    // Add AHJ if present
+    if (note.ahj && !extracted.ahj.includes(note.ahj)) {
+      extracted.ahj.push(note.ahj);
+    }
+
+    // Determine category and severity based on result
+    let category = 'observation';
+    let severity = 'low';
+
+    if (note.result) {
+      const lowerResult = note.result.toLowerCase();
+      if (lowerResult.includes('fail') || lowerResult.includes('deficient')) {
+        category = 'issue';
+        severity = 'high';
+        extracted.issueTypes.push('code_violation');
+      } else if (lowerResult.includes('pass') || lowerResult.includes('approved')) {
+        category = 'observation';
+        severity = 'low';
+      }
+    }
+
+    const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
+
+    const insight = await prisma.insight.create({
+      data: {
+        sourceType: 'inspection_note',
+        sourceId: inspectionNoteId,
+        projectId: note.dailyLog.projectId,
+        dailyLogId: note.dailyLogId,
+        dailyLogDate: note.dailyLog.date,
+        title: `${note.inspectionType || 'Inspection'}: ${note.result || 'No Result'}`,
+        description: note.notes,
+        rawText: note.notes,
+        category,
+        severity,
+        inspectors: extracted.inspectors,
+        trades: extracted.trades,
+        materials: extracted.materials,
+        issueTypes: extracted.issueTypes,
+        locations: extracted.locations,
+        ahj: extracted.ahj,
+        systems: extracted.systems,
+        costImpact: extracted.costImpact,
+        needsFollowUp: note.followUpNeeded || false,
+        followUpReason: note.followUpNeeded ? note.notes : null,
+        isResolved: !note.followUpNeeded,
+        keywordsSummary,
+        isTest
+      }
+    });
+
+    console.log(`[insights] Created insight from inspection note: ${insight.id}`);
+    return insight;
+  }
+
+  /**
+   * Create a manual insight
+   * @param {Object} data - Insight data
+   * @returns {Object} Created insight
+   */
+  async createManualInsight(data) {
+    const {
+      projectId,
+      dailyLogId,
+      title,
+      description,
+      category = 'observation',
+      severity = 'medium',
+      isTest = false
+    } = data;
+
+    // Extract keywords from description
+    const text = `${title || ''} ${description || ''}`;
+    const extracted = eventIndexer.extractAllKeywords(text);
+    const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
+
+    const insight = await prisma.insight.create({
+      data: {
+        sourceType: 'manual',
+        projectId,
+        dailyLogId,
+        title,
+        description,
+        rawText: description,
+        category,
+        severity,
+        inspectors: extracted.inspectors,
+        trades: extracted.trades,
+        materials: extracted.materials,
+        issueTypes: extracted.issueTypes,
+        locations: extracted.locations,
+        ahj: extracted.ahj,
+        systems: extracted.systems,
+        costImpact: extracted.costImpact,
+        needsFollowUp: extracted.needsFollowUp,
+        followUpReason: extracted.followUpReason,
+        keywordsSummary,
+        isTest
+      }
+    });
+
+    console.log(`[insights] Created manual insight: ${insight.id}`);
+    return insight;
+  }
+
+  /**
+   * Index all unindexed items from daily logs
+   * @param {boolean} isTest - Mark as test data
+   * @returns {Object} Summary of indexed items
+   */
+  async indexAllFromDailyLogs(isTest = false) {
+    const results = {
+      pendingIssues: { indexed: 0, errors: 0 },
+      inspectionNotes: { indexed: 0, errors: 0 },
+      events: { indexed: 0, errors: 0 }
+    };
+
+    // Index pending issues
+    const pendingIssues = await prisma.pendingIssue.findMany({
+      where: {
+        NOT: {
+          id: {
+            in: (await prisma.insight.findMany({
+              where: { sourceType: 'pending_issue' },
+              select: { sourceId: true }
+            })).map(i => i.sourceId).filter(Boolean)
+          }
+        }
+      },
+      select: { id: true }
+    });
+
+    for (const issue of pendingIssues) {
+      try {
+        await this.createFromPendingIssue(issue.id, isTest);
+        results.pendingIssues.indexed++;
+      } catch (err) {
+        console.error(`Error indexing pending issue ${issue.id}:`, err.message);
+        results.pendingIssues.errors++;
+      }
+    }
+
+    // Index inspection notes
+    const inspectionNotes = await prisma.inspectionNote.findMany({
+      where: {
+        NOT: {
+          id: {
+            in: (await prisma.insight.findMany({
+              where: { sourceType: 'inspection_note' },
+              select: { sourceId: true }
+            })).map(i => i.sourceId).filter(Boolean)
+          }
+        }
+      },
+      select: { id: true }
+    });
+
+    for (const note of inspectionNotes) {
+      try {
+        await this.createFromInspectionNote(note.id, isTest);
+        results.inspectionNotes.indexed++;
+      } catch (err) {
+        console.error(`Error indexing inspection note ${note.id}:`, err.message);
+        results.inspectionNotes.errors++;
+      }
+    }
+
+    // Index events
+    const events = await prisma.event.findMany({
+      where: {
+        transcriptText: { not: null },
+        NOT: {
+          id: {
+            in: (await prisma.insight.findMany({
+              where: { sourceType: 'event' },
+              select: { sourceId: true }
+            })).map(i => i.sourceId).filter(Boolean)
+          }
+        }
+      },
+      select: { id: true }
+    });
+
+    for (const event of events) {
+      try {
+        await this.createFromEvent(event.id, isTest);
+        results.events.indexed++;
+      } catch (err) {
+        console.error(`Error indexing event ${event.id}:`, err.message);
+        results.events.errors++;
+      }
+    }
+
+    console.log('[insights] Indexing complete:', results);
+    return results;
+  }
+
+  /**
+   * Find similar insights
+   * @param {string} insightId - Insight ID to find similar for
+   * @param {Object} options - Search options
+   * @returns {Array} Similar insights
+   */
+  async findSimilar(insightId, options = {}) {
+    const { limit = 5, includeTest = false } = options;
+
+    const insight = await prisma.insight.findUnique({
+      where: { id: insightId }
+    });
+
+    if (!insight) {
+      throw new Error(`Insight not found: ${insightId}`);
+    }
+
+    // Get all insights to compare (excluding source and optionally test data)
+    const whereClause = {
+      id: { not: insightId }
+    };
+
+    if (!includeTest) {
+      whereClause.isTest = false;
+    }
+
+    const candidates = await prisma.insight.findMany({
+      where: whereClause,
+      include: {
+        project: { select: { id: true, name: true } }
+      }
+    });
+
+    // Score each candidate
+    const scored = candidates.map(candidate => {
+      const score = this.calculateSimilarityScore(insight, candidate);
+      return { ...candidate, similarityScore: score.total, scoreBreakdown: score.breakdown };
+    });
+
+    // Filter and sort
+    return scored
+      .filter(c => c.similarityScore > 0.3)
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, limit)
+      .map(c => ({
+        id: c.id,
+        title: c.title,
+        category: c.category,
+        severity: c.severity,
+        sourceType: c.sourceType,
+        createdAt: c.createdAt,
+        project: c.project,
+        similarityScore: Math.round(c.similarityScore * 100) / 100,
+        scoreBreakdown: c.scoreBreakdown
+      }));
+  }
+
+  /**
+   * Calculate similarity score between two insights
+   */
+  calculateSimilarityScore(source, candidate) {
+    const breakdown = {};
+    let total = 0;
+
+    // Same category (0.2)
+    if (source.category === candidate.category) {
+      breakdown.category = 0.2;
+      total += 0.2;
+    }
+
+    // Same severity (0.1)
+    if (source.severity === candidate.severity) {
+      breakdown.severity = 0.1;
+      total += 0.1;
+    }
+
+    // Trade overlap (0.25)
+    const tradeOverlap = this.calculateArrayOverlap(source.trades, candidate.trades);
+    if (tradeOverlap > 0) {
+      breakdown.trades = tradeOverlap * 0.25;
+      total += breakdown.trades;
+    }
+
+    // Issue type overlap (0.25)
+    const issueOverlap = this.calculateArrayOverlap(source.issueTypes, candidate.issueTypes);
+    if (issueOverlap > 0) {
+      breakdown.issueTypes = issueOverlap * 0.25;
+      total += breakdown.issueTypes;
+    }
+
+    // Location overlap (0.15)
+    const locationOverlap = this.calculateArrayOverlap(source.locations, candidate.locations);
+    if (locationOverlap > 0) {
+      breakdown.locations = locationOverlap * 0.15;
+      total += breakdown.locations;
+    }
+
+    // System overlap (0.15)
+    const systemOverlap = this.calculateArrayOverlap(source.systems, candidate.systems);
+    if (systemOverlap > 0) {
+      breakdown.systems = systemOverlap * 0.15;
+      total += breakdown.systems;
+    }
+
+    // Keywords summary overlap (0.3)
+    if (source.keywordsSummary && candidate.keywordsSummary) {
+      const sourceWords = new Set(source.keywordsSummary.toLowerCase().split(/\s+/));
+      const candidateWords = new Set(candidate.keywordsSummary.toLowerCase().split(/\s+/));
+
+      let overlap = 0;
+      sourceWords.forEach(word => {
+        if (candidateWords.has(word) && word.length > 3) overlap++;
+      });
+
+      const keywordScore = overlap / Math.max(sourceWords.size, 1);
+      breakdown.keywords = keywordScore * 0.3;
+      total += breakdown.keywords;
+    }
+
+    return { total: Math.min(total, 1.0), breakdown };
+  }
+
+  /**
+   * Calculate overlap between two JSON arrays
+   */
+  calculateArrayOverlap(arr1, arr2) {
+    if (!arr1 || !arr2 || !Array.isArray(arr1) || !Array.isArray(arr2)) {
+      return 0;
+    }
+    if (arr1.length === 0 || arr2.length === 0) {
+      return 0;
+    }
+
+    const set1 = new Set(arr1.map(s => s.toLowerCase()));
+    const set2 = new Set(arr2.map(s => s.toLowerCase()));
+
+    let overlap = 0;
+    set1.forEach(item => {
+      if (set2.has(item)) overlap++;
+    });
+
+    return overlap / Math.max(set1.size, set2.size);
+  }
+
+  /**
+   * Determine category based on issue types
+   */
+  determineCategory(issueTypes) {
+    if (!issueTypes || issueTypes.length === 0) {
+      return 'observation';
+    }
+
+    if (issueTypes.includes('safety')) return 'safety';
+    if (issueTypes.includes('cost_impact')) return 'cost_impact';
+    if (issueTypes.includes('delay')) return 'delay';
+    if (issueTypes.includes('rework')) return 'rework';
+    if (issueTypes.includes('quality')) return 'quality';
+    if (issueTypes.includes('code_violation')) return 'issue';
+
+    return 'issue';
+  }
+
+  /**
+   * Search insights with filters
+   * @param {Object} filters - Search filters
+   * @returns {Array} Matching insights
+   */
+  async search(filters = {}) {
+    const {
+      query,
+      projectId,
+      category,
+      severity,
+      sourceType,
+      needsFollowUp,
+      isResolved,
+      isTest,
+      startDate,
+      endDate,
+      limit = 50
+    } = filters;
+
+    const whereClause = {};
+
+    if (query) {
+      whereClause.OR = [
+        { title: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+        { keywordsSummary: { contains: query, mode: 'insensitive' } }
+      ];
+    }
+
+    if (projectId) whereClause.projectId = projectId;
+    if (category) whereClause.category = category;
+    if (severity) whereClause.severity = severity;
+    if (sourceType) whereClause.sourceType = sourceType;
+    if (needsFollowUp !== undefined) whereClause.needsFollowUp = needsFollowUp;
+    if (isResolved !== undefined) whereClause.isResolved = isResolved;
+    if (isTest !== undefined) whereClause.isTest = isTest;
+
+    if (startDate) {
+      whereClause.createdAt = { gte: new Date(startDate) };
+    }
+    if (endDate) {
+      whereClause.createdAt = { ...whereClause.createdAt, lte: new Date(endDate) };
+    }
+
+    const insights = await prisma.insight.findMany({
+      where: whereClause,
+      include: {
+        project: { select: { id: true, name: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit
+    });
+
+    return insights;
+  }
+
+  /**
+   * Get insights statistics
+   * @param {Object} options - Query options
+   * @returns {Object} Statistics
+   */
+  async getStats(options = {}) {
+    const { projectId, isTest } = options;
+
+    const whereClause = {};
+    if (projectId) whereClause.projectId = projectId;
+    if (isTest !== undefined) whereClause.isTest = isTest;
+
+    const [
+      total,
+      byCategory,
+      bySeverity,
+      bySourceType,
+      needsFollowUp,
+      unresolved,
+      withCostImpact,
+      insights
+    ] = await Promise.all([
+      prisma.insight.count({ where: whereClause }),
+      prisma.insight.groupBy({
+        by: ['category'],
+        where: whereClause,
+        _count: true
+      }),
+      prisma.insight.groupBy({
+        by: ['severity'],
+        where: whereClause,
+        _count: true
+      }),
+      prisma.insight.groupBy({
+        by: ['sourceType'],
+        where: whereClause,
+        _count: true
+      }),
+      prisma.insight.count({ where: { ...whereClause, needsFollowUp: true } }),
+      prisma.insight.count({ where: { ...whereClause, isResolved: false } }),
+      prisma.insight.count({ where: { ...whereClause, costImpact: { not: null } } }),
+      prisma.insight.findMany({
+        where: whereClause,
+        select: {
+          trades: true,
+          issueTypes: true,
+          systems: true,
+          costImpact: true
+        }
+      })
+    ]);
+
+    // Aggregate keyword frequencies
+    const tradeCounts = {};
+    const issueCounts = {};
+    const systemCounts = {};
+    let totalCostImpact = 0;
+
+    for (const insight of insights) {
+      if (Array.isArray(insight.trades)) {
+        for (const trade of insight.trades) {
+          tradeCounts[trade] = (tradeCounts[trade] || 0) + 1;
+        }
+      }
+      if (Array.isArray(insight.issueTypes)) {
+        for (const issue of insight.issueTypes) {
+          issueCounts[issue] = (issueCounts[issue] || 0) + 1;
+        }
+      }
+      if (Array.isArray(insight.systems)) {
+        for (const system of insight.systems) {
+          systemCounts[system] = (systemCounts[system] || 0) + 1;
+        }
+      }
+      if (insight.costImpact) {
+        totalCostImpact += insight.costImpact;
+      }
+    }
+
+    return {
+      total,
+      byCategory: byCategory.map(c => ({ category: c.category, count: c._count })),
+      bySeverity: bySeverity.map(s => ({ severity: s.severity, count: s._count })),
+      bySourceType: bySourceType.map(s => ({ sourceType: s.sourceType, count: s._count })),
+      needsFollowUp,
+      unresolved,
+      withCostImpact,
+      totalCostImpact,
+      topTrades: this.sortByCount(tradeCounts, 10),
+      topIssueTypes: this.sortByCount(issueCounts, 10),
+      topSystems: this.sortByCount(systemCounts, 10)
+    };
+  }
+
+  /**
+   * Clear all test data
+   * @returns {Object} Deletion summary
+   */
+  async clearTestData() {
+    const [insights, patterns] = await Promise.all([
+      prisma.insight.deleteMany({ where: { isTest: true } }),
+      prisma.insightPattern.deleteMany({ where: { isTest: true } })
+    ]);
+
+    console.log(`[insights] Cleared test data: ${insights.count} insights, ${patterns.count} patterns`);
+    return { insights: insights.count, patterns: patterns.count };
+  }
+
+  sortByCount(counts, limit) {
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([name, count]) => ({ name, count }));
+  }
+}
+
+module.exports = new InsightsService();
