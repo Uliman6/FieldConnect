@@ -1097,8 +1097,206 @@ export async function parseEventWithAI(
   });
 }
 
+// ============================================
+// INSIGHTS API (Unified Learning/Issue Tracking)
+// ============================================
+
+export interface Insight {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  sourceType: 'event' | 'pending_issue' | 'inspection_note' | 'additional_work' | 'manual';
+  sourceId: string | null;
+  projectId: string;
+  dailyLogId: string | null;
+  dailyLogDate: string | null;
+  title: string;
+  description: string | null;
+  rawText: string | null;
+  category: 'issue' | 'learning' | 'observation' | 'safety' | 'quality' | 'cost_impact' | 'delay' | 'rework';
+  severity: string | null;
+  inspectors: string[] | null;
+  trades: string[] | null;
+  materials: string[] | null;
+  issueTypes: string[] | null;
+  locations: string[] | null;
+  ahj: string[] | null;
+  systems: string[] | null;
+  costImpact: number | null;
+  needsFollowUp: boolean;
+  followUpReason: string | null;
+  followUpDueDate: string | null;
+  isResolved: boolean;
+  resolvedAt: string | null;
+  keywordsSummary: string | null;
+  isTest: boolean;
+  project: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface InsightsStats {
+  total: number;
+  byCategory: { category: string; count: number }[];
+  bySeverity: { severity: string; count: number }[];
+  bySourceType: { sourceType: string; count: number }[];
+  needsFollowUp: number;
+  unresolved: number;
+  withCostImpact: number;
+  totalCostImpact: number;
+  topTrades: { name: string; count: number }[];
+  topIssueTypes: { name: string; count: number }[];
+  topSystems: { name: string; count: number }[];
+}
+
+export interface InsightSearchFilters {
+  query?: string;
+  projectId?: string;
+  category?: string;
+  severity?: string;
+  sourceType?: string;
+  needsFollowUp?: boolean;
+  isResolved?: boolean;
+  isTest?: boolean;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+}
+
+/**
+ * Get insights with optional filters
+ */
+export async function getInsights(filters: InsightSearchFilters = {}): Promise<Insight[]> {
+  const params = new URLSearchParams();
+
+  if (filters.query) params.append('query', filters.query);
+  if (filters.projectId) params.append('projectId', filters.projectId);
+  if (filters.category) params.append('category', filters.category);
+  if (filters.severity) params.append('severity', filters.severity);
+  if (filters.sourceType) params.append('sourceType', filters.sourceType);
+  if (filters.needsFollowUp !== undefined) params.append('needsFollowUp', String(filters.needsFollowUp));
+  if (filters.isResolved !== undefined) params.append('isResolved', String(filters.isResolved));
+  if (filters.isTest !== undefined) params.append('isTest', String(filters.isTest));
+  if (filters.startDate) params.append('startDate', filters.startDate);
+  if (filters.endDate) params.append('endDate', filters.endDate);
+  if (filters.limit) params.append('limit', String(filters.limit));
+
+  const query = params.toString();
+  return apiFetch(`/api/insights${query ? `?${query}` : ''}`);
+}
+
+/**
+ * Get insight by ID
+ */
+export async function getInsight(id: string): Promise<Insight> {
+  return apiFetch(`/api/insights/${id}`);
+}
+
+/**
+ * Get insights statistics
+ */
+export async function getInsightsStats(options: {
+  projectId?: string;
+  isTest?: boolean;
+} = {}): Promise<InsightsStats> {
+  const params = new URLSearchParams();
+  if (options.projectId) params.append('projectId', options.projectId);
+  if (options.isTest !== undefined) params.append('isTest', String(options.isTest));
+
+  const query = params.toString();
+  return apiFetch(`/api/insights/stats${query ? `?${query}` : ''}`);
+}
+
+/**
+ * Find similar insights by text
+ */
+export async function findSimilarInsights(
+  text: string,
+  options: { projectId?: string; includeTest?: boolean; limit?: number } = {}
+): Promise<{
+  query: string;
+  extracted: {
+    inspectors: string[];
+    trades: string[];
+    materials: string[];
+    issueTypes: string[];
+    locations: string[];
+    systems: string[];
+  };
+  results: (Insight & { similarityScore: number })[];
+}> {
+  return apiFetch('/api/insights/find-similar-by-text', {
+    method: 'POST',
+    body: JSON.stringify({
+      text,
+      projectId: options.projectId,
+      includeTest: options.includeTest,
+      limit: options.limit,
+    }),
+  });
+}
+
+/**
+ * Index all daily log items into insights
+ */
+export async function indexAllInsights(isTest: boolean = false): Promise<{
+  success: boolean;
+  message: string;
+  results: {
+    pendingIssues: { indexed: number; errors: number };
+    inspectionNotes: { indexed: number; errors: number };
+    events: { indexed: number; errors: number };
+  };
+}> {
+  return apiFetch('/api/insights/index-all', {
+    method: 'POST',
+    body: JSON.stringify({ isTest }),
+  });
+}
+
+/**
+ * Update an insight
+ */
+export async function updateInsight(
+  id: string,
+  data: {
+    isResolved?: boolean;
+    needsFollowUp?: boolean;
+    followUpReason?: string;
+    followUpDueDate?: string | null;
+    severity?: string;
+    category?: string;
+  }
+): Promise<Insight> {
+  return apiFetch(`/api/insights/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Clear all test insights data
+ */
+export async function clearTestInsights(): Promise<{
+  success: boolean;
+  message: string;
+  insights: number;
+  patterns: number;
+}> {
+  return apiFetch('/api/insights/test-data', { method: 'DELETE' });
+}
+
+/**
+ * Get a single event from backend by ID
+ */
+export async function getEvent(id: string): Promise<IndexedEvent> {
+  return apiFetch(`/api/events/${id}`);
+}
+
 export const queryKeys = {
   events: ['events'] as const,
+  event: (id: string) => ['events', id] as const,
   eventSearch: (query: string) => ['events', 'search', query] as const,
   eventIndex: (eventId: string) => ['events', eventId, 'index'] as const,
   indexedSearch: (filters: SearchFilters) => ['events', 'indexed', 'search', filters] as const,
@@ -1109,4 +1307,7 @@ export const queryKeys = {
   dailyLog: (id: string) => ['daily-logs', id] as const,
   projects: ['projects'] as const,
   project: (id: string) => ['projects', id] as const,
+  insights: (filters?: InsightSearchFilters) => ['insights', filters] as const,
+  insight: (id: string) => ['insights', id] as const,
+  insightsStats: (projectId?: string, isTest?: boolean) => ['insights', 'stats', projectId, isTest] as const,
 };

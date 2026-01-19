@@ -7,13 +7,16 @@ import {
   TextInput,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { useDailyLogStore } from '@/lib/store';
 import { EventType, EventSeverity, Event } from '@/lib/types';
 import { audioFileExists } from '@/lib/audio-storage';
 import { generateTitleFromTranscript } from '@/lib/transcription';
 import { cn } from '@/lib/cn';
+import { getEvent, queryKeys, IndexedEvent } from '@/lib/api';
 import {
   ArrowLeft,
   Play,
@@ -28,12 +31,15 @@ import {
   FileText,
   Copy,
   Sparkles,
+  Building2,
+  Calendar,
 } from 'lucide-react-native';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { format } from 'date-fns';
 
 const EVENT_TYPES: EventType[] = [
   'Delay',
@@ -71,12 +77,29 @@ export default function EventDetailScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const event = useDailyLogStore((s) => s.events.find((e) => e.id === id));
+  // First try local store
+  const localEvent = useDailyLogStore((s) => s.events.find((e) => e.id === id));
   const projects = useDailyLogStore((s) => s.projects);
   const updateEvent = useDailyLogStore((s) => s.updateEvent);
   const deleteEvent = useDailyLogStore((s) => s.deleteEvent);
   const addEventToDailyLog = useDailyLogStore((s) => s.addEventToDailyLog);
   const toggleEventResolved = useDailyLogStore((s) => s.toggleEventResolved);
+
+  // If not in local store, fetch from backend
+  const backendEventQuery = useQuery({
+    queryKey: queryKeys.event(id || ''),
+    queryFn: () => getEvent(id || ''),
+    enabled: !!id && !localEvent, // Only fetch if not found locally
+    retry: 1,
+  });
+
+  const backendEvent = backendEventQuery.data;
+  const isLoadingBackend = backendEventQuery.isLoading && !localEvent;
+  const backendError = backendEventQuery.isError && !localEvent;
+
+  // Determine if we're viewing a local or backend event
+  const isLocalEvent = !!localEvent;
+  const event = localEvent;
 
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
@@ -89,28 +112,37 @@ export default function EventDetailScreen() {
   const [hasChanges, setHasChanges] = useState(false);
   const [audioExists, setAudioExists] = useState(true);
 
-  const project = projects.find((p) => p.id === event?.project_id);
+  const project = localEvent
+    ? projects.find((p) => p.id === localEvent.project_id)
+    : backendEvent?.project;
 
   useEffect(() => {
-    if (event) {
-      setTitle(event.title);
-      setNotes(event.notes);
-      setEventType(event.event_type);
-      setSeverity(event.severity);
-      setLocation(event.location);
-      setTradeVendor(event.trade_vendor);
+    if (localEvent) {
+      setTitle(localEvent.title);
+      setNotes(localEvent.notes);
+      setEventType(localEvent.event_type);
+      setSeverity(localEvent.severity);
+      setLocation(localEvent.location);
+      setTradeVendor(localEvent.trade_vendor);
 
       // Check if audio file exists
-      if (event.local_audio_uri) {
-        audioFileExists(event.local_audio_uri).then((exists) => {
+      if (localEvent.local_audio_uri) {
+        audioFileExists(localEvent.local_audio_uri).then((exists) => {
           setAudioExists(exists);
           if (!exists) {
-            console.log('[event-detail] Audio file not found:', event.local_audio_uri);
+            console.log('[event-detail] Audio file not found:', localEvent.local_audio_uri);
           }
         });
       }
+    } else if (backendEvent) {
+      setTitle(backendEvent.title || '');
+      setNotes('');
+      setEventType((backendEvent.eventType as EventType) || 'Other');
+      setSeverity((backendEvent.severity as EventSeverity) || 'Medium');
+      setLocation('');
+      setTradeVendor('');
     }
-  }, [event]);
+  }, [localEvent, backendEvent]);
 
   useEffect(() => {
     return () => {
@@ -120,13 +152,176 @@ export default function EventDetailScreen() {
     };
   }, [sound]);
 
+  // Loading state for backend fetch
+  if (isLoadingBackend) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
+        <ActivityIndicator size="large" color="#F97316" />
+        <Text className="mt-3 text-gray-500">Loading event...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // Show backend event in read-only mode if not found locally
+  if (!localEvent && backendEvent) {
+    return (
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            headerTitle: 'Event Details',
+            headerStyle: { backgroundColor: isDark ? '#111' : '#FFF' },
+            headerTintColor: isDark ? '#FFF' : '#111',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} className="p-2">
+                <ArrowLeft size={24} color={isDark ? '#FFF' : '#111'} />
+              </Pressable>
+            ),
+          }}
+        />
+        <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
+          <Animated.View
+            entering={FadeIn}
+            className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
+          >
+            {/* Header badges */}
+            <View className="flex-row items-center mb-3">
+              {backendEvent.eventType && (
+                <View
+                  className="px-2 py-0.5 rounded-full mr-2"
+                  style={{ backgroundColor: EVENT_TYPE_COLORS[backendEvent.eventType as EventType] + '20' }}
+                >
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{ color: EVENT_TYPE_COLORS[backendEvent.eventType as EventType] }}
+                  >
+                    {backendEvent.eventType}
+                  </Text>
+                </View>
+              )}
+              {backendEvent.severity && (
+                <View
+                  className="px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: SEVERITY_COLORS[backendEvent.severity as EventSeverity] + '20' }}
+                >
+                  <Text
+                    className="text-xs font-medium"
+                    style={{ color: SEVERITY_COLORS[backendEvent.severity as EventSeverity] }}
+                  >
+                    {backendEvent.severity}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Title */}
+            <Text className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+              {backendEvent.title || 'Untitled Event'}
+            </Text>
+
+            {/* Project & Date */}
+            <View className="flex-row items-center mb-3">
+              {backendEvent.project && (
+                <View className="flex-row items-center mr-4">
+                  <Building2 size={14} color="#9CA3AF" />
+                  <Text className="text-sm text-gray-500 ml-1">
+                    {backendEvent.project.name}
+                  </Text>
+                </View>
+              )}
+              <View className="flex-row items-center">
+                <Calendar size={14} color="#9CA3AF" />
+                <Text className="text-sm text-gray-500 ml-1">
+                  {format(new Date(backendEvent.createdAt), 'MMM d, yyyy')}
+                </Text>
+              </View>
+            </View>
+
+            {/* Transcript */}
+            {backendEvent.transcriptText && (
+              <View className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mt-2">
+                <View className="flex-row items-center mb-2">
+                  <FileText size={16} color="#3B82F6" />
+                  <Text className="ml-2 text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Transcript
+                  </Text>
+                </View>
+                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-5">
+                  {backendEvent.transcriptText}
+                </Text>
+              </View>
+            )}
+
+            {/* Index data */}
+            {backendEvent.index && (
+              <View className="mt-4">
+                {/* Trades */}
+                {backendEvent.index.trades && backendEvent.index.trades.length > 0 && (
+                  <View className="flex-row flex-wrap mb-2">
+                    {backendEvent.index.trades.map((trade) => (
+                      <View key={trade} className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
+                        <Text className="text-xs text-blue-700 dark:text-blue-300">{trade}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {/* Cost Impact */}
+                {backendEvent.index.costImpact && (
+                  <View className="flex-row items-center bg-red-50 dark:bg-red-900/20 rounded-lg p-3 mt-2">
+                    <Text className="text-sm text-red-600 font-semibold">
+                      Cost Impact: ${backendEvent.index.costImpact.toLocaleString()}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Resolved status */}
+            {backendEvent.isResolved && (
+              <View className="flex-row items-center mt-4">
+                <CheckCircle2 size={16} color="#10B981" />
+                <Text className="ml-1 text-sm text-green-600">Resolved</Text>
+              </View>
+            )}
+          </Animated.View>
+
+          {/* Info banner */}
+          <View className="mx-4 mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+            <Text className="text-sm text-blue-700 dark:text-blue-300 text-center">
+              This event is stored on the server. To edit, record a new event locally.
+            </Text>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Event not found in either place
+  if (!localEvent && backendError) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
+        <AlertTriangle size={48} color="#EF4444" />
+        <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+          Event Not Found
+        </Text>
+        <Text className="mt-2 text-sm text-gray-500 text-center px-6">
+          This event may have been deleted or doesn't exist.
+        </Text>
+        <Pressable
+          onPress={() => router.back()}
+          className="mt-4 bg-orange-500 py-3 px-6 rounded-xl"
+        >
+          <Text className="text-white font-semibold">Go Back</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
   if (!event) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
-        <Text className="text-gray-500">Event not found</Text>
-        <Pressable onPress={() => router.back()} className="mt-4">
-          <Text className="text-orange-500">Go back</Text>
-        </Pressable>
+        <ActivityIndicator size="large" color="#F97316" />
+        <Text className="mt-3 text-gray-500">Loading...</Text>
       </SafeAreaView>
     );
   }
