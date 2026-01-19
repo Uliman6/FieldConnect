@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,51 +8,72 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import {
   Search,
   AlertCircle,
   TrendingUp,
-  Users,
   Wrench,
-  MapPin,
   DollarSign,
   ChevronRight,
   X,
-  Filter,
   Building2,
-  Clock,
   ArrowLeft,
   Bell,
   BellOff,
-  List,
+  CheckCircle2,
+  Clock,
+  Database,
+  RefreshCw,
+  Filter,
+  BarChart3,
+  FileText,
+  AlertTriangle,
+  Lightbulb,
+  Eye,
+  Shield,
+  Zap,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/cn';
 import {
-  getFollowUpEvents,
-  getIndexStats,
-  searchEventsByKeywords,
-  getEvents,
-  updateEventFollowUp,
+  getInsights,
+  getInsightsStats,
+  updateInsight,
+  indexAllInsights,
+  findSimilarInsights,
   queryKeys,
-  FollowUpEvent,
-  IndexStats,
-  IndexedEvent,
-  SearchFilters,
+  Insight,
+  InsightsStats,
+  InsightSearchFilters,
 } from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
 
-const ISSUE_TYPE_COLORS: Record<string, string> = {
-  cost_impact: '#EF4444',
-  code_violation: '#DC2626',
-  rework: '#F59E0B',
-  delay: '#8B5CF6',
-  follow_up: '#3B82F6',
-  safety: '#DC2626',
-  quality: '#F59E0B',
+const CATEGORY_CONFIG: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
+  issue: { color: '#EF4444', icon: AlertCircle, label: 'Issue' },
+  learning: { color: '#8B5CF6', icon: Lightbulb, label: 'Learning' },
+  observation: { color: '#3B82F6', icon: Eye, label: 'Observation' },
+  safety: { color: '#DC2626', icon: Shield, label: 'Safety' },
+  quality: { color: '#F59E0B', icon: CheckCircle2, label: 'Quality' },
+  cost_impact: { color: '#EF4444', icon: DollarSign, label: 'Cost Impact' },
+  delay: { color: '#6366F1', icon: Clock, label: 'Delay' },
+  rework: { color: '#F97316', icon: RefreshCw, label: 'Rework' },
+};
+
+const SEVERITY_COLORS: Record<string, string> = {
+  low: '#10B981',
+  medium: '#F59E0B',
+  high: '#EF4444',
+  critical: '#DC2626',
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  event: 'Event',
+  pending_issue: 'Pending Issue',
+  inspection_note: 'Inspection',
+  additional_work: 'Additional Work',
+  manual: 'Manual Entry',
 };
 
 function StatCard({
@@ -60,20 +81,16 @@ function StatCard({
   value,
   icon: Icon,
   color,
-  onPress,
+  subtitle,
 }: {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ size: number; color: string }>;
   color: string;
-  onPress?: () => void;
+  subtitle?: string;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      className="bg-white dark:bg-gray-800 rounded-xl p-4 flex-1 mr-2 last:mr-0"
-    >
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 flex-1 mr-2 last:mr-0">
       <View className="flex-row items-center mb-2">
         <View
           className="w-8 h-8 rounded-full items-center justify-center"
@@ -88,80 +105,169 @@ function StatCard({
       <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
         {title}
       </Text>
-    </Pressable>
+      {subtitle && (
+        <Text className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          {subtitle}
+        </Text>
+      )}
+    </View>
   );
 }
 
-function FollowUpCard({
-  event,
+function InsightCard({
+  insight,
   onPress,
+  onToggleFollowUp,
+  onToggleResolved,
 }: {
-  event: FollowUpEvent;
+  insight: Insight;
   onPress: () => void;
+  onToggleFollowUp: (needsFollowUp: boolean) => void;
+  onToggleResolved: (isResolved: boolean) => void;
 }) {
-  const issueTypes = event.issueTypes || [];
+  const categoryConfig = CATEGORY_CONFIG[insight.category] || CATEGORY_CONFIG.issue;
+  const CategoryIcon = categoryConfig.icon;
 
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3 border-l-4 border-orange-500"
+      className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3"
     >
       <View className="flex-row items-start justify-between">
         <View className="flex-1 mr-3">
+          {/* Category & Severity badges */}
+          <View className="flex-row items-center mb-2 flex-wrap">
+            <View
+              className="flex-row items-center px-2 py-0.5 rounded-full mr-2 mb-1"
+              style={{ backgroundColor: categoryConfig.color + '20' }}
+            >
+              <CategoryIcon size={12} color={categoryConfig.color} />
+              <Text
+                className="text-xs font-medium ml-1"
+                style={{ color: categoryConfig.color }}
+              >
+                {categoryConfig.label}
+              </Text>
+            </View>
+            {insight.severity && (
+              <View
+                className="px-2 py-0.5 rounded-full mr-2 mb-1"
+                style={{ backgroundColor: (SEVERITY_COLORS[insight.severity] || '#6B7280') + '20' }}
+              >
+                <Text
+                  className="text-xs font-medium capitalize"
+                  style={{ color: SEVERITY_COLORS[insight.severity] || '#6B7280' }}
+                >
+                  {insight.severity}
+                </Text>
+              </View>
+            )}
+            <View className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full mb-1">
+              <Text className="text-xs text-gray-500 dark:text-gray-400">
+                {SOURCE_LABELS[insight.sourceType] || insight.sourceType}
+              </Text>
+            </View>
+          </View>
+
+          {/* Title */}
           <Text
             className="text-base font-semibold text-gray-900 dark:text-white mb-1"
             numberOfLines={2}
           >
-            {event.title || 'Untitled Event'}
+            {insight.title}
           </Text>
 
-          {event.project && (
+          {/* Project */}
+          {insight.project && (
             <View className="flex-row items-center mb-2">
               <Building2 size={12} color="#9CA3AF" />
               <Text className="text-xs text-gray-500 ml-1">
-                {event.project.name}
+                {insight.project.name}
               </Text>
             </View>
           )}
 
-          {event.followUpReason && (
+          {/* Description preview */}
+          {insight.description && (
             <Text
               className="text-sm text-gray-600 dark:text-gray-400 mb-2"
               numberOfLines={2}
             >
-              {event.followUpReason}
+              {insight.description}
             </Text>
           )}
 
+          {/* Tags */}
           <View className="flex-row flex-wrap">
-            {issueTypes.map((type) => (
-              <View
-                key={type}
-                className="px-2 py-0.5 rounded-full mr-1 mb-1"
-                style={{
-                  backgroundColor: (ISSUE_TYPE_COLORS[type] || '#6B7280') + '20',
-                }}
-              >
-                <Text
-                  className="text-xs font-medium"
-                  style={{ color: ISSUE_TYPE_COLORS[type] || '#6B7280' }}
-                >
-                  {type.replace('_', ' ')}
+            {insight.trades?.slice(0, 2).map((trade) => (
+              <View key={trade} className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
+                <Text className="text-xs text-blue-700 dark:text-blue-300">{trade}</Text>
+              </View>
+            ))}
+            {insight.costImpact && (
+              <View className="bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
+                <Text className="text-xs text-red-700 dark:text-red-300">
+                  ${insight.costImpact.toLocaleString()}
                 </Text>
+              </View>
+            )}
+            {insight.systems?.slice(0, 1).map((system) => (
+              <View key={system} className="bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
+                <Text className="text-xs text-purple-700 dark:text-purple-300">{system}</Text>
               </View>
             ))}
           </View>
         </View>
 
         <View className="items-end">
-          {event.costImpact && (
-            <View className="flex-row items-center mb-2">
-              <DollarSign size={14} color="#EF4444" />
-              <Text className="text-sm font-semibold text-red-500">
-                {event.costImpact.toLocaleString()}
-              </Text>
-            </View>
-          )}
+          {/* Follow-up Toggle */}
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onToggleFollowUp(!insight.needsFollowUp);
+            }}
+            className={cn(
+              'flex-row items-center px-2 py-1 rounded-full mb-2',
+              insight.needsFollowUp
+                ? 'bg-orange-100 dark:bg-orange-900/30'
+                : 'bg-gray-100 dark:bg-gray-700'
+            )}
+          >
+            {insight.needsFollowUp ? (
+              <>
+                <Bell size={14} color="#F97316" />
+                <Text className="text-xs text-orange-600 ml-1">Follow-up</Text>
+              </>
+            ) : (
+              <BellOff size={14} color="#9CA3AF" />
+            )}
+          </Pressable>
+
+          {/* Resolved Toggle */}
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onToggleResolved(!insight.isResolved);
+            }}
+            className={cn(
+              'flex-row items-center px-2 py-1 rounded-full mb-2',
+              insight.isResolved
+                ? 'bg-green-100 dark:bg-green-900/30'
+                : 'bg-gray-100 dark:bg-gray-700'
+            )}
+          >
+            {insight.isResolved ? (
+              <>
+                <CheckCircle2 size={14} color="#10B981" />
+                <Text className="text-xs text-green-600 ml-1">Resolved</Text>
+              </>
+            ) : (
+              <Clock size={14} color="#9CA3AF" />
+            )}
+          </Pressable>
+
           <ChevronRight size={20} color="#9CA3AF" />
         </View>
       </View>
@@ -190,7 +296,7 @@ function TopItemsList({
           {title}
         </Text>
       </View>
-      {items.slice(0, 5).map((item, index) => (
+      {items.slice(0, 5).map((item) => (
         <View
           key={item.name}
           className="flex-row items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
@@ -209,247 +315,117 @@ function TopItemsList({
   );
 }
 
-function SearchResultCard({
-  event,
-  onPress,
-}: {
-  event: IndexedEvent;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3"
-    >
-      <Text
-        className="text-base font-semibold text-gray-900 dark:text-white mb-1"
-        numberOfLines={1}
-      >
-        {event.title || 'Untitled Event'}
-      </Text>
-
-      {event.project && (
-        <View className="flex-row items-center mb-2">
-          <Building2 size={12} color="#9CA3AF" />
-          <Text className="text-xs text-gray-500 ml-1">{event.project.name}</Text>
-        </View>
-      )}
-
-      {event.transcriptText && (
-        <Text
-          className="text-sm text-gray-600 dark:text-gray-400"
-          numberOfLines={2}
-        >
-          {event.transcriptText}
-        </Text>
-      )}
-
-      {event.index && (
-        <View className="flex-row flex-wrap mt-2">
-          {event.index.inspectors?.slice(0, 2).map((name) => (
-            <View key={name} className="bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
-              <Text className="text-xs text-purple-700 dark:text-purple-300">{name}</Text>
-            </View>
-          ))}
-          {event.index.trades?.slice(0, 2).map((trade) => (
-            <View key={trade} className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
-              <Text className="text-xs text-blue-700 dark:text-blue-300">{trade}</Text>
-            </View>
-          ))}
-          {event.index.ahj?.slice(0, 1).map((ahj) => (
-            <View key={ahj} className="bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
-              <Text className="text-xs text-green-700 dark:text-green-300">{ahj}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </Pressable>
-  );
-}
-
-type TabType = 'all-events' | 'follow-ups' | 'search' | 'stats';
-
-function AllEventsCard({
-  event,
-  onPress,
-  onToggleFollowUp,
-}: {
-  event: IndexedEvent;
-  onPress: () => void;
-  onToggleFollowUp: (needsFollowUp: boolean) => void;
-}) {
-  const needsFollowUp = event.index?.needsFollowUp ?? false;
-
-  return (
-    <Pressable
-      onPress={onPress}
-      className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3"
-    >
-      <View className="flex-row items-start justify-between">
-        <View className="flex-1 mr-3">
-          <Text
-            className="text-base font-semibold text-gray-900 dark:text-white mb-1"
-            numberOfLines={2}
-          >
-            {event.title || 'Untitled Event'}
-          </Text>
-
-          {event.project && (
-            <View className="flex-row items-center mb-2">
-              <Building2 size={12} color="#9CA3AF" />
-              <Text className="text-xs text-gray-500 ml-1">
-                {event.project.name}
-              </Text>
-            </View>
-          )}
-
-          {event.transcriptText && (
-            <Text
-              className="text-sm text-gray-600 dark:text-gray-400 mb-2"
-              numberOfLines={2}
-            >
-              {event.transcriptText}
-            </Text>
-          )}
-
-          {event.index && (
-            <View className="flex-row flex-wrap">
-              {event.index.trades?.slice(0, 2).map((trade) => (
-                <View key={trade} className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
-                  <Text className="text-xs text-blue-700 dark:text-blue-300">{trade}</Text>
-                </View>
-              ))}
-              {event.index.costImpact && (
-                <View className="bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
-                  <Text className="text-xs text-red-700 dark:text-red-300">
-                    ${event.index.costImpact.toLocaleString()}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-
-        <View className="items-end">
-          {/* Follow-up Toggle */}
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation();
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onToggleFollowUp(!needsFollowUp);
-            }}
-            className={cn(
-              'flex-row items-center px-2 py-1 rounded-full mb-2',
-              needsFollowUp
-                ? 'bg-orange-100 dark:bg-orange-900/30'
-                : 'bg-gray-100 dark:bg-gray-700'
-            )}
-          >
-            {needsFollowUp ? (
-              <>
-                <Bell size={14} color="#F97316" />
-                <Text className="text-xs text-orange-600 ml-1">Follow-up</Text>
-              </>
-            ) : (
-              <>
-                <BellOff size={14} color="#9CA3AF" />
-                <Text className="text-xs text-gray-500 ml-1">No follow-up</Text>
-              </>
-            )}
-          </Pressable>
-
-          <ChevronRight size={20} color="#9CA3AF" />
-        </View>
-      </View>
-    </Pressable>
-  );
-}
+type TabType = 'dashboard' | 'all' | 'follow-ups' | 'search';
 
 export default function InsightsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<TabType>('all-events');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [isIndexing, setIsIndexing] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Fetch all events
-  const allEventsQuery = useQuery({
-    queryKey: queryKeys.events,
-    queryFn: () => getEvents({ limit: 100 }),
-    staleTime: 30000,
-  });
+  // Debounced search
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
 
-  // Fetch follow-ups
-  const followUpsQuery = useQuery({
-    queryKey: queryKeys.followUps(),
-    queryFn: () => getFollowUpEvents({ limit: 50 }),
-    staleTime: 30000,
-  });
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
-  // Fetch stats
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedQuery(text);
+    }, 300);
+  }, []);
+
+  // Fetch insights stats
   const statsQuery = useQuery({
-    queryKey: queryKeys.indexStats(),
-    queryFn: () => getIndexStats(),
+    queryKey: queryKeys.insightsStats(),
+    queryFn: () => getInsightsStats(),
     staleTime: 30000,
   });
 
-  // Search query (only when search is active)
-  const searchResultsQuery = useQuery({
-    queryKey: queryKeys.indexedSearch(searchFilters),
-    queryFn: () => searchEventsByKeywords(searchFilters),
-    enabled: activeTab === 'search' && Object.keys(searchFilters).length > 0,
+  // Fetch all insights
+  const insightsQuery = useQuery({
+    queryKey: queryKeys.insights({ limit: 100 }),
+    queryFn: () => getInsights({ limit: 100 }),
+    staleTime: 30000,
+  });
+
+  // Fetch follow-up insights
+  const followUpsQuery = useQuery({
+    queryKey: queryKeys.insights({ needsFollowUp: true, limit: 50 }),
+    queryFn: () => getInsights({ needsFollowUp: true, limit: 50 }),
+    staleTime: 30000,
+  });
+
+  // Search insights
+  const searchQuery_result = useQuery({
+    queryKey: queryKeys.insights({ query: debouncedQuery, limit: 30 }),
+    queryFn: () => getInsights({ query: debouncedQuery, limit: 30 }),
+    enabled: activeTab === 'search' && debouncedQuery.length > 0,
     staleTime: 30000,
   });
 
   // Handle follow-up toggle
-  const handleToggleFollowUp = useCallback(async (eventId: string, needsFollowUp: boolean) => {
+  const handleToggleFollowUp = useCallback(async (insightId: string, needsFollowUp: boolean) => {
     try {
-      await updateEventFollowUp(eventId, { needs_follow_up: needsFollowUp });
+      await updateInsight(insightId, { needsFollowUp });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.events });
-      queryClient.invalidateQueries({ queryKey: queryKeys.followUps() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.indexStats() });
+      queryClient.invalidateQueries({ queryKey: ['insights'] });
     } catch (error) {
       console.error('Failed to update follow-up status:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   }, [queryClient]);
 
-  const handleSearch = useCallback(() => {
-    if (searchQuery.trim()) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      // Search in multiple fields
-      setSearchFilters({
-        inspector: searchQuery.trim(),
-        limit: 20,
-      });
+  // Handle resolved toggle
+  const handleToggleResolved = useCallback(async (insightId: string, isResolved: boolean) => {
+    try {
+      await updateInsight(insightId, { isResolved });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ['insights'] });
+    } catch (error) {
+      console.error('Failed to update resolved status:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
-  }, [searchQuery]);
+  }, [queryClient]);
 
-  const handleFilterPress = useCallback((filterType: keyof SearchFilters, value: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSearchFilters({ [filterType]: value, limit: 20 });
-    setActiveTab('search');
-  }, []);
+  // Handle index all
+  const handleIndexAll = useCallback(async () => {
+    setIsIndexing(true);
+    try {
+      const result = await indexAllInsights(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ['insights'] });
+      alert(`Indexed: ${result.results.events.indexed} events, ${result.results.pendingIssues.indexed} issues, ${result.results.inspectionNotes.indexed} inspections`);
+    } catch (error) {
+      console.error('Failed to index insights:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsIndexing(false);
+    }
+  }, [queryClient]);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
-    setSearchFilters({});
+    setDebouncedQuery('');
   }, []);
 
-  const isLoading = followUpsQuery.isLoading || statsQuery.isLoading || allEventsQuery.isLoading;
-  const hasError = followUpsQuery.isError || statsQuery.isError || allEventsQuery.isError;
+  const isLoading = statsQuery.isLoading || insightsQuery.isLoading;
+  const hasError = statsQuery.isError || insightsQuery.isError;
 
   const stats = statsQuery.data;
-  const followUps = followUpsQuery.data?.results || [];
-  const allEvents = allEventsQuery.data || [];
+  const allInsights = insightsQuery.data || [];
+  const followUps = followUpsQuery.data || [];
+  const searchResults = searchQuery_result.data || [];
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       <Stack.Screen
         options={{
-          title: 'Insights',
+          title: 'Insights Dashboard',
           presentation: 'modal',
           headerStyle: { backgroundColor: '#111' },
           headerTintColor: '#FFF',
@@ -464,12 +440,25 @@ export default function InsightsScreen() {
               <ArrowLeft size={24} color="#FFF" />
             </Pressable>
           ),
+          headerRight: () => (
+            <Pressable
+              onPress={handleIndexAll}
+              disabled={isIndexing}
+              className="p-2"
+            >
+              {isIndexing ? (
+                <ActivityIndicator size="small" color="#F97316" />
+              ) : (
+                <Database size={22} color="#F97316" />
+              )}
+            </Pressable>
+          ),
         }}
       />
 
       {/* Tab Selector */}
       <View className="flex-row px-4 pt-4 pb-2">
-        {(['all-events', 'follow-ups', 'search', 'stats'] as TabType[]).map((tab) => (
+        {(['dashboard', 'all', 'follow-ups', 'search'] as TabType[]).map((tab) => (
           <Pressable
             key={tab}
             onPress={() => {
@@ -485,13 +474,13 @@ export default function InsightsScreen() {
           >
             <Text
               className={cn(
-                'text-center text-sm font-medium',
+                'text-center text-xs font-medium',
                 activeTab === tab
                   ? 'text-white'
                   : 'text-gray-600 dark:text-gray-400'
               )}
             >
-              {tab === 'all-events' ? 'All' : tab === 'follow-ups' ? 'Follow-ups' : tab === 'search' ? 'Search' : 'Stats'}
+              {tab === 'dashboard' ? 'Dashboard' : tab === 'all' ? 'All' : tab === 'follow-ups' ? 'Follow-ups' : 'Search'}
             </Text>
           </Pressable>
         ))}
@@ -503,9 +492,17 @@ export default function InsightsScreen() {
           <View className="flex-row items-center">
             <AlertCircle size={20} color="#EF4444" />
             <Text className="ml-2 text-sm text-red-700 dark:text-red-300">
-              Unable to connect to server. Make sure the backend is running.
+              Unable to load insights. Make sure the backend is running and you've indexed data.
             </Text>
           </View>
+          <Pressable
+            onPress={handleIndexAll}
+            className="mt-3 bg-red-100 dark:bg-red-800 py-2 px-4 rounded-lg self-start"
+          >
+            <Text className="text-sm font-medium text-red-700 dark:text-red-300">
+              Index Data Now
+            </Text>
+          </Pressable>
         </View>
       )}
 
@@ -524,36 +521,167 @@ export default function InsightsScreen() {
           contentContainerStyle={{ paddingBottom: 40 }}
           refreshControl={
             <RefreshControl
-              refreshing={followUpsQuery.isFetching || statsQuery.isFetching || allEventsQuery.isFetching}
+              refreshing={statsQuery.isFetching || insightsQuery.isFetching}
               onRefresh={() => {
-                allEventsQuery.refetch();
-                followUpsQuery.refetch();
                 statsQuery.refetch();
+                insightsQuery.refetch();
+                followUpsQuery.refetch();
               }}
             />
           }
         >
-          {/* All Events Tab */}
-          {activeTab === 'all-events' && (
+          {/* Dashboard Tab */}
+          {activeTab === 'dashboard' && stats && (
+            <Animated.View entering={FadeIn} className="px-4 pt-4">
+              {/* Overview Cards */}
+              <View className="flex-row mb-4">
+                <StatCard
+                  title="Total Insights"
+                  value={stats.total}
+                  icon={BarChart3}
+                  color="#3B82F6"
+                />
+                <StatCard
+                  title="Need Follow-up"
+                  value={stats.needsFollowUp}
+                  icon={Bell}
+                  color="#F97316"
+                />
+              </View>
+
+              <View className="flex-row mb-4">
+                <StatCard
+                  title="Unresolved"
+                  value={stats.unresolved}
+                  icon={AlertCircle}
+                  color="#EF4444"
+                />
+                <StatCard
+                  title="Total Cost Impact"
+                  value={stats.totalCostImpact > 0 ? `$${(stats.totalCostImpact / 1000).toFixed(0)}k` : '$0'}
+                  icon={DollarSign}
+                  color="#10B981"
+                  subtitle={`${stats.withCostImpact} with costs`}
+                />
+              </View>
+
+              {/* Category Breakdown */}
+              {stats.byCategory.length > 0 && (
+                <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3">
+                  <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    By Category
+                  </Text>
+                  <View className="flex-row flex-wrap">
+                    {stats.byCategory.map((item) => {
+                      const config = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.issue;
+                      return (
+                        <View
+                          key={item.category}
+                          className="flex-row items-center px-3 py-1.5 rounded-full mr-2 mb-2"
+                          style={{ backgroundColor: config.color + '20' }}
+                        >
+                          <Text
+                            className="text-xs font-medium"
+                            style={{ color: config.color }}
+                          >
+                            {config.label}: {item.count}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {/* Source Type Breakdown */}
+              {stats.bySourceType.length > 0 && (
+                <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3">
+                  <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    By Source
+                  </Text>
+                  <View className="flex-row flex-wrap">
+                    {stats.bySourceType.map((item) => (
+                      <View
+                        key={item.sourceType}
+                        className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full mr-2 mb-2"
+                      >
+                        <Text className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                          {SOURCE_LABELS[item.sourceType] || item.sourceType}: {item.count}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Top Lists */}
+              <TopItemsList
+                title="Top Trades"
+                items={stats.topTrades}
+                icon={Wrench}
+                color="#3B82F6"
+              />
+
+              <TopItemsList
+                title="Top Issue Types"
+                items={stats.topIssueTypes}
+                icon={AlertTriangle}
+                color="#F59E0B"
+              />
+
+              <TopItemsList
+                title="Top Systems"
+                items={stats.topSystems}
+                icon={Zap}
+                color="#8B5CF6"
+              />
+
+              {/* Empty State */}
+              {stats.total === 0 && (
+                <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
+                  <Database size={48} color="#9CA3AF" />
+                  <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    No Insights Yet
+                  </Text>
+                  <Text className="mt-2 text-sm text-gray-500 text-center">
+                    Index your events and daily log data to see insights and patterns.
+                  </Text>
+                  <Pressable
+                    onPress={handleIndexAll}
+                    disabled={isIndexing}
+                    className="mt-4 bg-orange-500 py-3 px-6 rounded-xl"
+                  >
+                    <Text className="text-white font-semibold">
+                      {isIndexing ? 'Indexing...' : 'Index Data Now'}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+            </Animated.View>
+          )}
+
+          {/* All Insights Tab */}
+          {activeTab === 'all' && (
             <Animated.View entering={FadeIn} className="px-4 pt-4">
               <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                All Events ({allEvents.length})
+                All Insights ({allInsights.length})
               </Text>
 
-              {allEvents.length === 0 ? (
+              {allInsights.length === 0 ? (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-                  <List size={32} color="#9CA3AF" />
+                  <FileText size={32} color="#9CA3AF" />
                   <Text className="mt-3 text-gray-500 text-center">
-                    No events logged yet.
+                    No insights indexed yet.{'\n'}Tap the database icon to index your data.
                   </Text>
                 </View>
               ) : (
-                allEvents.map((event, index) => (
-                  <Animated.View key={event.id} entering={FadeInDown.delay(index * 30)}>
-                    <AllEventsCard
-                      event={event}
-                      onPress={() => router.push(`/event-detail?id=${event.id}`)}
-                      onToggleFollowUp={(needsFollowUp) => handleToggleFollowUp(event.id, needsFollowUp)}
+                allInsights.map((insight, index) => (
+                  <Animated.View key={insight.id} entering={FadeInDown.delay(index * 20)}>
+                    <InsightCard
+                      insight={insight}
+                      onPress={() => router.push(`/insight-detail?id=${insight.id}`)}
+                      onToggleFollowUp={(needsFollowUp) => handleToggleFollowUp(insight.id, needsFollowUp)}
+                      onToggleResolved={(isResolved) => handleToggleResolved(insight.id, isResolved)}
                     />
                   </Animated.View>
                 ))
@@ -564,40 +692,25 @@ export default function InsightsScreen() {
           {/* Follow-ups Tab */}
           {activeTab === 'follow-ups' && (
             <Animated.View entering={FadeIn} className="px-4 pt-4">
-              {/* Summary Stats */}
-              <View className="flex-row mb-4">
-                <StatCard
-                  title="Need Follow-up"
-                  value={stats?.needsFollowUp || 0}
-                  icon={AlertCircle}
-                  color="#F97316"
-                />
-                <StatCard
-                  title="Cost Impact"
-                  value={stats?.totalCostImpact ? `$${(stats.totalCostImpact / 1000).toFixed(0)}k` : '$0'}
-                  icon={DollarSign}
-                  color="#EF4444"
-                />
-              </View>
-
-              {/* Follow-up List */}
               <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Events Needing Attention ({followUps.length})
+                Needs Follow-up ({followUps.length})
               </Text>
 
               {followUps.length === 0 ? (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-                  <AlertCircle size={32} color="#10B981" />
+                  <CheckCircle2 size={32} color="#10B981" />
                   <Text className="mt-3 text-gray-500 text-center">
-                    No events need follow-up right now.
+                    No insights need follow-up right now.
                   </Text>
                 </View>
               ) : (
-                followUps.map((event, index) => (
-                  <Animated.View key={event.id} entering={FadeInDown.delay(index * 50)}>
-                    <FollowUpCard
-                      event={event}
-                      onPress={() => router.push(`/event-detail?id=${event.id}`)}
+                followUps.map((insight, index) => (
+                  <Animated.View key={insight.id} entering={FadeInDown.delay(index * 30)}>
+                    <InsightCard
+                      insight={insight}
+                      onPress={() => router.push(`/insight-detail?id=${insight.id}`)}
+                      onToggleFollowUp={(needsFollowUp) => handleToggleFollowUp(insight.id, needsFollowUp)}
+                      onToggleResolved={(isResolved) => handleToggleResolved(insight.id, isResolved)}
                     />
                   </Animated.View>
                 ))
@@ -613,167 +726,63 @@ export default function InsightsScreen() {
                 <Search size={20} color="#9CA3AF" />
                 <TextInput
                   value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  onSubmitEditing={handleSearch}
-                  placeholder="Search by inspector, trade, AHJ..."
+                  onChangeText={handleSearchChange}
+                  placeholder="Search insights by keyword..."
                   placeholderTextColor="#9CA3AF"
-                  className="flex-1 ml-3 text-gray-900 dark:text-white"
+                  className="flex-1 ml-3 text-gray-900 dark:text-white text-base"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   returnKeyType="search"
                 />
                 {searchQuery.length > 0 && (
-                  <Pressable onPress={clearSearch}>
+                  <Pressable onPress={clearSearch} className="p-1">
                     <X size={20} color="#9CA3AF" />
                   </Pressable>
                 )}
               </View>
 
-              {/* Quick Filters */}
-              {stats && (
-                <View className="mb-4">
-                  <Text className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                    Quick Filters
-                  </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {stats.topInspectors?.slice(0, 3).map((item) => (
-                      <Pressable
-                        key={item.name}
-                        onPress={() => handleFilterPress('inspector', item.name)}
-                        className="bg-purple-100 dark:bg-purple-900/30 px-3 py-1.5 rounded-full mr-2"
-                      >
-                        <Text className="text-sm text-purple-700 dark:text-purple-300">
-                          {item.name}
-                        </Text>
-                      </Pressable>
-                    ))}
-                    {stats.topTrades?.slice(0, 3).map((item) => (
-                      <Pressable
-                        key={item.name}
-                        onPress={() => handleFilterPress('trade', item.name)}
-                        className="bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded-full mr-2"
-                      >
-                        <Text className="text-sm text-blue-700 dark:text-blue-300">
-                          {item.name}
-                        </Text>
-                      </Pressable>
-                    ))}
-                    {stats.topAHJ?.slice(0, 2).map((item) => (
-                      <Pressable
-                        key={item.name}
-                        onPress={() => handleFilterPress('ahj', item.name)}
-                        className="bg-green-100 dark:bg-green-900/30 px-3 py-1.5 rounded-full mr-2"
-                      >
-                        <Text className="text-sm text-green-700 dark:text-green-300">
-                          {item.name}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-
               {/* Search Results */}
-              {searchResultsQuery.isLoading && (
+              {searchQuery_result.isLoading && (
                 <View className="py-8 items-center">
                   <ActivityIndicator size="small" color="#F97316" />
                 </View>
               )}
 
-              {searchResultsQuery.data && (
+              {debouncedQuery.length > 0 && searchResults.length > 0 && (
                 <View>
                   <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                    Results ({searchResultsQuery.data.count})
+                    Results ({searchResults.length})
                   </Text>
-                  {searchResultsQuery.data.results.map((event, index) => (
-                    <Animated.View key={event.id} entering={FadeInDown.delay(index * 30)}>
-                      <SearchResultCard
-                        event={event}
-                        onPress={() => router.push(`/event-detail?id=${event.id}`)}
+                  {searchResults.map((insight, index) => (
+                    <Animated.View key={insight.id} entering={FadeInDown.delay(index * 20)}>
+                      <InsightCard
+                        insight={insight}
+                        onPress={() => router.push(`/insight-detail?id=${insight.id}`)}
+                        onToggleFollowUp={(needsFollowUp) => handleToggleFollowUp(insight.id, needsFollowUp)}
+                        onToggleResolved={(isResolved) => handleToggleResolved(insight.id, isResolved)}
                       />
                     </Animated.View>
                   ))}
                 </View>
               )}
 
-              {!searchResultsQuery.data && Object.keys(searchFilters).length === 0 && (
+              {debouncedQuery.length > 0 && !searchQuery_result.isLoading && searchResults.length === 0 && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
                   <Search size={32} color="#9CA3AF" />
                   <Text className="mt-3 text-gray-500 text-center">
-                    Search events by inspector name, trade,{'\n'}jurisdiction, or use quick filters above.
+                    No results found for "{debouncedQuery}"
                   </Text>
                 </View>
               )}
-            </Animated.View>
-          )}
 
-          {/* Stats Tab */}
-          {activeTab === 'stats' && stats && (
-            <Animated.View entering={FadeIn} className="px-4 pt-4">
-              {/* Overview Cards */}
-              <View className="flex-row mb-4">
-                <StatCard
-                  title="Total Indexed"
-                  value={stats.totalIndexed}
-                  icon={TrendingUp}
-                  color="#3B82F6"
-                />
-                <StatCard
-                  title="Need Follow-up"
-                  value={stats.needsFollowUp}
-                  icon={AlertCircle}
-                  color="#F97316"
-                />
-              </View>
-
-              <View className="flex-row mb-4">
-                <StatCard
-                  title="With Cost Impact"
-                  value={stats.withCostImpact}
-                  icon={DollarSign}
-                  color="#EF4444"
-                />
-                <StatCard
-                  title="Total Cost"
-                  value={`$${(stats.totalCostImpact / 1000).toFixed(0)}k`}
-                  icon={DollarSign}
-                  color="#EF4444"
-                />
-              </View>
-
-              {/* Top Lists */}
-              <TopItemsList
-                title="Top Inspectors"
-                items={stats.topInspectors}
-                icon={Users}
-                color="#8B5CF6"
-              />
-
-              <TopItemsList
-                title="Top Trades"
-                items={stats.topTrades}
-                icon={Wrench}
-                color="#3B82F6"
-              />
-
-              <TopItemsList
-                title="Jurisdictions (AHJ)"
-                items={stats.topAHJ}
-                icon={MapPin}
-                color="#10B981"
-              />
-
-              <TopItemsList
-                title="Issue Types"
-                items={stats.topIssueTypes}
-                icon={AlertCircle}
-                color="#F59E0B"
-              />
-
-              <TopItemsList
-                title="Systems"
-                items={stats.topSystems}
-                icon={Wrench}
-                color="#6B7280"
-              />
+              {debouncedQuery.length === 0 && (
+                <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
+                  <Search size={32} color="#9CA3AF" />
+                  <Text className="mt-3 text-gray-500 text-center">
+                    Search insights by trade, location,{'\n'}system, inspector, or any keyword.
+                  </Text>
+                </View>
+              )}
             </Animated.View>
           )}
         </ScrollView>
