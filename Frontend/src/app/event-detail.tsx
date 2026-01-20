@@ -17,6 +17,7 @@ import { EventType, EventSeverity, Event, PdfTemplate, FormFieldDefinition } fro
 import { audioFileExists } from '@/lib/audio-storage';
 import { generateTitleFromTranscript } from '@/lib/transcription';
 import { cn } from '@/lib/cn';
+import { getBackendId } from '@/lib/data-provider';
 import {
   getEvent,
   queryKeys,
@@ -26,6 +27,7 @@ import {
   attachTemplateToEvent,
   updateEventTemplateData,
   fetchFilledPdf,
+  deleteEventApi,
 } from '@/lib/api';
 import {
   ArrowLeft,
@@ -590,7 +592,21 @@ export default function EventDetailScreen() {
   };
 
   const handleDelete = () => {
-    const doDelete = () => {
+    const doDelete = async () => {
+      try {
+        // Try to delete from backend first
+        const backendId = getBackendId('events', event.id) || event.id;
+        await deleteEventApi(backendId);
+        console.log('[event] Deleted from backend:', backendId);
+
+        // Invalidate queries to refresh lists
+        queryClient.invalidateQueries({ queryKey: queryKeys.events });
+      } catch (error) {
+        console.error('[event] Failed to delete from backend:', error);
+        // Continue with local delete even if backend fails
+      }
+
+      // Delete from local store
       deleteEvent(event.id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
