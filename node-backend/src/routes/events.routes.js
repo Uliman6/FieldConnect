@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const eventsController = require('../controllers/events.controller');
+const templatesController = require('../controllers/templates.controller');
 
 /**
  * GET /api/events/search
@@ -144,6 +145,42 @@ router.patch('/:id', (req, res, next) => {
  */
 router.delete('/:id', (req, res, next) => {
   eventsController.delete(req, res, next);
+});
+
+// ============================================
+// TEMPLATE ROUTES
+// ============================================
+
+/**
+ * POST /api/events/:eventId/template
+ * Attach a template to an event
+ */
+router.post('/:eventId/template', (req, res, next) => {
+  templatesController.attachTemplateToEvent(req, res, next);
+});
+
+/**
+ * GET /api/events/:eventId/template-data
+ * Get template data for an event
+ */
+router.get('/:eventId/template-data', (req, res, next) => {
+  templatesController.getEventTemplateData(req, res, next);
+});
+
+/**
+ * PATCH /api/events/:eventId/template-data
+ * Update template field values for an event
+ */
+router.patch('/:eventId/template-data', (req, res, next) => {
+  templatesController.updateEventTemplateData(req, res, next);
+});
+
+/**
+ * GET /api/events/:eventId/filled-pdf
+ * Download filled PDF for an event
+ */
+router.get('/:eventId/filled-pdf', (req, res, next) => {
+  templatesController.getFilledPdf(req, res, next);
 });
 
 module.exports = router;

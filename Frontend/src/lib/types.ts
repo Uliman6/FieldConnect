@@ -397,3 +397,46 @@ export function mapEventTypeToIssueCategory(eventType: EventType): IssueCategory
   };
   return mapping[eventType];
 }
+
+// ============================================
+// PDF TEMPLATE TYPES
+// ============================================
+
+export type TemplateType = 'PUNCH_LIST' | 'RFI' | 'CUSTOM';
+
+export type FormFieldType = 'text' | 'checkbox' | 'dropdown' | 'radio' | 'list' | 'date';
+
+export interface FormFieldDefinition {
+  name: string;
+  type: FormFieldType;
+  label: string;
+  required: boolean;
+  options?: string[] | null;
+}
+
+export interface PdfTemplate {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  description: string | null;
+  templateType: TemplateType;
+  version: number;
+  isActive: boolean;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  formFields: FormFieldDefinition[];
+  createdById: string | null;
+}
+
+export interface EventTemplateData {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  eventId: string;
+  templateId: string;
+  fieldValues: Record<string, string | boolean>;
+  generatedPdfPath: string | null;
+  template?: PdfTemplate;
+}

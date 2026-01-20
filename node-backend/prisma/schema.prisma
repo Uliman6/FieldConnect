@@ -238,10 +238,16 @@ model Event {
   // Link to daily log if event was added to one
   linkedDailyLogId String? @map("linked_daily_log_id")
 
+  // Link to PDF template if using structured form
+  templateId String? @map("template_id")
+
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  template PdfTemplate? @relation(fields: [templateId], references: [id])
+  templateData EventTemplateData?
   index   EventIndex?
 
   @@index([projectId])
+  @@index([templateId])
   @@index([eventType])
   @@index([severity])
   @@index([tradeVendor])
@@ -409,6 +415,71 @@ model InsightPattern {
   @@index([isActive])
   @@index([isTest])
   @@map("insight_patterns")
+}
+
+// ============================================
+// PDF TEMPLATE SYSTEM
+// ============================================
+
+enum TemplateType {
+  PUNCH_LIST
+  RFI
+  CUSTOM
+}
+
+model PdfTemplate {
+  id            String       @id @default(uuid())
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  // Template metadata
+  name          String       // "Punch List v2", "RFI Form"
+  description   String?      @db.Text
+  templateType  TemplateType @map("template_type")
+  version       Int          @default(1)
+  isActive      Boolean      @default(true) @map("is_active")
+
+  // File storage
+  fileName      String       @map("file_name")
+  filePath      String       @map("file_path")  // ./uploads/templates/uuid.pdf
+  fileSize      Int          @map("file_size")
+
+  // Extracted form fields (JSON structure)
+  // Format: [{ name: "field1", type: "text", label: "Field 1", required: false }, ...]
+  formFields    Json         @map("form_fields")
+
+  // Creator tracking
+  createdById   String?      @map("created_by_id")
+
+  // Relations
+  events        Event[]
+  templateData  EventTemplateData[]
+
+  @@index([templateType])
+  @@index([isActive])
+  @@map("pdf_templates")
+}
+
+// Stores filled template field values for each event
+model EventTemplateData {
+  id               String     @id @default(uuid())
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  eventId          String     @unique @map("event_id")
+  templateId       String     @map("template_id")
+
+  // Field values as JSON: { "fieldName1": "value1", "fieldName2": "value2" }
+  fieldValues      Json       @map("field_values")
+
+  // Generated PDF path (after filling)
+  generatedPdfPath String?    @map("generated_pdf_path")
+
+  event            Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  template         PdfTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([templateId])
+  @@map("event_template_data")
 }
 
 // ============================================

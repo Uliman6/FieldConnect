@@ -13,6 +13,7 @@ const dailyLogsRoutes = require('./routes/daily-logs.routes');
 const eventsRoutes = require('./routes/events.routes');
 const transcriptsRoutes = require('./routes/transcripts.routes');
 const insightsRoutes = require('./routes/insights.routes');
+const templatesRoutes = require('./routes/templates.routes');
 
 // Import middleware
 const errorHandler = require('./middleware/error-handler.middleware');
@@ -71,6 +72,7 @@ app.use('/api/daily-logs', authenticate, dailyLogsRoutes);
 app.use('/api/events', authenticate, eventsRoutes);
 app.use('/api/transcripts', authenticate, transcriptsRoutes);
 app.use('/api/insights', insightsRoutes); // Auth handled in route file
+app.use('/api/templates', templatesRoutes); // Auth handled in route file
 
 // 404 handler
 app.use((req, res) => {
