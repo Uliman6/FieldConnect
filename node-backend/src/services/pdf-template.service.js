@@ -1,7 +1,7 @@
 const { PDFDocument, PDFName, PDFDict, PDFString, PDFBool } = require('pdf-lib');
 const fs = require('fs').promises;
 const path = require('path');
-const prisma = require('../lib/prisma');
+const prisma = require('./prisma');
 
 class PdfTemplateService {
   constructor() {
