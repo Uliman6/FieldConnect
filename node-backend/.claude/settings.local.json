@@ -19,7 +19,9 @@
       "Bash(rm *)",
       "Bash(cp *)",
       "Bash(mv *)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(grep:*)",
+      "Bash(unzip:*)"
     ]
   }
 }

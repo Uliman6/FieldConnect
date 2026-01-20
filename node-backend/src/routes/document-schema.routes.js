@@ -31,11 +31,16 @@ router.use(authenticate);
 // Schema CRUD routes
 router.post('/', upload.single('document'), documentSchemaController.learnSchema);
 router.get('/', documentSchemaController.getSchemas);
-router.get('/:id', documentSchemaController.getSchemaById);
-router.put('/:id', documentSchemaController.updateSchema);
-router.delete('/:id', documentSchemaController.deleteSchema);
+
+// Seed default schemas (must be before /:id to avoid route conflict)
+router.post('/seed-defaults', documentSchemaController.seedDefaultSchemas);
 
 // Analysis endpoint (preview without saving)
 router.post('/analyze', upload.single('document'), documentSchemaController.analyzeDocument);
+
+// Single schema routes
+router.get('/:id', documentSchemaController.getSchemaById);
+router.put('/:id', documentSchemaController.updateSchema);
+router.delete('/:id', documentSchemaController.deleteSchema);
 
 module.exports = router;
