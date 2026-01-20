@@ -203,6 +203,95 @@ const analyzeDocument = async (req, res) => {
   }
 };
 
+/**
+ * Seed default schemas (Punch List, RFI)
+ * POST /api/document-schemas/seed-defaults
+ */
+const seedDefaultSchemas = async (req, res) => {
+  try {
+    const prisma = require('../services/prisma');
+
+    const defaultSchemas = [
+      {
+        name: 'Punch List',
+        description: 'Standard punch list item for tracking deficiencies and incomplete work',
+        documentType: 'PUNCH_LIST',
+        fields: [
+          { name: 'title', label: 'Title', type: 'text', required: true },
+          { name: 'description', label: 'Description', type: 'multiline', required: true },
+          { name: 'assigned_to', label: 'Assigned To', type: 'company', required: false },
+          { name: 'created_by', label: 'Created By', type: 'person', required: false },
+          { name: 'location', label: 'Location', type: 'location', required: false },
+          { name: 'created_on', label: 'Date of Creation', type: 'date', required: false },
+          { name: 'root_cause', label: 'Root Cause', type: 'text', required: false },
+          { name: 'attachments', label: 'Attachments', type: 'attachment', required: false },
+        ],
+        confidence: 1.0,
+        sourceFileName: 'Default Template - ACC Standard Fields',
+      },
+      {
+        name: 'RFI',
+        description: 'Request for Information for clarifying design or construction questions',
+        documentType: 'RFI',
+        fields: [
+          { name: 'subject', label: 'Subject', type: 'text', required: true },
+          { name: 'created_on', label: 'Created On', type: 'date', required: false },
+          { name: 'created_by', label: 'Created By', type: 'person', required: false },
+          { name: 'ball_in_court', label: 'Ball in Court', type: 'person', required: false },
+          { name: 'reference', label: 'Reference', type: 'text', required: false },
+          { name: 'question', label: 'Question', type: 'multiline', required: true },
+          { name: 'cost_impact', label: 'Cost Impact', type: 'text', required: false },
+          { name: 'schedule_impact', label: 'Schedule Impact', type: 'text', required: false },
+          { name: 'attachments', label: 'Attachments', type: 'attachment', required: false },
+        ],
+        confidence: 1.0,
+        sourceFileName: 'Default Template - ACC Standard Fields',
+      },
+    ];
+
+    const results = [];
+
+    for (const schema of defaultSchemas) {
+      const existing = await prisma.documentSchema.findFirst({
+        where: {
+          name: schema.name,
+          documentType: schema.documentType,
+          projectId: null,
+          isActive: true,
+        },
+      });
+
+      if (existing) {
+        results.push({ name: schema.name, status: 'exists', id: existing.id });
+        continue;
+      }
+
+      const created = await prisma.documentSchema.create({
+        data: {
+          name: schema.name,
+          description: schema.description,
+          documentType: schema.documentType,
+          fields: schema.fields,
+          confidence: schema.confidence,
+          sourceFileName: schema.sourceFileName,
+          projectId: null,
+          isActive: true,
+        },
+      });
+
+      results.push({ name: schema.name, status: 'created', id: created.id });
+    }
+
+    res.json({
+      message: 'Default schemas seeded',
+      results,
+    });
+  } catch (error) {
+    console.error('[document-schema] Error seeding defaults:', error);
+    res.status(500).json({ error: 'Failed to seed default schemas' });
+  }
+};
+
 module.exports = {
   learnSchema,
   getSchemas,
@@ -210,4 +299,5 @@ module.exports = {
   updateSchema,
   deleteSchema,
   analyzeDocument,
+  seedDefaultSchemas,
 };
