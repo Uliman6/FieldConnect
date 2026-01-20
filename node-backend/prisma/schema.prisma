@@ -55,6 +55,7 @@ model Project {
   dailyLogs DailyLog[]
   events    Event[]
   insights  Insight[]
+  templates PdfTemplate[]
 
   @@index([name])
   @@index([number])
@@ -439,6 +440,9 @@ model PdfTemplate {
   version       Int          @default(1)
   isActive      Boolean      @default(true) @map("is_active")
 
+  // Project-specific template (null = admin/default template)
+  projectId     String?      @map("project_id")
+
   // File storage
   fileName      String       @map("file_name")
   filePath      String       @map("file_path")  // ./uploads/templates/uuid.pdf
@@ -452,11 +456,13 @@ model PdfTemplate {
   createdById   String?      @map("created_by_id")
 
   // Relations
+  project       Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   events        Event[]
   templateData  EventTemplateData[]
 
   @@index([templateType])
   @@index([isActive])
+  @@index([projectId])
   @@map("pdf_templates")
 }
 

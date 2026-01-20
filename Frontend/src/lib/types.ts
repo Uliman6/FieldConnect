@@ -423,6 +423,7 @@ export interface PdfTemplate {
   templateType: TemplateType;
   version: number;
   isActive: boolean;
+  projectId: string | null; // null = admin/default template
   fileName: string;
   filePath: string;
   fileSize: number;

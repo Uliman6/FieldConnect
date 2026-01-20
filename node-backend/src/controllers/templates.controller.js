@@ -3,6 +3,8 @@ const pdfTemplateService = require('../services/pdf-template.service');
 /**
  * Upload a new PDF template
  * POST /api/templates
+ * Body: { name, description, templateType, projectId? }
+ * projectId is optional - if not provided, creates an admin/default template
  */
 const uploadTemplate = async (req, res) => {
   try {
@@ -10,7 +12,7 @@ const uploadTemplate = async (req, res) => {
       return res.status(400).json({ error: 'No PDF file provided' });
     }
 
-    const { name, description, templateType } = req.body;
+    const { name, description, templateType, projectId } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Template name is required' });
@@ -24,6 +26,7 @@ const uploadTemplate = async (req, res) => {
       name,
       description,
       templateType,
+      projectId: projectId || null, // null = admin/default template
       createdById: req.userId
     });
 
@@ -37,14 +40,45 @@ const uploadTemplate = async (req, res) => {
 /**
  * Get all active templates
  * GET /api/templates
+ * Query params:
+ *   - projectId: Get templates for a specific project (includes admin defaults as fallback)
+ *   - adminOnly: If true, only return admin/default templates (no projectId)
  */
 const getTemplates = async (req, res) => {
   try {
-    const templates = await pdfTemplateService.getActiveTemplates();
+    const { projectId, adminOnly } = req.query;
+
+    let templates;
+    if (adminOnly === 'true') {
+      // Only admin/default templates
+      templates = await pdfTemplateService.getAdminTemplates();
+    } else if (projectId) {
+      // Project-specific + admin defaults as fallback
+      templates = await pdfTemplateService.getActiveTemplates(projectId);
+    } else {
+      // All admin templates (default behavior for /templates page)
+      templates = await pdfTemplateService.getAdminTemplates();
+    }
+
     res.json(templates);
   } catch (error) {
     console.error('Error fetching templates:', error);
     res.status(500).json({ error: 'Failed to fetch templates' });
+  }
+};
+
+/**
+ * Get project-specific templates only (not including admin defaults)
+ * GET /api/templates/project/:projectId
+ */
+const getProjectTemplates = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const templates = await pdfTemplateService.getProjectTemplates(projectId);
+    res.json(templates);
+  } catch (error) {
+    console.error('Error fetching project templates:', error);
+    res.status(500).json({ error: 'Failed to fetch project templates' });
   }
 };
 
@@ -219,6 +253,7 @@ const getEventTemplateData = async (req, res) => {
 module.exports = {
   uploadTemplate,
   getTemplates,
+  getProjectTemplates,
   getTemplateById,
   updateTemplate,
   deleteTemplate,

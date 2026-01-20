@@ -26,6 +26,7 @@ router.use(authenticate);
 // Template CRUD routes
 router.post('/', upload.single('pdf'), templatesController.uploadTemplate);
 router.get('/', templatesController.getTemplates);
+router.get('/project/:projectId', templatesController.getProjectTemplates);
 router.get('/:id', templatesController.getTemplateById);
 router.put('/:id', upload.single('pdf'), templatesController.updateTemplate);
 router.delete('/:id', templatesController.deleteTemplate);
