@@ -4,7 +4,7 @@
  * Uses AI to extract schema from PDFs, DOCX, and other formats
  */
 
-const { PDFDocument } = require('pdf-lib');
+const pdfParse = require('pdf-parse');
 const prisma = require('./prisma');
 
 // AI API configuration (reuse from transcript parser)
@@ -26,94 +26,32 @@ class DocumentSchemaService {
   }
 
   /**
-   * Extract text content from a PDF buffer
-   * Note: This is basic extraction - for complex layouts, consider using vision models
+   * Extract text content from a PDF buffer using pdf-parse
    */
   async extractTextFromPdf(buffer) {
     try {
-      // pdf-lib doesn't extract text well, so we'll use a simple approach
-      // For production, consider using pdf-parse or a vision model
-      const pdfDoc = await PDFDocument.load(buffer);
-      const pages = pdfDoc.getPages();
+      console.log('[document-schema] Extracting text from PDF using pdf-parse...');
 
-      // Get basic info
-      const pageCount = pages.length;
+      const data = await pdfParse(buffer);
 
-      // Try to extract text using raw PDF content
-      // This is a simplified approach - real text extraction needs pdf-parse
-      const textContent = await this.extractRawPdfText(buffer);
+      console.log('[document-schema] PDF extraction complete:', {
+        pages: data.numpages,
+        textLength: data.text?.length || 0,
+      });
 
       return {
-        pageCount,
-        text: textContent,
+        pageCount: data.numpages,
+        text: data.text || '',
         metadata: {
-          title: pdfDoc.getTitle() || null,
-          author: pdfDoc.getAuthor() || null,
-          subject: pdfDoc.getSubject() || null,
+          title: data.info?.Title || null,
+          author: data.info?.Author || null,
+          subject: data.info?.Subject || null,
         }
       };
     } catch (error) {
       console.error('[document-schema] PDF extraction error:', error.message);
-      throw new Error('Failed to extract text from PDF');
+      throw new Error(`Failed to extract text from PDF: ${error.message}`);
     }
-  }
-
-  /**
-   * Extract raw text from PDF buffer
-   * Simple regex-based extraction for PDF text streams
-   */
-  async extractRawPdfText(buffer) {
-    // Convert buffer to string and look for text patterns
-    const content = buffer.toString('latin1');
-
-    // Look for text in BT...ET blocks (PDF text objects)
-    const textMatches = [];
-    const btPattern = /BT[\s\S]*?ET/g;
-    let match;
-
-    while ((match = btPattern.exec(content)) !== null) {
-      // Extract text from Tj and TJ operators
-      const tjPattern = /\(([^)]+)\)\s*Tj/g;
-      const tjArrayPattern = /\[([^\]]+)\]\s*TJ/g;
-
-      let tjMatch;
-      while ((tjMatch = tjPattern.exec(match[0])) !== null) {
-        textMatches.push(this.decodePdfString(tjMatch[1]));
-      }
-
-      while ((tjMatch = tjArrayPattern.exec(match[0])) !== null) {
-        // Parse TJ array which contains strings and numbers
-        const arrayContent = tjMatch[1];
-        const stringPattern = /\(([^)]*)\)/g;
-        let strMatch;
-        while ((strMatch = stringPattern.exec(arrayContent)) !== null) {
-          textMatches.push(this.decodePdfString(strMatch[1]));
-        }
-      }
-    }
-
-    // Join and clean up
-    let text = textMatches.join(' ');
-
-    // Clean up common PDF encoding artifacts
-    text = text.replace(/\\n/g, '\n');
-    text = text.replace(/\\r/g, '');
-    text = text.replace(/\s+/g, ' ');
-
-    return text.trim();
-  }
-
-  /**
-   * Decode PDF string escapes
-   */
-  decodePdfString(str) {
-    return str
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '\r')
-      .replace(/\\t/g, '\t')
-      .replace(/\\\(/g, '(')
-      .replace(/\\\)/g, ')')
-      .replace(/\\\\/g, '\\');
   }
 
   /**
