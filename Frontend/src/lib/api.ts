@@ -3,6 +3,7 @@
 
 import NetInfo from '@react-native-community/netinfo';
 import { getAuthToken, useAuthStore } from './auth-store';
+import type { PdfTemplate, EventTemplateData, TemplateType } from './types';
 
 // Backend API base URL - configure via ENV tab in Vibecode
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -1294,6 +1295,196 @@ export async function getEvent(id: string): Promise<IndexedEvent> {
   return apiFetch(`/api/events/${id}`);
 }
 
+// ============================================
+// PDF TEMPLATES API
+// ============================================
+
+/**
+ * Get all active PDF templates
+ */
+export async function getTemplates(): Promise<PdfTemplate[]> {
+  return apiFetch('/api/templates');
+}
+
+/**
+ * Get a single template by ID
+ */
+export async function getTemplate(id: string): Promise<PdfTemplate> {
+  return apiFetch(`/api/templates/${id}`);
+}
+
+/**
+ * Upload a new PDF template
+ */
+export async function uploadTemplate(
+  file: File,
+  data: {
+    name: string;
+    description?: string;
+    templateType: TemplateType;
+  }
+): Promise<PdfTemplate> {
+  const formData = new FormData();
+  formData.append('pdf', file);
+  formData.append('name', data.name);
+  if (data.description) formData.append('description', data.description);
+  formData.append('templateType', data.templateType);
+
+  const url = `${API_BASE_URL}/api/templates`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || error.error || `Upload failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Update a template
+ */
+export async function updateTemplate(
+  id: string,
+  file: File | null,
+  data: {
+    name?: string;
+    description?: string;
+    templateType?: TemplateType;
+  }
+): Promise<PdfTemplate> {
+  const formData = new FormData();
+  if (file) formData.append('pdf', file);
+  if (data.name) formData.append('name', data.name);
+  if (data.description !== undefined) formData.append('description', data.description);
+  if (data.templateType) formData.append('templateType', data.templateType);
+
+  const url = `${API_BASE_URL}/api/templates/${id}`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: formData,
+  });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || error.error || `Update failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete a template (soft delete)
+ */
+export async function deleteTemplate(id: string): Promise<void> {
+  await apiFetch(`/api/templates/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Get template download URL
+ */
+export function getTemplateDownloadUrl(id: string): string {
+  return `${API_BASE_URL}/api/templates/${id}/download`;
+}
+
+/**
+ * Attach a template to an event
+ */
+export async function attachTemplateToEvent(
+  eventId: string,
+  templateId: string
+): Promise<IndexedEvent> {
+  return apiFetch(`/api/events/${eventId}/template`, {
+    method: 'POST',
+    body: JSON.stringify({ templateId }),
+  });
+}
+
+/**
+ * Get event template data
+ */
+export async function getEventTemplateData(eventId: string): Promise<EventTemplateData> {
+  return apiFetch(`/api/events/${eventId}/template-data`);
+}
+
+/**
+ * Update event template field values
+ */
+export async function updateEventTemplateData(
+  eventId: string,
+  templateId: string,
+  fieldValues: Record<string, string | boolean>
+): Promise<{ filledPath: string; fieldValues: Record<string, string | boolean> }> {
+  return apiFetch(`/api/events/${eventId}/template-data`, {
+    method: 'PATCH',
+    body: JSON.stringify({ templateId, fieldValues }),
+  });
+}
+
+/**
+ * Get filled PDF download URL for an event
+ */
+export function getFilledPdfUrl(eventId: string): string {
+  return `${API_BASE_URL}/api/events/${eventId}/filled-pdf`;
+}
+
+/**
+ * Download filled PDF with auth
+ */
+export async function fetchFilledPdf(eventId: string): Promise<string> {
+  const url = `${API_BASE_URL}/api/events/${eventId}/filled-pdf`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || `Failed to fetch PDF: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -1310,4 +1501,7 @@ export const queryKeys = {
   insights: (filters?: InsightSearchFilters) => ['insights', filters] as const,
   insight: (id: string) => ['insights', id] as const,
   insightsStats: (projectId?: string, isTest?: boolean) => ['insights', 'stats', projectId, isTest] as const,
+  templates: ['templates'] as const,
+  template: (id: string) => ['templates', id] as const,
+  eventTemplateData: (eventId: string) => ['events', eventId, 'template-data'] as const,
 };

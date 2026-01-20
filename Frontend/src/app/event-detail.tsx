@@ -8,15 +8,25 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDailyLogStore } from '@/lib/store';
-import { EventType, EventSeverity, Event } from '@/lib/types';
+import { EventType, EventSeverity, Event, PdfTemplate, FormFieldDefinition } from '@/lib/types';
 import { audioFileExists } from '@/lib/audio-storage';
 import { generateTitleFromTranscript } from '@/lib/transcription';
 import { cn } from '@/lib/cn';
-import { getEvent, queryKeys, IndexedEvent } from '@/lib/api';
+import {
+  getEvent,
+  queryKeys,
+  IndexedEvent,
+  getTemplates,
+  getEventTemplateData,
+  attachTemplateToEvent,
+  updateEventTemplateData,
+  fetchFilledPdf,
+} from '@/lib/api';
 import {
   ArrowLeft,
   Play,
@@ -33,6 +43,9 @@ import {
   Sparkles,
   Building2,
   Calendar,
+  Download,
+  ChevronDown,
+  X,
 } from 'lucide-react-native';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
@@ -70,6 +83,88 @@ const SEVERITY_COLORS: Record<EventSeverity, string> = {
   Medium: '#F59E0B',
   High: '#EF4444',
 };
+
+const TEMPLATE_TYPE_COLORS: Record<string, string> = {
+  PUNCH_LIST: '#F59E0B',
+  RFI: '#3B82F6',
+  CUSTOM: '#8B5CF6',
+};
+
+// Template Fields Form Component
+function TemplateFieldsForm({
+  template,
+  fieldValues,
+  onChange,
+  disabled,
+}: {
+  template: PdfTemplate;
+  fieldValues: Record<string, string | boolean>;
+  onChange: (name: string, value: string | boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <View className="mt-4">
+      {template.formFields.map((field) => (
+        <View key={field.name} className="mb-4">
+          <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
+            {field.label}
+            {field.required && <Text className="text-red-500"> *</Text>}
+          </Text>
+
+          {field.type === 'checkbox' ? (
+            <View className="flex-row items-center">
+              <Switch
+                value={!!fieldValues[field.name]}
+                onValueChange={(val) => onChange(field.name, val)}
+                disabled={disabled}
+                trackColor={{ false: '#E5E7EB', true: '#3B82F6' }}
+                thumbColor={fieldValues[field.name] ? '#FFFFFF' : '#9CA3AF'}
+              />
+              <Text className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                {fieldValues[field.name] ? 'Yes' : 'No'}
+              </Text>
+            </View>
+          ) : field.type === 'dropdown' && field.options ? (
+            <View className="flex-row flex-wrap gap-2">
+              {field.options.map((opt) => (
+                <Pressable
+                  key={opt}
+                  onPress={() => !disabled && onChange(field.name, opt)}
+                  className={cn(
+                    'px-3 py-2 rounded-lg border',
+                    fieldValues[field.name] === opt
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-600'
+                  )}
+                >
+                  <Text
+                    className={cn(
+                      'text-sm',
+                      fieldValues[field.name] === opt
+                        ? 'text-blue-600 dark:text-blue-400 font-medium'
+                        : 'text-gray-600 dark:text-gray-300'
+                    )}
+                  >
+                    {opt}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            <TextInput
+              value={String(fieldValues[field.name] || '')}
+              onChangeText={(text) => onChange(field.name, text)}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              placeholderTextColor="#9CA3AF"
+              editable={!disabled}
+              className="bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white"
+            />
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -111,6 +206,50 @@ export default function EventDetailScreen() {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [audioExists, setAudioExists] = useState(true);
+
+  // Template state
+  const queryClient = useQueryClient();
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [templateFieldValues, setTemplateFieldValues] = useState<Record<string, string | boolean>>({});
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  // Fetch available templates
+  const templatesQuery = useQuery({
+    queryKey: queryKeys.templates,
+    queryFn: getTemplates,
+  });
+
+  // Get selected template
+  const selectedTemplate = templatesQuery.data?.find((t) => t.id === selectedTemplateId);
+
+  // Attach template mutation
+  const attachTemplateMutation = useMutation({
+    mutationFn: async ({ eventId, templateId }: { eventId: string; templateId: string }) => {
+      return attachTemplateToEvent(eventId, templateId);
+    },
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+  });
+
+  // Save template data mutation
+  const saveTemplateDataMutation = useMutation({
+    mutationFn: async ({
+      eventId,
+      templateId,
+      fieldValues,
+    }: {
+      eventId: string;
+      templateId: string;
+      fieldValues: Record<string, string | boolean>;
+    }) => {
+      return updateEventTemplateData(eventId, templateId, fieldValues);
+    },
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+  });
 
   const project = localEvent
     ? projects.find((p) => p.id === localEvent.project_id)
@@ -367,6 +506,66 @@ export default function EventDetailScreen() {
     });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setHasChanges(false);
+  };
+
+  // Template handlers
+  const handleSelectTemplate = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    setShowTemplateSelector(false);
+    setTemplateFieldValues({});
+
+    // Attach template to event (backend)
+    attachTemplateMutation.mutate({ eventId: event.id, templateId });
+  };
+
+  const handleClearTemplate = () => {
+    setSelectedTemplateId(null);
+    setTemplateFieldValues({});
+  };
+
+  const handleTemplateFieldChange = (name: string, value: string | boolean) => {
+    setTemplateFieldValues((prev) => ({ ...prev, [name]: value }));
+    markChanged();
+  };
+
+  const handleSaveTemplateData = async () => {
+    if (!selectedTemplateId) return;
+
+    await saveTemplateDataMutation.mutateAsync({
+      eventId: event.id,
+      templateId: selectedTemplateId,
+      fieldValues: templateFieldValues,
+    });
+  };
+
+  const handleDownloadFilledPdf = async () => {
+    if (!selectedTemplateId) return;
+
+    setIsDownloadingPdf(true);
+    try {
+      // First save current template data
+      await handleSaveTemplateData();
+
+      // Then download the filled PDF
+      const blobUrl = await fetchFilledPdf(event.id);
+
+      if (Platform.OS === 'web') {
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${selectedTemplate?.name || 'filled'}-${event.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Failed to download PDF:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   const handleAddToDailyLog = () => {
@@ -756,9 +955,147 @@ export default function EventDetailScreen() {
           </View>
         </Animated.View>
 
+        {/* Template Section */}
+        {templatesQuery.data && templatesQuery.data.length > 0 && (
+          <Animated.View
+            entering={FadeInDown.delay(250)}
+            className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
+          >
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center">
+                <FileText size={16} color="#8B5CF6" />
+                <Text className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Document Template
+                </Text>
+              </View>
+              {selectedTemplate && (
+                <Pressable
+                  onPress={handleClearTemplate}
+                  className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700"
+                >
+                  <X size={14} color="#6B7280" />
+                </Pressable>
+              )}
+            </View>
+
+            {!selectedTemplate ? (
+              <View>
+                {showTemplateSelector ? (
+                  <View className="space-y-2">
+                    {templatesQuery.data.map((template) => (
+                      <Pressable
+                        key={template.id}
+                        onPress={() => handleSelectTemplate(template.id)}
+                        className="flex-row items-center bg-gray-50 dark:bg-gray-700 rounded-xl p-3"
+                      >
+                        <View
+                          className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                          style={{ backgroundColor: TEMPLATE_TYPE_COLORS[template.templateType] + '20' }}
+                        >
+                          <FileText size={16} color={TEMPLATE_TYPE_COLORS[template.templateType]} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-sm font-medium text-gray-900 dark:text-white">
+                            {template.name}
+                          </Text>
+                          <Text className="text-xs text-gray-500">
+                            {template.formFields.length} fields
+                          </Text>
+                        </View>
+                        <ChevronDown size={18} color="#9CA3AF" style={{ transform: [{ rotate: '-90deg' }] }} />
+                      </Pressable>
+                    ))}
+                    <Pressable
+                      onPress={() => setShowTemplateSelector(false)}
+                      className="py-2"
+                    >
+                      <Text className="text-sm text-gray-500 text-center">Cancel</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable
+                    onPress={() => setShowTemplateSelector(true)}
+                    className="flex-row items-center justify-center bg-purple-50 dark:bg-purple-900/20 rounded-xl py-3 border border-purple-200 dark:border-purple-800"
+                  >
+                    <FileText size={18} color="#8B5CF6" />
+                    <Text className="ml-2 text-sm font-medium text-purple-600 dark:text-purple-400">
+                      Add Document Template
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            ) : (
+              <View>
+                {/* Selected template header */}
+                <View className="flex-row items-center bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 mb-4">
+                  <View
+                    className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+                    style={{ backgroundColor: TEMPLATE_TYPE_COLORS[selectedTemplate.templateType] + '30' }}
+                  >
+                    <FileText size={20} color={TEMPLATE_TYPE_COLORS[selectedTemplate.templateType]} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {selectedTemplate.name}
+                    </Text>
+                    <Text className="text-xs text-gray-500">
+                      {selectedTemplate.formFields.length} fields to fill
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Template fields form */}
+                <TemplateFieldsForm
+                  template={selectedTemplate}
+                  fieldValues={templateFieldValues}
+                  onChange={handleTemplateFieldChange}
+                />
+
+                {/* Template actions */}
+                <View className="flex-row gap-3 mt-4">
+                  <Pressable
+                    onPress={handleSaveTemplateData}
+                    disabled={saveTemplateDataMutation.isPending}
+                    className={cn(
+                      'flex-1 flex-row items-center justify-center py-3 rounded-xl',
+                      saveTemplateDataMutation.isPending ? 'bg-gray-300' : 'bg-purple-600'
+                    )}
+                  >
+                    {saveTemplateDataMutation.isPending ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Save size={18} color="white" />
+                        <Text className="ml-2 text-white font-semibold">Save</Text>
+                      </>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={handleDownloadFilledPdf}
+                    disabled={isDownloadingPdf}
+                    className={cn(
+                      'flex-1 flex-row items-center justify-center py-3 rounded-xl',
+                      isDownloadingPdf ? 'bg-gray-300' : 'bg-green-600'
+                    )}
+                  >
+                    {isDownloadingPdf ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Download size={18} color="white" />
+                        <Text className="ml-2 text-white font-semibold">Export PDF</Text>
+                      </>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            )}
+          </Animated.View>
+        )}
+
         {/* Actions */}
         <Animated.View
-          entering={FadeInDown.delay(250)}
+          entering={FadeInDown.delay(300)}
           className="mx-4 mt-6"
         >
           {/* Add to Daily Log */}
