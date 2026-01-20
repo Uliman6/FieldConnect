@@ -1301,9 +1301,26 @@ export async function getEvent(id: string): Promise<IndexedEvent> {
 
 /**
  * Get all active PDF templates
+ * @param options.projectId - If provided, gets project-specific templates + admin defaults as fallback
+ * @param options.adminOnly - If true, only returns admin/default templates
  */
-export async function getTemplates(): Promise<PdfTemplate[]> {
-  return apiFetch('/api/templates');
+export async function getTemplates(options?: {
+  projectId?: string;
+  adminOnly?: boolean;
+}): Promise<PdfTemplate[]> {
+  const params = new URLSearchParams();
+  if (options?.projectId) params.append('projectId', options.projectId);
+  if (options?.adminOnly) params.append('adminOnly', 'true');
+
+  const queryString = params.toString();
+  return apiFetch(`/api/templates${queryString ? `?${queryString}` : ''}`);
+}
+
+/**
+ * Get project-specific templates only (not including admin defaults)
+ */
+export async function getProjectTemplates(projectId: string): Promise<PdfTemplate[]> {
+  return apiFetch(`/api/templates/project/${projectId}`);
 }
 
 /**
@@ -1315,6 +1332,7 @@ export async function getTemplate(id: string): Promise<PdfTemplate> {
 
 /**
  * Upload a new PDF template
+ * @param data.projectId - Optional project ID to make this a project-specific template
  */
 export async function uploadTemplate(
   file: File,
@@ -1322,6 +1340,7 @@ export async function uploadTemplate(
     name: string;
     description?: string;
     templateType: TemplateType;
+    projectId?: string;
   }
 ): Promise<PdfTemplate> {
   const formData = new FormData();
@@ -1329,6 +1348,7 @@ export async function uploadTemplate(
   formData.append('name', data.name);
   if (data.description) formData.append('description', data.description);
   formData.append('templateType', data.templateType);
+  if (data.projectId) formData.append('projectId', data.projectId);
 
   const url = `${API_BASE_URL}/api/templates`;
   const token = getAuthToken();

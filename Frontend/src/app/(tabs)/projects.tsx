@@ -14,6 +14,7 @@ import {
   X,
   AlertTriangle,
   Upload,
+  Files,
 } from 'lucide-react-native';
 import { useDailyLogStore } from '@/lib/store';
 import { Button, InputField } from '@/components/ui';
@@ -294,6 +295,19 @@ export default function ProjectsScreen() {
             }}
             variant="secondary"
             icon={<Upload size={20} color="#F97316" />}
+          />
+        </View>
+
+        {/* Manage Templates Button */}
+        <View className="px-4 mt-3">
+          <Button
+            title="Manage Templates"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/templates');
+            }}
+            variant="secondary"
+            icon={<Files size={20} color="#F97316" />}
           />
         </View>
       </ScrollView>

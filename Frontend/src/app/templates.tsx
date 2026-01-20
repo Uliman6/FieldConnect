@@ -22,6 +22,8 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
+  Building2,
+  Shield,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -29,10 +31,13 @@ import * as DocumentPicker from 'expo-document-picker';
 import { cn } from '@/lib/cn';
 import {
   getTemplates,
+  getProjectTemplates,
+  getProjects,
   uploadTemplate,
   deleteTemplate,
   getTemplateDownloadUrl,
   queryKeys,
+  type ProjectSummary,
 } from '@/lib/api';
 import type { PdfTemplate, TemplateType } from '@/lib/types';
 import { getAuthToken } from '@/lib/auth-store';
@@ -53,13 +58,16 @@ function TemplateCard({
   template,
   onDelete,
   onDownload,
+  showProjectBadge = false,
 }: {
   template: PdfTemplate;
   onDelete: () => void;
   onDownload: () => void;
+  showProjectBadge?: boolean;
 }) {
   const color = TEMPLATE_TYPE_COLORS[template.templateType];
   const typeLabel = TEMPLATE_TYPE_LABELS[template.templateType];
+  const isAdminTemplate = !template.projectId;
 
   return (
     <Animated.View entering={FadeInDown.duration(300)}>
@@ -77,7 +85,7 @@ function TemplateCard({
                 <Text className="text-base font-semibold text-gray-900 dark:text-white">
                   {template.name}
                 </Text>
-                <View className="flex-row items-center mt-0.5">
+                <View className="flex-row items-center mt-0.5 flex-wrap">
                   <View
                     className="px-2 py-0.5 rounded-full"
                     style={{ backgroundColor: color + '20' }}
@@ -89,6 +97,14 @@ function TemplateCard({
                   <Text className="text-xs text-gray-500 dark:text-gray-400 ml-2">
                     v{template.version}
                   </Text>
+                  {showProjectBadge && isAdminTemplate && (
+                    <View className="flex-row items-center ml-2 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                      <Shield size={10} color="#8B5CF6" />
+                      <Text className="text-xs font-medium text-purple-600 dark:text-purple-400 ml-1">
+                        Default
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
             </View>
@@ -164,17 +180,22 @@ function UploadModal({
   onClose,
   onUpload,
   isUploading,
+  selectedProjectId,
+  projects,
 }: {
   visible: boolean;
   onClose: () => void;
-  onUpload: (file: any, name: string, type: TemplateType, description: string) => void;
+  onUpload: (file: any, name: string, type: TemplateType, description: string, projectId?: string) => void;
   isUploading: boolean;
+  selectedProjectId?: string;
+  projects?: ProjectSummary[];
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [templateType, setTemplateType] = useState<TemplateType>('PUNCH_LIST');
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string | undefined>(selectedProjectId);
 
   const handlePickFile = async () => {
     try {
@@ -206,7 +227,7 @@ function UploadModal({
       setError('Please enter a template name');
       return;
     }
-    onUpload(selectedFile, name.trim(), templateType, description.trim());
+    onUpload(selectedFile, name.trim(), templateType, description.trim(), projectId);
   };
 
   const resetForm = () => {
@@ -215,6 +236,7 @@ function UploadModal({
     setTemplateType('PUNCH_LIST');
     setSelectedFile(null);
     setError(null);
+    setProjectId(selectedProjectId);
   };
 
   if (!visible) return null;
@@ -314,6 +336,68 @@ function UploadModal({
           </View>
         </View>
 
+        {/* Project Selector - only show if projects available */}
+        {projects && projects.length > 0 && (
+          <View className="mb-4">
+            <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Template Scope
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className="flex-row gap-2">
+                <Pressable
+                  onPress={() => setProjectId(undefined)}
+                  className={cn(
+                    'py-2 px-3 rounded-lg border-2 flex-row items-center',
+                    !projectId
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                      : 'border-gray-200 dark:border-gray-600'
+                  )}
+                >
+                  <Shield size={14} color={!projectId ? '#8B5CF6' : '#6B7280'} />
+                  <Text
+                    className={cn(
+                      'text-sm font-medium ml-1',
+                      !projectId
+                        ? 'text-purple-600 dark:text-purple-400'
+                        : 'text-gray-600 dark:text-gray-400'
+                    )}
+                  >
+                    Default
+                  </Text>
+                </Pressable>
+                {projects.map((project) => (
+                  <Pressable
+                    key={project.id}
+                    onPress={() => setProjectId(project.id)}
+                    className={cn(
+                      'py-2 px-3 rounded-lg border-2 flex-row items-center',
+                      projectId === project.id
+                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                        : 'border-gray-200 dark:border-gray-600'
+                    )}
+                  >
+                    <Building2 size={14} color={projectId === project.id ? '#F97316' : '#6B7280'} />
+                    <Text
+                      className={cn(
+                        'text-sm font-medium ml-1',
+                        projectId === project.id
+                          ? 'text-orange-600 dark:text-orange-400'
+                          : 'text-gray-600 dark:text-gray-400'
+                      )}
+                      numberOfLines={1}
+                    >
+                      {project.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
+            <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {projectId ? 'Template will override default for this project' : 'Template available to all projects'}
+            </Text>
+          </View>
+        )}
+
         <View className="mb-6">
           <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description (optional)
@@ -348,11 +432,21 @@ function UploadModal({
   );
 }
 
+type ViewMode = 'admin' | 'project';
+
 export default function TemplatesScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('admin');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>();
+
+  // Fetch projects for project selector
+  const { data: projects } = useQuery({
+    queryKey: queryKeys.projects,
+    queryFn: () => getProjects(),
+  });
 
   const {
     data: templates,
@@ -360,8 +454,14 @@ export default function TemplatesScreen() {
     error,
     refetch,
   } = useQuery({
-    queryKey: queryKeys.templates,
-    queryFn: getTemplates,
+    queryKey: viewMode === 'admin'
+      ? [...queryKeys.templates, 'admin']
+      : [...queryKeys.templates, 'project', selectedProjectId],
+    queryFn: () => viewMode === 'admin'
+      ? getTemplates({ adminOnly: true })
+      : selectedProjectId
+        ? getTemplates({ projectId: selectedProjectId })
+        : getTemplates({ adminOnly: true }),
   });
 
   const uploadMutation = useMutation({
@@ -370,11 +470,13 @@ export default function TemplatesScreen() {
       name,
       templateType,
       description,
+      projectId,
     }: {
       file: any;
       name: string;
       templateType: TemplateType;
       description: string;
+      projectId?: string;
     }) => {
       // For web, we need to create a File object from the document picker result
       let fileToUpload: File;
@@ -391,7 +493,7 @@ export default function TemplatesScreen() {
         fileToUpload = new File([blob], file.name, { type: 'application/pdf' });
       }
 
-      return uploadTemplate(fileToUpload, { name, templateType, description });
+      return uploadTemplate(fileToUpload, { name, templateType, description, projectId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.templates });
@@ -457,9 +559,10 @@ export default function TemplatesScreen() {
     file: any,
     name: string,
     templateType: TemplateType,
-    description: string
+    description: string,
+    projectId?: string
   ) => {
-    uploadMutation.mutate({ file, name, templateType, description });
+    uploadMutation.mutate({ file, name, templateType, description, projectId });
   };
 
   return (
@@ -498,6 +601,117 @@ export default function TemplatesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
+        {/* Mode Selector */}
+        <View className="mb-4">
+          <View className="flex-row bg-gray-200 dark:bg-gray-700 rounded-xl p-1">
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                setViewMode('admin');
+                setSelectedProjectId(undefined);
+              }}
+              className={cn(
+                'flex-1 py-2 rounded-lg flex-row items-center justify-center',
+                viewMode === 'admin' && 'bg-white dark:bg-gray-800'
+              )}
+            >
+              <Shield size={16} color={viewMode === 'admin' ? '#8B5CF6' : '#6B7280'} />
+              <Text
+                className={cn(
+                  'font-medium ml-1.5',
+                  viewMode === 'admin'
+                    ? 'text-purple-600 dark:text-purple-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                )}
+              >
+                Default Templates
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                setViewMode('project');
+                // Auto-select first project if available
+                if (projects && projects.length > 0 && !selectedProjectId) {
+                  setSelectedProjectId(projects[0].id);
+                }
+              }}
+              className={cn(
+                'flex-1 py-2 rounded-lg flex-row items-center justify-center',
+                viewMode === 'project' && 'bg-white dark:bg-gray-800'
+              )}
+            >
+              <Building2 size={16} color={viewMode === 'project' ? '#F97316' : '#6B7280'} />
+              <Text
+                className={cn(
+                  'font-medium ml-1.5',
+                  viewMode === 'project'
+                    ? 'text-orange-600 dark:text-orange-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                )}
+              >
+                By Project
+              </Text>
+            </Pressable>
+          </View>
+          <Text className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+            {viewMode === 'admin'
+              ? 'Default templates are available to all projects'
+              : 'Project templates override default templates'}
+          </Text>
+        </View>
+
+        {/* Project Selector (when in project mode) */}
+        {viewMode === 'project' && projects && projects.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mb-4"
+          >
+            <View className="flex-row gap-2">
+              {projects.map((project) => (
+                <Pressable
+                  key={project.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setSelectedProjectId(project.id);
+                  }}
+                  className={cn(
+                    'px-4 py-2 rounded-xl',
+                    selectedProjectId === project.id
+                      ? 'bg-orange-500'
+                      : 'bg-white dark:bg-gray-800'
+                  )}
+                >
+                  <Text
+                    className={cn(
+                      'font-medium',
+                      selectedProjectId === project.id
+                        ? 'text-white'
+                        : 'text-gray-600 dark:text-gray-300'
+                    )}
+                    numberOfLines={1}
+                  >
+                    {project.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        )}
+
+        {viewMode === 'project' && (!projects || projects.length === 0) && (
+          <View className="py-8 items-center bg-yellow-50 dark:bg-yellow-900/20 rounded-xl mb-4">
+            <AlertCircle size={32} color="#F59E0B" />
+            <Text className="text-yellow-700 dark:text-yellow-300 mt-2 text-center">
+              No projects available
+            </Text>
+            <Text className="text-yellow-600 dark:text-yellow-400 text-sm mt-1 text-center">
+              Create a project first to add project-specific templates
+            </Text>
+          </View>
+        )}
+
         {isLoading ? (
           <View className="py-20 items-center">
             <ActivityIndicator size="large" color="#3B82F6" />
@@ -539,6 +753,7 @@ export default function TemplatesScreen() {
           <View>
             <Text className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               {templates?.length} template{templates?.length !== 1 ? 's' : ''} available
+              {viewMode === 'project' && selectedProjectId && ' (including default templates)'}
             </Text>
             {templates?.map((template) => (
               <TemplateCard
@@ -546,6 +761,7 @@ export default function TemplatesScreen() {
                 template={template}
                 onDelete={() => handleDelete(template)}
                 onDownload={() => handleDownload(template)}
+                showProjectBadge={viewMode === 'project'}
               />
             ))}
           </View>
@@ -557,6 +773,8 @@ export default function TemplatesScreen() {
         onClose={() => setShowUploadModal(false)}
         onUpload={handleUpload}
         isUploading={uploadMutation.isPending}
+        selectedProjectId={viewMode === 'project' ? selectedProjectId : undefined}
+        projects={projects}
       />
     </View>
   );

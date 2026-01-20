@@ -217,7 +217,7 @@ export default function EventDetailScreen() {
   // Fetch available templates
   const templatesQuery = useQuery({
     queryKey: queryKeys.templates,
-    queryFn: getTemplates,
+    queryFn: () => getTemplates(),
   });
 
   // Get selected template

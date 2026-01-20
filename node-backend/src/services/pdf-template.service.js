@@ -90,11 +90,13 @@ class PdfTemplateService {
 
   /**
    * Save an uploaded template to disk and database
+   * @param {Object} file - Uploaded file object
+   * @param {Object} templateData - Template metadata including optional projectId
    */
   async saveTemplate(file, templateData) {
     await this.ensureDirectories();
 
-    const { name, description, templateType } = templateData;
+    const { name, description, templateType, projectId } = templateData;
     const fileName = `${Date.now()}-${file.originalname}`;
     const filePath = path.join(this.uploadsDir, fileName);
 
@@ -110,6 +112,7 @@ class PdfTemplateService {
         name,
         description,
         templateType,
+        projectId: projectId || null, // null = admin/default template
         fileName: file.originalname,
         filePath: filePath,
         fileSize: file.size,
@@ -123,10 +126,56 @@ class PdfTemplateService {
 
   /**
    * Get all active templates
+   * @param {string} projectId - Optional project ID to get project-specific templates
+   * @returns {Array} Templates with project-specific ones overriding admin defaults
    */
-  async getActiveTemplates() {
+  async getActiveTemplates(projectId = null) {
+    if (!projectId) {
+      // Return only admin/default templates (no projectId)
+      return prisma.pdfTemplate.findMany({
+        where: { isActive: true, projectId: null },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    // Get both admin templates and project-specific templates
+    const [adminTemplates, projectTemplates] = await Promise.all([
+      prisma.pdfTemplate.findMany({
+        where: { isActive: true, projectId: null },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.pdfTemplate.findMany({
+        where: { isActive: true, projectId },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
+
+    // Project templates override admin templates of the same type
+    const projectTemplateTypes = new Set(projectTemplates.map(t => t.templateType));
+    const filteredAdminTemplates = adminTemplates.filter(
+      t => !projectTemplateTypes.has(t.templateType)
+    );
+
+    // Combine: project-specific first, then admin defaults that weren't overridden
+    return [...projectTemplates, ...filteredAdminTemplates];
+  }
+
+  /**
+   * Get templates for a specific project (project-specific only)
+   */
+  async getProjectTemplates(projectId) {
     return prisma.pdfTemplate.findMany({
-      where: { isActive: true },
+      where: { isActive: true, projectId },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  /**
+   * Get admin/default templates only
+   */
+  async getAdminTemplates() {
+    return prisma.pdfTemplate.findMany({
+      where: { isActive: true, projectId: null },
       orderBy: { createdAt: 'desc' }
     });
   }
