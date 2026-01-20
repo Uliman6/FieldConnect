@@ -52,10 +52,11 @@ model Project {
   // Original ID from imported JSON (for deduplication)
   originalId String? @unique @map("original_id")
 
-  dailyLogs DailyLog[]
-  events    Event[]
-  insights  Insight[]
-  templates PdfTemplate[]
+  dailyLogs       DailyLog[]
+  events          Event[]
+  insights        Insight[]
+  templates       PdfTemplate[]
+  documentSchemas DocumentSchema[]
 
   @@index([name])
   @@index([number])
@@ -503,4 +504,55 @@ model ImportLog {
   errorMessage    String?  @map("error_message") @db.Text
 
   @@map("import_logs")
+}
+
+// ============================================
+// DOCUMENT SCHEMA LEARNING
+// ============================================
+// Stores learned field structures from sample documents
+// Used to understand what data to extract from events/transcriptions
+
+enum SchemaDocumentType {
+  PUNCH_LIST
+  RFI
+  DAILY_REPORT
+  SAFETY_REPORT
+  INSPECTION
+  CUSTOM
+}
+
+model DocumentSchema {
+  id             String             @id @default(uuid())
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  // Schema metadata
+  name           String             // "Punch List", "RFI Form"
+  description    String?            @db.Text
+  documentType   SchemaDocumentType @map("document_type")
+  version        Int                @default(1)
+  isActive       Boolean            @default(true) @map("is_active")
+
+  // Project association (null = global/default schema)
+  projectId      String?            @map("project_id")
+
+  // Source document info
+  sourceFileName String?            @map("source_file_name")
+  sourceFilePath String?            @map("source_file_path")
+
+  // Learned field structure (JSON)
+  // Format: [{ name, type, label, description, required, examples }]
+  fields         Json               @default("[]")
+
+  // AI analysis metadata
+  analysisNotes  String?            @map("analysis_notes") @db.Text
+  confidence     Float?             // AI confidence score 0-1
+
+  // Relations
+  project        Project?           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([documentType])
+  @@index([isActive])
+  @@map("document_schemas")
 }

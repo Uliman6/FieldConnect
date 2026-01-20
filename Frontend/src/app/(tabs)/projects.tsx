@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Upload,
   Files,
+  Brain,
 } from 'lucide-react-native';
 import { useDailyLogStore } from '@/lib/store';
 import { Button, InputField } from '@/components/ui';
@@ -308,6 +309,19 @@ export default function ProjectsScreen() {
             }}
             variant="secondary"
             icon={<Files size={20} color="#F97316" />}
+          />
+        </View>
+
+        {/* Document Schemas Button */}
+        <View className="px-4 mt-3">
+          <Button
+            title="Document Schemas"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/schemas');
+            }}
+            variant="secondary"
+            icon={<Brain size={20} color="#F97316" />}
           />
         </View>
       </ScrollView>
