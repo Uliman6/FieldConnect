@@ -441,3 +441,36 @@ export interface EventTemplateData {
   generatedPdfPath: string | null;
   template?: PdfTemplate;
 }
+
+// ============================================
+// DOCUMENT SCHEMA TYPES (AI-Learned Schemas)
+// ============================================
+
+export type SchemaDocumentType = 'PUNCH_LIST' | 'RFI' | 'DAILY_REPORT' | 'SAFETY_REPORT' | 'INSPECTION' | 'CUSTOM';
+
+export type SchemaFieldType = 'text' | 'number' | 'date' | 'datetime' | 'boolean' | 'select' | 'multiline' | 'person' | 'company' | 'location' | 'attachment';
+
+export interface SchemaField {
+  name: string;
+  label: string;
+  type: SchemaFieldType;
+  description?: string;
+  required: boolean;
+  examples?: string[];
+}
+
+export interface DocumentSchema {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  description: string | null;
+  documentType: SchemaDocumentType;
+  version: number;
+  isActive: boolean;
+  projectId: string | null;
+  sourceFileName: string | null;
+  fields: SchemaField[];
+  analysisNotes: string | null;
+  confidence: number | null;
+}

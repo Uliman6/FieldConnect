@@ -3,7 +3,7 @@
 
 import NetInfo from '@react-native-community/netinfo';
 import { getAuthToken, useAuthStore } from './auth-store';
-import type { PdfTemplate, EventTemplateData, TemplateType } from './types';
+import type { PdfTemplate, EventTemplateData, TemplateType, DocumentSchema, SchemaDocumentType, SchemaField } from './types';
 
 // Backend API base URL - configure via ENV tab in Vibecode
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -1505,6 +1505,159 @@ export async function fetchFilledPdf(eventId: string): Promise<string> {
   return URL.createObjectURL(blob);
 }
 
+// ============================================
+// DOCUMENT SCHEMAS API (AI-Learned Schemas)
+// ============================================
+
+export interface AnalyzeDocumentResult {
+  message: string;
+  fileName: string;
+  extractedTextLength: number;
+  schema: {
+    documentName: string;
+    description: string;
+    fields: SchemaField[];
+    sections?: string[];
+    confidence: number;
+  };
+}
+
+export interface LearnSchemaResult {
+  message: string;
+  schema: DocumentSchema;
+}
+
+/**
+ * Get all document schemas
+ */
+export async function getDocumentSchemas(options?: {
+  projectId?: string;
+  type?: SchemaDocumentType;
+}): Promise<DocumentSchema[]> {
+  const params = new URLSearchParams();
+  if (options?.projectId) params.append('projectId', options.projectId);
+  if (options?.type) params.append('type', options.type);
+
+  const query = params.toString();
+  return apiFetch(`/api/document-schemas${query ? `?${query}` : ''}`);
+}
+
+/**
+ * Get a single document schema by ID
+ */
+export async function getDocumentSchema(id: string): Promise<DocumentSchema> {
+  return apiFetch(`/api/document-schemas/${id}`);
+}
+
+/**
+ * Learn schema from uploaded document (with AI analysis)
+ */
+export async function learnDocumentSchema(
+  file: File,
+  data: {
+    name?: string;
+    documentType: SchemaDocumentType;
+    projectId?: string;
+    description?: string;
+  }
+): Promise<LearnSchemaResult> {
+  const formData = new FormData();
+  formData.append('document', file);
+  if (data.name) formData.append('name', data.name);
+  formData.append('documentType', data.documentType);
+  if (data.projectId) formData.append('projectId', data.projectId);
+  if (data.description) formData.append('description', data.description);
+
+  const url = `${API_BASE_URL}/api/document-schemas`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || error.error || error.details || `Upload failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Analyze document without saving (preview)
+ */
+export async function analyzeDocument(
+  file: File,
+  documentType?: SchemaDocumentType
+): Promise<AnalyzeDocumentResult> {
+  const formData = new FormData();
+  formData.append('document', file);
+  if (documentType) formData.append('documentType', documentType);
+
+  const url = `${API_BASE_URL}/api/document-schemas/analyze`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || error.error || error.details || `Analysis failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Update a document schema
+ */
+export async function updateDocumentSchema(
+  id: string,
+  data: {
+    name?: string;
+    description?: string;
+    fields?: SchemaField[];
+    isActive?: boolean;
+  }
+): Promise<{ message: string; schema: DocumentSchema }> {
+  return apiFetch(`/api/document-schemas/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a document schema (soft delete)
+ */
+export async function deleteDocumentSchema(id: string): Promise<void> {
+  await apiFetch(`/api/document-schemas/${id}`, { method: 'DELETE' });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -1524,4 +1677,6 @@ export const queryKeys = {
   templates: ['templates'] as const,
   template: (id: string) => ['templates', id] as const,
   eventTemplateData: (eventId: string) => ['events', eventId, 'template-data'] as const,
+  documentSchemas: (options?: { projectId?: string; type?: SchemaDocumentType }) => ['document-schemas', options] as const,
+  documentSchema: (id: string) => ['document-schemas', id] as const,
 };
