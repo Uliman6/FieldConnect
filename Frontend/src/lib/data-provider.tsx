@@ -338,6 +338,25 @@ export function DataProvider({ children }: DataProviderProps) {
         }
       }
 
+      // Remove local projects that don't exist on backend anymore
+      const currentStoreAfterSync = useDailyLogStore.getState();
+      const projectsToRemove = currentStoreAfterSync.projects.filter((localProject) => {
+        // Check if this local project has a backend mapping
+        const backendId = backendIdMap.projects[localProject.id] || localProject.id;
+        // Keep only if it exists on backend
+        return !backendProjectIds.has(backendId) && !backendProjectIds.has(localProject.id);
+      });
+
+      if (projectsToRemove.length > 0) {
+        console.log('[data] Removing deleted projects:', projectsToRemove.map((p) => p.name));
+        useDailyLogStore.setState((s) => ({
+          projects: s.projects.filter((p) => !projectsToRemove.some((r) => r.id === p.id)),
+          // Also remove related daily logs and events
+          dailyLogs: s.dailyLogs.filter((l) => !projectsToRemove.some((r) => r.id === l.project_id)),
+          events: s.events.filter((e) => !projectsToRemove.some((r) => r.id === e.project_id)),
+        }));
+      }
+
       // ============================================
       // STEP 2: Fetch and sync EVENTS
       // ============================================
@@ -377,6 +396,25 @@ export function DataProvider({ children }: DataProviderProps) {
 
       if (addedEventIds.size > 0) {
         console.log('[data] Added events from backend:', addedEventIds.size);
+      }
+
+      // Build a set of backend event IDs
+      const backendEventIds = new Set(backendEvents.map((be) => be.id));
+
+      // Remove local events that don't exist on backend anymore
+      const storeAfterEventSync = useDailyLogStore.getState();
+      const eventsToRemove = storeAfterEventSync.events.filter((localEvent) => {
+        // Check if this local event has a backend mapping
+        const backendId = backendIdMap.events[localEvent.id] || localEvent.id;
+        // Keep only if it exists on backend
+        return !backendEventIds.has(backendId) && !backendEventIds.has(localEvent.id);
+      });
+
+      if (eventsToRemove.length > 0) {
+        console.log('[data] Removing deleted events:', eventsToRemove.length);
+        useDailyLogStore.setState((s) => ({
+          events: s.events.filter((e) => !eventsToRemove.some((r) => r.id === e.id)),
+        }));
       }
 
       // ============================================
