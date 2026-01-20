@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const templatesController = require('../controllers/templates.controller');
-const authMiddleware = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware');
 
 // Configure multer for PDF uploads
 const storage = multer.memoryStorage();
@@ -21,7 +21,7 @@ const upload = multer({
 });
 
 // All routes require authentication
-router.use(authMiddleware);
+router.use(authenticate);
 
 // Template CRUD routes
 router.post('/', upload.single('pdf'), templatesController.uploadTemplate);
