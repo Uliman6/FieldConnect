@@ -1,0 +1,166 @@
+/**
+ * Schema Data Controller
+ * Handles API endpoints for applying document schemas to events
+ */
+
+const schemaExtractionService = require('../services/schema-extraction.service');
+
+/**
+ * Apply schema to event - AI extracts fields from transcript
+ * POST /api/events/:eventId/apply-schema
+ */
+const applySchema = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { schemaId } = req.body;
+
+    if (!schemaId) {
+      return res.status(400).json({ error: 'schemaId is required' });
+    }
+
+    if (!schemaExtractionService.isAvailable()) {
+      return res.status(503).json({
+        error: 'AI service not available. Please configure OPENAI_API_KEY or GROQ_API_KEY.'
+      });
+    }
+
+    const schemaData = await schemaExtractionService.applySchemaToEvent(eventId, schemaId);
+
+    res.status(201).json({
+      message: 'Schema applied successfully',
+      schemaData,
+    });
+  } catch (error) {
+    console.error('[schema-data] Error applying schema:', error);
+
+    if (error.message === 'Event not found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error.message === 'Schema not found') {
+      return res.status(404).json({ error: 'Schema not found' });
+    }
+    if (error.message === 'Event has no transcript text') {
+      return res.status(400).json({ error: 'Event has no transcript text to extract from' });
+    }
+    if (error.message === 'Schema is not active') {
+      return res.status(400).json({ error: 'Schema is not active' });
+    }
+
+    res.status(500).json({
+      error: 'Failed to apply schema',
+      details: error.message
+    });
+  }
+};
+
+/**
+ * Get schema data for an event
+ * GET /api/events/:eventId/schema-data
+ */
+const getSchemaData = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const schemaData = await schemaExtractionService.getSchemaData(eventId);
+
+    if (!schemaData) {
+      return res.status(404).json({ error: 'No schema data found for this event' });
+    }
+
+    res.json(schemaData);
+  } catch (error) {
+    console.error('[schema-data] Error fetching schema data:', error);
+    res.status(500).json({ error: 'Failed to fetch schema data' });
+  }
+};
+
+/**
+ * Update schema data field values (manual edit)
+ * PATCH /api/events/:eventId/schema-data
+ */
+const updateSchemaData = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { fieldValues } = req.body;
+
+    if (!fieldValues || typeof fieldValues !== 'object') {
+      return res.status(400).json({ error: 'fieldValues object is required' });
+    }
+
+    const schemaData = await schemaExtractionService.updateSchemaData(eventId, fieldValues);
+
+    res.json({
+      message: 'Schema data updated successfully',
+      schemaData,
+    });
+  } catch (error) {
+    console.error('[schema-data] Error updating schema data:', error);
+
+    if (error.message === 'No schema data found for this event') {
+      return res.status(404).json({ error: 'No schema data found for this event' });
+    }
+
+    res.status(500).json({ error: 'Failed to update schema data' });
+  }
+};
+
+/**
+ * Remove schema data from event
+ * DELETE /api/events/:eventId/schema-data
+ */
+const removeSchemaData = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    await schemaExtractionService.removeSchemaData(eventId);
+    res.json({ message: 'Schema data removed successfully' });
+  } catch (error) {
+    console.error('[schema-data] Error removing schema data:', error);
+
+    if (error.message === 'No schema data found for this event') {
+      return res.status(404).json({ error: 'No schema data found for this event' });
+    }
+
+    res.status(500).json({ error: 'Failed to remove schema data' });
+  }
+};
+
+/**
+ * Re-extract fields from transcript
+ * POST /api/events/:eventId/re-extract
+ */
+const reExtract = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    if (!schemaExtractionService.isAvailable()) {
+      return res.status(503).json({
+        error: 'AI service not available. Please configure OPENAI_API_KEY or GROQ_API_KEY.'
+      });
+    }
+
+    const schemaData = await schemaExtractionService.reExtractFields(eventId);
+
+    res.json({
+      message: 'Fields re-extracted successfully',
+      schemaData,
+    });
+  } catch (error) {
+    console.error('[schema-data] Error re-extracting fields:', error);
+
+    if (error.message === 'No schema data found for this event') {
+      return res.status(404).json({ error: 'No schema data found for this event' });
+    }
+
+    res.status(500).json({
+      error: 'Failed to re-extract fields',
+      details: error.message
+    });
+  }
+};
+
+module.exports = {
+  applySchema,
+  getSchemaData,
+  updateSchemaData,
+  removeSchemaData,
+  reExtract,
+};

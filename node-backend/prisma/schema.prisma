@@ -246,6 +246,7 @@ model Event {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   template PdfTemplate? @relation(fields: [templateId], references: [id])
   templateData EventTemplateData?
+  schemaData EventSchemaData?
   index   EventIndex?
 
   @@index([projectId])
@@ -550,9 +551,43 @@ model DocumentSchema {
 
   // Relations
   project        Project?           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  eventSchemaData EventSchemaData[]
 
   @@index([projectId])
   @@index([documentType])
   @@index([isActive])
   @@map("document_schemas")
+}
+
+// ============================================
+// EVENT SCHEMA DATA (Extracted Document Fields)
+// ============================================
+// Stores extracted field values when user applies a document schema to an event
+// Enables: Event -> "Apply to Document" -> AI extracts fields -> User edits -> Save
+
+model EventSchemaData {
+  id            String         @id @default(uuid())
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  eventId       String         @unique @map("event_id")
+  schemaId      String         @map("schema_id")
+
+  // Extracted/edited field values as JSON: { "title": "...", "description": "...", etc }
+  fieldValues   Json           @map("field_values") @default("{}")
+
+  // Extraction metadata
+  extractedAt   DateTime?      @map("extracted_at")
+  extractionConfidence Float?  @map("extraction_confidence") // AI confidence 0-1
+
+  // Track manual edits
+  lastEditedAt  DateTime?      @map("last_edited_at")
+  wasManuallyEdited Boolean    @default(false) @map("was_manually_edited")
+
+  // Relations
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  schema        DocumentSchema @relation(fields: [schemaId], references: [id])
+
+  @@index([schemaId])
+  @@map("event_schema_data")
 }
