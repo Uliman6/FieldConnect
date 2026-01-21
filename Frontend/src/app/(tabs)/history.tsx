@@ -76,10 +76,15 @@ export default function LogsHistoryScreen() {
   // Fetch daily logs for current project
   const dailyLogsQuery = useQuery({
     queryKey: queryKeys.dailyLogs(currentProjectId || undefined),
-    queryFn: () => getDailyLogs({
-      project_id: currentProjectId || undefined,
-      limit: 100,
-    }),
+    queryFn: async () => {
+      console.log('[history] Fetching daily logs, project_id:', currentProjectId || 'ALL');
+      const logs = await getDailyLogs({
+        project_id: currentProjectId || undefined,
+        limit: 100,
+      });
+      console.log('[history] Received daily logs:', logs.length, logs);
+      return logs;
+    },
     staleTime: 0,
     enabled: selectedCategory === 'daily_log',
   });
@@ -109,6 +114,17 @@ export default function LogsHistoryScreen() {
   const dailyLogs = dailyLogsQuery.data || [];
   const schemaEvents = eventsQuery.data || [];
   const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  // Debug logging
+  console.log('[history] State:', {
+    currentProjectId,
+    currentProject: currentProject?.name,
+    projectsCount: projects.length,
+    dailyLogsCount: dailyLogs.length,
+    selectedCategory,
+    isLoading: dailyLogsQuery.isLoading,
+    error: dailyLogsQuery.error?.message,
+  });
 
   // Refetch data when screen comes into focus
   useFocusEffect(
