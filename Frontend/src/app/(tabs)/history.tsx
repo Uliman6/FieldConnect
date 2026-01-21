@@ -17,12 +17,15 @@ import {
   Eye,
   Users,
   Clock,
-  AlertCircle,
   CloudOff,
   Trash2,
   Pencil,
+  ClipboardList,
+  FileQuestion,
+  Wand2,
 } from 'lucide-react-native';
 import { cn } from '@/lib/cn';
+import { useDailyLogStore } from '@/lib/store';
 import {
   getDailyLogs,
   getProjects,
@@ -31,21 +34,27 @@ import {
   queryKeys,
   DailyLogSummary,
   ProjectSummary,
+  getEvents,
+  downloadSchemaPdf,
 } from '@/lib/api';
+
+type DocumentCategory = 'daily_log' | 'punch_list' | 'rfi';
+
+const CATEGORY_CONFIG: Record<DocumentCategory, { label: string; icon: any; color: string }> = {
+  daily_log: { label: 'Daily Logs', icon: Calendar, color: '#F97316' },
+  punch_list: { label: 'Punch Lists', icon: ClipboardList, color: '#F59E0B' },
+  rfi: { label: 'RFIs', icon: FileQuestion, color: '#3B82F6' },
+};
 
 /**
  * Parse a date string as local date (not UTC)
- * This prevents timezone issues where dates appear a day off
  */
 function parseLocalDate(dateString: string): Date {
-  // If it's just a date (YYYY-MM-DD), parse as local date
   if (dateString && dateString.length === 10) {
     const [year, month, day] = dateString.split('-').map(Number);
     return new Date(year, month - 1, day);
   }
-  // If it has time component, parse and adjust for local
   const date = new Date(dateString);
-  // Add timezone offset to treat as local
   return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 }
 
@@ -53,42 +62,74 @@ export default function LogsHistoryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [showAllProjects, setShowAllProjects] = useState(true);
+  const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
+  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>('daily_log');
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
 
-  // Fetch projects - always refetch fresh data (staleTime: 0)
+  // Fetch projects
   const projectsQuery = useQuery({
     queryKey: queryKeys.projects,
     queryFn: () => getProjects(),
     staleTime: 0,
   });
 
-  // Fetch daily logs
+  // Fetch daily logs for current project
   const dailyLogsQuery = useQuery({
-    queryKey: queryKeys.dailyLogs(showAllProjects ? undefined : selectedProjectId || undefined),
+    queryKey: queryKeys.dailyLogs(currentProjectId || undefined),
     queryFn: () => getDailyLogs({
-      project_id: showAllProjects ? undefined : selectedProjectId || undefined,
+      project_id: currentProjectId || undefined,
       limit: 100,
     }),
     staleTime: 0,
+    enabled: selectedCategory === 'daily_log',
+  });
+
+  // Fetch events with schema data (punch lists and RFIs)
+  const eventsQuery = useQuery({
+    queryKey: ['events', 'with-schema', currentProjectId, selectedCategory],
+    queryFn: async () => {
+      const events = await getEvents({
+        project_id: currentProjectId || undefined,
+        limit: 100,
+      });
+      // Filter events that have schema data matching the category
+      return events.filter((event: any) => {
+        if (!event.schemaData) return false;
+        const docType = event.schemaData.schema?.documentType;
+        if (selectedCategory === 'punch_list') return docType === 'PUNCH_LIST';
+        if (selectedCategory === 'rfi') return docType === 'RFI';
+        return false;
+      });
+    },
+    staleTime: 0,
+    enabled: selectedCategory !== 'daily_log',
   });
 
   const projects = projectsQuery.data || [];
   const dailyLogs = dailyLogsQuery.data || [];
+  const schemaEvents = eventsQuery.data || [];
+  const currentProject = projects.find((p) => p.id === currentProjectId);
 
   // Refetch data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       projectsQuery.refetch();
-      dailyLogsQuery.refetch();
-    }, [])
+      if (selectedCategory === 'daily_log') {
+        dailyLogsQuery.refetch();
+      } else {
+        eventsQuery.refetch();
+      }
+    }, [selectedCategory])
   );
 
   const handleRefresh = useCallback(() => {
     projectsQuery.refetch();
-    dailyLogsQuery.refetch();
-  }, [projectsQuery, dailyLogsQuery]);
+    if (selectedCategory === 'daily_log') {
+      dailyLogsQuery.refetch();
+    } else {
+      eventsQuery.refetch();
+    }
+  }, [selectedCategory]);
 
   const handleViewPdf = useCallback(async (logId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -101,7 +142,6 @@ export default function LogsHistoryScreen() {
       }
     } catch (error) {
       console.error('[pdf] Failed to fetch PDF:', error);
-      // Could show an alert here
     }
   }, []);
 
@@ -115,7 +155,6 @@ export default function LogsHistoryScreen() {
     try {
       const blobUrl = await fetchDailyLogPdf(logId, false);
       if (Platform.OS === 'web') {
-        // Create a download link for web
         const a = document.createElement('a');
         a.href = blobUrl;
         a.download = `daily-log-${logId}.pdf`;
@@ -128,7 +167,6 @@ export default function LogsHistoryScreen() {
       }
     } catch (error) {
       console.error('[pdf] Failed to download PDF:', error);
-      // Could show an alert here
     }
   }, []);
 
@@ -137,13 +175,13 @@ export default function LogsHistoryScreen() {
       return new Promise<boolean>((resolve) => {
         if (Platform.OS === 'web') {
           const confirmed = window.confirm(
-            `Delete daily log for ${format(parseLocalDate(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`
+            `Delete daily log for ${format(parseLocalDate(log.date), 'MMMM d, yyyy')}?\n\nThis action cannot be undone.`
           );
           resolve(confirmed);
         } else {
           Alert.alert(
             'Delete Daily Log',
-            `Delete the log for ${format(parseLocalDate(log.date), 'MMMM d, yyyy')}?\n\nThis will also delete any linked events and recordings. This action cannot be undone.`,
+            `Delete the log for ${format(parseLocalDate(log.date), 'MMMM d, yyyy')}?\n\nThis action cannot be undone.`,
             [
               { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
               { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
@@ -160,11 +198,7 @@ export default function LogsHistoryScreen() {
     setDeletingLogId(log.id);
 
     try {
-      // Delete the daily log (backend handles linked events deletion)
       await deleteDailyLogApi(log.id);
-      console.log('[delete] Daily log deleted successfully');
-
-      // Invalidate queries to refresh the list
       queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogs() });
       queryClient.invalidateQueries({ queryKey: queryKeys.events() });
     } catch (error) {
@@ -179,19 +213,51 @@ export default function LogsHistoryScreen() {
     }
   }, [queryClient]);
 
-  const isLoading = projectsQuery.isLoading || dailyLogsQuery.isLoading;
-  const hasError = projectsQuery.isError || dailyLogsQuery.isError;
+  const handleViewEvent = useCallback((eventId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(`/event-detail?id=${eventId}`);
+  }, [router]);
 
-  // If no projects exist at all
-  if (!isLoading && projects.length === 0) {
+  const handleDownloadSchemaPdf = useCallback(async (eventId: string, title: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const blobUrl = await downloadSchemaPdf(eventId);
+      if (Platform.OS === 'web') {
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `${selectedCategory}-${title || eventId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        Linking.openURL(blobUrl);
+      }
+    } catch (error) {
+      console.error('[pdf] Failed to download schema PDF:', error);
+      if (Platform.OS === 'web') {
+        window.alert('No PDF generated yet. Open the event and click "Export PDF" first.');
+      } else {
+        Alert.alert('No PDF', 'No PDF generated yet. Open the event and click "Export PDF" first.');
+      }
+    }
+  }, [selectedCategory]);
+
+  const isLoading = projectsQuery.isLoading ||
+    (selectedCategory === 'daily_log' ? dailyLogsQuery.isLoading : eventsQuery.isLoading);
+  const hasError = projectsQuery.isError ||
+    (selectedCategory === 'daily_log' ? dailyLogsQuery.isError : eventsQuery.isError);
+
+  // If no current project selected
+  if (!currentProjectId) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-black">
-        <FileText size={48} color="#9CA3AF" />
-        <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
-          No projects yet
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-black px-4">
+        <Building2 size={48} color="#9CA3AF" />
+        <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4 text-center">
+          No project selected
         </Text>
-        <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2 px-8">
-          Import data to see daily logs here
+        <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2">
+          Select a project from the Projects tab to view documents
         </Text>
       </View>
     );
@@ -204,7 +270,7 @@ export default function LogsHistoryScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         refreshControl={
           <RefreshControl
-            refreshing={dailyLogsQuery.isFetching}
+            refreshing={selectedCategory === 'daily_log' ? dailyLogsQuery.isFetching : eventsQuery.isFetching}
             onRefresh={handleRefresh}
           />
         }
@@ -212,96 +278,55 @@ export default function LogsHistoryScreen() {
         {/* Header */}
         <View className="px-4 pt-4 pb-2">
           <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-            Log History
+            Documents
           </Text>
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {dailyLogs.length} daily logs from the backend
-          </Text>
+          {currentProject && (
+            <View className="flex-row items-center mt-1">
+              <Building2 size={14} color="#F97316" />
+              <Text className="ml-1 text-sm text-orange-600 dark:text-orange-400 font-medium">
+                {currentProject.name}
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* Filter Toggle */}
-        <View className="px-4 mt-2 flex-row">
-          <Pressable
-            onPress={() => {
-              Haptics.selectionAsync();
-              setShowAllProjects(true);
-            }}
-            className={cn(
-              'flex-1 py-2 rounded-l-xl border',
-              showAllProjects
-                ? 'bg-orange-500 border-orange-500'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-            )}
-          >
-            <Text
-              className={cn(
-                'text-center text-sm font-medium',
-                showAllProjects ? 'text-white' : 'text-gray-600 dark:text-gray-400'
-              )}
-            >
-              All Projects
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              Haptics.selectionAsync();
-              setShowAllProjects(false);
-            }}
-            className={cn(
-              'flex-1 py-2 rounded-r-xl border',
-              !showAllProjects
-                ? 'bg-orange-500 border-orange-500'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-            )}
-          >
-            <Text
-              className={cn(
-                'text-center text-sm font-medium',
-                !showAllProjects ? 'text-white' : 'text-gray-600 dark:text-gray-400'
-              )}
-            >
-              By Project
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Project selector when not showing all */}
-        {!showAllProjects && projects.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-3"
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          >
-            {projects.map((project) => (
-              <Pressable
-                key={project.id}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedProjectId(project.id);
-                }}
-                className={cn(
-                  'px-4 py-2 rounded-full mr-2',
-                  selectedProjectId === project.id
-                    ? 'bg-orange-500'
-                    : 'bg-white dark:bg-gray-800'
-                )}
-              >
-                <Text
+        {/* Category Tabs */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-2"
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
+          {(Object.entries(CATEGORY_CONFIG) as [DocumentCategory, typeof CATEGORY_CONFIG[DocumentCategory]][]).map(
+            ([key, config]) => {
+              const Icon = config.icon;
+              const isActive = selectedCategory === key;
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setSelectedCategory(key);
+                  }}
                   className={cn(
-                    'text-sm font-medium',
-                    selectedProjectId === project.id
-                      ? 'text-white'
-                      : 'text-gray-600 dark:text-gray-400'
+                    'flex-row items-center px-4 py-2 rounded-full mr-2',
+                    isActive ? 'bg-gray-900 dark:bg-white' : 'bg-white dark:bg-gray-800'
                   )}
-                  numberOfLines={1}
                 >
-                  {project.name}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        )}
+                  <Icon size={16} color={isActive ? '#FFF' : config.color} />
+                  <Text
+                    className={cn(
+                      'ml-2 text-sm font-medium',
+                      isActive ? 'text-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-400'
+                    )}
+                  >
+                    {config.label}
+                  </Text>
+                </Pressable>
+              );
+            }
+          )}
+        </ScrollView>
 
         {/* Error State */}
         {hasError && (
@@ -309,7 +334,7 @@ export default function LogsHistoryScreen() {
             <View className="flex-row items-center">
               <CloudOff size={20} color="#EF4444" />
               <Text className="ml-2 text-sm text-red-700 dark:text-red-300">
-                Unable to connect to server. Make sure the backend is running.
+                Unable to connect to server.
               </Text>
             </View>
           </View>
@@ -319,31 +344,20 @@ export default function LogsHistoryScreen() {
         {isLoading && (
           <View className="flex-1 items-center justify-center py-20">
             <ActivityIndicator size="large" color="#F97316" />
-            <Text className="mt-3 text-gray-500">Loading logs...</Text>
+            <Text className="mt-3 text-gray-500">Loading...</Text>
           </View>
         )}
 
-        {/* Logs List */}
-        {!isLoading && (
+        {/* Daily Logs List */}
+        {!isLoading && selectedCategory === 'daily_log' && (
           <View className="px-4 mt-4">
             {dailyLogs.length === 0 ? (
-              <View className="items-center py-12">
-                <Calendar size={48} color="#9CA3AF" />
-                <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
-                  No logs yet
-                </Text>
-                <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2">
-                  {showAllProjects
-                    ? 'No daily logs have been created yet'
-                    : 'No logs for the selected project'}
-                </Text>
-              </View>
+              <EmptyState category="daily_log" />
             ) : (
               dailyLogs.map((log, index) => (
                 <Animated.View key={log.id} entering={FadeInDown.delay(index * 30)}>
                   <DailyLogCard
                     log={log}
-                    showProject={showAllProjects}
                     onViewPdf={() => handleViewPdf(log.id)}
                     onDownloadPdf={() => handleDownloadPdf(log.id)}
                     onEdit={() => handleEditLog(log.id)}
@@ -355,14 +369,52 @@ export default function LogsHistoryScreen() {
             )}
           </View>
         )}
+
+        {/* Punch List / RFI List */}
+        {!isLoading && selectedCategory !== 'daily_log' && (
+          <View className="px-4 mt-4">
+            {schemaEvents.length === 0 ? (
+              <EmptyState category={selectedCategory} />
+            ) : (
+              schemaEvents.map((event: any, index: number) => (
+                <Animated.View key={event.id} entering={FadeInDown.delay(index * 30)}>
+                  <SchemaDocumentCard
+                    event={event}
+                    category={selectedCategory}
+                    onView={() => handleViewEvent(event.id)}
+                    onDownloadPdf={() => handleDownloadSchemaPdf(event.id, event.schemaData?.fieldValues?.title)}
+                  />
+                </Animated.View>
+              ))
+            )}
+          </View>
+        )}
       </ScrollView>
+    </View>
+  );
+}
+
+function EmptyState({ category }: { category: DocumentCategory }) {
+  const config = CATEGORY_CONFIG[category];
+  const Icon = config.icon;
+
+  return (
+    <View className="items-center py-12">
+      <Icon size={48} color="#9CA3AF" />
+      <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
+        No {config.label.toLowerCase()} yet
+      </Text>
+      <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2 px-8">
+        {category === 'daily_log'
+          ? 'Create a daily log to see it here'
+          : `Record an event and apply it to a ${category === 'punch_list' ? 'Punch List' : 'RFI'}`}
+      </Text>
     </View>
   );
 }
 
 function DailyLogCard({
   log,
-  showProject,
   onViewPdf,
   onDownloadPdf,
   onEdit,
@@ -370,7 +422,6 @@ function DailyLogCard({
   isDeleting,
 }: {
   log: DailyLogSummary;
-  showProject: boolean;
   onViewPdf: () => void;
   onDownloadPdf: () => void;
   onEdit: () => void;
@@ -380,11 +431,9 @@ function DailyLogCard({
   const logDate = parseLocalDate(log.date);
   const isLogToday = isToday(logDate);
   const issueCount = log._count.pendingIssues;
-  const hasWeatherDelay = log.weather?.weather_delay;
 
   return (
     <View className="bg-white dark:bg-gray-900 rounded-2xl mb-3 p-4">
-      {/* Main Info */}
       <View className="flex-row items-start justify-between">
         <View className="flex-1">
           <View className="flex-row items-center">
@@ -401,18 +450,6 @@ function DailyLogCard({
             )}
           </View>
 
-          {/* Project name */}
-          {showProject && log.project && (
-            <View className="flex-row items-center mt-1">
-              <Building2 size={14} color="#9CA3AF" />
-              <Text className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                {log.project.name}
-                {log.project.number && ` (#${log.project.number})`}
-              </Text>
-            </View>
-          )}
-
-          {/* Stats row */}
           <View className="flex-row items-center mt-2 flex-wrap">
             {log.dailyTotalsWorkers != null && (
               <View className="flex-row items-center mr-4">
@@ -430,16 +467,8 @@ function DailyLogCard({
                 </Text>
               </View>
             )}
-            {hasWeatherDelay && (
-              <View className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900 rounded">
-                <Text className="text-xs text-yellow-600 dark:text-yellow-400">
-                  Weather Delay
-                </Text>
-              </View>
-            )}
           </View>
 
-          {/* Issues badge */}
           {issueCount > 0 && (
             <View className="flex-row items-center mt-2">
               <AlertTriangle size={14} color="#EF4444" />
@@ -448,34 +477,16 @@ function DailyLogCard({
               </Text>
             </View>
           )}
-
-          {/* Tasks summary */}
-          {log._count.tasks > 0 && (
-            <Text className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-              {log._count.tasks} task{log._count.tasks !== 1 ? 's' : ''} logged
-              {log._count.inspectionNotes > 0 && ` · ${log._count.inspectionNotes} inspection${log._count.inspectionNotes !== 1 ? 's' : ''}`}
-            </Text>
-          )}
         </View>
 
-        {/* Actions */}
         <View className="flex-row items-center ml-2">
-          <Pressable
-            onPress={onEdit}
-            className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg mr-2"
-          >
+          <Pressable onPress={onEdit} className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg mr-2">
             <Pencil size={20} color="#3B82F6" />
           </Pressable>
-          <Pressable
-            onPress={onViewPdf}
-            className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-2"
-          >
+          <Pressable onPress={onViewPdf} className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-2">
             <Eye size={20} color="#F97316" />
           </Pressable>
-          <Pressable
-            onPress={onDownloadPdf}
-            className="bg-orange-500 p-2 rounded-lg mr-2"
-          >
+          <Pressable onPress={onDownloadPdf} className="bg-orange-500 p-2 rounded-lg mr-2">
             <Download size={20} color="#FFF" />
           </Pressable>
           <Pressable
@@ -495,7 +506,6 @@ function DailyLogCard({
         </View>
       </View>
 
-      {/* Footer */}
       <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
         <Text className="text-xs text-gray-400 dark:text-gray-500">
           {log.preparedBy ? `By ${log.preparedBy}` : 'No author'}
@@ -503,13 +513,103 @@ function DailyLogCard({
           {log.status || 'draft'}
         </Text>
         <Pressable onPress={onEdit} className="flex-row items-center">
-          <Pencil size={14} color="#3B82F6" />
-          <Text className="ml-1 text-xs font-medium text-blue-500">
-            Edit Report
-          </Text>
+          <Text className="text-xs font-medium text-blue-500">View Details</Text>
           <ChevronRight size={14} color="#3B82F6" />
         </Pressable>
       </View>
     </View>
+  );
+}
+
+function SchemaDocumentCard({
+  event,
+  category,
+  onView,
+  onDownloadPdf,
+}: {
+  event: any;
+  category: DocumentCategory;
+  onView: () => void;
+  onDownloadPdf: () => void;
+}) {
+  const config = CATEGORY_CONFIG[category];
+  const Icon = config.icon;
+  const fieldValues = event.schemaData?.fieldValues || {};
+  const title = fieldValues.title || fieldValues.subject || event.title || 'Untitled';
+  const description = fieldValues.description || fieldValues.question || '';
+  const hasPdf = !!event.schemaData?.generatedPdfPath;
+  const createdAt = new Date(event.createdAt);
+
+  return (
+    <Pressable onPress={onView} className="bg-white dark:bg-gray-900 rounded-2xl mb-3 p-4">
+      <View className="flex-row items-start">
+        <View
+          className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+          style={{ backgroundColor: config.color + '20' }}
+        >
+          <Icon size={20} color={config.color} />
+        </View>
+
+        <View className="flex-1">
+          <View className="flex-row items-center">
+            <Text className="text-base font-semibold text-gray-900 dark:text-white flex-1" numberOfLines={1}>
+              {title}
+            </Text>
+            {hasPdf && (
+              <View className="ml-2 px-2 py-0.5 bg-green-100 dark:bg-green-900 rounded flex-row items-center">
+                <FileText size={12} color="#10B981" />
+                <Text className="text-xs font-medium text-green-600 dark:text-green-400 ml-1">
+                  PDF
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {description && (
+            <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1" numberOfLines={2}>
+              {description}
+            </Text>
+          )}
+
+          <View className="flex-row items-center mt-2">
+            <Calendar size={12} color="#9CA3AF" />
+            <Text className="ml-1 text-xs text-gray-400 dark:text-gray-500">
+              {format(createdAt, 'MMM d, yyyy')}
+            </Text>
+            {fieldValues.assigned_to && (
+              <>
+                <Text className="mx-2 text-gray-300 dark:text-gray-600">·</Text>
+                <Text className="text-xs text-gray-400 dark:text-gray-500">
+                  {fieldValues.assigned_to}
+                </Text>
+              </>
+            )}
+            {fieldValues.location && (
+              <>
+                <Text className="mx-2 text-gray-300 dark:text-gray-600">·</Text>
+                <Text className="text-xs text-gray-400 dark:text-gray-500">
+                  {fieldValues.location}
+                </Text>
+              </>
+            )}
+          </View>
+        </View>
+
+        <View className="flex-row items-center ml-2">
+          {hasPdf && (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onDownloadPdf();
+              }}
+              className="bg-green-500 p-2 rounded-lg mr-2"
+            >
+              <Download size={18} color="#FFF" />
+            </Pressable>
+          )}
+          <ChevronRight size={20} color="#9CA3AF" />
+        </View>
+      </View>
+    </Pressable>
   );
 }
