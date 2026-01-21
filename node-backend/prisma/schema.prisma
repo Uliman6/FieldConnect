@@ -584,6 +584,11 @@ model EventSchemaData {
   lastEditedAt  DateTime?      @map("last_edited_at")
   wasManuallyEdited Boolean    @default(false) @map("was_manually_edited")
 
+  // Generated PDF
+  generatedPdfPath String?     @map("generated_pdf_path")
+  generatedPdfName String?     @map("generated_pdf_name")
+  pdfGeneratedAt   DateTime?   @map("pdf_generated_at")
+
   // Relations
   event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   schema        DocumentSchema @relation(fields: [schemaId], references: [id])

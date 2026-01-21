@@ -51,7 +51,7 @@ class SchemaExtractionService {
       return desc;
     }).join('\n');
 
-    const systemPrompt = `You are a construction document data extractor. Your job is to extract specific field values from a spoken transcript or note.
+    const systemPrompt = `You are a construction document data extractor. Your job is to extract and CLEAN UP field values from a spoken transcript or note into professional construction document format.
 
 DOCUMENT TYPE: ${schema.name}
 DESCRIPTION: ${schema.description || 'N/A'}
@@ -66,8 +66,18 @@ INSTRUCTIONS:
 4. For "company" type fields, extract company/trade names
 5. For "location" type fields, extract room/area/floor references
 6. For "date" type fields, extract dates in YYYY-MM-DD format if possible
-7. For "multiline" type fields, capture full descriptions
-8. Be precise - only extract what's explicitly stated or clearly implied
+7. For "multiline" type fields (like description):
+   - DO NOT copy the raw transcript verbatim
+   - Clean up and summarize into professional, concise language
+   - Remove filler words, repetition, and conversational tone
+   - Write in third person, past tense for observations
+   - Focus on: what the issue is, where it is, what action is needed
+8. For "title" fields, create a clear, concise title (5-10 words max)
+9. Be precise - only extract what's explicitly stated or clearly implied
+
+EXAMPLE - Converting transcript to description:
+Transcript: "we realized that on the east side of the exterior of the building, one of the metal panels has a dent. This dent, we were told by DPR Division 7 that they can come back and apply the manufacturer's paint to make it match the rest of it"
+Good description: "Metal panel on east exterior has visible dent. DPR Division 7 to apply manufacturer's touch-up paint to restore appearance."
 
 OUTPUT FORMAT:
 Return a JSON object with:
