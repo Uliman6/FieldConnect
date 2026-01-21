@@ -117,7 +117,16 @@ export default function LogsHistoryScreen() {
   });
 
   const projects = projectsQuery.data || [];
-  const dailyLogs = dailyLogsQuery.data || [];
+  // Filter to only show daily logs with actual content (not empty placeholders)
+  const dailyLogs = (dailyLogsQuery.data || []).filter((log) => {
+    const hasContent =
+      (log._count?.tasks || 0) > 0 ||
+      (log._count?.pendingIssues || 0) > 0 ||
+      (log._count?.inspectionNotes || 0) > 0 ||
+      (log.dailyTotalsWorkers && log.dailyTotalsWorkers > 0) ||
+      (log.dailyTotalsHours && log.dailyTotalsHours > 0);
+    return hasContent;
+  });
   const schemaEvents = eventsQuery.data || [];
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
@@ -127,10 +136,9 @@ export default function LogsHistoryScreen() {
     backendProjectId,
     currentProject: currentProject?.name,
     projectsCount: projects.length,
-    dailyLogsCount: dailyLogs.length,
+    dailyLogsFetched: dailyLogsQuery.data?.length || 0,
+    dailyLogsWithContent: dailyLogs.length,
     selectedCategory,
-    isLoading: dailyLogsQuery.isLoading,
-    error: dailyLogsQuery.error?.message,
   });
 
   // Refetch data when screen comes into focus
