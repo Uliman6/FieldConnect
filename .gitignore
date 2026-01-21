@@ -41,3 +41,7 @@ node-backend/uploads/*
 # Temp files
 *.tmp
 *.temp
+
+# Sample documents (don't commit user test files)
+*Samples/
+Project Directory/
