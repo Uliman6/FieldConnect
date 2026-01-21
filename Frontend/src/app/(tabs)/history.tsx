@@ -37,6 +37,7 @@ import {
   getEvents,
   downloadSchemaPdf,
 } from '@/lib/api';
+import { getBackendId } from '@/lib/data-provider';
 
 type DocumentCategory = 'daily_log' | 'punch_list' | 'rfi';
 
@@ -73,13 +74,18 @@ export default function LogsHistoryScreen() {
     staleTime: 0,
   });
 
+  // Get backend project ID (local IDs may differ from backend IDs)
+  const backendProjectId = currentProjectId
+    ? (getBackendId('projects', currentProjectId) || currentProjectId)
+    : undefined;
+
   // Fetch daily logs for current project
   const dailyLogsQuery = useQuery({
-    queryKey: queryKeys.dailyLogs(currentProjectId || undefined),
+    queryKey: queryKeys.dailyLogs(backendProjectId),
     queryFn: async () => {
-      console.log('[history] Fetching daily logs, project_id:', currentProjectId || 'ALL');
+      console.log('[history] Fetching daily logs, project_id:', backendProjectId || 'ALL');
       const logs = await getDailyLogs({
-        project_id: currentProjectId || undefined,
+        project_id: backendProjectId,
         limit: 100,
       });
       console.log('[history] Received daily logs:', logs.length, logs);
@@ -91,10 +97,10 @@ export default function LogsHistoryScreen() {
 
   // Fetch events with schema data (punch lists and RFIs)
   const eventsQuery = useQuery({
-    queryKey: ['events', 'with-schema', currentProjectId, selectedCategory],
+    queryKey: ['events', 'with-schema', backendProjectId, selectedCategory],
     queryFn: async () => {
       const events = await getEvents({
-        project_id: currentProjectId || undefined,
+        project_id: backendProjectId,
         limit: 100,
       });
       // Filter events that have schema data matching the category
@@ -118,6 +124,7 @@ export default function LogsHistoryScreen() {
   // Debug logging
   console.log('[history] State:', {
     currentProjectId,
+    backendProjectId,
     currentProject: currentProject?.name,
     projectsCount: projects.length,
     dailyLogsCount: dailyLogs.length,
