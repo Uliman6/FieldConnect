@@ -14,7 +14,7 @@ FieldConnect (formerly SiteSpeak) is a construction daily log application for fi
 
 ### Backend (Node.js/Express)
 - **Location**: `node-backend/`
-- **Deployed on**: Render (free tier) at https://sitespeak-api.onrender.com
+- **Deployed on**: Render (free tier) at https://fieldconnect.onrender.com
 - **Stack**: Express, Prisma ORM, JWT authentication
 - **Database**: PostgreSQL on Railway
 
