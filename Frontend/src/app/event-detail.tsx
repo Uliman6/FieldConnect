@@ -731,10 +731,11 @@ export default function EventDetailScreen() {
 
   // Document Schema handlers (Apply to Document)
   const handleApplySchema = (schemaId: string) => {
+    const backendId = getBackendId('events', event.id) || event.id;
     setSelectedSchemaId(schemaId);
     setShowSchemaSelector(false);
     // Trigger AI extraction
-    applySchemaDataMutation.mutate({ eventId: event.id, schemaId });
+    applySchemaDataMutation.mutate({ eventId: backendId, schemaId });
   };
 
   const handleSchemaFieldChange = (name: string, value: string | null) => {
@@ -744,19 +745,22 @@ export default function EventDetailScreen() {
 
   const handleSaveSchemaData = async () => {
     if (!selectedSchemaId) return;
+    const backendId = getBackendId('events', event.id) || event.id;
     await saveSchemaDataMutation.mutateAsync({
-      eventId: event.id,
+      eventId: backendId,
       fieldValues: schemaFieldValues,
     });
   };
 
   const handleReExtract = () => {
-    reExtractMutation.mutate(event.id);
+    const backendId = getBackendId('events', event.id) || event.id;
+    reExtractMutation.mutate(backendId);
   };
 
   const handleRemoveSchema = () => {
+    const backendId = getBackendId('events', event.id) || event.id;
     const doRemove = () => {
-      removeSchemaDataMutation.mutate(event.id);
+      removeSchemaDataMutation.mutate(backendId);
     };
 
     if (Platform.OS === 'web') {
