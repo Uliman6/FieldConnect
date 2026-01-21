@@ -1470,7 +1470,10 @@ export default function EventDetailScreen() {
                 {applySchemaDataMutation.isError && (
                   <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 mb-4">
                     <Text className="text-sm text-red-600 dark:text-red-400">
-                      Failed to extract fields. Please try again.
+                      Failed to extract fields: {applySchemaDataMutation.error?.message || 'Unknown error'}
+                    </Text>
+                    <Text className="text-xs text-red-500 dark:text-red-400 mt-1">
+                      Event ID: {getBackendId('events', event.id) || event.id}
                     </Text>
                   </View>
                 )}

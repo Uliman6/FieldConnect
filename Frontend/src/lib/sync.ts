@@ -1020,6 +1020,7 @@ export async function syncEventToBackend(event: Event): Promise<string | null> {
       console.log('[sync] Updating event in backend:', backendId);
       await updateEventApi(backendId, {
         title: event.title || undefined,
+        description: event.description || undefined,
         transcriptText: event.transcript_text || undefined,
         eventType: event.event_type || undefined,
         severity: event.severity || undefined,
@@ -1051,6 +1052,7 @@ export async function syncEventToBackend(event: Event): Promise<string | null> {
     const result = await createEventApi({
       projectId: backendProjectId,
       title: event.title || undefined,
+      description: event.description || undefined,
       transcriptText: event.transcript_text || undefined,
       eventType: event.event_type || undefined,
       severity: event.severity || undefined,

@@ -38,6 +38,7 @@ export interface Event {
   severity: EventSeverity;
   title: string;
   notes: string;
+  description: string; // Clean, professional interpretation of the transcription
   // Optional fields
   location: string;
   trade_vendor: string;
@@ -370,6 +371,7 @@ export function createEmptyEvent(projectId: string, audioUri: string): Event {
     event_type: 'Other',
     severity: 'Medium',
     title: 'Untitled Event',
+    description: '',
     notes: '',
     location: '',
     trade_vendor: '',

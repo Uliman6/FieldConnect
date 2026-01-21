@@ -226,7 +226,8 @@ model Event {
   eventType      String?   @map("event_type")
   severity       String?
   title          String?
-  notes          String?   @db.Text
+  description    String?   @db.Text  // Clean, professional summary of the event
+  notes          String?   @db.Text  // Additional user notes
   location       String?
   tradeVendor    String?   @map("trade_vendor")
   isResolved     Boolean?  @default(false) @map("is_resolved")
