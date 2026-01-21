@@ -44,6 +44,13 @@ class EventsController {
         include: {
           project: {
             select: { id: true, name: true, number: true }
+          },
+          schemaData: {
+            include: {
+              schema: {
+                select: { id: true, name: true, documentType: true }
+              }
+            }
           }
         }
       });

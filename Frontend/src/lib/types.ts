@@ -490,5 +490,9 @@ export interface EventSchemaData {
   extractionConfidence: number | null;
   lastEditedAt: string | null;
   wasManuallyEdited: boolean;
+  // Generated PDF fields
+  generatedPdfPath: string | null;
+  generatedPdfName: string | null;
+  pdfGeneratedAt: string | null;
   schema?: DocumentSchema;
 }
