@@ -14,10 +14,12 @@ import {
   getEvents,
   IndexedEvent,
   ProjectSummary,
+  DailyLogSummary,
   createProject as createProjectApi,
   createDailyLog as createDailyLogApi,
   createEvent as createEventApi,
 } from './api';
+import { DailyLog, createEmptyDailyLog } from './types';
 
 // ============================================
 // TYPES
@@ -418,7 +420,104 @@ export function DataProvider({ children }: DataProviderProps) {
       }
 
       // ============================================
-      // STEP 3: Auto-select project if needed
+      // STEP 3: Fetch and sync DAILY LOGS
+      // ============================================
+      const backendDailyLogs = await getDailyLogs({ limit: 200 });
+      console.log('[data] Fetched daily logs from backend:', backendDailyLogs.length);
+
+      // Get current local daily logs
+      const storeForLogs = useDailyLogStore.getState();
+      const localLogIds = new Set(storeForLogs.dailyLogs.map((l) => l.id));
+      const backendLogIds = new Set(backendDailyLogs.map((bl) => bl.id));
+
+      // Add backend logs that don't exist locally
+      const addedLogIds = new Set<string>();
+      for (const bl of backendDailyLogs) {
+        // Skip if we already have this log locally (by ID or by backend mapping)
+        const existingByMapping = Object.entries(backendIdMap.dailyLogs).find(
+          ([, backendId]) => backendId === bl.id
+        );
+
+        if (localLogIds.has(bl.id) || existingByMapping) {
+          // Update mapping if needed
+          if (!existingByMapping) {
+            setBackendId('dailyLogs', bl.id, bl.id);
+          }
+          continue;
+        }
+
+        // Get the project ID
+        const projectId = bl.project?.id || bl.projectId;
+
+        if (projectId) {
+          // Convert and add to store
+          const localLog = convertBackendDailyLogToLocal(bl, projectId);
+          useDailyLogStore.setState((s) => ({
+            dailyLogs: [...s.dailyLogs, localLog],
+          }));
+          setBackendId('dailyLogs', bl.id, bl.id);
+          addedLogIds.add(bl.id);
+        }
+      }
+
+      if (addedLogIds.size > 0) {
+        console.log('[data] Added daily logs from backend:', addedLogIds.size);
+      }
+
+      // Push local-only logs to backend (logs without backend ID mapping)
+      const storeAfterFetch = useDailyLogStore.getState();
+      const localOnlyLogs = storeAfterFetch.dailyLogs.filter((localLog) => {
+        const backendId = backendIdMap.dailyLogs[localLog.id];
+        return !backendId && !backendLogIds.has(localLog.id);
+      });
+
+      if (localOnlyLogs.length > 0) {
+        console.log('[data] Syncing local-only daily logs to backend:', localOnlyLogs.length);
+        for (const localLog of localOnlyLogs) {
+          try {
+            // Get backend project ID
+            const backendProjectId = backendIdMap.projects[localLog.project_id] || localLog.project_id;
+
+            const result = await createDailyLogApi({
+              projectId: backendProjectId,
+              date: localLog.date,
+              preparedBy: localLog.prepared_by || undefined,
+              status: localLog.status || undefined,
+              weather: localLog.weather || undefined,
+              dailyTotalsWorkers: localLog.daily_totals_workers || undefined,
+              dailyTotalsHours: localLog.daily_totals_hours || undefined,
+              tasks: localLog.tasks?.map(t => ({
+                company_name: t.company_name,
+                workers: t.workers,
+                hours: t.hours,
+                task_description: t.task_description,
+                notes: t.notes,
+              })),
+              pending_issues: localLog.pending_issues?.map(i => ({
+                title: i.title,
+                description: i.description,
+                category: i.category,
+                severity: i.severity,
+                location: i.location,
+              })),
+              inspection_notes: localLog.inspection_notes?.map(n => ({
+                inspection_type: n.inspection_type,
+                inspector_name: n.inspector_name,
+                result: n.result,
+                notes: n.notes,
+                follow_up_needed: n.follow_up_needed,
+              })),
+            });
+            setBackendId('dailyLogs', localLog.id, result.id);
+            console.log('[data] Synced daily log:', localLog.date, '→', result.id);
+          } catch (error) {
+            console.error('[data] Failed to sync daily log:', localLog.id, error);
+          }
+        }
+      }
+
+      // ============================================
+      // STEP 4: Auto-select project if needed
       // ============================================
       const updatedStore = useDailyLogStore.getState();
       const currentProjectValid = updatedStore.currentProjectId &&
@@ -455,7 +554,7 @@ export function DataProvider({ children }: DataProviderProps) {
       }
 
       // ============================================
-      // STEP 4: Update state
+      // STEP 5: Update state
       // ============================================
       const finalStore = useDailyLogStore.getState();
       console.log('[data] Hydration complete:', {
@@ -649,5 +748,41 @@ function convertBackendEventToLocal(be: IndexedEvent, projectId: string): LocalE
     is_resolved: be.isResolved || false,
     resolved_at: null,
     linked_daily_log_id: null,
+  };
+}
+
+/**
+ * Convert backend daily log to local format
+ */
+function convertBackendDailyLogToLocal(bl: DailyLogSummary, projectId: string): DailyLog {
+  return {
+    id: bl.id,
+    project_id: projectId,
+    date: bl.date,
+    prepared_by: bl.preparedBy || '',
+    weather: {
+      low_temp: null,
+      high_temp: null,
+      precipitation: '',
+      wind: '',
+      sky_condition: 'Clear',
+      weather_delay: bl.weather?.weather_delay || false,
+    },
+    daily_totals_workers: bl.dailyTotalsWorkers || 0,
+    daily_totals_hours: bl.dailyTotalsHours || 0,
+    tasks: [],
+    visitors: [],
+    equipment: [],
+    materials: [],
+    pending_issues: [],
+    inspection_notes: [],
+    additional_work: [],
+    daily_summary_notes: '',
+    voice_artifacts: [],
+    status: (bl.status as 'draft' | 'completed') || 'draft',
+    sync_status: 'synced',
+    last_synced_at: new Date().toISOString(),
+    created_at: bl.createdAt,
+    updated_at: bl.updatedAt,
   };
 }
