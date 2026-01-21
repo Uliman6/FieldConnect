@@ -13,7 +13,7 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDailyLogStore } from '@/lib/store';
-import { EventType, EventSeverity, Event, PdfTemplate, FormFieldDefinition } from '@/lib/types';
+import { EventType, EventSeverity, Event, PdfTemplate, FormFieldDefinition, DocumentSchema, SchemaField, EventSchemaData } from '@/lib/types';
 import { audioFileExists } from '@/lib/audio-storage';
 import { generateTitleFromTranscript } from '@/lib/transcription';
 import { cn } from '@/lib/cn';
@@ -28,6 +28,11 @@ import {
   updateEventTemplateData,
   fetchFilledPdf,
   deleteEventApi,
+  getDocumentSchemas,
+  applySchemaToEvent,
+  updateEventSchemaData,
+  removeEventSchemaData,
+  reExtractSchemaData,
 } from '@/lib/api';
 import {
   ArrowLeft,
@@ -48,6 +53,8 @@ import {
   Download,
   ChevronDown,
   X,
+  Wand2,
+  RefreshCw,
 } from 'lucide-react-native';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
@@ -91,6 +98,87 @@ const TEMPLATE_TYPE_COLORS: Record<string, string> = {
   RFI: '#3B82F6',
   CUSTOM: '#8B5CF6',
 };
+
+const SCHEMA_TYPE_COLORS: Record<string, string> = {
+  PUNCH_LIST: '#F59E0B',
+  RFI: '#3B82F6',
+  DAILY_REPORT: '#10B981',
+  SAFETY_REPORT: '#EF4444',
+  INSPECTION: '#8B5CF6',
+  CUSTOM: '#6B7280',
+};
+
+// Schema Fields Form Component (for AI-extracted document schemas)
+function SchemaFieldsForm({
+  schema,
+  fieldValues,
+  onChange,
+  disabled,
+  confidence,
+}: {
+  schema: DocumentSchema;
+  fieldValues: Record<string, string | null>;
+  onChange: (name: string, value: string | null) => void;
+  disabled?: boolean;
+  confidence?: number | null;
+}) {
+  return (
+    <View className="mt-4">
+      {confidence !== undefined && confidence !== null && (
+        <View className="flex-row items-center mb-4 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+          <Wand2 size={16} color="#8B5CF6" />
+          <Text className="ml-2 text-sm text-gray-600 dark:text-gray-300">
+            AI Confidence: {Math.round(confidence * 100)}%
+          </Text>
+        </View>
+      )}
+      {schema.fields.map((field) => (
+        <View key={field.name} className="mb-4">
+          <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
+            {field.label}
+            {field.required && <Text className="text-red-500"> *</Text>}
+          </Text>
+          {field.description && (
+            <Text className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+              {field.description}
+            </Text>
+          )}
+
+          {field.type === 'multiline' ? (
+            <TextInput
+              value={fieldValues[field.name] || ''}
+              onChangeText={(text) => onChange(field.name, text || null)}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              placeholderTextColor="#9CA3AF"
+              editable={!disabled}
+              multiline
+              className="bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white min-h-[80px]"
+              textAlignVertical="top"
+            />
+          ) : field.type === 'date' ? (
+            <TextInput
+              value={fieldValues[field.name] || ''}
+              onChangeText={(text) => onChange(field.name, text || null)}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor="#9CA3AF"
+              editable={!disabled}
+              className="bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white"
+            />
+          ) : (
+            <TextInput
+              value={fieldValues[field.name] || ''}
+              onChangeText={(text) => onChange(field.name, text || null)}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              placeholderTextColor="#9CA3AF"
+              editable={!disabled}
+              className="bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white"
+            />
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 // Template Fields Form Component
 function TemplateFieldsForm({
@@ -216,6 +304,13 @@ export default function EventDetailScreen() {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
+  // Document Schema state (Apply to Document)
+  const [showSchemaSelector, setShowSchemaSelector] = useState(false);
+  const [selectedSchemaId, setSelectedSchemaId] = useState<string | null>(null);
+  const [schemaFieldValues, setSchemaFieldValues] = useState<Record<string, string | null>>({});
+  const [schemaConfidence, setSchemaConfidence] = useState<number | null>(null);
+  const [schemaHasChanges, setSchemaHasChanges] = useState(false);
+
   // Fetch available templates
   const templatesQuery = useQuery({
     queryKey: queryKeys.templates,
@@ -250,6 +345,70 @@ export default function EventDetailScreen() {
     },
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+  });
+
+  // Fetch available document schemas
+  const schemasQuery = useQuery({
+    queryKey: queryKeys.documentSchemas({}),
+    queryFn: () => getDocumentSchemas(),
+  });
+
+  // Get selected schema
+  const selectedSchema = schemasQuery.data?.find((s) => s.id === selectedSchemaId);
+
+  // Apply schema mutation (AI extracts fields from transcript)
+  const applySchemaDataMutation = useMutation({
+    mutationFn: async ({ eventId, schemaId }: { eventId: string; schemaId: string }) => {
+      return applySchemaToEvent(eventId, schemaId);
+    },
+    onSuccess: (data) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Populate field values from extraction
+      setSchemaFieldValues(data.schemaData.fieldValues as Record<string, string | null>);
+      setSchemaConfidence(data.schemaData.extractionConfidence);
+      setSchemaHasChanges(false);
+      // Invalidate event query to refresh schemaData
+      queryClient.invalidateQueries({ queryKey: queryKeys.event(id || '') });
+    },
+  });
+
+  // Update schema data mutation (manual edits)
+  const saveSchemaDataMutation = useMutation({
+    mutationFn: async ({ eventId, fieldValues }: { eventId: string; fieldValues: Record<string, string | null> }) => {
+      return updateEventSchemaData(eventId, fieldValues);
+    },
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSchemaHasChanges(false);
+    },
+  });
+
+  // Re-extract mutation
+  const reExtractMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      return reExtractSchemaData(eventId);
+    },
+    onSuccess: (data) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSchemaFieldValues(data.schemaData.fieldValues as Record<string, string | null>);
+      setSchemaConfidence(data.schemaData.extractionConfidence);
+      setSchemaHasChanges(false);
+    },
+  });
+
+  // Remove schema data mutation
+  const removeSchemaDataMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      return removeEventSchemaData(eventId);
+    },
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSelectedSchemaId(null);
+      setSchemaFieldValues({});
+      setSchemaConfidence(null);
+      setSchemaHasChanges(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.event(id || '') });
     },
   });
 
@@ -567,6 +726,52 @@ export default function EventDetailScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsDownloadingPdf(false);
+    }
+  };
+
+  // Document Schema handlers (Apply to Document)
+  const handleApplySchema = (schemaId: string) => {
+    setSelectedSchemaId(schemaId);
+    setShowSchemaSelector(false);
+    // Trigger AI extraction
+    applySchemaDataMutation.mutate({ eventId: event.id, schemaId });
+  };
+
+  const handleSchemaFieldChange = (name: string, value: string | null) => {
+    setSchemaFieldValues((prev) => ({ ...prev, [name]: value }));
+    setSchemaHasChanges(true);
+  };
+
+  const handleSaveSchemaData = async () => {
+    if (!selectedSchemaId) return;
+    await saveSchemaDataMutation.mutateAsync({
+      eventId: event.id,
+      fieldValues: schemaFieldValues,
+    });
+  };
+
+  const handleReExtract = () => {
+    reExtractMutation.mutate(event.id);
+  };
+
+  const handleRemoveSchema = () => {
+    const doRemove = () => {
+      removeSchemaDataMutation.mutate(event.id);
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm('Remove document association? This will delete extracted data.')) {
+        doRemove();
+      }
+    } else {
+      Alert.alert(
+        'Remove Document',
+        'This will delete the extracted document data. Continue?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Remove', style: 'destructive', onPress: doRemove },
+        ]
+      );
     }
   };
 
@@ -1104,6 +1309,169 @@ export default function EventDetailScreen() {
                     )}
                   </Pressable>
                 </View>
+              </View>
+            )}
+          </Animated.View>
+        )}
+
+        {/* Apply to Document Section (AI-powered extraction) */}
+        {schemasQuery.data && schemasQuery.data.length > 0 && event.transcript_text && (
+          <Animated.View
+            entering={FadeInDown.delay(275)}
+            className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
+          >
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center">
+                <Wand2 size={16} color="#F59E0B" />
+                <Text className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Apply to Document
+                </Text>
+              </View>
+              {selectedSchema && (
+                <Pressable
+                  onPress={handleRemoveSchema}
+                  className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700"
+                >
+                  <X size={14} color="#6B7280" />
+                </Pressable>
+              )}
+            </View>
+
+            {!selectedSchema ? (
+              <View>
+                {showSchemaSelector ? (
+                  <View className="space-y-2">
+                    {schemasQuery.data.map((schema) => (
+                      <Pressable
+                        key={schema.id}
+                        onPress={() => handleApplySchema(schema.id)}
+                        disabled={applySchemaDataMutation.isPending}
+                        className="flex-row items-center bg-gray-50 dark:bg-gray-700 rounded-xl p-3"
+                      >
+                        <View
+                          className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                          style={{ backgroundColor: SCHEMA_TYPE_COLORS[schema.documentType] + '20' }}
+                        >
+                          <Wand2 size={16} color={SCHEMA_TYPE_COLORS[schema.documentType]} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-sm font-medium text-gray-900 dark:text-white">
+                            {schema.name}
+                          </Text>
+                          <Text className="text-xs text-gray-500">
+                            {schema.fields.length} fields • AI extracts from transcript
+                          </Text>
+                        </View>
+                        <ChevronDown size={18} color="#9CA3AF" style={{ transform: [{ rotate: '-90deg' }] }} />
+                      </Pressable>
+                    ))}
+                    <Pressable
+                      onPress={() => setShowSchemaSelector(false)}
+                      className="py-2"
+                    >
+                      <Text className="text-sm text-gray-500 text-center">Cancel</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable
+                    onPress={() => setShowSchemaSelector(true)}
+                    className="flex-row items-center justify-center bg-amber-50 dark:bg-amber-900/20 rounded-xl py-3 border border-amber-200 dark:border-amber-800"
+                  >
+                    <Wand2 size={18} color="#F59E0B" />
+                    <Text className="ml-2 text-sm font-medium text-amber-600 dark:text-amber-400">
+                      Apply to Punch List or RFI
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            ) : (
+              <View>
+                {/* Extracting indicator */}
+                {applySchemaDataMutation.isPending && (
+                  <View className="flex-row items-center justify-center bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 mb-4">
+                    <ActivityIndicator size="small" color="#F59E0B" />
+                    <Text className="ml-3 text-sm text-amber-700 dark:text-amber-300">
+                      AI is extracting fields from transcript...
+                    </Text>
+                  </View>
+                )}
+
+                {/* Error message */}
+                {applySchemaDataMutation.isError && (
+                  <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 mb-4">
+                    <Text className="text-sm text-red-600 dark:text-red-400">
+                      Failed to extract fields. Please try again.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Selected schema header */}
+                {!applySchemaDataMutation.isPending && (
+                  <>
+                    <View className="flex-row items-center bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 mb-4">
+                      <View
+                        className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+                        style={{ backgroundColor: SCHEMA_TYPE_COLORS[selectedSchema.documentType] + '30' }}
+                      >
+                        <Wand2 size={20} color={SCHEMA_TYPE_COLORS[selectedSchema.documentType]} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {selectedSchema.name}
+                        </Text>
+                        <Text className="text-xs text-gray-500">
+                          {Object.keys(schemaFieldValues).filter(k => schemaFieldValues[k]).length} of {selectedSchema.fields.length} fields extracted
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Schema fields form */}
+                    <SchemaFieldsForm
+                      schema={selectedSchema}
+                      fieldValues={schemaFieldValues}
+                      onChange={handleSchemaFieldChange}
+                      confidence={schemaConfidence}
+                    />
+
+                    {/* Schema actions */}
+                    <View className="flex-row gap-3 mt-4">
+                      <Pressable
+                        onPress={handleSaveSchemaData}
+                        disabled={saveSchemaDataMutation.isPending || !schemaHasChanges}
+                        className={cn(
+                          'flex-1 flex-row items-center justify-center py-3 rounded-xl',
+                          saveSchemaDataMutation.isPending || !schemaHasChanges ? 'bg-gray-300 dark:bg-gray-600' : 'bg-amber-500'
+                        )}
+                      >
+                        {saveSchemaDataMutation.isPending ? (
+                          <ActivityIndicator size="small" color="white" />
+                        ) : (
+                          <>
+                            <Save size={18} color="white" />
+                            <Text className="ml-2 text-white font-semibold">Save</Text>
+                          </>
+                        )}
+                      </Pressable>
+                      <Pressable
+                        onPress={handleReExtract}
+                        disabled={reExtractMutation.isPending}
+                        className={cn(
+                          'flex-row items-center justify-center py-3 px-4 rounded-xl border',
+                          reExtractMutation.isPending ? 'border-gray-300 dark:border-gray-600' : 'border-amber-500'
+                        )}
+                      >
+                        {reExtractMutation.isPending ? (
+                          <ActivityIndicator size="small" color="#F59E0B" />
+                        ) : (
+                          <>
+                            <RefreshCw size={18} color="#F59E0B" />
+                            <Text className="ml-2 text-amber-600 dark:text-amber-400 font-semibold">Re-extract</Text>
+                          </>
+                        )}
+                      </Pressable>
+                    </View>
+                  </>
+                )}
               </View>
             )}
           </Animated.View>

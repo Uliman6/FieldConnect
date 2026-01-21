@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const eventsController = require('../controllers/events.controller');
 const templatesController = require('../controllers/templates.controller');
+const schemaDataController = require('../controllers/schema-data.controller');
 
 /**
  * GET /api/events/search
@@ -181,6 +182,50 @@ router.patch('/:eventId/template-data', (req, res, next) => {
  */
 router.get('/:eventId/filled-pdf', (req, res, next) => {
   templatesController.getFilledPdf(req, res, next);
+});
+
+// ============================================
+// SCHEMA DATA ROUTES (Apply to Document)
+// ============================================
+
+/**
+ * POST /api/events/:eventId/apply-schema
+ * Apply a document schema to an event - AI extracts fields from transcript
+ */
+router.post('/:eventId/apply-schema', (req, res, next) => {
+  schemaDataController.applySchema(req, res, next);
+});
+
+/**
+ * GET /api/events/:eventId/schema-data
+ * Get schema data (extracted fields) for an event
+ */
+router.get('/:eventId/schema-data', (req, res, next) => {
+  schemaDataController.getSchemaData(req, res, next);
+});
+
+/**
+ * PATCH /api/events/:eventId/schema-data
+ * Update schema data field values (manual edit)
+ */
+router.patch('/:eventId/schema-data', (req, res, next) => {
+  schemaDataController.updateSchemaData(req, res, next);
+});
+
+/**
+ * DELETE /api/events/:eventId/schema-data
+ * Remove schema data from event
+ */
+router.delete('/:eventId/schema-data', (req, res, next) => {
+  schemaDataController.removeSchemaData(req, res, next);
+});
+
+/**
+ * POST /api/events/:eventId/re-extract
+ * Re-extract fields from transcript using same schema
+ */
+router.post('/:eventId/re-extract', (req, res, next) => {
+  schemaDataController.reExtract(req, res, next);
 });
 
 module.exports = router;

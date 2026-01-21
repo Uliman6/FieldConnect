@@ -3,7 +3,7 @@
 
 import NetInfo from '@react-native-community/netinfo';
 import { getAuthToken, useAuthStore } from './auth-store';
-import type { PdfTemplate, EventTemplateData, TemplateType, DocumentSchema, SchemaDocumentType, SchemaField } from './types';
+import type { PdfTemplate, EventTemplateData, TemplateType, DocumentSchema, SchemaDocumentType, SchemaField, EventSchemaData } from './types';
 
 // Backend API base URL - configure via ENV tab in Vibecode
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -1658,6 +1658,66 @@ export async function deleteDocumentSchema(id: string): Promise<void> {
   await apiFetch(`/api/document-schemas/${id}`, { method: 'DELETE' });
 }
 
+// ============================================
+// EVENT SCHEMA DATA API (Apply to Document)
+// ============================================
+
+export interface ApplySchemaResult {
+  message: string;
+  schemaData: EventSchemaData & {
+    extractionNotes?: string | null;
+  };
+}
+
+/**
+ * Apply a document schema to an event - AI extracts fields from transcript
+ */
+export async function applySchemaToEvent(
+  eventId: string,
+  schemaId: string
+): Promise<ApplySchemaResult> {
+  return apiFetch(`/api/events/${eventId}/apply-schema`, {
+    method: 'POST',
+    body: JSON.stringify({ schemaId }),
+  });
+}
+
+/**
+ * Get schema data for an event
+ */
+export async function getEventSchemaData(eventId: string): Promise<EventSchemaData> {
+  return apiFetch(`/api/events/${eventId}/schema-data`);
+}
+
+/**
+ * Update schema data field values (manual edit)
+ */
+export async function updateEventSchemaData(
+  eventId: string,
+  fieldValues: Record<string, string | null>
+): Promise<{ message: string; schemaData: EventSchemaData }> {
+  return apiFetch(`/api/events/${eventId}/schema-data`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fieldValues }),
+  });
+}
+
+/**
+ * Remove schema data from event
+ */
+export async function removeEventSchemaData(eventId: string): Promise<{ message: string }> {
+  return apiFetch(`/api/events/${eventId}/schema-data`, { method: 'DELETE' });
+}
+
+/**
+ * Re-extract fields from transcript using same schema
+ */
+export async function reExtractSchemaData(
+  eventId: string
+): Promise<ApplySchemaResult> {
+  return apiFetch(`/api/events/${eventId}/re-extract`, { method: 'POST' });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -1679,4 +1739,5 @@ export const queryKeys = {
   eventTemplateData: (eventId: string) => ['events', eventId, 'template-data'] as const,
   documentSchemas: (options?: { projectId?: string; type?: SchemaDocumentType }) => ['document-schemas', options] as const,
   documentSchema: (id: string) => ['document-schemas', id] as const,
+  eventSchemaData: (eventId: string) => ['events', eventId, 'schema-data'] as const,
 };

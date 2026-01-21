@@ -138,7 +138,12 @@ class EventsController {
       const event = await prisma.event.findUnique({
         where: { id },
         include: {
-          project: true
+          project: true,
+          schemaData: {
+            include: {
+              schema: true
+            }
+          }
         }
       });
 

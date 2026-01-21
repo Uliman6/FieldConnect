@@ -474,3 +474,21 @@ export interface DocumentSchema {
   analysisNotes: string | null;
   confidence: number | null;
 }
+
+// ============================================
+// EVENT SCHEMA DATA TYPES (Apply to Document)
+// ============================================
+
+export interface EventSchemaData {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  eventId: string;
+  schemaId: string;
+  fieldValues: Record<string, string | null>;
+  extractedAt: string | null;
+  extractionConfidence: number | null;
+  lastEditedAt: string | null;
+  wasManuallyEdited: boolean;
+  schema?: DocumentSchema;
+}
