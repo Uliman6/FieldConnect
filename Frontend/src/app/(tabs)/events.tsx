@@ -231,6 +231,7 @@ export default function EventsScreen() {
                 transcript_text: transcriptText,
                 status: 'transcribed',
                 title: aiParsed.title,
+                description: aiParsed.summary || '', // Clean, professional interpretation
                 event_type: aiParsed.event_type as any,
                 severity: aiParsed.severity as any,
                 action_items: aiParsed.action_items,

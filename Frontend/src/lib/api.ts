@@ -686,6 +686,7 @@ export async function createEvent(data: {
   transcriptText?: string;
   eventType?: string;
   severity?: string;
+  description?: string;
   notes?: string;
   location?: string;
   tradeVendor?: string;
@@ -699,6 +700,7 @@ export async function createEvent(data: {
       transcript_text: data.transcriptText,
       event_type: data.eventType,
       severity: data.severity,
+      description: data.description,
       notes: data.notes,
       location: data.location,
       trade_vendor: data.tradeVendor,
@@ -717,6 +719,7 @@ export async function updateEventApi(
     transcriptText?: string;
     eventType?: string;
     severity?: string;
+    description?: string;
     notes?: string;
     location?: string;
     tradeVendor?: string;
@@ -730,6 +733,7 @@ export async function updateEventApi(
       transcript_text: data.transcriptText,
       event_type: data.eventType,
       severity: data.severity,
+      description: data.description,
       notes: data.notes,
       location: data.location,
       trade_vendor: data.tradeVendor,
