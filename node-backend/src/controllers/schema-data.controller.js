@@ -4,6 +4,8 @@
  */
 
 const schemaExtractionService = require('../services/schema-extraction.service');
+const schemaPdfService = require('../services/schema-pdf.service');
+const fs = require('fs');
 
 /**
  * Apply schema to event - AI extracts fields from transcript
@@ -157,10 +159,70 @@ const reExtract = async (req, res) => {
   }
 };
 
+/**
+ * Generate PDF from schema data
+ * POST /api/events/:eventId/generate-pdf
+ */
+const generatePdf = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    console.log('[schema-data] Generating PDF for event:', eventId);
+
+    const result = await schemaPdfService.generatePdf(eventId);
+
+    res.json({
+      message: 'PDF generated successfully',
+      fileName: result.fileName,
+    });
+  } catch (error) {
+    console.error('[schema-data] Error generating PDF:', error);
+
+    if (error.message === 'Event not found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error.message === 'No schema data found for this event') {
+      return res.status(404).json({ error: 'No schema data found for this event' });
+    }
+
+    res.status(500).json({
+      error: 'Failed to generate PDF',
+      details: error.message
+    });
+  }
+};
+
+/**
+ * Download generated PDF
+ * GET /api/events/:eventId/download-pdf
+ */
+const downloadPdf = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const result = await schemaPdfService.getPdf(eventId);
+
+    if (!result) {
+      return res.status(404).json({ error: 'No PDF found. Generate one first.' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
+
+    const stream = fs.createReadStream(result.filePath);
+    stream.pipe(res);
+  } catch (error) {
+    console.error('[schema-data] Error downloading PDF:', error);
+    res.status(500).json({ error: 'Failed to download PDF' });
+  }
+};
+
 module.exports = {
   applySchema,
   getSchemaData,
   updateSchemaData,
   removeSchemaData,
   reExtract,
+  generatePdf,
+  downloadPdf,
 };

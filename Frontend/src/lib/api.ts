@@ -1718,6 +1718,34 @@ export async function reExtractSchemaData(
   return apiFetch(`/api/events/${eventId}/re-extract`, { method: 'POST' });
 }
 
+/**
+ * Generate PDF from schema data
+ */
+export async function generateSchemaPdf(
+  eventId: string
+): Promise<{ message: string; fileName: string }> {
+  return apiFetch(`/api/events/${eventId}/generate-pdf`, { method: 'POST' });
+}
+
+/**
+ * Download generated PDF
+ */
+export async function downloadSchemaPdf(eventId: string): Promise<string> {
+  const token = await getAuthToken();
+  const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/download-pdf`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to download PDF');
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,

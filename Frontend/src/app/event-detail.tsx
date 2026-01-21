@@ -33,6 +33,8 @@ import {
   updateEventSchemaData,
   removeEventSchemaData,
   reExtractSchemaData,
+  generateSchemaPdf,
+  downloadSchemaPdf,
 } from '@/lib/api';
 import {
   ArrowLeft,
@@ -310,6 +312,7 @@ export default function EventDetailScreen() {
   const [schemaFieldValues, setSchemaFieldValues] = useState<Record<string, string | null>>({});
   const [schemaConfidence, setSchemaConfidence] = useState<number | null>(null);
   const [schemaHasChanges, setSchemaHasChanges] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Fetch available templates
   const templatesQuery = useQuery({
@@ -443,6 +446,27 @@ export default function EventDetailScreen() {
       setTradeVendor('');
     }
   }, [localEvent, backendEvent]);
+
+  // Load existing schemaData from backend
+  useEffect(() => {
+    const loadSchemaData = async () => {
+      if (!id) return;
+      const backendId = getBackendId('events', id) || id;
+      try {
+        const eventData = await getEvent(backendId);
+        if (eventData?.schemaData) {
+          setSelectedSchemaId(eventData.schemaData.schemaId);
+          setSchemaFieldValues(eventData.schemaData.fieldValues as Record<string, string | null>);
+          setSchemaConfidence(eventData.schemaData.extractionConfidence);
+          setSchemaHasChanges(false);
+        }
+      } catch (error) {
+        // Event might not exist on backend yet, that's ok
+        console.log('[event-detail] Could not load schemaData:', error);
+      }
+    };
+    loadSchemaData();
+  }, [id]);
 
   useEffect(() => {
     return () => {
@@ -776,6 +800,48 @@ export default function EventDetailScreen() {
           { text: 'Remove', style: 'destructive', onPress: doRemove },
         ]
       );
+    }
+  };
+
+  const handleGeneratePdf = async () => {
+    const backendId = getBackendId('events', event.id) || event.id;
+    setIsGeneratingPdf(true);
+    try {
+      // First save any pending changes
+      if (schemaHasChanges) {
+        await saveSchemaDataMutation.mutateAsync({
+          eventId: backendId,
+          fieldValues: schemaFieldValues,
+        });
+      }
+
+      // Generate PDF
+      await generateSchemaPdf(backendId);
+
+      // Download the PDF
+      const blobUrl = await downloadSchemaPdf(backendId);
+
+      if (Platform.OS === 'web') {
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${selectedSchema?.name || 'document'}-${event.id.substring(0, 8)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        alert('Failed to generate PDF. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to generate PDF. Please try again.');
+      }
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -1474,6 +1540,25 @@ export default function EventDetailScreen() {
                         )}
                       </Pressable>
                     </View>
+
+                    {/* Export PDF Button */}
+                    <Pressable
+                      onPress={handleGeneratePdf}
+                      disabled={isGeneratingPdf}
+                      className={cn(
+                        'flex-row items-center justify-center py-3 rounded-xl mt-3',
+                        isGeneratingPdf ? 'bg-gray-300 dark:bg-gray-600' : 'bg-green-600'
+                      )}
+                    >
+                      {isGeneratingPdf ? (
+                        <ActivityIndicator size="small" color="white" />
+                      ) : (
+                        <>
+                          <Download size={18} color="white" />
+                          <Text className="ml-2 text-white font-semibold">Export PDF</Text>
+                        </>
+                      )}
+                    </Pressable>
                   </>
                 )}
               </View>

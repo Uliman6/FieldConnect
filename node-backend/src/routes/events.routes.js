@@ -228,4 +228,20 @@ router.post('/:eventId/re-extract', (req, res, next) => {
   schemaDataController.reExtract(req, res, next);
 });
 
+/**
+ * POST /api/events/:eventId/generate-pdf
+ * Generate PDF from schema data
+ */
+router.post('/:eventId/generate-pdf', (req, res, next) => {
+  schemaDataController.generatePdf(req, res, next);
+});
+
+/**
+ * GET /api/events/:eventId/download-pdf
+ * Download generated PDF
+ */
+router.get('/:eventId/download-pdf', (req, res, next) => {
+  schemaDataController.downloadPdf(req, res, next);
+});
+
 module.exports = router;
