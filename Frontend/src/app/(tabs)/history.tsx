@@ -248,20 +248,8 @@ export default function LogsHistoryScreen() {
   const hasError = projectsQuery.isError ||
     (selectedCategory === 'daily_log' ? dailyLogsQuery.isError : eventsQuery.isError);
 
-  // If no current project selected
-  if (!currentProjectId) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-black px-4">
-        <Building2 size={48} color="#9CA3AF" />
-        <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4 text-center">
-          No project selected
-        </Text>
-        <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2">
-          Select a project from the Projects tab to view documents
-        </Text>
-      </View>
-    );
-  }
+  // For punch lists and RFIs, require a project to be selected
+  const requiresProjectSelection = selectedCategory !== 'daily_log' && !currentProjectId;
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-black">
@@ -280,14 +268,15 @@ export default function LogsHistoryScreen() {
           <Text className="text-2xl font-bold text-gray-900 dark:text-white">
             Documents
           </Text>
-          {currentProject && (
-            <View className="flex-row items-center mt-1">
-              <Building2 size={14} color="#F97316" />
-              <Text className="ml-1 text-sm text-orange-600 dark:text-orange-400 font-medium">
-                {currentProject.name}
-              </Text>
-            </View>
-          )}
+          <View className="flex-row items-center mt-1">
+            <Building2 size={14} color={currentProject ? '#F97316' : '#9CA3AF'} />
+            <Text className={cn(
+              'ml-1 text-sm font-medium',
+              currentProject ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'
+            )}>
+              {currentProject ? currentProject.name : 'All Projects'}
+            </Text>
+          </View>
         </View>
 
         {/* Category Tabs */}
@@ -358,6 +347,7 @@ export default function LogsHistoryScreen() {
                 <Animated.View key={log.id} entering={FadeInDown.delay(index * 30)}>
                   <DailyLogCard
                     log={log}
+                    showProject={!currentProjectId}
                     onViewPdf={() => handleViewPdf(log.id)}
                     onDownloadPdf={() => handleDownloadPdf(log.id)}
                     onEdit={() => handleEditLog(log.id)}
@@ -373,7 +363,17 @@ export default function LogsHistoryScreen() {
         {/* Punch List / RFI List */}
         {!isLoading && selectedCategory !== 'daily_log' && (
           <View className="px-4 mt-4">
-            {schemaEvents.length === 0 ? (
+            {requiresProjectSelection ? (
+              <View className="items-center py-12">
+                <Building2 size={48} color="#9CA3AF" />
+                <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4 text-center">
+                  Select a project
+                </Text>
+                <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2 px-8">
+                  Choose a project from the Projects tab to view {selectedCategory === 'punch_list' ? 'punch lists' : 'RFIs'}
+                </Text>
+              </View>
+            ) : schemaEvents.length === 0 ? (
               <EmptyState category={selectedCategory} />
             ) : (
               schemaEvents.map((event: any, index: number) => (
@@ -415,6 +415,7 @@ function EmptyState({ category }: { category: DocumentCategory }) {
 
 function DailyLogCard({
   log,
+  showProject,
   onViewPdf,
   onDownloadPdf,
   onEdit,
@@ -422,6 +423,7 @@ function DailyLogCard({
   isDeleting,
 }: {
   log: DailyLogSummary;
+  showProject?: boolean;
   onViewPdf: () => void;
   onDownloadPdf: () => void;
   onEdit: () => void;
@@ -449,6 +451,15 @@ function DailyLogCard({
               </View>
             )}
           </View>
+
+          {showProject && log.project && (
+            <View className="flex-row items-center mt-1">
+              <Building2 size={14} color="#9CA3AF" />
+              <Text className="ml-1 text-sm text-gray-500 dark:text-gray-400">
+                {log.project.name}
+              </Text>
+            </View>
+          )}
 
           <View className="flex-row items-center mt-2 flex-wrap">
             {log.dailyTotalsWorkers != null && (
