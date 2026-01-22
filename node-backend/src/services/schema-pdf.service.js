@@ -9,6 +9,33 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 const prisma = require('./prisma');
 
+/**
+ * Fetch image from URL and return buffer for PDFKit
+ * @param {string} url - Image URL (Cloudinary or other)
+ * @returns {Promise<Buffer|null>}
+ */
+async function fetchImageBuffer(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`[schema-pdf] Failed to fetch image: ${response.status}`);
+      return null;
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (err) {
+    console.error('[schema-pdf] Error fetching image:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Check if a path is a URL
+ */
+function isUrl(path) {
+  return path && (path.startsWith('http://') || path.startsWith('https://'));
+}
+
 // Ensure uploads directory exists
 const UPLOADS_DIR = path.join(__dirname, '../../uploads/schema-pdfs');
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -79,6 +106,7 @@ class SchemaPdfService {
 
   /**
    * Add photos section to PDF
+   * Supports both local file paths and Cloudinary URLs
    */
   async addPhotosToDoc(doc, photos, leftCol = 50) {
     if (!photos || photos.length === 0) return;
@@ -117,11 +145,24 @@ class SchemaPdfService {
       const y = doc.y;
 
       try {
-        // Check if file exists
-        await fsPromises.access(photo.filePath);
+        let imageSource;
+
+        // Check if filePath is a URL (Cloudinary) or local file
+        if (isUrl(photo.filePath)) {
+          // Fetch image from Cloudinary URL
+          console.log(`[schema-pdf] Fetching photo from URL: ${photo.filePath}`);
+          imageSource = await fetchImageBuffer(photo.filePath);
+          if (!imageSource) {
+            throw new Error('Failed to fetch image from URL');
+          }
+        } else {
+          // Local file - check if it exists
+          await fsPromises.access(photo.filePath);
+          imageSource = photo.filePath;
+        }
 
         // Add image to PDF
-        doc.image(photo.filePath, x, y, {
+        doc.image(imageSource, x, y, {
           width: photoWidth,
           height: photoHeight,
           fit: [photoWidth, photoHeight],
@@ -143,7 +184,8 @@ class SchemaPdfService {
           doc.y = y + photoHeight + (photo.caption ? 25 : 10);
         }
       } catch (err) {
-        // File not found - add placeholder
+        // File/URL not available - add placeholder
+        console.error(`[schema-pdf] Photo not available: ${err.message}`);
         doc.rect(x, y, photoWidth, photoHeight).strokeColor('#CCCCCC').stroke();
         doc.fontSize(9).font('Helvetica').fillColor('#999999')
           .text('Photo not available', x, y + photoHeight / 2, {
