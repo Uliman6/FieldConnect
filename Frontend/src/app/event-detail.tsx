@@ -373,6 +373,7 @@ export default function EventDetailScreen() {
       setSchemaHasChanges(false);
       // Invalidate event query to refresh schemaData
       queryClient.invalidateQueries({ queryKey: queryKeys.event(id || '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.events }); // Refresh history lists
     },
   });
 
@@ -412,6 +413,7 @@ export default function EventDetailScreen() {
       setSchemaConfidence(null);
       setSchemaHasChanges(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.event(id || '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.events }); // Refresh history lists
     },
   });
 
