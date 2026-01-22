@@ -79,29 +79,24 @@ export default function LogsHistoryScreen() {
     ? (getBackendId('projects', currentProjectId) || currentProjectId)
     : undefined;
 
-  // Fetch daily logs for current project
+  // Fetch all daily logs (show all projects, display project name on each item)
   const dailyLogsQuery = useQuery({
-    queryKey: queryKeys.dailyLogs(backendProjectId),
+    queryKey: ['daily-logs', 'all'],
     queryFn: async () => {
-      const logs = await getDailyLogs({
-        project_id: backendProjectId,
-        limit: 100,
-      });
-      console.log('[history] Fetched daily logs for project:', logs.length);
+      const logs = await getDailyLogs({ limit: 100 });
+      console.log('[history] Fetched all daily logs:', logs.length);
       return logs;
     },
     staleTime: 0,
-    enabled: selectedCategory === 'daily_log' && !!backendProjectId,
+    enabled: selectedCategory === 'daily_log',
   });
 
-  // Fetch events with schema data (punch lists and RFIs) for current project
+  // Fetch all events with schema data (punch lists and RFIs)
   const eventsQuery = useQuery({
-    queryKey: ['events', 'with-schema', backendProjectId, selectedCategory],
+    queryKey: ['events', 'with-schema', 'all', selectedCategory],
     queryFn: async () => {
-      const events = await getEvents({
-        project_id: backendProjectId,
-        limit: 100,
-      });
+      const events = await getEvents({ limit: 100 });
+      console.log('[history] Fetched all events:', events.length);
 
       // Filter events that have schema data matching the category
       const filtered = events.filter((event: any) => {
@@ -115,7 +110,7 @@ export default function LogsHistoryScreen() {
       return filtered;
     },
     staleTime: 0,
-    enabled: selectedCategory !== 'daily_log' && !!backendProjectId,
+    enabled: selectedCategory !== 'daily_log',
   });
 
   const projects = projectsQuery.data || [];
