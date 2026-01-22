@@ -1160,15 +1160,8 @@ export async function loadBackendMappings(): Promise<void> {
 }
 
 /**
- * Get backend ID for a local entity
- */
-export function getBackendId(type: 'projects' | 'dailyLogs' | 'events', localId: string): string | null {
-  return backendIdMap[type].get(localId) || null;
-}
-
-/**
- * Check if entity is synced
+ * Check if entity is synced (uses persisted backend ID map)
  */
 export function isSynced(type: 'projects' | 'dailyLogs' | 'events', localId: string): boolean {
-  return backendIdMap[type].has(localId);
+  return !!getBackendId(type, localId) || backendIdMap[type].has(localId);
 }
