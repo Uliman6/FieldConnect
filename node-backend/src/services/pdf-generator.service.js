@@ -3,6 +3,33 @@ const fs = require('fs').promises;
 const path = require('path');
 
 /**
+ * Fetch image from URL and return buffer for PDFKit
+ * @param {string} url - Image URL (Cloudinary or other)
+ * @returns {Promise<Buffer|null>}
+ */
+async function fetchImageBuffer(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`[pdf-generator] Failed to fetch image: ${response.status}`);
+      return null;
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (err) {
+    console.error('[pdf-generator] Error fetching image:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Check if a path is a URL
+ */
+function isUrl(filePath) {
+  return filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'));
+}
+
+/**
  * PDF Generator Service for Daily Log Reports
  */
 class PDFGeneratorService {
@@ -309,12 +336,24 @@ class PDFGeneratorService {
       const y = doc.y;
 
       try {
-        // Check if file exists and load it
-        const filePath = photo.filePath;
-        await fs.access(filePath);
+        let imageSource;
+
+        // Check if filePath is a URL (Cloudinary) or local file
+        if (isUrl(photo.filePath)) {
+          // Fetch image from Cloudinary URL
+          console.log(`[pdf-generator] Fetching photo from URL: ${photo.filePath}`);
+          imageSource = await fetchImageBuffer(photo.filePath);
+          if (!imageSource) {
+            throw new Error('Failed to fetch image from URL');
+          }
+        } else {
+          // Local file - check if it exists
+          await fs.access(photo.filePath);
+          imageSource = photo.filePath;
+        }
 
         // Add image to PDF
-        doc.image(filePath, x, y, {
+        doc.image(imageSource, x, y, {
           width: photoWidth,
           height: photoHeight,
           fit: [photoWidth, photoHeight],
@@ -336,7 +375,8 @@ class PDFGeneratorService {
           doc.y = y + photoHeight + (photo.caption ? 25 : 10);
         }
       } catch (err) {
-        // File not found - add placeholder
+        // File/URL not available - add placeholder
+        console.error(`[pdf-generator] Photo not available: ${err.message}`);
         doc.rect(x, y, photoWidth, photoHeight).stroke();
         doc.fontSize(9).font('Helvetica');
         doc.text('Photo not available', x, y + photoHeight / 2, {
