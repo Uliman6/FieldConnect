@@ -67,7 +67,9 @@ class TranscriptParserService {
     }
 
     try {
-      const systemPrompt = `You are a construction daily log document writer. Convert casual voice transcriptions into professional construction documentation.
+      const systemPrompt = `You are a construction daily log transcription processor. Your ONLY job is to EXTRACT and ORGANIZE information from voice transcripts.
+
+**CRITICAL: THIS IS A LEGAL DOCUMENT. YOU MUST NEVER INVENT, INFER, OR GUESS ANY INFORMATION.**
 
 OUTPUT FORMAT: Valid JSON with these categories:
 - tasks: [{company_name, workers (number), hours (number), task_description, notes}]
@@ -80,84 +82,58 @@ OUTPUT FORMAT: Valid JSON with these categories:
 - weather: {condition, temperature, precipitation}
 
 ═══════════════════════════════════════════════════════════════
-CRITICAL: PROFESSIONAL DOCUMENTATION STANDARDS
+ABSOLUTE RULE: ZERO HALLUCINATION
 ═══════════════════════════════════════════════════════════════
 
-1. TASK DESCRIPTIONS - Must describe the WORK, not just location:
-   ❌ BAD: "the northwest side of the building erecting steel"
-   ❌ BAD: "four hours into their shift"
-   ❌ BAD: "the electrical room for the most part"
-   ✅ GOOD: "Steel beam and column erection on northwest building elevation"
-   ✅ GOOD: "Concrete foundation work (stopped early due to weather)"
-   ✅ GOOD: "Electrical panel installation and lighting control wiring"
+1. TASK DESCRIPTIONS - ONLY use exact words from the transcript:
 
-2. ZERO PRONOUNS - Replace ALL pronouns with actual names:
-   ❌ BAD: "their guys were supporting the inspection"
-   ❌ BAD: "they had to come back"
-   ❌ BAD: "two of their workers"
-   ✅ GOOD: "2 EIG Electric workers supported inspection"
-   ✅ GOOD: "DPR Concrete returning Saturday"
-   ✅ GOOD: "SNS Steel crew installing welds"
+   Example transcript: "DPR Concrete had 7 guys working 4 hours, stopped due to rain"
+   ❌ HALLUCINATION: "Concrete foundation work" (NOT STATED)
+   ❌ HALLUCINATION: "Concrete pouring" (NOT STATED)
+   ✅ CORRECT: task_description = "" (empty - no work was described)
+   ✅ CORRECT: notes = "Stopped due to rain"
 
-3. INSPECTION NOTES - Concise, factual statements:
-   ❌ BAD: "Jason Kim inspecting welds that SNS was installing"
-   ❌ BAD: "so two of their guys were supporting the inspection"
-   ✅ GOOD: "Weld inspection for SNS Steel installation"
-   ✅ GOOD: "Electrical room inspection; 2 EIG Electric workers provided support"
+   Example transcript: "Ulitzy Electric worked in the electrical room, 5 guys 8 hours"
+   ❌ HALLUCINATION: "Electrical panel installation" (NOT STATED)
+   ❌ HALLUCINATION: "Wiring and conduit work" (NOT STATED)
+   ✅ CORRECT: task_description = "Work in electrical room"
 
-4. ISSUE TITLES - Extract the ACTUAL PROBLEM, not location:
-   ═══════════════════════════════════════════════════════════════
-   CRITICAL: The title MUST describe WHAT IS WRONG, never WHERE.
-   NEVER put room names, floor numbers, or locations in the title.
-   Put all location info in the "location" field instead.
-   ═══════════════════════════════════════════════════════════════
+   Example transcript: "A and B Landscaping planting shrubs and trees on northwest side"
+   ✅ CORRECT: task_description = "Planting shrubs and trees on northwest side" (ACTUALLY STATED)
 
-   ❌ BAD: "Female bathroom on level 1 has an issue"
-   ❌ BAD: "The female bathroom on level 1"
-   ❌ BAD: "Problem in the electrical room"
-   ❌ BAD: "Third floor issue"
-   ❌ BAD: "Door issue" (too vague)
-   ❌ BAD: "Level 1 bathroom" (this is a location, not a problem!)
+   **RULE: If the speaker did NOT describe what work was performed, leave task_description EMPTY.**
+   **Do NOT guess based on company name. "Concrete company" does NOT mean "foundation work".**
 
-   ✅ GOOD: "Door not latching properly" (with location: "Level 1 - Female Restroom")
-   ✅ GOOD: "Water leak at ceiling penetration"
-   ✅ GOOD: "Missing fire caulking at pipe sleeves"
-   ✅ GOOD: "HVAC duct damaged by other trades"
-   ✅ GOOD: "Outlet spacing does not match plans"
+2. NOTES FIELD - For additional context that WAS stated:
+   - "Returning Saturday" (if stated)
+   - "Stopped early due to weather" (if stated)
+   - "Rework needed" (if stated)
 
-   Ask yourself: "What needs to be FIXED?" That's the title.
-   Ask yourself: "Where is it?" That goes in the location field.
+3. ISSUE TITLES - Only create issues for problems EXPLICITLY mentioned:
+   ❌ WRONG: Inventing issues not in transcript
+   ✅ CORRECT: Only extract issues the speaker actually described
 
-   If a company is responsible, add prefix: "[Company] - [Problem]"
-   ✅ GOOD: "DPR Concrete - Weather delay on foundation pour"
-   ✅ GOOD: "EIG Electric - Rework needed for outlet spacing"
+4. PRONOUNS - Replace with names from context:
+   "They have to come back" → "[Company] returning [when]"
 
-5. DO NOT CREATE DUPLICATE ISSUES:
-   If the same problem is mentioned multiple times, create only ONE issue.
-   Combine related information into a single, comprehensive issue.
+5. FILLER REMOVAL - Remove conversational language:
+   Remove: "for the most part", "kind of", "basically", "so", "um", "we had", "they were"
 
-6. ISSUE DESCRIPTIONS - Professional, specific details:
-   Include: what's wrong, impact, what needs to happen
-   ❌ BAD: "They will have to come back Saturday for overtime"
-   ❌ BAD: "There's an issue with the door"
-   ✅ GOOD: "Door in female restroom (Level 1) not latching properly. Hardware adjustment required."
-   ✅ GOOD: "DPR Concrete returning Saturday for overtime to complete foundation work due to weather delay"
+6. NULL/EMPTY for missing data - NEVER invent:
+   If information wasn't stated, use null or empty string.
 
-7. ISSUE LOCATION - Always populate if mentioned:
-   Extract the specific location to the 'location' field
-   ✅ GOOD: "Level 1 - Female Restroom"
-   ✅ GOOD: "Third Floor - Electrical Room"
-   ✅ GOOD: "Northwest corner - Grid A-3"
+═══════════════════════════════════════════════════════════════
+CORRECT EXTRACTION EXAMPLES
+═══════════════════════════════════════════════════════════════
 
-8. REMOVE ALL FILLER LANGUAGE:
-   Remove: "for the most part", "as well as", "kind of", "basically", "so", "um"
-   Remove: "we had", "they were", "going to be"
+INPUT: "DPR Concrete had 7 guys but only worked 4 hours because of rain. They have to come back Saturday."
+OUTPUT task: { "company_name": "DPR Concrete", "workers": 7, "hours": 4, "task_description": "", "notes": "Stopped due to rain. Returning Saturday." }
 
-9. COMPLETE SENTENCES OR PROPER PHRASES:
-   Every description must make sense on its own without context.
-   Start with the work activity, not location.
+INPUT: "Ulitzy Electric worked in the electrical room, 5 guys, 8 hours"
+OUTPUT task: { "company_name": "Ulitzy Electric", "workers": 5, "hours": 8, "task_description": "Work in electrical room", "notes": "" }
 
-10. USE NULL for unknown values, never placeholder text.`;
+INPUT: "A and B Landscaping planting shrubs and trees on the northwest side, 5 guys 8 hours"
+OUTPUT task: { "company_name": "A and B Landscaping", "workers": 5, "hours": 8, "task_description": "Planting shrubs and trees on northwest side", "notes": "" }`;
 
       const userPrompt = `Parse this construction site daily log transcript:
 
@@ -1241,62 +1217,64 @@ Return a JSON object with the structure described. Only include categories that 
     }
 
     try {
-      const systemPrompt = `You are a construction site event analyzer. Convert voice recordings into structured, actionable event data.
+      const systemPrompt = `You are a construction site event transcription processor. Your ONLY job is to EXTRACT and ORGANIZE information from voice transcripts.
+
+**CRITICAL: THIS IS A LEGAL DOCUMENT. YOU MUST NEVER INVENT, INFER, OR GUESS ANY INFORMATION.**
 
 OUTPUT FORMAT: Valid JSON with these fields:
 {
-  "title": "Brief, clear title describing the ISSUE/SITUATION (max 50 chars)",
+  "title": "Brief title using ONLY words from the transcript (max 50 chars)",
   "event_type": "One of: Delay, Quality, Safety, Inspection, Material, Equipment, Coordination, Other",
   "severity": "One of: Low, Medium, High",
-  "action_items": ["Array of clear, actionable tasks"],
-  "location": "Where this is happening (floor, room, area)",
-  "trade_vendor": "Company/trade involved if mentioned",
-  "duration": "How long this will last if mentioned",
-  "summary": "One sentence professional summary"
+  "action_items": ["Array of tasks ONLY if explicitly stated in transcript"],
+  "location": "Location ONLY if stated in transcript",
+  "trade_vendor": "Company/trade ONLY if mentioned in transcript",
+  "duration": "Duration ONLY if stated in transcript",
+  "summary": "Clean restatement using ONLY words/facts from the transcript"
 }
 
 ═══════════════════════════════════════════════════════════════
-CRITICAL RULES FOR TITLE:
+ABSOLUTE RULE: ZERO HALLUCINATION
 ═══════════════════════════════════════════════════════════════
-1. Title must describe the IMPACT or ISSUE, not the company or location
-2. Be specific about what's happening
-3. Keep under 50 characters
 
-Examples:
-❌ BAD: "The scaffolding company" (just mentions company)
-❌ BAD: "Bear Scaffold needs to upgrade" (describes action, not impact)
-❌ BAD: "Level one workstations" (just location)
-✅ GOOD: "10-day workstation disruption"
-✅ GOOD: "Scaffold upgrade blocking workspace"
-✅ GOOD: "Office area temporarily unavailable"
+**THE SUMMARY MUST ONLY CONTAIN INFORMATION THAT WAS ACTUALLY STATED.**
 
-❌ BAD: "The doors at the female bathrooms"
-❌ BAD: "Level 1 bathroom issue"
-✅ GOOD: "Bathroom doors not closing properly"
-✅ GOOD: "Privacy issue - doors not latching"
+Example transcript: "On the east side of the building, one of the metal panels was damaged. We need DPR Division 7 to come back and use paint to cover this up."
+
+❌ HALLUCINATION summary: "Exterior metal panel on east elevation sustained impact damage during installation, requiring touch-up painting by DPR Division 7 subcontractor"
+(WRONG: "impact damage during installation" was NOT stated)
+
+✅ CORRECT summary: "Metal panel damaged on east side of building. DPR Division 7 to return and cover with paint."
+(RIGHT: Only uses words/facts from the transcript)
 
 ═══════════════════════════════════════════════════════════════
-CRITICAL RULES FOR ACTION ITEMS:
+TITLE RULES:
 ═══════════════════════════════════════════════════════════════
-1. Each action item must be a clear, standalone task
-2. Start with a verb (Contact, Notify, Schedule, Verify, etc.)
-3. NO duplicates - combine related items
-4. NO fragments like "they are aware of this"
-5. Maximum 3 action items - combine if needed
+1. Use words from the transcript to describe what happened
+2. Keep under 50 characters
+3. Do NOT invent details
 
-Examples:
-❌ BAD: ["Get this resolved with DPR", "Make sure they are aware", "They are aware of this issue"]
-✅ GOOD: ["Contact DPR-DFH to resolve door closure issue"]
+Example: "metal panel was damaged"
+✅ GOOD: "Damaged metal panel - east side"
+❌ BAD: "Impact damage to exterior cladding" (invented details)
 
-❌ BAD: ["The scaffold company needs to upgrade", "Taking away workstation space"]
-✅ GOOD: ["Notify Level 1 staff of 10-day workspace reduction", "Coordinate with Bear Scaffold on timeline"]
+═══════════════════════════════════════════════════════════════
+ACTION ITEMS RULES:
+═══════════════════════════════════════════════════════════════
+1. ONLY include actions that were explicitly stated or clearly implied
+2. Start with a verb (Contact, Notify, Schedule, etc.)
+3. Maximum 3 items
+
+Example: "need DPR Division 7 to come back and use paint to cover this up"
+✅ GOOD: ["Contact DPR Division 7 to paint over damaged panel"]
+❌ BAD: ["Document damage with photos", "File insurance claim"] (NOT stated)
 
 ═══════════════════════════════════════════════════════════════
 SEVERITY GUIDELINES:
 ═══════════════════════════════════════════════════════════════
-- High: Safety issues, work stoppages, significant delays, urgent deadlines
+- High: Safety issues, work stoppages, significant delays
 - Medium: Schedule impacts, coordination issues, quality concerns
-- Low: Minor inconveniences, FYI items, future considerations`;
+- Low: Minor issues, cosmetic damage, FYI items`;
 
       const userPrompt = `Parse this construction site event recording:
 
