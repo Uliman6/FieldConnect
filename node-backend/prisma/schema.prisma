@@ -610,11 +610,12 @@ model Photo {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  // File storage
-  fileName    String    @map("file_name")        // Original filename
-  filePath    String    @map("file_path")        // ./uploads/photos/uuid.jpg
-  mimeType    String    @map("mime_type")        // image/jpeg, image/png
-  fileSize    Int       @map("file_size")        // Size in bytes
+  // File storage (Cloudinary)
+  fileName           String    @map("file_name")           // Original filename
+  filePath           String    @map("file_path")           // Cloudinary URL
+  cloudinaryPublicId String?   @map("cloudinary_public_id") // For deletion
+  mimeType           String    @map("mime_type")           // image/jpeg, image/png
+  fileSize           Int       @map("file_size")           // Size in bytes
 
   // Photo metadata
   caption     String?   @db.Text                 // Optional description
