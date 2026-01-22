@@ -1,16 +1,13 @@
 const prisma = require('../services/prisma');
-const path = require('path');
-const fs = require('fs').promises;
-
-const UPLOAD_DIR = path.join(__dirname, '../../uploads/photos');
+const cloudinaryService = require('../services/cloudinary.service');
 
 /**
- * Photos Controller - Upload, retrieve, and manage photos for Events and Daily Logs
+ * Photos Controller - Upload, retrieve, and manage photos via Cloudinary
  */
 class PhotosController {
   /**
    * POST /api/photos/upload
-   * Upload a photo and optionally associate with an event or daily log
+   * Upload a photo to Cloudinary and associate with an event or daily log
    */
   async upload(req, res, next) {
     try {
@@ -25,8 +22,6 @@ class PhotosController {
 
       // Validate that at least one association is provided
       if (!event_id && !daily_log_id) {
-        // Clean up uploaded file
-        await fs.unlink(req.file.path).catch(() => {});
         return res.status(400).json({
           error: 'Validation Error',
           message: 'Either event_id or daily_log_id is required'
@@ -37,7 +32,6 @@ class PhotosController {
       if (event_id) {
         const event = await prisma.event.findUnique({ where: { id: event_id } });
         if (!event) {
-          await fs.unlink(req.file.path).catch(() => {});
           return res.status(404).json({
             error: 'Not Found',
             message: 'Event not found'
@@ -48,7 +42,6 @@ class PhotosController {
       if (daily_log_id) {
         const dailyLog = await prisma.dailyLog.findUnique({ where: { id: daily_log_id } });
         if (!dailyLog) {
-          await fs.unlink(req.file.path).catch(() => {});
           return res.status(404).json({
             error: 'Not Found',
             message: 'Daily log not found'
@@ -56,13 +49,26 @@ class PhotosController {
         }
       }
 
-      // Create photo record
+      // Upload to Cloudinary
+      const uploadResult = await cloudinaryService.uploadBuffer(req.file.buffer, {
+        folder: event_id ? `fieldconnect/events/${event_id}` : `fieldconnect/daily-logs/${daily_log_id}`
+      });
+
+      if (!uploadResult.success) {
+        return res.status(500).json({
+          error: 'Upload Error',
+          message: uploadResult.error || 'Failed to upload to Cloudinary'
+        });
+      }
+
+      // Create photo record with Cloudinary URL
       const photo = await prisma.photo.create({
         data: {
           fileName: req.file.originalname,
-          filePath: req.file.path,
+          filePath: uploadResult.url,
+          cloudinaryPublicId: uploadResult.publicId,
           mimeType: req.file.mimetype,
-          fileSize: req.file.size,
+          fileSize: uploadResult.bytes || req.file.size,
           caption: caption || null,
           eventId: event_id || null,
           dailyLogId: daily_log_id || null
@@ -71,10 +77,6 @@ class PhotosController {
 
       res.status(201).json(photo);
     } catch (err) {
-      // Clean up file on error
-      if (req.file) {
-        await fs.unlink(req.file.path).catch(() => {});
-      }
       next(err);
     }
   }
@@ -110,7 +112,7 @@ class PhotosController {
 
   /**
    * GET /api/photos/:id/file
-   * Serve the actual photo file
+   * Redirect to Cloudinary URL
    */
   async getFile(req, res, next) {
     try {
@@ -127,19 +129,8 @@ class PhotosController {
         });
       }
 
-      // Check if file exists
-      try {
-        await fs.access(photo.filePath);
-      } catch {
-        return res.status(404).json({
-          error: 'Not Found',
-          message: 'Photo file not found on disk'
-        });
-      }
-
-      res.setHeader('Content-Type', photo.mimeType);
-      res.setHeader('Content-Disposition', `inline; filename="${photo.fileName}"`);
-      res.sendFile(path.resolve(photo.filePath));
+      // Redirect to Cloudinary URL
+      res.redirect(photo.filePath);
     } catch (err) {
       next(err);
     }
@@ -213,7 +204,7 @@ class PhotosController {
 
   /**
    * DELETE /api/photos/:id
-   * Delete a photo
+   * Delete a photo from Cloudinary and database
    */
   async delete(req, res, next) {
     try {
@@ -230,11 +221,12 @@ class PhotosController {
         });
       }
 
-      // Delete file from disk
-      try {
-        await fs.unlink(photo.filePath);
-      } catch (err) {
-        console.error('[photos] Failed to delete file:', err.message);
+      // Delete from Cloudinary if we have the public ID
+      if (photo.cloudinaryPublicId) {
+        const deleteResult = await cloudinaryService.delete(photo.cloudinaryPublicId);
+        if (!deleteResult.success) {
+          console.error('[photos] Failed to delete from Cloudinary:', deleteResult.error);
+        }
       }
 
       // Delete database record
