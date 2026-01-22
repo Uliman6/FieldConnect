@@ -99,18 +99,27 @@ export default function LogsHistoryScreen() {
   const eventsQuery = useQuery({
     queryKey: ['events', 'with-schema', backendProjectId, selectedCategory],
     queryFn: async () => {
+      console.log('[history] Fetching events, project_id:', backendProjectId, 'category:', selectedCategory);
       const events = await getEvents({
         project_id: backendProjectId,
         limit: 100,
       });
+      console.log('[history] All events:', events.length, events.map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        hasSchemaData: !!e.schemaData,
+        docType: e.schemaData?.schema?.documentType
+      })));
       // Filter events that have schema data matching the category
-      return events.filter((event: any) => {
+      const filtered = events.filter((event: any) => {
         if (!event.schemaData) return false;
         const docType = event.schemaData.schema?.documentType;
         if (selectedCategory === 'punch_list') return docType === 'PUNCH_LIST';
         if (selectedCategory === 'rfi') return docType === 'RFI';
         return false;
       });
+      console.log('[history] Filtered events for', selectedCategory, ':', filtered.length);
+      return filtered;
     },
     staleTime: 0,
     enabled: selectedCategory !== 'daily_log',
@@ -118,7 +127,17 @@ export default function LogsHistoryScreen() {
 
   const projects = projectsQuery.data || [];
   // Filter to only show daily logs with actual content (not empty placeholders)
-  const dailyLogs = (dailyLogsQuery.data || []).filter((log) => {
+  const allDailyLogs = dailyLogsQuery.data || [];
+  console.log('[history] All daily logs:', allDailyLogs.length, allDailyLogs.map((log) => ({
+    id: log.id,
+    date: log.date,
+    tasks: log._count?.tasks,
+    pendingIssues: log._count?.pendingIssues,
+    inspectionNotes: log._count?.inspectionNotes,
+    workers: log.dailyTotalsWorkers,
+    hours: log.dailyTotalsHours
+  })));
+  const dailyLogs = allDailyLogs.filter((log) => {
     const hasContent =
       (log._count?.tasks || 0) > 0 ||
       (log._count?.pendingIssues || 0) > 0 ||
@@ -127,6 +146,7 @@ export default function LogsHistoryScreen() {
       (log.dailyTotalsHours && log.dailyTotalsHours > 0);
     return hasContent;
   });
+  console.log('[history] Filtered daily logs (with content):', dailyLogs.length);
   const schemaEvents = eventsQuery.data || [];
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
