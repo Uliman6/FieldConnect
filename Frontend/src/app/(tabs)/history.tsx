@@ -79,31 +79,26 @@ export default function LogsHistoryScreen() {
     ? (getBackendId('projects', currentProjectId) || currentProjectId)
     : undefined;
 
-  // Fetch daily logs for current project
+  // Fetch daily logs - no project filter for now due to ID mismatch issues
+  // TODO: Fix project ID mapping in sync logic, then re-enable filtering
   const dailyLogsQuery = useQuery({
-    queryKey: queryKeys.dailyLogs(backendProjectId),
+    queryKey: ['daily-logs', 'all'],
     queryFn: async () => {
-      console.log('[history] Fetching daily logs for project:', backendProjectId);
-      const logs = await getDailyLogs({
-        project_id: backendProjectId,
-        limit: 100,
-      });
-      console.log('[history] Fetched daily logs:', logs.length);
+      const logs = await getDailyLogs({ limit: 100 });
+      console.log('[history] Fetched all daily logs:', logs.length);
       return logs;
     },
     staleTime: 0,
-    enabled: selectedCategory === 'daily_log' && !!backendProjectId,
+    enabled: selectedCategory === 'daily_log',
   });
 
-  // Fetch events with schema data (punch lists and RFIs) for current project
+  // Fetch events with schema data (punch lists and RFIs) - no project filter
+  // TODO: Fix project ID mapping in sync logic, then re-enable filtering
   const eventsQuery = useQuery({
-    queryKey: ['events', 'with-schema', backendProjectId, selectedCategory],
+    queryKey: ['events', 'with-schema', selectedCategory],
     queryFn: async () => {
-      console.log('[history] Fetching events for project:', backendProjectId, 'category:', selectedCategory);
-      const events = await getEvents({
-        project_id: backendProjectId,
-        limit: 100,
-      });
+      const events = await getEvents({ limit: 100 });
+      console.log('[history] Fetched all events:', events.length);
 
       // Filter events that have schema data matching the category
       const filtered = events.filter((event: any) => {
@@ -117,7 +112,7 @@ export default function LogsHistoryScreen() {
       return filtered;
     },
     staleTime: 0,
-    enabled: selectedCategory !== 'daily_log' && !!backendProjectId,
+    enabled: selectedCategory !== 'daily_log',
   });
 
   const projects = projectsQuery.data || [];
