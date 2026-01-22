@@ -29,6 +29,7 @@ import {
   updateEventApi,
   getProjects,
 } from './api';
+import { setBackendId } from './data-provider';
 
 // App version constant - update this when releasing new versions
 const APP_VERSION = '1.0.0';
@@ -829,6 +830,7 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
     });
 
     backendIdMap.projects.set(project.id, result.id);
+    setBackendId('projects', project.id, result.id);
     console.log('[sync] Project synced:', project.id, '->', result.id);
     return result.id;
   } catch (error) {
@@ -986,6 +988,7 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
     }
 
     backendIdMap.dailyLogs.set(dailyLog.id, result.id);
+    setBackendId('dailyLogs', dailyLog.id, result.id);
     console.log('[sync] Daily log synced:', dailyLog.id, '->', result.id);
 
     // Update sync status in store
@@ -1063,6 +1066,7 @@ export async function syncEventToBackend(event: Event): Promise<string | null> {
     });
 
     backendIdMap.events.set(event.id, result.id);
+    setBackendId('events', event.id, result.id); // Persist to data-provider map
     console.log('[sync] Event synced:', event.id, '->', result.id);
     return result.id;
   } catch (error) {
@@ -1138,6 +1142,7 @@ export async function loadBackendMappings(): Promise<void> {
       const match = backendProjects.find(bp => bp.name === localProject.name);
       if (match) {
         backendIdMap.projects.set(localProject.id, match.id);
+        setBackendId('projects', localProject.id, match.id);
       }
     }
 
