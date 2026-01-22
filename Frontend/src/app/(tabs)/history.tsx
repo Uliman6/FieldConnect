@@ -79,26 +79,29 @@ export default function LogsHistoryScreen() {
     ? (getBackendId('projects', currentProjectId) || currentProjectId)
     : undefined;
 
-  // Fetch daily logs - no project filter for now due to ID mismatch issues
-  // TODO: Fix project ID mapping in sync logic, then re-enable filtering
+  // Fetch daily logs for current project
   const dailyLogsQuery = useQuery({
-    queryKey: ['daily-logs', 'all'],
+    queryKey: queryKeys.dailyLogs(backendProjectId),
     queryFn: async () => {
-      const logs = await getDailyLogs({ limit: 100 });
-      console.log('[history] Fetched all daily logs:', logs.length);
+      const logs = await getDailyLogs({
+        project_id: backendProjectId,
+        limit: 100,
+      });
+      console.log('[history] Fetched daily logs for project:', logs.length);
       return logs;
     },
     staleTime: 0,
-    enabled: selectedCategory === 'daily_log',
+    enabled: selectedCategory === 'daily_log' && !!backendProjectId,
   });
 
-  // Fetch events with schema data (punch lists and RFIs) - no project filter
-  // TODO: Fix project ID mapping in sync logic, then re-enable filtering
+  // Fetch events with schema data (punch lists and RFIs) for current project
   const eventsQuery = useQuery({
-    queryKey: ['events', 'with-schema', selectedCategory],
+    queryKey: ['events', 'with-schema', backendProjectId, selectedCategory],
     queryFn: async () => {
-      const events = await getEvents({ limit: 100 });
-      console.log('[history] Fetched all events:', events.length);
+      const events = await getEvents({
+        project_id: backendProjectId,
+        limit: 100,
+      });
 
       // Filter events that have schema data matching the category
       const filtered = events.filter((event: any) => {
@@ -112,7 +115,7 @@ export default function LogsHistoryScreen() {
       return filtered;
     },
     staleTime: 0,
-    enabled: selectedCategory !== 'daily_log',
+    enabled: selectedCategory !== 'daily_log' && !!backendProjectId,
   });
 
   const projects = projectsQuery.data || [];
