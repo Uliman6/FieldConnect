@@ -51,7 +51,9 @@ class SchemaExtractionService {
       return desc;
     }).join('\n');
 
-    const systemPrompt = `You are a construction document data extractor. Your job is to extract and CLEAN UP field values from a spoken transcript or note into professional construction document format.
+    const systemPrompt = `You are a construction document data extractor. Your job is to extract field values from a spoken transcript.
+
+**CRITICAL: ZERO HALLUCINATION POLICY - ONLY USE WORDS AND FACTS FROM THE TRANSCRIPT.**
 
 DOCUMENT TYPE: ${schema.name}
 DESCRIPTION: ${schema.description || 'N/A'}
@@ -59,25 +61,50 @@ DESCRIPTION: ${schema.description || 'N/A'}
 FIELDS TO EXTRACT:
 ${fieldDescriptions}
 
-INSTRUCTIONS:
-1. Extract values for each field from the transcript
-2. For fields not mentioned, use null
-3. For "person" type fields, extract full names
-4. For "company" type fields, extract company/trade names
-5. For "location" type fields, extract room/area/floor references
-6. For "date" type fields, extract dates in YYYY-MM-DD format if possible
-7. For "multiline" type fields (like description):
-   - DO NOT copy the raw transcript verbatim
-   - Clean up and summarize into professional, concise language
-   - Remove filler words, repetition, and conversational tone
-   - Write in third person, past tense for observations
-   - Focus on: what the issue is, where it is, what action is needed
-8. For "title" fields, create a clear, concise title (5-10 words max)
-9. Be precise - only extract what's explicitly stated or clearly implied
+═══════════════════════════════════════════════════════════════
+ABSOLUTE RULES - NEVER VIOLATE THESE:
+═══════════════════════════════════════════════════════════════
 
-EXAMPLE - Converting transcript to description:
-Transcript: "we realized that on the east side of the exterior of the building, one of the metal panels has a dent. This dent, we were told by DPR Division 7 that they can come back and apply the manufacturer's paint to make it match the rest of it"
-Good description: "Metal panel on east exterior has visible dent. DPR Division 7 to apply manufacturer's touch-up paint to restore appearance."
+1. ONLY extract information that is EXPLICITLY STATED in the transcript
+2. NEVER infer, guess, or add details not in the transcript
+3. For fields not mentioned, use null
+4. For "person" type fields, extract full names AS STATED
+5. For "company" type fields, extract company/trade names AS STATED
+6. For "location" type fields, extract room/area/floor AS STATED
+
+7. For "multiline" type fields (like description):
+   ═══════════════════════════════════════════════════════════════
+   CRITICAL: The description must ONLY contain facts from the transcript.
+   DO NOT add professional-sounding details that weren't stated.
+   DO NOT infer causes, reasons, or technical details.
+   ═══════════════════════════════════════════════════════════════
+   
+   - Remove filler words (um, uh, basically, kind of)
+   - Fix grammar and make sentences complete
+   - Use third person
+   - BUT NEVER ADD INFORMATION THAT WASN'T STATED
+
+8. For "title" fields, create a clear title using ONLY words from the transcript
+
+═══════════════════════════════════════════════════════════════
+EXAMPLES - CORRECT VS WRONG:
+═══════════════════════════════════════════════════════════════
+
+Transcript: "metal panel was damaged on east side, DPR Division 7 needs to come paint it"
+
+❌ WRONG description: "Exterior metal panel cladding on east building elevation sustained damage requiring manufacturer touch-up paint application by DPR Division 7 subcontractor to restore aesthetic continuity."
+(HALLUCINATED: "cladding", "elevation", "sustained", "manufacturer", "subcontractor", "aesthetic continuity")
+
+✅ CORRECT description: "Metal panel damaged on east side. DPR Division 7 to paint."
+(Only facts from transcript, cleaned up grammar)
+
+Transcript: "the doors in the female bathroom don't close right"
+
+❌ WRONG description: "Female restroom door hardware is malfunctioning, preventing proper closure. Latch mechanism requires adjustment or replacement."
+(HALLUCINATED: "hardware", "malfunctioning", "latch mechanism", "adjustment or replacement")
+
+✅ CORRECT description: "Doors in female bathroom not closing properly."
+(Only what was stated)
 
 OUTPUT FORMAT:
 Return a JSON object with:
