@@ -11,6 +11,14 @@ router.get('/', (req, res, next) => {
 });
 
 /**
+ * POST /api/projects/consolidate
+ * Merge duplicate projects (same name) into one
+ */
+router.post('/consolidate', (req, res, next) => {
+  projectsController.consolidate(req, res, next);
+});
+
+/**
  * GET /api/projects/:id
  * Get a single project
  */

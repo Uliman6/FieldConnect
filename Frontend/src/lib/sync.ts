@@ -814,6 +814,7 @@ const backendIdMap = {
 
 /**
  * Sync a project to the backend (creates if new, returns backend ID)
+ * IMPORTANT: Checks for existing project by name to prevent duplicates
  */
 export async function syncProjectToBackend(project: Project): Promise<string | null> {
   try {
@@ -825,7 +826,23 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
       return existingBackendId;
     }
 
-    console.log('[sync] Creating project in backend:', project.name);
+    // IMPORTANT: Check if project with same name already exists in backend
+    // This prevents creating duplicate projects
+    console.log('[sync] Checking for existing project by name:', project.name);
+    const backendProjects = await getProjects();
+    const existingByName = backendProjects.find(
+      (bp) => bp.name.toLowerCase() === project.name.toLowerCase()
+    );
+
+    if (existingByName) {
+      console.log('[sync] Found existing project by name:', project.name, '->', existingByName.id);
+      backendIdMap.projects.set(project.id, existingByName.id);
+      setBackendId('projects', project.id, existingByName.id);
+      return existingByName.id;
+    }
+
+    // No existing project found, create new one
+    console.log('[sync] Creating new project in backend:', project.name);
     const result = await createProjectApi({
       name: project.name,
       number: project.number || undefined,
@@ -834,7 +851,7 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
 
     backendIdMap.projects.set(project.id, result.id);
     setBackendId('projects', project.id, result.id);
-    console.log('[sync] Project synced:', project.id, '->', result.id);
+    console.log('[sync] Project created:', project.id, '->', result.id);
     return result.id;
   } catch (error) {
     console.error('[sync] Failed to sync project:', error);

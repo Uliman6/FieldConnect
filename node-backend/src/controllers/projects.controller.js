@@ -161,6 +161,93 @@ class ProjectsController {
       next(err);
     }
   }
+
+  /**
+   * POST /api/projects/consolidate
+   * Merge duplicate projects (same name) into one
+   * Moves all events and daily logs to the canonical project
+   */
+  async consolidate(req, res, next) {
+    try {
+      // Get all projects
+      const projects = await prisma.project.findMany({
+        orderBy: { createdAt: 'asc' },
+        include: {
+          _count: {
+            select: { events: true, dailyLogs: true }
+          }
+        }
+      });
+
+      // Group by name (case-insensitive)
+      const projectsByName = {};
+      for (const project of projects) {
+        const key = project.name.toLowerCase();
+        if (!projectsByName[key]) {
+          projectsByName[key] = [];
+        }
+        projectsByName[key].push(project);
+      }
+
+      const results = {
+        consolidated: [],
+        errors: []
+      };
+
+      // For each group with duplicates, consolidate
+      for (const [name, group] of Object.entries(projectsByName)) {
+        if (group.length <= 1) continue;
+
+        // Keep the first (oldest) as canonical
+        const canonical = group[0];
+        const duplicates = group.slice(1);
+
+        console.log(`[consolidate] Merging ${duplicates.length} duplicates into "${canonical.name}" (${canonical.id})`);
+
+        try {
+          // Move all events from duplicates to canonical
+          for (const dup of duplicates) {
+            await prisma.event.updateMany({
+              where: { projectId: dup.id },
+              data: { projectId: canonical.id }
+            });
+
+            await prisma.dailyLog.updateMany({
+              where: { projectId: dup.id },
+              data: { projectId: canonical.id }
+            });
+
+            // Delete the duplicate project
+            await prisma.project.delete({
+              where: { id: dup.id }
+            });
+
+            console.log(`[consolidate] Deleted duplicate project ${dup.id}`);
+          }
+
+          results.consolidated.push({
+            name: canonical.name,
+            canonicalId: canonical.id,
+            mergedCount: duplicates.length,
+            duplicateIds: duplicates.map(d => d.id)
+          });
+        } catch (err) {
+          console.error(`[consolidate] Error merging "${name}":`, err);
+          results.errors.push({
+            name,
+            error: err.message
+          });
+        }
+      }
+
+      res.json({
+        message: 'Project consolidation complete',
+        ...results
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new ProjectsController();
