@@ -78,6 +78,7 @@ import {
   DailyLogDetail,
   queryKeys,
 } from '@/lib/api';
+import { getBackendId } from '@/lib/data-provider';
 import type { Photo } from '@/lib/types';
 import { cn } from '@/lib/cn';
 
@@ -1019,11 +1020,14 @@ export default function DailyLogDetailScreen() {
     enabled: !!id,
   });
 
+  // Get backend ID for photos (daily logs may have local IDs that differ from backend IDs)
+  const backendDailyLogId = id ? (getBackendId('dailyLogs', id) || id) : '';
+
   // Fetch photos for the daily log
   const photosQuery = useQuery({
-    queryKey: queryKeys.dailyLogPhotos(id!),
-    queryFn: () => getDailyLogPhotos(id!),
-    enabled: !!id,
+    queryKey: queryKeys.dailyLogPhotos(backendDailyLogId),
+    queryFn: () => getDailyLogPhotos(backendDailyLogId),
+    enabled: !!backendDailyLogId && !!id,
   });
 
   // Mutations
@@ -1309,14 +1313,14 @@ Hours: ${log.dailyTotalsHours || 0}`;
         <View className="px-4 mt-4">
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
             <DailyLogPhotoSection
-              dailyLogId={id!}
+              dailyLogId={backendDailyLogId}
               photos={photosQuery.data || []}
               isLoading={photosQuery.isLoading}
               onPhotoUploaded={() => {
-                queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogPhotos(id!) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogPhotos(backendDailyLogId) });
               }}
               onPhotoDeleted={() => {
-                queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogPhotos(id!) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogPhotos(backendDailyLogId) });
               }}
             />
           </View>
