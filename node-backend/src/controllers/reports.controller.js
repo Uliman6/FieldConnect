@@ -13,7 +13,7 @@ class ReportsController {
     try {
       const { id } = req.params;
 
-      // Fetch daily log with all related data
+      // Fetch daily log with all related data including photos
       const dailyLog = await prisma.dailyLog.findUnique({
         where: { id },
         include: {
@@ -24,7 +24,8 @@ class ReportsController {
           materials: true,
           pendingIssues: true,
           inspectionNotes: true,
-          additionalWorkEntries: true
+          additionalWorkEntries: true,
+          photos: true
         }
       });
 
@@ -35,8 +36,12 @@ class ReportsController {
         });
       }
 
-      // Generate PDF
-      const doc = pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project);
+      // Generate PDF with photos
+      const doc = await pdfGenerator.generateDailyLogReport(
+        dailyLog,
+        dailyLog.project,
+        dailyLog.photos || []
+      );
 
       // Set response headers for PDF download
       const filename = `daily-log-${dailyLog.project.number || 'report'}-${new Date(dailyLog.date).toISOString().split('T')[0]}.pdf`;
@@ -69,7 +74,8 @@ class ReportsController {
           materials: true,
           pendingIssues: true,
           inspectionNotes: true,
-          additionalWorkEntries: true
+          additionalWorkEntries: true,
+          photos: true
         }
       });
 
@@ -80,7 +86,11 @@ class ReportsController {
         });
       }
 
-      const doc = pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project);
+      const doc = await pdfGenerator.generateDailyLogReport(
+        dailyLog,
+        dailyLog.project,
+        dailyLog.photos || []
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'inline');

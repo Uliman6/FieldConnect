@@ -498,3 +498,21 @@ export interface EventSchemaData {
   pdfGeneratedAt: string | null;
   schema?: DocumentSchema;
 }
+
+// ============================================
+// PHOTO TYPES
+// ============================================
+
+export interface Photo {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  fileName: string;
+  filePath: string;
+  mimeType: string;
+  fileSize: number;
+  caption: string | null;
+  takenAt: string | null;
+  eventId: string | null;
+  dailyLogId: string | null;
+}

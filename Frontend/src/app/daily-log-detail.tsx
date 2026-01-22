@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Linking,
   Modal,
   KeyboardAvoidingView,
+  Image,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -44,6 +46,8 @@ import {
   Edit3,
   Save,
   ChevronDown,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react-native';
 import {
   getDailyLog,
@@ -67,9 +71,14 @@ import {
   addInspectionNoteApi,
   updateInspectionNoteApi,
   deleteInspectionNoteApi,
+  getDailyLogPhotos,
+  uploadPhoto,
+  deletePhoto,
+  fetchPhotoFile,
   DailyLogDetail,
   queryKeys,
 } from '@/lib/api';
+import type { Photo } from '@/lib/types';
 import { cn } from '@/lib/cn';
 
 // ============================================
@@ -785,6 +794,202 @@ function EditInspectionModal({
 }
 
 // ============================================
+// DAILY LOG PHOTO SECTION
+// ============================================
+
+function DailyLogPhotoSection({
+  dailyLogId,
+  photos,
+  isLoading,
+  onPhotoUploaded,
+  onPhotoDeleted,
+}: {
+  dailyLogId: string;
+  photos: Photo[];
+  isLoading: boolean;
+  onPhotoUploaded: () => void;
+  onPhotoDeleted: (photoId: string) => void;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+
+  // Import PhotoPicker
+  const PhotoPicker = require('@/components/PhotoPicker').default;
+
+  // Load photo URLs with auth
+  useEffect(() => {
+    const loadPhotoUrls = async () => {
+      const urls: Record<string, string> = {};
+      for (const photo of photos) {
+        try {
+          const url = await fetchPhotoFile(photo.id);
+          urls[photo.id] = url;
+        } catch (err) {
+          console.error('Failed to load photo:', photo.id, err);
+        }
+      }
+      setPhotoUrls(urls);
+    };
+    if (photos.length > 0) {
+      loadPhotoUrls();
+    }
+  }, [photos]);
+
+  const handlePhotoPicked = async (file: File | Blob) => {
+    setIsUploading(true);
+    try {
+      await uploadPhoto(file, { dailyLogId });
+      onPhotoUploaded();
+    } catch (error) {
+      console.error('Failed to upload photo:', error);
+      throw error; // Let PhotoPicker handle the error feedback
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = (photo: Photo) => {
+    const doDelete = async () => {
+      try {
+        await deletePhoto(photo.id);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onPhotoDeleted(photo.id);
+        setSelectedPhoto(null);
+      } catch (error) {
+        console.error('Failed to delete photo:', error);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm('Delete this photo?')) {
+        doDelete();
+      }
+    } else {
+      Alert.alert('Delete Photo', 'Are you sure you want to delete this photo?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: doDelete },
+      ]);
+    }
+  };
+
+  return (
+    <View>
+      <View className="flex-row items-center justify-between mb-3">
+        <View className="flex-row items-center">
+          <Camera size={20} color="#10B981" />
+          <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">Photos</Text>
+          {photos.length > 0 && (
+            <View className="ml-2 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full">
+              <Text className="text-xs font-medium text-green-600 dark:text-green-400">{photos.length}</Text>
+            </View>
+          )}
+        </View>
+        <PhotoPicker onPhotoPicked={handlePhotoPicked} disabled={isUploading}>
+          <View className="flex-row items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg">
+            {isUploading ? (
+              <ActivityIndicator size="small" color="#10B981" />
+            ) : (
+              <>
+                <Plus size={16} color="#10B981" />
+                <Text className="ml-1 text-sm font-medium text-green-600">Add</Text>
+              </>
+            )}
+          </View>
+        </PhotoPicker>
+      </View>
+
+      {isLoading ? (
+        <View className="items-center py-4">
+          <ActivityIndicator size="small" color="#9CA3AF" />
+        </View>
+      ) : photos.length === 0 ? (
+        <PhotoPicker onPhotoPicked={handlePhotoPicked} disabled={isUploading}>
+          <View className="flex-row items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-xl py-8 border-2 border-dashed border-gray-200 dark:border-gray-600">
+            <ImageIcon size={24} color="#9CA3AF" />
+            <Text className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+              Tap to add photos
+            </Text>
+          </View>
+        </PhotoPicker>
+      ) : (
+        <View className="flex-row flex-wrap gap-2">
+          {photos.map((photo) => (
+            <Pressable
+              key={photo.id}
+              onPress={() => setSelectedPhoto(photo)}
+              className="relative"
+            >
+              {photoUrls[photo.id] ? (
+                <Image
+                  source={{ uri: photoUrls[photo.id] }}
+                  style={{ width: 80, height: 80, borderRadius: 8 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View
+                  style={{ width: 80, height: 80, borderRadius: 8 }}
+                  className="bg-gray-200 dark:bg-gray-600 items-center justify-center"
+                >
+                  <ActivityIndicator size="small" color="#9CA3AF" />
+                </View>
+              )}
+            </Pressable>
+          ))}
+          <PhotoPicker onPhotoPicked={handlePhotoPicked} disabled={isUploading}>
+            <View className="w-20 h-20 rounded-lg bg-gray-100 dark:bg-gray-700 items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-500">
+              {isUploading ? (
+                <ActivityIndicator size="small" color="#9CA3AF" />
+              ) : (
+                <Plus size={24} color="#9CA3AF" />
+              )}
+            </View>
+          </PhotoPicker>
+        </View>
+      )}
+
+      {/* Photo Preview Modal */}
+      {selectedPhoto && photoUrls[selectedPhoto.id] && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setSelectedPhoto(null)}>
+          <Pressable
+            onPress={() => setSelectedPhoto(null)}
+            className="flex-1 bg-black/80 items-center justify-center"
+          >
+            <Pressable onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-gray-800 rounded-2xl p-4 mx-4 max-w-lg w-full">
+              <Image
+                source={{ uri: photoUrls[selectedPhoto.id] }}
+                style={{ width: '100%', height: 300, borderRadius: 12 }}
+                resizeMode="contain"
+              />
+              {selectedPhoto.caption && (
+                <Text className="mt-3 text-sm text-gray-700 dark:text-gray-300 text-center">
+                  {selectedPhoto.caption}
+                </Text>
+              )}
+              <View className="flex-row gap-3 mt-4">
+                <Pressable
+                  onPress={() => setSelectedPhoto(null)}
+                  className="flex-1 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center"
+                >
+                  <Text className="text-gray-700 dark:text-gray-300 font-medium">Close</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleDeletePhoto(selectedPhoto)}
+                  className="flex-1 py-3 rounded-xl bg-red-500 items-center"
+                >
+                  <Text className="text-white font-medium">Delete</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
+    </View>
+  );
+}
+
+// ============================================
 // MAIN COMPONENT
 // ============================================
 
@@ -811,6 +1016,13 @@ export default function DailyLogDetailScreen() {
   const { data: log, isLoading, isError, error, refetch } = useQuery({
     queryKey: queryKeys.dailyLog(id!),
     queryFn: () => getDailyLog(id!),
+    enabled: !!id,
+  });
+
+  // Fetch photos for the daily log
+  const photosQuery = useQuery({
+    queryKey: queryKeys.dailyLogPhotos(id!),
+    queryFn: () => getDailyLogPhotos(id!),
     enabled: !!id,
   });
 
@@ -1090,6 +1302,23 @@ Hours: ${log.dailyTotalsHours || 0}`;
                 <Text className="text-sm text-gray-500 dark:text-gray-400">Hours</Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        {/* Photos Section */}
+        <View className="px-4 mt-4">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+            <DailyLogPhotoSection
+              dailyLogId={id!}
+              photos={photosQuery.data || []}
+              isLoading={photosQuery.isLoading}
+              onPhotoUploaded={() => {
+                queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogPhotos(id!) });
+              }}
+              onPhotoDeleted={() => {
+                queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogPhotos(id!) });
+              }}
+            />
           </View>
         </View>
 

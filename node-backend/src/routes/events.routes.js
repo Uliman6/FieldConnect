@@ -3,6 +3,7 @@ const router = express.Router();
 const eventsController = require('../controllers/events.controller');
 const templatesController = require('../controllers/templates.controller');
 const schemaDataController = require('../controllers/schema-data.controller');
+const photosController = require('../controllers/photos.controller');
 
 /**
  * GET /api/events/search
@@ -242,6 +243,18 @@ router.post('/:eventId/generate-pdf', (req, res, next) => {
  */
 router.get('/:eventId/download-pdf', (req, res, next) => {
   schemaDataController.downloadPdf(req, res, next);
+});
+
+// ============================================
+// PHOTOS ROUTES
+// ============================================
+
+/**
+ * GET /api/events/:eventId/photos
+ * Get all photos for an event
+ */
+router.get('/:eventId/photos', (req, res, next) => {
+  photosController.getEventPhotos(req, res, next);
 });
 
 module.exports = router;

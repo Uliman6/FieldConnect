@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const dailyLogsController = require('../controllers/daily-logs.controller');
+const photosController = require('../controllers/photos.controller');
 
 /**
  * GET /api/daily-logs
@@ -137,6 +138,18 @@ router.patch('/:id/inspection-notes/:noteId', (req, res, next) => {
 });
 router.delete('/:id/inspection-notes/:noteId', (req, res, next) => {
   dailyLogsController.deleteInspectionNote(req, res, next);
+});
+
+// ============================================
+// PHOTOS ROUTES
+// ============================================
+
+/**
+ * GET /api/daily-logs/:dailyLogId/photos
+ * Get all photos for a daily log
+ */
+router.get('/:dailyLogId/photos', (req, res, next) => {
+  photosController.getDailyLogPhotos(req, res, next);
 });
 
 module.exports = router;
