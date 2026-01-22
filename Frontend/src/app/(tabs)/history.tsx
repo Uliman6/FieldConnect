@@ -230,8 +230,10 @@ export default function LogsHistoryScreen() {
 
     try {
       await deleteDailyLogApi(log.id);
-      queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogs() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.events() });
+      // Invalidate all daily logs queries (any projectId)
+      queryClient.invalidateQueries({ queryKey: ['daily-logs'] });
+      // Invalidate all events queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.events });
     } catch (error) {
       console.error('[delete] Failed to delete daily log:', error);
       if (Platform.OS === 'web') {
