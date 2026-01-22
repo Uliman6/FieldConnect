@@ -3,6 +3,21 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+
+// Ensure upload directories exist (important for containerized deployments)
+const uploadDirs = [
+  path.join(__dirname, '../uploads'),
+  path.join(__dirname, '../uploads/photos'),
+  path.join(__dirname, '../uploads/templates')
+];
+
+for (const dir of uploadDirs) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created upload directory: ${dir}`);
+  }
+}
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
