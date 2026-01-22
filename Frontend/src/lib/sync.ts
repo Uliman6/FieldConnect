@@ -29,7 +29,7 @@ import {
   updateEventApi,
   getProjects,
 } from './api';
-import { setBackendId } from './data-provider';
+import { setBackendId, getBackendId } from './data-provider';
 
 // App version constant - update this when releasing new versions
 const APP_VERSION = '1.0.0';
@@ -817,9 +817,12 @@ const backendIdMap = {
  */
 export async function syncProjectToBackend(project: Project): Promise<string | null> {
   try {
-    // Check if already synced
-    if (backendIdMap.projects.has(project.id)) {
-      return backendIdMap.projects.get(project.id) || null;
+    // Check if already synced (check persisted map first, then in-memory cache)
+    const existingBackendId = getBackendId('projects', project.id) || backendIdMap.projects.get(project.id);
+    if (existingBackendId) {
+      // Update in-memory cache
+      backendIdMap.projects.set(project.id, existingBackendId);
+      return existingBackendId;
     }
 
     console.log('[sync] Creating project in backend:', project.name);
@@ -845,11 +848,13 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
  */
 export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string | null> {
   try {
-    // Check if already synced - update it
-    if (backendIdMap.dailyLogs.has(dailyLog.id)) {
-      const backendId = backendIdMap.dailyLogs.get(dailyLog.id)!;
-      console.log('[sync] Updating daily log in backend:', backendId);
-      await updateDailyLogApi(backendId, {
+    // Check if already synced (check persisted map first, then in-memory cache)
+    const existingBackendId = getBackendId('dailyLogs', dailyLog.id) || backendIdMap.dailyLogs.get(dailyLog.id);
+    if (existingBackendId) {
+      // Update in-memory cache
+      backendIdMap.dailyLogs.set(dailyLog.id, existingBackendId);
+      console.log('[sync] Updating daily log in backend:', existingBackendId);
+      await updateDailyLogApi(existingBackendId, {
         preparedBy: dailyLog.prepared_by || undefined,
         status: dailyLog.status || undefined,
         weather: dailyLog.weather || undefined,
@@ -864,11 +869,11 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
         last_synced_at: new Date().toISOString(),
       });
 
-      return backendId;
+      return existingBackendId;
     }
 
-    // Get backend project ID
-    let backendProjectId = backendIdMap.projects.get(dailyLog.project_id);
+    // Get backend project ID (check persisted map first)
+    let backendProjectId = getBackendId('projects', dailyLog.project_id) || backendIdMap.projects.get(dailyLog.project_id);
     if (!backendProjectId) {
       // Try to sync the project first
       const store = useDailyLogStore.getState();
@@ -1017,11 +1022,13 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
  */
 export async function syncEventToBackend(event: Event): Promise<string | null> {
   try {
-    // Check if already synced - update it
-    if (backendIdMap.events.has(event.id)) {
-      const backendId = backendIdMap.events.get(event.id)!;
-      console.log('[sync] Updating event in backend:', backendId);
-      await updateEventApi(backendId, {
+    // Check if already synced (check persisted map first, then in-memory cache)
+    const existingBackendId = getBackendId('events', event.id) || backendIdMap.events.get(event.id);
+    if (existingBackendId) {
+      // Update in-memory cache
+      backendIdMap.events.set(event.id, existingBackendId);
+      console.log('[sync] Updating event in backend:', existingBackendId);
+      await updateEventApi(existingBackendId, {
         title: event.title || undefined,
         description: event.description || undefined,
         transcriptText: event.transcript_text || undefined,
@@ -1032,11 +1039,11 @@ export async function syncEventToBackend(event: Event): Promise<string | null> {
         tradeVendor: event.trade_vendor || undefined,
         isResolved: event.is_resolved,
       });
-      return backendId;
+      return existingBackendId;
     }
 
-    // Get backend project ID
-    let backendProjectId = backendIdMap.projects.get(event.project_id);
+    // Get backend project ID (check persisted map first)
+    let backendProjectId = getBackendId('projects', event.project_id) || backendIdMap.projects.get(event.project_id);
     if (!backendProjectId) {
       // Try to sync the project first
       const store = useDailyLogStore.getState();
