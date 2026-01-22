@@ -84,11 +84,27 @@ export default function LogsHistoryScreen() {
     queryKey: queryKeys.dailyLogs(backendProjectId),
     queryFn: async () => {
       console.log('[history] Fetching daily logs, project_id:', backendProjectId || 'ALL');
-      const logs = await getDailyLogs({
+      let logs = await getDailyLogs({
         project_id: backendProjectId,
         limit: 100,
       });
-      console.log('[history] Received daily logs:', logs.length, logs);
+      console.log('[history] Daily logs with project filter:', logs.length);
+
+      // Also fetch ALL logs to compare
+      const allLogs = await getDailyLogs({ limit: 100 });
+      console.log('[history] ALL daily logs (no project filter):', allLogs.length, allLogs.map((log) => ({
+        id: log.id,
+        date: log.date,
+        projectId: log.projectId,
+        projectName: log.project?.name
+      })));
+
+      // Use all logs if project-filtered returns nothing
+      if (logs.length === 0 && allLogs.length > 0) {
+        console.log('[history] Using ALL logs since project filter returned nothing');
+        logs = allLogs;
+      }
+
       return logs;
     },
     staleTime: 0,
@@ -100,16 +116,29 @@ export default function LogsHistoryScreen() {
     queryKey: ['events', 'with-schema', backendProjectId, selectedCategory],
     queryFn: async () => {
       console.log('[history] Fetching events, project_id:', backendProjectId, 'category:', selectedCategory);
-      const events = await getEvents({
+      // First try with project filter, then try without to debug
+      let events = await getEvents({
         project_id: backendProjectId,
         limit: 100,
       });
-      console.log('[history] All events:', events.length, events.map((e: any) => ({
+      console.log('[history] Events with project filter:', events.length);
+
+      // Also fetch ALL events to compare
+      const allEvents = await getEvents({ limit: 100 });
+      console.log('[history] ALL events (no project filter):', allEvents.length, allEvents.map((e: any) => ({
         id: e.id,
         title: e.title,
+        projectId: e.projectId,
         hasSchemaData: !!e.schemaData,
         docType: e.schemaData?.schema?.documentType
       })));
+
+      // Use all events if project-filtered returns nothing but all events has data
+      if (events.length === 0 && allEvents.length > 0) {
+        console.log('[history] Using ALL events since project filter returned nothing');
+        events = allEvents;
+      }
+
       // Filter events that have schema data matching the category
       const filtered = events.filter((event: any) => {
         if (!event.schemaData) return false;
