@@ -312,17 +312,17 @@ class PDFGeneratorService {
     this.checkPageBreak(doc, 150);
     this.addSectionHeader(doc, 'PHOTOS');
 
-    // Layout: 2 photos per row
-    const photoWidth = 240;
-    const photoHeight = 180;
-    const margin = 16;
+    // Layout: 2 photos per row, large size like reference documents
+    const photoWidth = 245;
+    const photoHeight = 320;
+    const margin = 10;
     const startX = 50;
 
     for (let i = 0; i < photos.length; i++) {
       const photo = photos[i];
 
-      // Check if we need a new page (photo height + caption space)
-      this.checkPageBreak(doc, photoHeight + 40);
+      // Check if we need a new page (larger photos need more space)
+      this.checkPageBreak(doc, photoHeight + 50);
 
       // Calculate position (2 columns)
       const col = i % 2;

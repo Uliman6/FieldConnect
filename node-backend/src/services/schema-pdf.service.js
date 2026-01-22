@@ -120,16 +120,16 @@ class SchemaPdfService {
     doc.fontSize(9).font('Helvetica-Bold').fillColor('#666666').text('PHOTOS', leftCol);
     doc.moveDown(0.5);
 
-    // Layout: 2 photos per row
-    const photoWidth = 240;
-    const photoHeight = 180;
-    const margin = 16;
+    // Layout: 2 photos per row, large size like reference documents
+    const photoWidth = 245;
+    const photoHeight = 320;
+    const margin = 10;
 
     for (let i = 0; i < photos.length; i++) {
       const photo = photos[i];
 
-      // Check if we need a new page
-      if (doc.y + photoHeight + 40 > 700) {
+      // Check if we need a new page (larger photos need more space)
+      if (doc.y + photoHeight + 50 > doc.page.height - 70) {
         doc.addPage();
       }
 
