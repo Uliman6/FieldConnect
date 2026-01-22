@@ -98,6 +98,16 @@ export default function LogsHistoryScreen() {
       const events = await getEvents({ limit: 100 });
       console.log('[history] Fetched all events:', events.length);
 
+      // Log project IDs for debugging
+      console.log('[history] Event project IDs:', events.map((e: any) => ({
+        title: e.title?.substring(0, 30),
+        projectId: e.projectId,
+        projectName: e.project?.name,
+        hasSchemaData: !!e.schemaData,
+        docType: e.schemaData?.schema?.documentType
+      })));
+      console.log('[history] Expected project ID:', backendProjectId);
+
       // Filter events that have schema data matching the category
       const filtered = events.filter((event: any) => {
         if (!event.schemaData) return false;
