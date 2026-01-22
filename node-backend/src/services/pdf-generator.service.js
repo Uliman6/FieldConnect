@@ -1,4 +1,6 @@
 const PDFDocument = require('pdfkit');
+const fs = require('fs').promises;
+const path = require('path');
 
 /**
  * PDF Generator Service for Daily Log Reports
@@ -8,9 +10,10 @@ class PDFGeneratorService {
    * Generate a PDF report for a daily log
    * @param {Object} dailyLog - Daily log with all relations
    * @param {Object} project - Project data
+   * @param {Array} photos - Optional photos to include
    * @returns {PDFDocument} PDF document stream
    */
-  generateDailyLogReport(dailyLog, project) {
+  async generateDailyLogReport(dailyLog, project, photos = []) {
     const doc = new PDFDocument({
       size: 'LETTER',
       margins: { top: 50, bottom: 50, left: 50, right: 50 }
@@ -60,6 +63,11 @@ class PDFGeneratorService {
     // Additional Work Section
     if (dailyLog.additionalWorkEntries && dailyLog.additionalWorkEntries.length > 0) {
       this.addAdditionalWorkSection(doc, dailyLog.additionalWorkEntries);
+    }
+
+    // Photos Section
+    if (photos && photos.length > 0) {
+      await this.addPhotosSection(doc, photos);
     }
 
     // Footer
@@ -271,6 +279,78 @@ class PDFGeneratorService {
       }
       doc.moveDown(0.5);
     });
+  }
+
+  async addPhotosSection(doc, photos) {
+    this.checkPageBreak(doc, 150);
+    this.addSectionHeader(doc, 'PHOTOS');
+
+    // Layout: 2 photos per row
+    const photoWidth = 240;
+    const photoHeight = 180;
+    const margin = 16;
+    const startX = 50;
+
+    for (let i = 0; i < photos.length; i++) {
+      const photo = photos[i];
+
+      // Check if we need a new page (photo height + caption space)
+      this.checkPageBreak(doc, photoHeight + 40);
+
+      // Calculate position (2 columns)
+      const col = i % 2;
+      const x = startX + col * (photoWidth + margin);
+
+      // If starting a new row (except first), adjust Y
+      if (i > 0 && col === 0) {
+        doc.moveDown(0.5);
+      }
+
+      const y = doc.y;
+
+      try {
+        // Check if file exists and load it
+        const filePath = photo.filePath;
+        await fs.access(filePath);
+
+        // Add image to PDF
+        doc.image(filePath, x, y, {
+          width: photoWidth,
+          height: photoHeight,
+          fit: [photoWidth, photoHeight],
+          align: 'center',
+          valign: 'center'
+        });
+
+        // Add caption below image
+        if (photo.caption) {
+          doc.fontSize(8).font('Helvetica');
+          doc.text(photo.caption, x, y + photoHeight + 5, {
+            width: photoWidth,
+            align: 'center'
+          });
+        }
+
+        // Only move down after completing a row (2 photos)
+        if (col === 1 || i === photos.length - 1) {
+          doc.y = y + photoHeight + (photo.caption ? 25 : 10);
+        }
+      } catch (err) {
+        // File not found - add placeholder
+        doc.rect(x, y, photoWidth, photoHeight).stroke();
+        doc.fontSize(9).font('Helvetica');
+        doc.text('Photo not available', x, y + photoHeight / 2, {
+          width: photoWidth,
+          align: 'center'
+        });
+
+        if (col === 1 || i === photos.length - 1) {
+          doc.y = y + photoHeight + 10;
+        }
+      }
+    }
+
+    doc.moveDown(1);
   }
 
   addFooter(doc, dailyLog) {

@@ -3,7 +3,7 @@
 
 import NetInfo from '@react-native-community/netinfo';
 import { getAuthToken, useAuthStore } from './auth-store';
-import type { PdfTemplate, EventTemplateData, TemplateType, DocumentSchema, SchemaDocumentType, SchemaField, EventSchemaData } from './types';
+import type { PdfTemplate, EventTemplateData, TemplateType, DocumentSchema, SchemaDocumentType, SchemaField, EventSchemaData, Photo } from './types';
 
 // Backend API base URL - configure via ENV tab in Vibecode
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -1750,6 +1750,133 @@ export async function downloadSchemaPdf(eventId: string): Promise<string> {
   return URL.createObjectURL(blob);
 }
 
+// ============================================
+// PHOTOS API
+// ============================================
+
+/**
+ * Upload a photo for an event or daily log
+ */
+export async function uploadPhoto(
+  file: File | Blob,
+  data: {
+    eventId?: string;
+    dailyLogId?: string;
+    caption?: string;
+  }
+): Promise<Photo> {
+  if (!data.eventId && !data.dailyLogId) {
+    throw new Error('Either eventId or dailyLogId is required');
+  }
+
+  const formData = new FormData();
+  formData.append('photo', file);
+  if (data.eventId) formData.append('event_id', data.eventId);
+  if (data.dailyLogId) formData.append('daily_log_id', data.dailyLogId);
+  if (data.caption) formData.append('caption', data.caption);
+
+  const url = `${API_BASE_URL}/api/photos/upload`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || error.error || `Upload failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get photo metadata by ID
+ */
+export async function getPhoto(id: string): Promise<Photo> {
+  return apiFetch(`/api/photos/${id}`);
+}
+
+/**
+ * Get photo file URL (for display in img tag)
+ */
+export function getPhotoFileUrl(id: string): string {
+  return `${API_BASE_URL}/api/photos/${id}/file`;
+}
+
+/**
+ * Fetch photo file with authentication
+ */
+export async function fetchPhotoFile(id: string): Promise<string> {
+  const url = `${API_BASE_URL}/api/photos/${id}/file`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch photo: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+/**
+ * Get all photos for an event
+ */
+export async function getEventPhotos(eventId: string): Promise<Photo[]> {
+  return apiFetch(`/api/events/${eventId}/photos`);
+}
+
+/**
+ * Get all photos for a daily log
+ */
+export async function getDailyLogPhotos(dailyLogId: string): Promise<Photo[]> {
+  return apiFetch(`/api/daily-logs/${dailyLogId}/photos`);
+}
+
+/**
+ * Update photo metadata (caption)
+ */
+export async function updatePhoto(
+  id: string,
+  data: { caption?: string }
+): Promise<Photo> {
+  return apiFetch(`/api/photos/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a photo
+ */
+export async function deletePhoto(id: string): Promise<void> {
+  await apiFetch(`/api/photos/${id}`, { method: 'DELETE' });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -1772,4 +1899,7 @@ export const queryKeys = {
   documentSchemas: (options?: { projectId?: string; type?: SchemaDocumentType }) => ['document-schemas', options] as const,
   documentSchema: (id: string) => ['document-schemas', id] as const,
   eventSchemaData: (eventId: string) => ['events', eventId, 'schema-data'] as const,
+  eventPhotos: (eventId: string) => ['events', eventId, 'photos'] as const,
+  dailyLogPhotos: (dailyLogId: string) => ['daily-logs', dailyLogId, 'photos'] as const,
+  photo: (id: string) => ['photos', id] as const,
 };

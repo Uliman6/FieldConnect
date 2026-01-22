@@ -89,6 +89,7 @@ model DailyLog {
   pendingIssues        PendingIssue[]
   inspectionNotes      InspectionNote[]
   additionalWorkEntries AdditionalWorkEntry[]
+  photos               Photo[]
 
   @@index([projectId])
   @@index([date])
@@ -249,6 +250,7 @@ model Event {
   templateData EventTemplateData?
   schemaData EventSchemaData?
   index   EventIndex?
+  photos  Photo[]
 
   @@index([projectId])
   @@index([templateId])
@@ -596,4 +598,38 @@ model EventSchemaData {
 
   @@index([schemaId])
   @@map("event_schema_data")
+}
+
+// ============================================
+// PHOTOS
+// ============================================
+// Photos can be attached to Events or Daily Logs
+
+model Photo {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // File storage
+  fileName    String    @map("file_name")        // Original filename
+  filePath    String    @map("file_path")        // ./uploads/photos/uuid.jpg
+  mimeType    String    @map("mime_type")        // image/jpeg, image/png
+  fileSize    Int       @map("file_size")        // Size in bytes
+
+  // Photo metadata
+  caption     String?   @db.Text                 // Optional description
+  takenAt     DateTime? @map("taken_at")         // When photo was taken (from EXIF or user input)
+
+  // Associations (a photo belongs to one entity)
+  eventId     String?   @map("event_id")
+  dailyLogId  String?   @map("daily_log_id")
+
+  // Relations
+  event       Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  dailyLog    DailyLog? @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([dailyLogId])
+  @@index([createdAt])
+  @@map("photos")
 }
