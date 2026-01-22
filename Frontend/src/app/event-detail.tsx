@@ -700,7 +700,8 @@ export default function EventDetailScreen() {
     setTemplateFieldValues({});
 
     // Attach template to event (backend)
-    attachTemplateMutation.mutate({ eventId: event.id, templateId });
+    const backendEventId = getBackendId('events', event.id) || event.id;
+    attachTemplateMutation.mutate({ eventId: backendEventId, templateId });
   };
 
   const handleClearTemplate = () => {
@@ -714,10 +715,11 @@ export default function EventDetailScreen() {
   };
 
   const handleSaveTemplateData = async () => {
+    const backendEventId = getBackendId('events', event.id) || event.id;
     if (!selectedTemplateId) return;
 
     await saveTemplateDataMutation.mutateAsync({
-      eventId: event.id,
+      eventId: backendEventId,
       templateId: selectedTemplateId,
       fieldValues: templateFieldValues,
     });
@@ -725,6 +727,7 @@ export default function EventDetailScreen() {
 
   const handleDownloadFilledPdf = async () => {
     if (!selectedTemplateId) return;
+    const backendEventId = getBackendId('events', event.id) || event.id;
 
     setIsDownloadingPdf(true);
     try {
@@ -732,7 +735,7 @@ export default function EventDetailScreen() {
       await handleSaveTemplateData();
 
       // Then download the filled PDF
-      const blobUrl = await fetchFilledPdf(event.id);
+      const blobUrl = await fetchFilledPdf(backendEventId);
 
       if (Platform.OS === 'web') {
         const link = document.createElement('a');
