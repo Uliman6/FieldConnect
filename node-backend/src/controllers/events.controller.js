@@ -254,8 +254,9 @@ class EventsController {
       });
 
       // Auto-index to insights if has transcript (async, non-blocking)
+      // Pass project.isTest so test project data is properly flagged
       if (transcript_text) {
-        insightsService.createFromEvent(event.id).catch(err =>
+        insightsService.createFromEvent(event.id, project.isTest).catch(err =>
           console.error(`[events] Auto-index failed for event ${event.id}: ${err.message}`)
         );
       }
@@ -304,8 +305,9 @@ class EventsController {
       });
 
       // Auto-index to insights if transcript was added/updated (async, non-blocking)
+      // Pass project.isTest so test project data is properly flagged
       if (transcript_text) {
-        insightsService.createFromEvent(event.id).catch(err =>
+        insightsService.createFromEvent(event.id, event.project?.isTest).catch(err =>
           console.error(`[events] Auto-index failed for event ${event.id}: ${err.message}`)
         );
       }

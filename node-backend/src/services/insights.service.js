@@ -12,10 +12,10 @@ class InsightsService {
   /**
    * Create an insight from an event
    * @param {string} eventId - Event ID to create insight from
-   * @param {boolean} isTest - Whether this is test data
+   * @param {boolean} isTest - Whether this is test data (defaults to project.isTest if not provided)
    * @returns {Object} Created insight
    */
-  async createFromEvent(eventId, isTest = false) {
+  async createFromEvent(eventId, isTest = null) {
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: { project: true }
@@ -33,6 +33,9 @@ class InsightsService {
     if (existing) {
       return existing;
     }
+
+    // Use project.isTest if isTest not explicitly provided
+    const testFlag = isTest !== null ? isTest : (event.project?.isTest || false);
 
     // Extract keywords using the event indexer
     const text = `${event.transcriptText || ''} ${event.title || ''} ${event.notes || ''}`;
@@ -72,7 +75,7 @@ class InsightsService {
         followUpReason: extracted.followUpReason,
         isResolved: event.isResolved || false,
         keywordsSummary,
-        isTest
+        isTest: testFlag
       }
     });
 
@@ -89,10 +92,10 @@ class InsightsService {
   /**
    * Create an insight from a pending issue
    * @param {string} pendingIssueId - PendingIssue ID
-   * @param {boolean} isTest - Whether this is test data
+   * @param {boolean} isTest - Whether this is test data (defaults to project.isTest if not provided)
    * @returns {Object} Created insight
    */
-  async createFromPendingIssue(pendingIssueId, isTest = false) {
+  async createFromPendingIssue(pendingIssueId, isTest = null) {
     const issue = await prisma.pendingIssue.findUnique({
       where: { id: pendingIssueId },
       include: {
@@ -114,6 +117,9 @@ class InsightsService {
     if (existing) {
       return existing;
     }
+
+    // Use project.isTest if isTest not explicitly provided
+    const testFlag = isTest !== null ? isTest : (issue.dailyLog?.project?.isTest || false);
 
     // Extract keywords from description
     const text = `${issue.title || ''} ${issue.description || ''}`;
@@ -157,7 +163,7 @@ class InsightsService {
         followUpDueDate: issue.dueDate,
         isResolved: false,
         keywordsSummary,
-        isTest
+        isTest: testFlag
       }
     });
 
@@ -174,10 +180,10 @@ class InsightsService {
   /**
    * Create an insight from an inspection note
    * @param {string} inspectionNoteId - InspectionNote ID
-   * @param {boolean} isTest - Whether this is test data
+   * @param {boolean} isTest - Whether this is test data (defaults to project.isTest if not provided)
    * @returns {Object} Created insight
    */
-  async createFromInspectionNote(inspectionNoteId, isTest = false) {
+  async createFromInspectionNote(inspectionNoteId, isTest = null) {
     const note = await prisma.inspectionNote.findUnique({
       where: { id: inspectionNoteId },
       include: {
@@ -199,6 +205,9 @@ class InsightsService {
     if (existing) {
       return existing;
     }
+
+    // Use project.isTest if isTest not explicitly provided
+    const testFlag = isTest !== null ? isTest : (note.dailyLog?.project?.isTest || false);
 
     // Extract keywords
     const text = `${note.inspectionType || ''} ${note.notes || ''} ${note.result || ''}`;
@@ -256,7 +265,7 @@ class InsightsService {
         followUpReason: note.followUpNeeded ? note.notes : null,
         isResolved: !note.followUpNeeded,
         keywordsSummary,
-        isTest
+        isTest: testFlag
       }
     });
 

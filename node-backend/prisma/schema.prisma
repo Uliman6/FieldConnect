@@ -52,6 +52,9 @@ model Project {
   // Original ID from imported JSON (for deduplication)
   originalId String? @unique @map("original_id")
 
+  // Test project flag - insights from test projects are excluded from pattern analysis
+  isTest    Boolean  @default(false) @map("is_test")
+
   dailyLogs       DailyLog[]
   events          Event[]
   insights        Insight[]
@@ -60,6 +63,7 @@ model Project {
 
   @@index([name])
   @@index([number])
+  @@index([isTest])
   @@map("projects")
 }
 
