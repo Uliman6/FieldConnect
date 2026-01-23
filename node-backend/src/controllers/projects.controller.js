@@ -7,10 +7,19 @@ class ProjectsController {
   /**
    * GET /api/projects
    * List all projects
+   * Query params: is_test (true/false) - filter by test flag
    */
   async list(req, res, next) {
     try {
+      const { is_test } = req.query;
+
+      const whereClause = {};
+      if (is_test !== undefined) {
+        whereClause.isTest = is_test === 'true';
+      }
+
       const projects = await prisma.project.findMany({
+        where: whereClause,
         orderBy: { createdAt: 'desc' },
         include: {
           _count: {
@@ -127,14 +136,15 @@ class ProjectsController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, number, address } = req.body;
+      const { name, number, address, is_test } = req.body;
 
       const project = await prisma.project.update({
         where: { id },
         data: {
           ...(name !== undefined && { name }),
           ...(number !== undefined && { number }),
-          ...(address !== undefined && { address })
+          ...(address !== undefined && { address }),
+          ...(is_test !== undefined && { isTest: is_test })
         }
       });
 
