@@ -1,6 +1,7 @@
 const prisma = require('../services/prisma');
 const similarityService = require('../services/similarity.service');
 const eventIndexerService = require('../services/event-indexer.service');
+const insightsService = require('../services/insights.service');
 
 /**
  * Events Controller - CRUD + search + similarity + indexed search for events
@@ -252,6 +253,13 @@ class EventsController {
         }
       });
 
+      // Auto-index to insights if has transcript (async, non-blocking)
+      if (transcript_text) {
+        insightsService.createFromEvent(event.id).catch(err =>
+          console.error(`[events] Auto-index failed for event ${event.id}: ${err.message}`)
+        );
+      }
+
       res.status(201).json(event);
     } catch (err) {
       next(err);
@@ -294,6 +302,13 @@ class EventsController {
           project: true
         }
       });
+
+      // Auto-index to insights if transcript was added/updated (async, non-blocking)
+      if (transcript_text) {
+        insightsService.createFromEvent(event.id).catch(err =>
+          console.error(`[events] Auto-index failed for event ${event.id}: ${err.message}`)
+        );
+      }
 
       res.json(event);
     } catch (err) {
