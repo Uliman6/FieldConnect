@@ -134,12 +134,12 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
             </View>
           )}
 
-          {event.notes ? (
+          {event.description ? (
             <Text
               className="text-sm text-gray-600 dark:text-gray-400"
               numberOfLines={2}
             >
-              {event.notes}
+              {event.description}
             </Text>
           ) : null}
         </View>

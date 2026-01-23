@@ -770,7 +770,7 @@ export default function EventDetailScreen() {
   const event = localEvent;
 
   const [title, setTitle] = useState('');
-  const [notes, setNotes] = useState('');
+  const [description, setDescription] = useState('');
   const [eventType, setEventType] = useState<EventType>('Other');
   const [severity, setSeverity] = useState<EventSeverity>('Medium');
   const [location, setLocation] = useState('');
@@ -917,11 +917,11 @@ export default function EventDetailScreen() {
   useEffect(() => {
     if (localEvent) {
       setTitle(localEvent.title);
-      setNotes(localEvent.notes);
+      setDescription(localEvent.description || '');
       setEventType(localEvent.event_type);
       setSeverity(localEvent.severity);
-      setLocation(localEvent.location);
-      setTradeVendor(localEvent.trade_vendor);
+      setLocation(localEvent.location || '');
+      setTradeVendor(localEvent.trade_vendor || '');
 
       // Check if audio file exists
       if (localEvent.local_audio_uri) {
@@ -934,11 +934,11 @@ export default function EventDetailScreen() {
       }
     } else if (backendEvent) {
       setTitle(backendEvent.title || '');
-      setNotes('');
+      setDescription(backendEvent.description || '');
       setEventType((backendEvent.eventType as EventType) || 'Other');
       setSeverity((backendEvent.severity as EventSeverity) || 'Medium');
-      setLocation('');
-      setTradeVendor('');
+      setLocation(backendEvent.location || '');
+      setTradeVendor(backendEvent.tradeVendor || '');
     }
   }, [localEvent, backendEvent]);
 
@@ -1182,7 +1182,7 @@ export default function EventDetailScreen() {
   const handleSave = () => {
     updateEvent(event.id, {
       title: title || 'Untitled Event',
-      notes,
+      description,
       event_type: eventType,
       severity,
       location,
@@ -1534,12 +1534,12 @@ export default function EventDetailScreen() {
                 </View>
                 <Pressable
                   onPress={() => {
-                    if (!notes.trim() && event.transcript_text) {
-                      setNotes(event.transcript_text);
+                    if (!description.trim() && event.transcript_text) {
+                      setDescription(event.transcript_text);
                       markChanged();
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     } else if (event.transcript_text) {
-                      setNotes((prev) => prev + '\n\n' + event.transcript_text);
+                      setDescription((prev) => prev + '\n\n' + event.transcript_text);
                       markChanged();
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }
@@ -1548,7 +1548,7 @@ export default function EventDetailScreen() {
                 >
                   <Copy size={14} color="#3B82F6" />
                   <Text className="ml-1 text-xs font-medium text-blue-600 dark:text-blue-400">
-                    Copy to Notes
+                    Copy to Description
                   </Text>
                 </Pressable>
               </View>
@@ -1622,18 +1622,18 @@ export default function EventDetailScreen() {
             />
           </View>
 
-          {/* Notes Input */}
+          {/* Description Input */}
           <View className="mb-4">
             <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
-              Notes
+              Description
             </Text>
             <TextInput
-              value={notes}
+              value={description}
               onChangeText={(text) => {
-                setNotes(text);
+                setDescription(text);
                 markChanged();
               }}
-              placeholder="Add notes..."
+              placeholder="Add description..."
               placeholderTextColor="#9CA3AF"
               multiline
               className="bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white min-h-[100px]"
