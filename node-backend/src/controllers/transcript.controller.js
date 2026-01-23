@@ -9,6 +9,11 @@ class TranscriptController {
   /**
    * POST /api/transcripts/transcribe
    * Transcribe audio file to text
+   * Supports automatic translation from Spanish (or any language) to English
+   *
+   * Body params:
+   * - language: optional language hint (e.g., 'es' for Spanish)
+   * - translateToEnglish: if true, translates any language to English (default: true for better consistency)
    */
   async transcribeAudio(req, res, next) {
     try {
@@ -20,11 +25,14 @@ class TranscriptController {
       }
 
       const { language } = req.body;
+      // Default to translating to English for consistent output
+      // Users speaking Spanish will get English transcripts
+      const translateToEnglish = req.body.translateToEnglish !== 'false';
 
       const result = await transcriptionService.transcribe(
         req.file.buffer,
         req.file.originalname,
-        { language }
+        { language, translateToEnglish }
       );
 
       if (!result.success) {
@@ -40,7 +48,9 @@ class TranscriptController {
       res.json({
         success: true,
         text: result.text,
-        title: title
+        title: title,
+        mode: result.mode,
+        provider: result.provider
       });
     } catch (err) {
       next(err);
