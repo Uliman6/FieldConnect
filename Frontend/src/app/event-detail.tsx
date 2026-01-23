@@ -15,7 +15,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDailyLogStore } from '@/lib/store';
 import { EventType, EventSeverity, Event, PdfTemplate, FormFieldDefinition, DocumentSchema, SchemaField, EventSchemaData, Photo } from '@/lib/types';
 import { audioFileExists } from '@/lib/audio-storage';
-import { generateTitleFromTranscript } from '@/lib/transcription';
 import { cn } from '@/lib/cn';
 import { getBackendId } from '@/lib/data-provider';
 import {
@@ -58,7 +57,6 @@ import {
   AlertTriangle,
   FileText,
   Copy,
-  Sparkles,
   Building2,
   Calendar,
   Download,
@@ -1589,27 +1587,9 @@ export default function EventDetailScreen() {
 
           {/* Title Input */}
           <View className="mb-4">
-            <View className="flex-row items-center justify-between mb-1">
-              <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Title
-              </Text>
-              {event.transcript_text && (
-                <Pressable
-                  onPress={() => {
-                    const autoTitle = generateTitleFromTranscript(event.transcript_text ?? '');
-                    setTitle(autoTitle);
-                    markChanged();
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }}
-                  className="flex-row items-center bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-lg"
-                >
-                  <Sparkles size={12} color="#8B5CF6" />
-                  <Text className="ml-1 text-xs font-medium text-purple-600 dark:text-purple-400">
-                    Auto-generate
-                  </Text>
-                </Pressable>
-              )}
-            </View>
+            <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
+              Title
+            </Text>
             <TextInput
               value={title}
               onChangeText={(text) => {
