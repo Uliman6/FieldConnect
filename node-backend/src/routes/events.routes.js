@@ -77,6 +77,53 @@ router.post('/indexed/reindex', (req, res, next) => {
   eventsController.reindexAll(req, res, next);
 });
 
+// ============================================
+// CHECKLIST ROUTES (Punch Lists & RFIs)
+// ============================================
+
+/**
+ * GET /api/events/checklist
+ * List punch lists and RFIs with status filtering
+ * Query params: category (PUNCH_LIST|RFI), project_id, status (OPEN|IN_PROGRESS|CLOSED), limit
+ */
+router.get('/checklist', (req, res, next) => {
+  eventsController.listChecklist(req, res, next);
+});
+
+/**
+ * PATCH /api/events/:id/status
+ * Update item status (creates audit comment)
+ * Body: { status: 'OPEN'|'IN_PROGRESS'|'CLOSED', comment?: string, changedBy?: string }
+ */
+router.patch('/:id/status', (req, res, next) => {
+  eventsController.updateStatus(req, res, next);
+});
+
+/**
+ * GET /api/events/:id/comments
+ * Get revision history/comments for an event
+ */
+router.get('/:id/comments', (req, res, next) => {
+  eventsController.getComments(req, res, next);
+});
+
+/**
+ * POST /api/events/:id/comments
+ * Add a comment/follow-up to an event
+ * Body: { text, authorName? }
+ */
+router.post('/:id/comments', (req, res, next) => {
+  eventsController.addComment(req, res, next);
+});
+
+/**
+ * DELETE /api/events/:id/comments/:commentId
+ * Delete a comment
+ */
+router.delete('/:id/comments/:commentId', (req, res, next) => {
+  eventsController.deleteComment(req, res, next);
+});
+
 /**
  * GET /api/events
  * List events with filters

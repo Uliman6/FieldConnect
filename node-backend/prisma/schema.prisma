@@ -22,6 +22,13 @@ enum Role {
   VIEWER
 }
 
+// Item status for punch lists and RFIs
+enum ItemStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -249,12 +256,18 @@ model Event {
   // Link to PDF template if using structured form
   templateId String? @map("template_id")
 
+  // Checklist status workflow (for punch lists and RFIs)
+  itemStatus      ItemStatus @default(OPEN) @map("item_status")
+  statusChangedAt DateTime?  @map("status_changed_at")
+  statusChangedBy String?    @map("status_changed_by")
+
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   template PdfTemplate? @relation(fields: [templateId], references: [id])
   templateData EventTemplateData?
   schemaData EventSchemaData?
   index   EventIndex?
   photos  Photo[]
+  comments EventComment[]
 
   @@index([projectId])
   @@index([templateId])
@@ -263,6 +276,7 @@ model Event {
   @@index([tradeVendor])
   @@index([location])
   @@index([isResolved])
+  @@index([itemStatus])
   @@index([createdAt])
   @@index([linkedDailyLogId])
   @@map("events")
@@ -301,6 +315,33 @@ model EventIndex {
   @@index([needsFollowUp])
   @@index([costImpact])
   @@map("event_indexes")
+}
+
+// ============================================
+// EVENT COMMENTS (Revision History)
+// ============================================
+
+model EventComment {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now()) @map("created_at")
+  eventId        String   @map("event_id")
+
+  // Comment content
+  text           String   @db.Text
+  authorName     String?  @map("author_name")
+
+  // Type of comment: 'comment', 'status_change', 'edit'
+  commentType    String   @default("comment") @map("comment_type")
+
+  // For status change audit trail
+  previousStatus String?  @map("previous_status")
+  newStatus      String?  @map("new_status")
+
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([createdAt])
+  @@map("event_comments")
 }
 
 // ============================================

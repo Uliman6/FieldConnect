@@ -48,6 +48,12 @@ export interface Event {
   // Resolution tracking
   is_resolved: boolean;
   resolved_at: string | null;
+  // Checklist status tracking
+  item_status?: ItemStatus;
+  status_changed_at?: string | null;
+  status_changed_by?: string | null;
+  // Comments (when fetched with include)
+  comments?: EventComment[];
   // Sync placeholders (nullable for now)
   server_id: string | null;
   last_synced_at: string | null;
@@ -497,6 +503,33 @@ export interface EventSchemaData {
   generatedPdfName: string | null;
   pdfGeneratedAt: string | null;
   schema?: DocumentSchema;
+}
+
+// ============================================
+// CHECKLIST STATUS TYPES (Punch Lists & RFIs)
+// ============================================
+
+export type ItemStatus = 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+
+export type CommentType = 'comment' | 'status_change' | 'edit';
+
+export interface EventComment {
+  id: string;
+  createdAt: string;
+  eventId: string;
+  text: string;
+  authorName: string | null;
+  commentType: CommentType;
+  previousStatus: string | null;
+  newStatus: string | null;
+}
+
+// Checklist item counts for dashboard
+export interface ChecklistCounts {
+  total: number;
+  open: number;
+  inProgress: number;
+  closed: number;
 }
 
 // ============================================

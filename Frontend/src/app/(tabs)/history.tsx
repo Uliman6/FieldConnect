@@ -23,6 +23,10 @@ import {
   ClipboardList,
   FileQuestion,
   Wand2,
+  Circle,
+  CheckCircle,
+  Clock4,
+  CircleDot,
 } from 'lucide-react-native';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
@@ -36,15 +40,27 @@ import {
   ProjectSummary,
   getEvents,
   downloadSchemaPdf,
+  getChecklistItems,
+  updateEventStatus,
+  ChecklistFilters,
+  IndexedEvent,
 } from '@/lib/api';
 import { getBackendId } from '@/lib/data-provider';
 
 type DocumentCategory = 'daily_log' | 'punch_list' | 'rfi';
+type StatusFilter = 'ALL' | 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
 
 const CATEGORY_CONFIG: Record<DocumentCategory, { label: string; icon: any; color: string }> = {
   daily_log: { label: 'Daily Logs', icon: Calendar, color: '#F97316' },
   punch_list: { label: 'Punch Lists', icon: ClipboardList, color: '#F59E0B' },
   rfi: { label: 'RFIs', icon: FileQuestion, color: '#3B82F6' },
+};
+
+const STATUS_CONFIG: Record<StatusFilter, { label: string; icon: any; color: string; bgColor: string }> = {
+  ALL: { label: 'All', icon: Circle, color: '#6B7280', bgColor: '#F3F4F6' },
+  OPEN: { label: 'Open', icon: CircleDot, color: '#EF4444', bgColor: '#FEE2E2' },
+  IN_PROGRESS: { label: 'In Progress', icon: Clock4, color: '#F59E0B', bgColor: '#FEF3C7' },
+  CLOSED: { label: 'Closed', icon: CheckCircle, color: '#10B981', bgColor: '#D1FAE5' },
 };
 
 /**
@@ -66,6 +82,8 @@ export default function LogsHistoryScreen() {
   const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>('daily_log');
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
   // Fetch projects
   const projectsQuery = useQuery({
@@ -95,27 +113,23 @@ export default function LogsHistoryScreen() {
     enabled: selectedCategory === 'daily_log' && !!backendProjectId,
   });
 
-  // Fetch events with schema data (punch lists and RFIs) for selected project
-  const eventsQuery = useQuery({
-    queryKey: ['events', 'with-schema', backendProjectId, selectedCategory],
+  // Fetch checklist items (punch lists and RFIs) with status filtering
+  const checklistQuery = useQuery({
+    queryKey: queryKeys.checklist({
+      category: selectedCategory === 'punch_list' ? 'PUNCH_LIST' : 'RFI',
+      project_id: backendProjectId,
+      status: statusFilter !== 'ALL' ? statusFilter : undefined,
+    }),
     queryFn: async () => {
-      console.log('[history] Fetching events for project:', backendProjectId);
-      const events = await getEvents({
+      console.log('[history] Fetching checklist for project:', backendProjectId, 'status:', statusFilter);
+      const response = await getChecklistItems({
+        category: selectedCategory === 'punch_list' ? 'PUNCH_LIST' : 'RFI',
         project_id: backendProjectId,
+        status: statusFilter !== 'ALL' ? statusFilter : undefined,
         limit: 100,
       });
-      console.log('[history] Fetched events:', events.length);
-
-      // Filter events that have schema data matching the category
-      const filtered = events.filter((event: any) => {
-        if (!event.schemaData) return false;
-        const docType = event.schemaData.schema?.documentType;
-        if (selectedCategory === 'punch_list') return docType === 'PUNCH_LIST';
-        if (selectedCategory === 'rfi') return docType === 'RFI';
-        return false;
-      });
-      console.log('[history] Filtered for', selectedCategory, ':', filtered.length);
-      return filtered;
+      console.log('[history] Fetched checklist items:', response.items.length, 'counts:', response.counts);
+      return response;
     },
     staleTime: 0,
     enabled: selectedCategory !== 'daily_log' && !!backendProjectId,
@@ -137,7 +151,9 @@ export default function LogsHistoryScreen() {
     return hasContent;
   });
   console.log('[history] Daily logs with content:', dailyLogs.length, 'of', allDailyLogs.length, 'total');
-  const schemaEvents = eventsQuery.data || [];
+  const checklistData = checklistQuery.data || { items: [], counts: { total: 0, open: 0, inProgress: 0, closed: 0 } };
+  const checklistItems = checklistData.items;
+  const checklistCounts = checklistData.counts;
   // Look up project by backend ID (projects from API have backend IDs)
   const currentProject = projects.find((p) => p.id === backendProjectId);
 
@@ -150,6 +166,9 @@ export default function LogsHistoryScreen() {
     dailyLogsFetched: dailyLogsQuery.data?.length || 0,
     dailyLogsWithContent: dailyLogs.length,
     selectedCategory,
+    statusFilter,
+    checklistItemsCount: checklistItems.length,
+    checklistCounts,
   });
 
   // Refetch data when screen comes into focus
@@ -159,9 +178,9 @@ export default function LogsHistoryScreen() {
       if (selectedCategory === 'daily_log') {
         dailyLogsQuery.refetch();
       } else {
-        eventsQuery.refetch();
+        checklistQuery.refetch();
       }
-    }, [selectedCategory])
+    }, [selectedCategory, statusFilter])
   );
 
   const handleRefresh = useCallback(() => {
@@ -169,9 +188,9 @@ export default function LogsHistoryScreen() {
     if (selectedCategory === 'daily_log') {
       dailyLogsQuery.refetch();
     } else {
-      eventsQuery.refetch();
+      checklistQuery.refetch();
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, statusFilter]);
 
   const handleViewPdf = useCallback(async (logId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -287,10 +306,29 @@ export default function LogsHistoryScreen() {
     }
   }, [selectedCategory]);
 
+  const handleStatusChange = useCallback(async (eventId: string, newStatus: 'OPEN' | 'IN_PROGRESS' | 'CLOSED') => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setUpdatingStatusId(eventId);
+    try {
+      await updateEventStatus(eventId, { status: newStatus });
+      // Invalidate checklist queries to refresh
+      queryClient.invalidateQueries({ queryKey: ['checklist'] });
+    } catch (error) {
+      console.error('[status] Failed to update status:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to update status. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to update status. Please try again.');
+      }
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  }, [queryClient]);
+
   const isLoading = projectsQuery.isLoading ||
-    (selectedCategory === 'daily_log' ? dailyLogsQuery.isLoading : eventsQuery.isLoading);
+    (selectedCategory === 'daily_log' ? dailyLogsQuery.isLoading : checklistQuery.isLoading);
   const hasError = projectsQuery.isError ||
-    (selectedCategory === 'daily_log' ? dailyLogsQuery.isError : eventsQuery.isError);
+    (selectedCategory === 'daily_log' ? dailyLogsQuery.isError : checklistQuery.isError);
 
   // For punch lists and RFIs, require a project to be selected
   const requiresProjectSelection = selectedCategory !== 'daily_log' && !currentProjectId;
@@ -302,7 +340,7 @@ export default function LogsHistoryScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         refreshControl={
           <RefreshControl
-            refreshing={selectedCategory === 'daily_log' ? dailyLogsQuery.isFetching : eventsQuery.isFetching}
+            refreshing={selectedCategory === 'daily_log' ? dailyLogsQuery.isFetching : checklistQuery.isFetching}
             onRefresh={handleRefresh}
           />
         }
@@ -340,6 +378,10 @@ export default function LogsHistoryScreen() {
                   onPress={() => {
                     Haptics.selectionAsync();
                     setSelectedCategory(key);
+                    // Reset status filter when switching categories
+                    if (key === 'daily_log') {
+                      setStatusFilter('ALL');
+                    }
                   }}
                   className={cn(
                     'flex-row items-center px-4 py-2 rounded-full mr-2',
@@ -417,19 +459,71 @@ export default function LogsHistoryScreen() {
                   Choose a project from the Projects tab to view {selectedCategory === 'punch_list' ? 'punch lists' : 'RFIs'}
                 </Text>
               </View>
-            ) : schemaEvents.length === 0 ? (
-              <EmptyState category={selectedCategory} />
             ) : (
-              schemaEvents.map((event: any, index: number) => (
-                <Animated.View key={event.id} entering={FadeInDown.delay(index * 30)}>
-                  <SchemaDocumentCard
-                    event={event}
-                    category={selectedCategory}
-                    onView={() => handleViewEvent(event.id)}
-                    onDownloadPdf={() => handleDownloadSchemaPdf(event.id, event.schemaData?.fieldValues?.title)}
-                  />
-                </Animated.View>
-              ))
+              <>
+                {/* Status Filter Tabs */}
+                <View className="flex-row items-center mb-4 bg-white dark:bg-gray-900 rounded-xl p-1">
+                  {(Object.entries(STATUS_CONFIG) as [StatusFilter, typeof STATUS_CONFIG[StatusFilter]][]).map(
+                    ([key, config]) => {
+                      const Icon = config.icon;
+                      const isActive = statusFilter === key;
+                      const count = key === 'ALL' ? checklistCounts.total
+                        : key === 'OPEN' ? checklistCounts.open
+                        : key === 'IN_PROGRESS' ? checklistCounts.inProgress
+                        : checklistCounts.closed;
+                      return (
+                        <Pressable
+                          key={key}
+                          onPress={() => {
+                            Haptics.selectionAsync();
+                            setStatusFilter(key);
+                          }}
+                          className={cn(
+                            'flex-1 flex-row items-center justify-center py-2 px-2 rounded-lg',
+                            isActive ? 'bg-gray-100 dark:bg-gray-800' : ''
+                          )}
+                        >
+                          <Icon size={14} color={isActive ? config.color : '#9CA3AF'} />
+                          <Text
+                            className={cn(
+                              'ml-1 text-xs font-medium',
+                              isActive ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
+                            )}
+                          >
+                            {config.label}
+                          </Text>
+                          <View
+                            className={cn(
+                              'ml-1 px-1.5 rounded-full',
+                              isActive ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-100 dark:bg-gray-800'
+                            )}
+                          >
+                            <Text className="text-xs text-gray-600 dark:text-gray-400">{count}</Text>
+                          </View>
+                        </Pressable>
+                      );
+                    }
+                  )}
+                </View>
+
+                {/* Items List */}
+                {checklistItems.length === 0 ? (
+                  <EmptyState category={selectedCategory} />
+                ) : (
+                  checklistItems.map((event: IndexedEvent, index: number) => (
+                    <Animated.View key={event.id} entering={FadeInDown.delay(index * 30)}>
+                      <ChecklistItemCard
+                        event={event}
+                        category={selectedCategory}
+                        onView={() => handleViewEvent(event.id)}
+                        onDownloadPdf={() => handleDownloadSchemaPdf(event.id, event.schemaData?.fieldValues?.title || event.title || 'document')}
+                        onStatusChange={(newStatus) => handleStatusChange(event.id, newStatus)}
+                        isUpdating={updatingStatusId === event.id}
+                      />
+                    </Animated.View>
+                  ))
+                )}
+              </>
             )}
           </View>
         )}
@@ -650,6 +744,155 @@ function SchemaDocumentCard({
           </View>
         </View>
 
+        <View className="flex-row items-center ml-2">
+          {hasPdf && (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onDownloadPdf();
+              }}
+              className="bg-green-500 p-2 rounded-lg mr-2"
+            >
+              <Download size={18} color="#FFF" />
+            </Pressable>
+          )}
+          <ChevronRight size={20} color="#9CA3AF" />
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function ChecklistItemCard({
+  event,
+  category,
+  onView,
+  onDownloadPdf,
+  onStatusChange,
+  isUpdating,
+}: {
+  event: IndexedEvent;
+  category: DocumentCategory;
+  onView: () => void;
+  onDownloadPdf: () => void;
+  onStatusChange: (newStatus: 'OPEN' | 'IN_PROGRESS' | 'CLOSED') => void;
+  isUpdating: boolean;
+}) {
+  const config = CATEGORY_CONFIG[category];
+  const Icon = config.icon;
+  const fieldValues = event.schemaData?.fieldValues || {};
+  const title = fieldValues.title || fieldValues.subject || event.title || 'Untitled';
+  const description = fieldValues.description || fieldValues.question || event.transcriptText?.slice(0, 100) || '';
+  const hasPdf = !!event.schemaData?.generatedPdfPath;
+  const createdAt = new Date(event.createdAt);
+  const currentStatus = event.itemStatus || 'OPEN';
+  const statusConfig = STATUS_CONFIG[currentStatus as StatusFilter] || STATUS_CONFIG.OPEN;
+
+  // Get next status in workflow
+  const getNextStatus = () => {
+    if (currentStatus === 'OPEN') return 'IN_PROGRESS';
+    if (currentStatus === 'IN_PROGRESS') return 'CLOSED';
+    return 'OPEN';
+  };
+
+  const StatusIcon = statusConfig.icon;
+
+  return (
+    <Pressable onPress={onView} className="bg-white dark:bg-gray-900 rounded-2xl mb-3 p-4">
+      <View className="flex-row items-start">
+        {/* Status indicator - clickable to change status */}
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation();
+            if (!isUpdating) {
+              onStatusChange(getNextStatus());
+            }
+          }}
+          disabled={isUpdating}
+          className="mr-3"
+        >
+          {isUpdating ? (
+            <ActivityIndicator size={24} color={statusConfig.color} />
+          ) : (
+            <View
+              className="w-8 h-8 rounded-full items-center justify-center"
+              style={{ backgroundColor: statusConfig.bgColor }}
+            >
+              <StatusIcon size={18} color={statusConfig.color} />
+            </View>
+          )}
+        </Pressable>
+
+        <View className="flex-1">
+          {/* Title and Status Badge */}
+          <View className="flex-row items-center">
+            <Text
+              className={cn(
+                'text-base font-semibold flex-1',
+                currentStatus === 'CLOSED'
+                  ? 'text-gray-400 dark:text-gray-500 line-through'
+                  : 'text-gray-900 dark:text-white'
+              )}
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+            <View
+              className="ml-2 px-2 py-0.5 rounded"
+              style={{ backgroundColor: statusConfig.bgColor }}
+            >
+              <Text className="text-xs font-medium" style={{ color: statusConfig.color }}>
+                {statusConfig.label}
+              </Text>
+            </View>
+          </View>
+
+          {/* Description */}
+          {description && (
+            <Text
+              className={cn(
+                'text-sm mt-1',
+                currentStatus === 'CLOSED'
+                  ? 'text-gray-400 dark:text-gray-500'
+                  : 'text-gray-500 dark:text-gray-400'
+              )}
+              numberOfLines={2}
+            >
+              {description}
+            </Text>
+          )}
+
+          {/* Meta info */}
+          <View className="flex-row items-center mt-2 flex-wrap">
+            <Icon size={12} color="#9CA3AF" />
+            <Text className="ml-1 text-xs text-gray-400 dark:text-gray-500">
+              {category === 'punch_list' ? 'Punch List' : 'RFI'}
+            </Text>
+            <Text className="mx-2 text-gray-300 dark:text-gray-600">·</Text>
+            <Calendar size={12} color="#9CA3AF" />
+            <Text className="ml-1 text-xs text-gray-400 dark:text-gray-500">
+              {format(createdAt, 'MMM d, yyyy')}
+            </Text>
+            {fieldValues.assigned_to && (
+              <>
+                <Text className="mx-2 text-gray-300 dark:text-gray-600">·</Text>
+                <Text className="text-xs text-gray-400 dark:text-gray-500">
+                  {fieldValues.assigned_to}
+                </Text>
+              </>
+            )}
+            {fieldValues.location && (
+              <>
+                <Text className="mx-2 text-gray-300 dark:text-gray-600">·</Text>
+                <Text className="text-xs text-gray-400 dark:text-gray-500">
+                  {fieldValues.location}
+                </Text>
+              </>
+            )}
+          </View>
+        </View>
+
+        {/* Action buttons */}
         <View className="flex-row items-center ml-2">
           {hasPdf && (
             <Pressable
