@@ -606,6 +606,280 @@ class EventsController {
       next(err);
     }
   }
+
+  // ============================================
+  // CHECKLIST ENDPOINTS (Punch Lists & RFIs)
+  // ============================================
+
+  /**
+   * GET /api/events/checklist
+   * List punch lists and RFIs with status filtering
+   */
+  async listChecklist(req, res, next) {
+    try {
+      const {
+        category, // 'PUNCH_LIST' or 'RFI'
+        project_id,
+        status, // 'OPEN', 'IN_PROGRESS', 'CLOSED'
+        limit = 50
+      } = req.query;
+
+      // Filter events that have schemaData with matching documentType
+      const whereClause = {
+        schemaData: {
+          schema: {
+            documentType: category
+              ? category.toUpperCase()
+              : { in: ['PUNCH_LIST', 'RFI'] }
+          }
+        }
+      };
+
+      if (project_id) {
+        whereClause.projectId = project_id;
+      }
+
+      if (status) {
+        whereClause.itemStatus = status.toUpperCase();
+      }
+
+      // Get events with schema data
+      const events = await prisma.event.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        take: parseInt(limit),
+        include: {
+          project: { select: { id: true, name: true, number: true } },
+          schemaData: {
+            include: {
+              schema: { select: { id: true, name: true, documentType: true } }
+            }
+          },
+          _count: { select: { comments: true } }
+        }
+      });
+
+      // Get status counts for dashboard
+      const countsWhere = {
+        schemaData: {
+          schema: {
+            documentType: category
+              ? category.toUpperCase()
+              : { in: ['PUNCH_LIST', 'RFI'] }
+          }
+        }
+      };
+      if (project_id) {
+        countsWhere.projectId = project_id;
+      }
+
+      const counts = await prisma.event.groupBy({
+        by: ['itemStatus'],
+        where: countsWhere,
+        _count: { id: true }
+      });
+
+      const statusCounts = {
+        OPEN: 0,
+        IN_PROGRESS: 0,
+        CLOSED: 0
+      };
+      counts.forEach(c => {
+        statusCounts[c.itemStatus] = c._count.id;
+      });
+
+      const total = statusCounts.OPEN + statusCounts.IN_PROGRESS + statusCounts.CLOSED;
+
+      res.json({
+        items: events,
+        counts: {
+          total,
+          open: statusCounts.OPEN,
+          inProgress: statusCounts.IN_PROGRESS,
+          closed: statusCounts.CLOSED
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PATCH /api/events/:id/status
+   * Update item status with optional comment
+   */
+  async updateStatus(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { status, comment, author_name } = req.body;
+
+      if (!status || !['OPEN', 'IN_PROGRESS', 'CLOSED'].includes(status.toUpperCase())) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Valid status is required: OPEN, IN_PROGRESS, or CLOSED'
+        });
+      }
+
+      const normalizedStatus = status.toUpperCase();
+
+      // Get current event
+      const event = await prisma.event.findUnique({
+        where: { id }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Event not found'
+        });
+      }
+
+      const previousStatus = event.itemStatus;
+
+      // Update event status
+      const updatedEvent = await prisma.event.update({
+        where: { id },
+        data: {
+          itemStatus: normalizedStatus,
+          statusChangedAt: new Date(),
+          statusChangedBy: author_name || null,
+          // Sync with isResolved for backward compatibility
+          isResolved: normalizedStatus === 'CLOSED'
+        },
+        include: {
+          project: { select: { id: true, name: true } },
+          schemaData: {
+            include: {
+              schema: { select: { id: true, name: true, documentType: true } }
+            }
+          }
+        }
+      });
+
+      // Create status change comment for audit trail
+      const statusComment = await prisma.eventComment.create({
+        data: {
+          eventId: id,
+          text: comment || `Status changed from ${previousStatus} to ${normalizedStatus}`,
+          authorName: author_name || null,
+          commentType: 'status_change',
+          previousStatus,
+          newStatus: normalizedStatus
+        }
+      });
+
+      res.json({
+        event: updatedEvent,
+        comment: statusComment
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * GET /api/events/:id/comments
+   * Get comments/revision history for an event
+   */
+  async getComments(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      // Verify event exists
+      const event = await prisma.event.findUnique({
+        where: { id }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Event not found'
+        });
+      }
+
+      const comments = await prisma.eventComment.findMany({
+        where: { eventId: id },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      res.json(comments);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/events/:id/comments
+   * Add a comment to an event
+   */
+  async addComment(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { text, author_name } = req.body;
+
+      if (!text || text.trim().length === 0) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Comment text is required'
+        });
+      }
+
+      // Verify event exists
+      const event = await prisma.event.findUnique({
+        where: { id }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Event not found'
+        });
+      }
+
+      const comment = await prisma.eventComment.create({
+        data: {
+          eventId: id,
+          text: text.trim(),
+          authorName: author_name || null,
+          commentType: 'comment'
+        }
+      });
+
+      res.status(201).json(comment);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/events/:id/comments/:commentId
+   * Delete a comment
+   */
+  async deleteComment(req, res, next) {
+    try {
+      const { id, commentId } = req.params;
+
+      // Verify comment exists and belongs to event
+      const comment = await prisma.eventComment.findFirst({
+        where: { id: commentId, eventId: id }
+      });
+
+      if (!comment) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Comment not found'
+        });
+      }
+
+      await prisma.eventComment.delete({
+        where: { id: commentId }
+      });
+
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new EventsController();

@@ -39,6 +39,11 @@ import {
   uploadPhoto,
   deletePhoto,
   fetchPhotoFile,
+  updateEventStatus,
+  getEventComments,
+  addEventComment,
+  deleteEventComment,
+  EventCommentData,
 } from '@/lib/api';
 import {
   ArrowLeft,
@@ -64,6 +69,11 @@ import {
   Camera,
   Image as ImageIcon,
   Plus,
+  CircleDot,
+  Clock4,
+  CheckCircle,
+  MessageSquare,
+  Send,
 } from 'lucide-react-native';
 import { Image } from 'react-native';
 import { Audio } from 'expo-av';
@@ -116,6 +126,14 @@ const SCHEMA_TYPE_COLORS: Record<string, string> = {
   SAFETY_REPORT: '#EF4444',
   INSPECTION: '#8B5CF6',
   CUSTOM: '#6B7280',
+};
+
+type ItemStatus = 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+
+const ITEM_STATUS_CONFIG: Record<ItemStatus, { label: string; icon: any; color: string; bgColor: string }> = {
+  OPEN: { label: 'Open', icon: CircleDot, color: '#EF4444', bgColor: '#FEE2E2' },
+  IN_PROGRESS: { label: 'In Progress', icon: Clock4, color: '#F59E0B', bgColor: '#FEF3C7' },
+  CLOSED: { label: 'Closed', icon: CheckCircle, color: '#10B981', bgColor: '#D1FAE5' },
 };
 
 // Schema Fields Form Component (for AI-extracted document schemas)
@@ -466,6 +484,261 @@ function PhotoSection({
   );
 }
 
+// Status and Comments Section Component (for Punch Lists & RFIs)
+function StatusCommentsSection({
+  eventId,
+  currentStatus,
+  hasSchemaData,
+  onStatusChange,
+  isUpdatingStatus,
+}: {
+  eventId: string;
+  currentStatus: ItemStatus;
+  hasSchemaData: boolean;
+  onStatusChange: (newStatus: ItemStatus) => void;
+  isUpdatingStatus: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const [newComment, setNewComment] = useState('');
+  const [isAddingComment, setIsAddingComment] = useState(false);
+
+  // Fetch comments
+  const commentsQuery = useQuery({
+    queryKey: queryKeys.eventComments(eventId),
+    queryFn: () => getEventComments(eventId),
+    enabled: hasSchemaData,
+  });
+
+  const comments = commentsQuery.data || [];
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    setIsAddingComment(true);
+    try {
+      await addEventComment(eventId, { text: newComment.trim() });
+      setNewComment('');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: queryKeys.eventComments(eventId) });
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsAddingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    const doDelete = async () => {
+      try {
+        await deleteEventComment(eventId, commentId);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        queryClient.invalidateQueries({ queryKey: queryKeys.eventComments(eventId) });
+      } catch (error) {
+        console.error('Failed to delete comment:', error);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm('Delete this comment?')) {
+        doDelete();
+      }
+    } else {
+      Alert.alert('Delete Comment', 'Are you sure?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: doDelete },
+      ]);
+    }
+  };
+
+  if (!hasSchemaData) return null;
+
+  const statusConfig = ITEM_STATUS_CONFIG[currentStatus];
+  const StatusIcon = statusConfig.icon;
+
+  return (
+    <View>
+      {/* Status Section */}
+      <View className="mb-4">
+        <View className="flex-row items-center mb-3">
+          <CheckCircle size={16} color="#10B981" />
+          <Text className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Status
+          </Text>
+        </View>
+
+        <View className="flex-row gap-2">
+          {(Object.entries(ITEM_STATUS_CONFIG) as [ItemStatus, typeof ITEM_STATUS_CONFIG[ItemStatus]][]).map(
+            ([status, config]) => {
+              const Icon = config.icon;
+              const isActive = currentStatus === status;
+              return (
+                <Pressable
+                  key={status}
+                  onPress={() => !isUpdatingStatus && onStatusChange(status)}
+                  disabled={isUpdatingStatus}
+                  className={cn(
+                    'flex-1 flex-row items-center justify-center py-3 rounded-xl border-2',
+                    isActive ? 'border-transparent' : 'border-gray-200 dark:border-gray-600'
+                  )}
+                  style={isActive ? { backgroundColor: config.bgColor } : undefined}
+                >
+                  {isUpdatingStatus && isActive ? (
+                    <ActivityIndicator size="small" color={config.color} />
+                  ) : (
+                    <>
+                      <Icon size={16} color={isActive ? config.color : '#9CA3AF'} />
+                      <Text
+                        className={cn(
+                          'ml-1 text-sm font-medium',
+                          isActive ? '' : 'text-gray-500 dark:text-gray-400'
+                        )}
+                        style={isActive ? { color: config.color } : undefined}
+                      >
+                        {config.label}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              );
+            }
+          )}
+        </View>
+      </View>
+
+      {/* Comments/Revisions Section */}
+      <View className="border-t border-gray-100 dark:border-gray-700 pt-4">
+        <View className="flex-row items-center mb-3">
+          <MessageSquare size={16} color="#6B7280" />
+          <Text className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Comments & History ({comments.length})
+          </Text>
+        </View>
+
+        {/* Add comment form */}
+        <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl p-2 mb-3">
+          <TextInput
+            value={newComment}
+            onChangeText={setNewComment}
+            placeholder="Add a comment..."
+            placeholderTextColor="#9CA3AF"
+            className="flex-1 px-2 py-1 text-base text-gray-900 dark:text-white"
+            multiline
+          />
+          <Pressable
+            onPress={handleAddComment}
+            disabled={isAddingComment || !newComment.trim()}
+            className={cn(
+              'p-2 rounded-lg',
+              newComment.trim() ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+            )}
+          >
+            {isAddingComment ? (
+              <ActivityIndicator size={18} color="#FFF" />
+            ) : (
+              <Send size={18} color="#FFF" />
+            )}
+          </Pressable>
+        </View>
+
+        {/* Comments list */}
+        {commentsQuery.isLoading ? (
+          <View className="items-center py-4">
+            <ActivityIndicator size="small" color="#9CA3AF" />
+          </View>
+        ) : comments.length === 0 ? (
+          <Text className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+            No comments yet
+          </Text>
+        ) : (
+          <View className="space-y-2">
+            {comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                onDelete={() => handleDeleteComment(comment.id)}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// Comment Item Component
+function CommentItem({
+  comment,
+  onDelete,
+}: {
+  comment: EventCommentData;
+  onDelete: () => void;
+}) {
+  const createdAt = new Date(comment.createdAt);
+  const isStatusChange = comment.commentType === 'status_change';
+
+  if (isStatusChange) {
+    const prevConfig = comment.previousStatus
+      ? ITEM_STATUS_CONFIG[comment.previousStatus as ItemStatus]
+      : null;
+    const newConfig = comment.newStatus
+      ? ITEM_STATUS_CONFIG[comment.newStatus as ItemStatus]
+      : null;
+
+    return (
+      <View className="flex-row items-start bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 mb-2">
+        <View className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 items-center justify-center mr-3">
+          <RefreshCw size={14} color="#9CA3AF" />
+        </View>
+        <View className="flex-1">
+          <View className="flex-row items-center flex-wrap">
+            <Text className="text-sm text-gray-600 dark:text-gray-300">
+              Status changed from{' '}
+            </Text>
+            {prevConfig && (
+              <Text className="text-sm font-medium" style={{ color: prevConfig.color }}>
+                {prevConfig.label}
+              </Text>
+            )}
+            <Text className="text-sm text-gray-600 dark:text-gray-300"> to </Text>
+            {newConfig && (
+              <Text className="text-sm font-medium" style={{ color: newConfig.color }}>
+                {newConfig.label}
+              </Text>
+            )}
+          </View>
+          {comment.text && (
+            <Text className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+              {comment.text}
+            </Text>
+          )}
+          <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            {format(createdAt, 'MMM d, yyyy h:mm a')}
+            {comment.authorName && ` • ${comment.authorName}`}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-3 mb-2 border border-gray-100 dark:border-gray-700">
+      <Text className="text-sm text-gray-700 dark:text-gray-300 leading-5">
+        {comment.text}
+      </Text>
+      <View className="flex-row items-center justify-between mt-2">
+        <Text className="text-xs text-gray-400 dark:text-gray-500">
+          {format(createdAt, 'MMM d, yyyy h:mm a')}
+          {comment.authorName && ` • ${comment.authorName}`}
+        </Text>
+        <Pressable onPress={onDelete} className="p-1">
+          <Trash2 size={14} color="#EF4444" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -521,6 +794,10 @@ export default function EventDetailScreen() {
   const [schemaConfidence, setSchemaConfidence] = useState<number | null>(null);
   const [schemaHasChanges, setSchemaHasChanges] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Checklist status state
+  const [itemStatus, setItemStatus] = useState<ItemStatus>('OPEN');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Fetch available templates
   const templatesQuery = useQuery({
@@ -665,7 +942,7 @@ export default function EventDetailScreen() {
     }
   }, [localEvent, backendEvent]);
 
-  // Load existing schemaData from backend
+  // Load existing schemaData and status from backend
   useEffect(() => {
     const loadSchemaData = async () => {
       if (!id) return;
@@ -677,6 +954,10 @@ export default function EventDetailScreen() {
           setSchemaFieldValues(eventData.schemaData.fieldValues as Record<string, string | null>);
           setSchemaConfidence(eventData.schemaData.extractionConfidence);
           setSchemaHasChanges(false);
+        }
+        // Load item status
+        if (eventData?.itemStatus) {
+          setItemStatus(eventData.itemStatus as ItemStatus);
         }
       } catch (error) {
         // Event might not exist on backend yet, that's ok
@@ -1063,6 +1344,32 @@ export default function EventDetailScreen() {
       }
     } finally {
       setIsGeneratingPdf(false);
+    }
+  };
+
+  // Status change handler for checklist items
+  const handleStatusChange = async (newStatus: ItemStatus) => {
+    if (!event || !id) return;
+    const backendId = getBackendId('events', id) || id;
+    setIsUpdatingStatus(true);
+    try {
+      await updateEventStatus(backendId, { status: newStatus });
+      setItemStatus(newStatus);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Invalidate comments query to refresh status change history
+      queryClient.invalidateQueries({ queryKey: queryKeys.eventComments(backendId) });
+      // Invalidate checklist queries
+      queryClient.invalidateQueries({ queryKey: ['checklist'] });
+    } catch (error) {
+      console.error('[status] Failed to update status:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        alert('Failed to update status. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to update status. Please try again.');
+      }
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -1806,6 +2113,22 @@ export default function EventDetailScreen() {
                 )}
               </View>
             )}
+          </Animated.View>
+        )}
+
+        {/* Status & Comments Section (for Punch Lists & RFIs) */}
+        {selectedSchemaId && (
+          <Animated.View
+            entering={FadeInDown.delay(290)}
+            className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
+          >
+            <StatusCommentsSection
+              eventId={getBackendId('events', event.id) || event.id}
+              currentStatus={itemStatus}
+              hasSchemaData={!!selectedSchemaId}
+              onStatusChange={handleStatusChange}
+              isUpdatingStatus={isUpdatingStatus}
+            />
           </Animated.View>
         )}
 

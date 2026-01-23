@@ -39,6 +39,35 @@ export interface EventIndex {
   keywordsSummary: string | null;
 }
 
+// Checklist/Comments types
+export interface EventCommentData {
+  id: string;
+  createdAt: string;
+  eventId: string;
+  text: string;
+  authorName: string | null;
+  commentType: 'comment' | 'status_change' | 'edit';
+  previousStatus: string | null;
+  newStatus: string | null;
+}
+
+export interface ChecklistFilters {
+  category?: 'PUNCH_LIST' | 'RFI';
+  project_id?: string;
+  status?: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  limit?: number;
+}
+
+export interface ChecklistResponse {
+  items: IndexedEvent[];
+  counts: {
+    total: number;
+    open: number;
+    inProgress: number;
+    closed: number;
+  };
+}
+
 export interface IndexedEvent {
   id: string;
   title: string | null;
@@ -47,11 +76,28 @@ export interface IndexedEvent {
   severity: string | null;
   createdAt: string;
   isResolved: boolean | null;
+  // Checklist status fields
+  itemStatus: 'OPEN' | 'IN_PROGRESS' | 'CLOSED' | null;
+  statusChangedAt: string | null;
+  statusChangedBy: string | null;
   project: {
     id: string;
     name: string;
   } | null;
   index: EventIndex | null;
+  // Schema data (for punch lists/RFIs)
+  schemaData?: {
+    schemaId: string;
+    fieldValues: Record<string, string | null>;
+    extractionConfidence?: number | null;
+    generatedPdfPath?: string | null;
+    schema?: {
+      documentType?: string;
+      name?: string;
+    };
+  } | null;
+  // Comments (when fetched with include)
+  comments?: EventCommentData[];
 }
 
 export interface IndexStats {
@@ -1877,6 +1923,83 @@ export async function deletePhoto(id: string): Promise<void> {
   await apiFetch(`/api/photos/${id}`, { method: 'DELETE' });
 }
 
+// ============================================
+// CHECKLIST API (Punch Lists & RFIs)
+// ============================================
+
+/**
+ * Get checklist items (punch lists and RFIs) with status filtering
+ */
+export async function getChecklistItems(
+  filters: ChecklistFilters = {}
+): Promise<ChecklistResponse> {
+  const params = new URLSearchParams();
+
+  if (filters.category) params.append('category', filters.category);
+  if (filters.project_id) params.append('project_id', filters.project_id);
+  if (filters.status) params.append('status', filters.status);
+  if (filters.limit) params.append('limit', String(filters.limit));
+
+  const query = params.toString();
+  return apiFetch(`/api/events/checklist${query ? `?${query}` : ''}`);
+}
+
+/**
+ * Update event status (OPEN, IN_PROGRESS, CLOSED)
+ */
+export async function updateEventStatus(
+  eventId: string,
+  data: {
+    status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+    comment?: string;
+    changedBy?: string;
+  }
+): Promise<{
+  message: string;
+  event: IndexedEvent;
+  comment: EventCommentData | null;
+}> {
+  return apiFetch(`/api/events/${eventId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Get comments/revision history for an event
+ */
+export async function getEventComments(eventId: string): Promise<EventCommentData[]> {
+  return apiFetch(`/api/events/${eventId}/comments`);
+}
+
+/**
+ * Add a comment/follow-up to an event
+ */
+export async function addEventComment(
+  eventId: string,
+  data: {
+    text: string;
+    authorName?: string;
+  }
+): Promise<EventCommentData> {
+  return apiFetch(`/api/events/${eventId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a comment
+ */
+export async function deleteEventComment(
+  eventId: string,
+  commentId: string
+): Promise<void> {
+  await apiFetch(`/api/events/${eventId}/comments/${commentId}`, {
+    method: 'DELETE',
+  });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -1902,4 +2025,7 @@ export const queryKeys = {
   eventPhotos: (eventId: string) => ['events', eventId, 'photos'] as const,
   dailyLogPhotos: (dailyLogId: string) => ['daily-logs', dailyLogId, 'photos'] as const,
   photo: (id: string) => ['photos', id] as const,
+  // Checklist/Comments queries
+  checklist: (filters?: ChecklistFilters) => ['checklist', filters] as const,
+  eventComments: (eventId: string) => ['events', eventId, 'comments'] as const,
 };
