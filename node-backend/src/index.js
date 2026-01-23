@@ -45,8 +45,10 @@ const allowedOrigins = [
   'http://localhost:8081',
   'http://127.0.0.1:8081',
   'http://localhost:19006',
-  process.env.CORS_ORIGIN
+  process.env.CORS_ORIGIN?.trim()
 ].filter(Boolean);
+
+console.log('[CORS] Allowed origins:', allowedOrigins);
 
 app.use(cors({
   origin: function(origin, callback) {
@@ -59,6 +61,7 @@ app.use(cors({
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       return callback(null, true);
     }
+    console.log(`[CORS] Rejected origin: "${origin}"`);
     callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
