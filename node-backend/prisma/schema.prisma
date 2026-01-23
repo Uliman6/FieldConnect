@@ -365,6 +365,9 @@ model Insight {
   // Pattern matching - full-text searchable summary
   keywordsSummary String? @map("keywords_summary") @db.Text
 
+  // Semantic search - OpenAI embedding vector (1536 dimensions stored as JSON)
+  embedding   Json?    // Float array for cosine similarity search
+
   // Test environment flag - separates test data from production
   isTest      Boolean  @default(false) @map("is_test")
 

@@ -1,6 +1,7 @@
 const prisma = require('./prisma');
 const eventIndexer = require('./event-indexer.service');
 const similarityService = require('./similarity.service');
+const embeddingService = require('./embedding.service');
 
 /**
  * Insights Service
@@ -76,6 +77,12 @@ class InsightsService {
     });
 
     console.log(`[insights] Created insight from event: ${insight.id}`);
+
+    // Generate embedding async (non-blocking)
+    this.generateAndSaveEmbedding(insight.id).catch(err =>
+      console.error(`[insights] Background embedding failed: ${err.message}`)
+    );
+
     return insight;
   }
 
@@ -155,6 +162,12 @@ class InsightsService {
     });
 
     console.log(`[insights] Created insight from pending issue: ${insight.id}`);
+
+    // Generate embedding async (non-blocking)
+    this.generateAndSaveEmbedding(insight.id).catch(err =>
+      console.error(`[insights] Background embedding failed: ${err.message}`)
+    );
+
     return insight;
   }
 
@@ -248,6 +261,12 @@ class InsightsService {
     });
 
     console.log(`[insights] Created insight from inspection note: ${insight.id}`);
+
+    // Generate embedding async (non-blocking)
+    this.generateAndSaveEmbedding(insight.id).catch(err =>
+      console.error(`[insights] Background embedding failed: ${err.message}`)
+    );
+
     return insight;
   }
 
@@ -298,6 +317,12 @@ class InsightsService {
     });
 
     console.log(`[insights] Created manual insight: ${insight.id}`);
+
+    // Generate embedding async (non-blocking)
+    this.generateAndSaveEmbedding(insight.id).catch(err =>
+      console.error(`[insights] Background embedding failed: ${err.message}`)
+    );
+
     return insight;
   }
 
@@ -725,6 +750,245 @@ class InsightsService {
       .sort((a, b) => b[1] - a[1])
       .slice(0, limit)
       .map(([name, count]) => ({ name, count }));
+  }
+
+  /**
+   * Generate and save embedding for an insight (async, non-blocking)
+   * @param {string} insightId - Insight ID
+   * @returns {Promise<boolean>} Success status
+   */
+  async generateAndSaveEmbedding(insightId) {
+    try {
+      const insight = await prisma.insight.findUnique({
+        where: { id: insightId }
+      });
+
+      if (!insight) {
+        console.log(`[insights] Insight not found for embedding: ${insightId}`);
+        return false;
+      }
+
+      const result = await embeddingService.generateInsightEmbedding(insight);
+
+      if (result.success) {
+        await prisma.insight.update({
+          where: { id: insightId },
+          data: { embedding: result.embedding }
+        });
+        console.log(`[insights] Saved embedding for insight: ${insightId}`);
+        return true;
+      } else {
+        console.log(`[insights] Could not generate embedding: ${result.error}`);
+        return false;
+      }
+    } catch (error) {
+      console.error(`[insights] Error saving embedding: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Find similar insights using embeddings (semantic search)
+   * Falls back to keyword-based similarity if embeddings not available
+   * @param {string} insightId - Insight ID
+   * @param {Object} options - Search options
+   * @returns {Array} Similar insights
+   */
+  async findSimilarWithEmbeddings(insightId, options = {}) {
+    const { limit = 10, threshold = 0.75, includeTest = false, crossProject = true } = options;
+
+    const insight = await prisma.insight.findUnique({
+      where: { id: insightId }
+    });
+
+    if (!insight) {
+      throw new Error(`Insight not found: ${insightId}`);
+    }
+
+    // If source insight has no embedding, generate one
+    let queryEmbedding = insight.embedding;
+    if (!queryEmbedding) {
+      const embResult = await embeddingService.generateInsightEmbedding(insight);
+      if (embResult.success) {
+        queryEmbedding = embResult.embedding;
+        // Save it for future use
+        await prisma.insight.update({
+          where: { id: insightId },
+          data: { embedding: embResult.embedding }
+        });
+      }
+    }
+
+    // Build where clause
+    const whereClause = {
+      id: { not: insightId },
+      embedding: { not: null }
+    };
+
+    if (!includeTest) {
+      whereClause.isTest = false;
+    }
+
+    if (!crossProject) {
+      whereClause.projectId = insight.projectId;
+    }
+
+    // Get candidates with embeddings
+    const candidates = await prisma.insight.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        severity: true,
+        sourceType: true,
+        projectId: true,
+        createdAt: true,
+        embedding: true,
+        trades: true,
+        systems: true,
+        issueTypes: true,
+        project: { select: { id: true, name: true } }
+      }
+    });
+
+    if (!queryEmbedding || candidates.length === 0) {
+      // Fall back to keyword-based similarity
+      console.log('[insights] No embeddings available, falling back to keyword similarity');
+      return this.findSimilar(insightId, { limit, includeTest });
+    }
+
+    // Calculate similarity scores using embeddings
+    const scored = candidates.map(candidate => {
+      const similarity = embeddingService.cosineSimilarity(queryEmbedding, candidate.embedding);
+      return {
+        id: candidate.id,
+        title: candidate.title,
+        category: candidate.category,
+        severity: candidate.severity,
+        sourceType: candidate.sourceType,
+        createdAt: candidate.createdAt,
+        project: candidate.project,
+        trades: candidate.trades,
+        systems: candidate.systems,
+        issueTypes: candidate.issueTypes,
+        similarity: Math.round(similarity * 100) / 100
+      };
+    });
+
+    // Filter by threshold and sort
+    return scored
+      .filter(s => s.similarity >= threshold)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit);
+  }
+
+  /**
+   * Find similar insights by text query using embeddings
+   * @param {string} queryText - Text to find similar insights for
+   * @param {Object} options - Search options
+   * @returns {Array} Similar insights
+   */
+  async findSimilarByText(queryText, options = {}) {
+    const { limit = 10, threshold = 0.7, projectId, includeTest = false } = options;
+
+    // Generate embedding for query text
+    const embResult = await embeddingService.generateEmbedding(queryText);
+
+    if (!embResult.success) {
+      console.log('[insights] Could not generate query embedding, falling back to text search');
+      return this.search({ query: queryText, limit, isTest: includeTest ? undefined : false });
+    }
+
+    // Build where clause
+    const whereClause = {
+      embedding: { not: null }
+    };
+
+    if (!includeTest) {
+      whereClause.isTest = false;
+    }
+
+    if (projectId) {
+      whereClause.projectId = projectId;
+    }
+
+    // Get all insights with embeddings
+    const candidates = await prisma.insight.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        category: true,
+        severity: true,
+        sourceType: true,
+        projectId: true,
+        createdAt: true,
+        embedding: true,
+        trades: true,
+        systems: true,
+        issueTypes: true,
+        costImpact: true,
+        project: { select: { id: true, name: true } }
+      }
+    });
+
+    if (candidates.length === 0) {
+      console.log('[insights] No insights with embeddings found');
+      return [];
+    }
+
+    // Calculate similarity scores
+    const scored = candidates.map(candidate => {
+      const similarity = embeddingService.cosineSimilarity(embResult.embedding, candidate.embedding);
+      return {
+        ...candidate,
+        embedding: undefined, // Don't return the embedding
+        similarity: Math.round(similarity * 100) / 100
+      };
+    });
+
+    // Filter by threshold and sort
+    return scored
+      .filter(s => s.similarity >= threshold)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit);
+  }
+
+  /**
+   * Backfill embeddings for all insights that don't have them
+   * @param {Object} options - Options
+   * @returns {Object} Results summary
+   */
+  async backfillEmbeddings(options = {}) {
+    const { batchSize = 50, isTest } = options;
+
+    const whereClause = { embedding: null };
+    if (isTest !== undefined) {
+      whereClause.isTest = isTest;
+    }
+
+    const insights = await prisma.insight.findMany({
+      where: whereClause,
+      select: { id: true },
+      take: batchSize
+    });
+
+    const results = { processed: 0, success: 0, failed: 0 };
+
+    for (const insight of insights) {
+      results.processed++;
+      const success = await this.generateAndSaveEmbedding(insight.id);
+      if (success) {
+        results.success++;
+      } else {
+        results.failed++;
+      }
+    }
+
+    console.log(`[insights] Backfill embeddings: ${results.success}/${results.processed} successful`);
+    return results;
   }
 }
 

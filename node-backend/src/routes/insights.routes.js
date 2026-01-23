@@ -10,6 +10,10 @@ router.use(authenticate);
 // POST /api/insights/index-all
 router.post('/index-all', requireRole(['ADMIN', 'EDITOR']), insightsController.indexAll);
 
+// Backfill embeddings for existing insights
+// POST /api/insights/backfill-embeddings
+router.post('/backfill-embeddings', requireRole(['ADMIN']), insightsController.backfillEmbeddings);
+
 // Get insights statistics
 // GET /api/insights/stats
 router.get('/stats', insightsController.getStats);

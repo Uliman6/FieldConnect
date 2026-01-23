@@ -1,5 +1,6 @@
 const prisma = require('../services/prisma');
 const transcriptParser = require('../services/transcript-parser.service');
+const insightsService = require('../services/insights.service');
 
 /**
  * Helper to parse date strings properly to avoid timezone issues
@@ -440,6 +441,11 @@ class DailyLogsController {
           location
         }
       });
+
+      // Auto-index to insights (async, non-blocking)
+      insightsService.createFromPendingIssue(issue.id).catch(err =>
+        console.error(`[daily-logs] Auto-index failed for pending issue ${issue.id}: ${err.message}`)
+      );
 
       res.status(201).json(issue);
     } catch (err) {
@@ -901,6 +907,11 @@ class DailyLogsController {
           followUpNeeded: follow_up_needed
         }
       });
+
+      // Auto-index to insights (async, non-blocking)
+      insightsService.createFromInspectionNote(note.id).catch(err =>
+        console.error(`[daily-logs] Auto-index failed for inspection note ${note.id}: ${err.message}`)
+      );
 
       res.status(201).json(note);
     } catch (err) {

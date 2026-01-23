@@ -291,75 +291,34 @@ async function clearTestData(req, res) {
 }
 
 /**
- * Find similar insights by text query
+ * Find similar insights by text query (uses embeddings if available)
  * POST /api/insights/find-similar-by-text
  */
 async function findSimilarByText(req, res) {
   try {
-    const { text, projectId, limit, includeTest } = req.body;
+    const { text, projectId, limit, includeTest, threshold } = req.body;
 
     if (!text) {
       return res.status(400).json({ error: 'text is required' });
     }
 
-    // Extract keywords from the text
+    // Try embedding-based search first (semantic similarity)
+    const embeddingResults = await insightsService.findSimilarByText(text, {
+      limit: limit || 10,
+      threshold: threshold || 0.7,
+      projectId,
+      includeTest: includeTest === true
+    });
+
+    // Also extract keywords for display
     const eventIndexer = require('../services/event-indexer.service');
     const extracted = eventIndexer.extractAllKeywords(text);
-    const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
-
-    // Create a pseudo-insight for comparison
-    const pseudoInsight = {
-      rawText: text,
-      keywordsSummary,
-      trades: extracted.trades,
-      materials: extracted.materials,
-      issueTypes: extracted.issueTypes,
-      locations: extracted.locations,
-      systems: extracted.systems,
-      category: insightsService.determineCategory(extracted.issueTypes),
-      severity: null
-    };
-
-    // Get all insights to compare
-    const prisma = require('../services/prisma');
-    const whereClause = {};
-    if (projectId) whereClause.projectId = projectId;
-    if (!includeTest) whereClause.isTest = false;
-
-    const candidates = await prisma.insight.findMany({
-      where: whereClause,
-      include: {
-        project: { select: { id: true, name: true } }
-      }
-    });
-
-    // Score and sort
-    const scored = candidates.map(candidate => {
-      const score = insightsService.calculateSimilarityScore(pseudoInsight, candidate);
-      return { ...candidate, similarityScore: score.total, scoreBreakdown: score.breakdown };
-    });
-
-    const results = scored
-      .filter(c => c.similarityScore > 0.2)
-      .sort((a, b) => b.similarityScore - a.similarityScore)
-      .slice(0, limit || 10)
-      .map(c => ({
-        id: c.id,
-        title: c.title,
-        category: c.category,
-        severity: c.severity,
-        sourceType: c.sourceType,
-        description: c.description?.substring(0, 200) + (c.description?.length > 200 ? '...' : ''),
-        createdAt: c.createdAt,
-        project: c.project,
-        similarityScore: Math.round(c.similarityScore * 100) / 100,
-        scoreBreakdown: c.scoreBreakdown
-      }));
 
     res.json({
       query: text,
       extracted,
-      results
+      searchMethod: embeddingResults.length > 0 ? 'embedding' : 'keyword',
+      results: embeddingResults
     });
   } catch (error) {
     console.error('Error finding similar by text:', error);
@@ -367,8 +326,33 @@ async function findSimilarByText(req, res) {
   }
 }
 
+/**
+ * Backfill embeddings for existing insights
+ * POST /api/insights/backfill-embeddings
+ */
+async function backfillEmbeddings(req, res) {
+  try {
+    const { batchSize, isTest } = req.body;
+
+    const results = await insightsService.backfillEmbeddings({
+      batchSize: batchSize || 50,
+      isTest
+    });
+
+    res.json({
+      success: true,
+      message: 'Embedding backfill complete',
+      ...results
+    });
+  } catch (error) {
+    console.error('Error backfilling embeddings:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   indexAll,
+  backfillEmbeddings,
   createFromEvent,
   createFromPendingIssue,
   createFromInspectionNote,
