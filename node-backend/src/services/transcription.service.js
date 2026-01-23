@@ -11,13 +11,15 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const PROVIDERS = {
   groq: {
     name: 'Groq',
-    endpoint: 'https://api.groq.com/openai/v1/audio/transcriptions',
+    transcribeEndpoint: 'https://api.groq.com/openai/v1/audio/transcriptions',
+    translateEndpoint: 'https://api.groq.com/openai/v1/audio/translations',
     model: 'whisper-large-v3',
     apiKey: GROQ_API_KEY,
   },
   openai: {
     name: 'OpenAI',
-    endpoint: 'https://api.openai.com/v1/audio/transcriptions',
+    transcribeEndpoint: 'https://api.openai.com/v1/audio/transcriptions',
+    translateEndpoint: 'https://api.openai.com/v1/audio/translations',
     model: 'whisper-1',
     apiKey: OPENAI_API_KEY,
   },
@@ -83,12 +85,24 @@ class TranscriptionService {
   }
 
   /**
-   * Make transcription request to a specific provider
+   * Make transcription/translation request to a specific provider
+   * @param {object} provider - Provider config
+   * @param {Buffer} audioBuffer - Audio data
+   * @param {string} filename - Filename for mime type
+   * @param {string} mimeType - Audio mime type
+   * @param {object} options - Options including translateToEnglish
    */
   async transcribeWithProvider(provider, audioBuffer, filename, mimeType, options = {}) {
     if (!provider.apiKey) {
       return { success: false, error: `No API key for ${provider.name}` };
     }
+
+    // Use translation endpoint if translateToEnglish is true
+    // Translation endpoint automatically detects source language and outputs English
+    const endpoint = options.translateToEnglish
+      ? provider.translateEndpoint
+      : provider.transcribeEndpoint;
+    const mode = options.translateToEnglish ? 'translate' : 'transcribe';
 
     const formData = new FormData();
     const audioBlob = new Blob([audioBuffer], { type: mimeType });
@@ -96,13 +110,15 @@ class TranscriptionService {
     formData.append('model', provider.model);
     formData.append('response_format', 'json');
 
-    if (options.language) {
+    // Only set language hint for transcription (not translation)
+    // Translation auto-detects and always outputs English
+    if (options.language && !options.translateToEnglish) {
       formData.append('language', options.language);
     }
 
-    console.log(`[transcription] Sending ${audioBuffer.length} bytes to ${provider.name} (${provider.model})`);
+    console.log(`[transcription] Sending ${audioBuffer.length} bytes to ${provider.name} (${provider.model}) - mode: ${mode}`);
 
-    const response = await fetch(provider.endpoint, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${provider.apiKey}`
@@ -126,17 +142,20 @@ class TranscriptionService {
     const result = await response.json();
     const transcribedText = result.text?.trim() ?? '';
 
-    console.log(`[transcription] ${provider.name} returned: "${transcribedText.substring(0, 50)}..." (${transcribedText.length} chars)`);
+    console.log(`[transcription] ${provider.name} ${mode} returned: "${transcribedText.substring(0, 50)}..." (${transcribedText.length} chars)`);
 
-    return { success: true, text: transcribedText };
+    return { success: true, text: transcribedText, mode };
   }
 
   /**
    * Transcribe audio buffer using Whisper (Groq with OpenAI fallback)
+   * Supports automatic translation from any language to English
    * @param {Buffer} audioBuffer - Audio file buffer
    * @param {string} filename - Original filename (for mime type detection)
    * @param {object} options - Optional settings
-   * @returns {Promise<{success: boolean, text?: string, error?: string, provider?: string}>}
+   * @param {boolean} options.translateToEnglish - If true, translates any language to English (default: false)
+   * @param {string} options.language - Language hint for transcription (e.g., 'es' for Spanish)
+   * @returns {Promise<{success: boolean, text?: string, error?: string, provider?: string, mode?: string}>}
    */
   async transcribe(audioBuffer, filename, options = {}) {
     if (!this.isAvailable()) {
@@ -196,11 +215,12 @@ class TranscriptionService {
             continue; // Try next provider
           }
 
-          console.log(`[transcription] ✅ SUCCESS via ${provider.name}, text length: ${result.text.length}`);
+          console.log(`[transcription] ✅ SUCCESS via ${provider.name} (${result.mode}), text length: ${result.text.length}`);
           return {
             success: true,
             text: result.text,
             provider: provider.name,
+            mode: result.mode,
           };
         }
 
