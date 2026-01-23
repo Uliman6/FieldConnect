@@ -74,6 +74,10 @@ export interface IndexedEvent {
   transcriptText: string | null;
   eventType: string | null;
   severity: string | null;
+  description: string | null;
+  notes: string | null;
+  location: string | null;
+  tradeVendor: string | null;
   createdAt: string;
   isResolved: boolean | null;
   // Checklist status fields
