@@ -413,25 +413,15 @@ export default function InsightsScreen() {
     }
   }, [queryClient]);
 
-  // Defensive: ensure queries exist before accessing properties
-  const isLoading = (statsQuery?.isLoading ?? false) || (insightsQuery?.isLoading ?? false);
-  const hasError = (statsQuery?.isError ?? false) || (insightsQuery?.isError ?? false);
+  const isLoading = statsQuery.isLoading || insightsQuery.isLoading;
+  const hasError = statsQuery.isError || insightsQuery.isError;
 
-  const stats = statsQuery?.data;
-  const allInsights = insightsQuery?.data || [];
-  const followUps = followUpsQuery?.data || [];
-
-  // Debug: log render state
-  console.log('[insights] Render state:', {
-    currentProjectId,
-    isLoading,
-    hasError,
-    insightsCount: allInsights.length,
-    statsLoaded: !!stats
-  });
+  const stats = statsQuery.data;
+  const allInsights = insightsQuery.data || [];
+  const followUps = followUpsQuery.data || [];
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       <Stack.Screen
         options={{
           title: currentProject ? `${currentProject.name} Insights` : 'Insights',
@@ -444,7 +434,7 @@ export default function InsightsScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.back();
               }}
-              style={{ padding: 8, marginLeft: -8 }}
+              className="p-2 -ml-2"
             >
               <ArrowLeft size={24} color="#FFF" />
             </Pressable>
@@ -496,28 +486,28 @@ export default function InsightsScreen() {
 
       {/* No Project Selected */}
       {!currentProjectId && (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+        <View className="flex-1 items-center justify-center px-6">
           <Building2 size={48} color="#9CA3AF" />
-          <Text style={{ marginTop: 16, fontSize: 18, fontWeight: '600', color: '#374151', textAlign: 'center' }}>
+          <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">
             Select a Project
           </Text>
-          <Text style={{ marginTop: 8, fontSize: 14, color: '#6B7280', textAlign: 'center' }}>
+          <Text className="mt-2 text-sm text-gray-500 text-center">
             Please select a project from the Projects tab to view its insights.
           </Text>
           <Pressable
             onPress={() => router.push('/(tabs)/projects')}
-            style={{ marginTop: 16, backgroundColor: '#F97316', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 }}
+            className="mt-4 bg-orange-500 py-3 px-6 rounded-xl"
           >
-            <Text style={{ color: 'white', fontWeight: '600' }}>Go to Projects</Text>
+            <Text className="text-white font-semibold">Go to Projects</Text>
           </Pressable>
         </View>
       )}
 
       {/* Loading State */}
       {currentProjectId && isLoading && (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#F97316" />
-          <Text style={{ marginTop: 12, color: '#6B7280' }}>Loading insights...</Text>
+          <Text className="mt-3 text-gray-500">Loading insights...</Text>
         </View>
       )}
 
