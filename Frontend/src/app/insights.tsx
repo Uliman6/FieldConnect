@@ -33,6 +33,7 @@ import {
   Zap,
   Sparkles,
   Send,
+  BarChart3,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
