@@ -52,6 +52,10 @@ class InsightsService {
       ? event.title
       : eventIndexer.generateSmartTitle(event.transcriptText);
 
+    // Use event description for follow-up reason (cleaner than raw text)
+    // Falls back to extracted action items if no description
+    const followUpReason = event.description || extracted.followUpReason || null;
+
     const insight = await prisma.insight.create({
       data: {
         sourceType: 'event',
@@ -59,7 +63,7 @@ class InsightsService {
         projectId: event.projectId,
         dailyLogId: event.linkedDailyLogId,
         title,
-        description: event.notes,
+        description: event.description || event.notes,
         rawText: event.transcriptText,
         category,
         severity: event.severity,
@@ -72,7 +76,7 @@ class InsightsService {
         systems: extracted.systems,
         costImpact: extracted.costImpact,
         needsFollowUp: extracted.needsFollowUp,
-        followUpReason: extracted.followUpReason,
+        followUpReason,
         isResolved: event.isResolved || false,
         keywordsSummary,
         isTest: testFlag
@@ -300,6 +304,9 @@ class InsightsService {
     const extracted = eventIndexer.extractAllKeywords(text);
     const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
 
+    // Use description for follow-up reason if follow-up is needed
+    const followUpReason = extracted.needsFollowUp ? description : null;
+
     const insight = await prisma.insight.create({
       data: {
         sourceType: 'manual',
@@ -319,7 +326,7 @@ class InsightsService {
         systems: extracted.systems,
         costImpact: extracted.costImpact,
         needsFollowUp: extracted.needsFollowUp,
-        followUpReason: extracted.followUpReason,
+        followUpReason,
         keywordsSummary,
         isTest
       }

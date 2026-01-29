@@ -42,6 +42,7 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/cn';
+import { useDailyLogStore } from '@/lib/store';
 import {
   getInsights,
   getInsightsStats,
@@ -326,6 +327,10 @@ type TabType = 'dashboard' | 'all' | 'follow-ups' | 'search';
 export default function InsightsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
+  const projects = useDailyLogStore((s) => s.projects);
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isIndexing, setIsIndexing] = useState(false);
@@ -343,7 +348,10 @@ export default function InsightsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const result = await queryInsights(searchQuery, { format: 'checklist' });
+      const result = await queryInsights(searchQuery, {
+        projectId: currentProjectId || undefined,
+        format: 'checklist'
+      });
       setNlQueryResult(result);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error: any) {
@@ -353,7 +361,7 @@ export default function InsightsScreen() {
     } finally {
       setIsQuerying(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, currentProjectId]);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
@@ -361,29 +369,32 @@ export default function InsightsScreen() {
     setNlError(null);
   }, []);
 
-  // Fetch insights stats
+  // Fetch insights stats for current project
   const statsQuery = useQuery({
-    queryKey: queryKeys.insightsStats(),
-    queryFn: () => getInsightsStats(),
+    queryKey: queryKeys.insightsStats(currentProjectId || undefined),
+    queryFn: () => getInsightsStats({ projectId: currentProjectId || undefined }),
     staleTime: 30000,
+    enabled: !!currentProjectId,
   });
 
-  // Fetch all insights (include test data to show everything)
+  // Fetch all insights for current project
   const insightsQuery = useQuery({
-    queryKey: queryKeys.insights({ limit: 100 }),
+    queryKey: queryKeys.insights({ projectId: currentProjectId || undefined, limit: 100 }),
     queryFn: async () => {
-      const result = await getInsights({ limit: 100 });
-      console.log('[insights] Fetched insights:', result?.length || 0);
+      const result = await getInsights({ projectId: currentProjectId || undefined, limit: 100 });
+      console.log('[insights] Fetched insights for project:', currentProjectId, result?.length || 0);
       return result;
     },
     staleTime: 0, // Always fetch fresh data
+    enabled: !!currentProjectId,
   });
 
-  // Fetch follow-up insights
+  // Fetch follow-up insights for current project
   const followUpsQuery = useQuery({
-    queryKey: queryKeys.insights({ needsFollowUp: true, limit: 50 }),
-    queryFn: () => getInsights({ needsFollowUp: true, limit: 50 }),
+    queryKey: queryKeys.insights({ projectId: currentProjectId || undefined, needsFollowUp: true, limit: 50 }),
+    queryFn: () => getInsights({ projectId: currentProjectId || undefined, needsFollowUp: true, limit: 50 }),
     staleTime: 30000,
+    enabled: !!currentProjectId,
   });
 
   // Handle follow-up toggle
@@ -430,15 +441,15 @@ export default function InsightsScreen() {
   const handleDebugFetch = useCallback(async () => {
     try {
       setDebugInfo('Fetching...');
-      const insights = await getInsights({ limit: 100 });
-      const stats = await getInsightsStats();
-      setDebugInfo(`API returned: ${insights.length} insights\nStats total: ${stats.total}\n\nFirst few titles:\n${insights.slice(0, 5).map((i: Insight) => `- ${i.title}`).join('\n')}`);
+      const insights = await getInsights({ projectId: currentProjectId || undefined, limit: 100 });
+      const stats = await getInsightsStats({ projectId: currentProjectId || undefined });
+      setDebugInfo(`Project: ${currentProject?.name || 'None'}\nAPI returned: ${insights.length} insights\nStats total: ${stats.total}\n\nFirst few titles:\n${insights.slice(0, 5).map((i: Insight) => `- ${i.title}`).join('\n')}`);
       // Force refetch
       queryClient.invalidateQueries({ queryKey: ['insights'] });
     } catch (error: any) {
       setDebugInfo(`Error: ${error.message}`);
     }
-  }, [queryClient]);
+  }, [queryClient, currentProjectId, currentProject]);
 
   const isLoading = statsQuery.isLoading || insightsQuery.isLoading;
   const hasError = statsQuery.isError || insightsQuery.isError;
@@ -451,7 +462,7 @@ export default function InsightsScreen() {
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       <Stack.Screen
         options={{
-          title: 'Insights Dashboard',
+          title: currentProject ? `${currentProject.name} Insights` : 'Insights',
           presentation: 'modal',
           headerStyle: { backgroundColor: '#111' },
           headerTintColor: '#FFF',
@@ -558,8 +569,27 @@ export default function InsightsScreen() {
         </View>
       )}
 
+      {/* No Project Selected */}
+      {!currentProjectId && (
+        <View className="flex-1 items-center justify-center px-6">
+          <Building2 size={48} color="#9CA3AF" />
+          <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">
+            Select a Project
+          </Text>
+          <Text className="mt-2 text-sm text-gray-500 text-center">
+            Please select a project from the Projects tab to view its insights.
+          </Text>
+          <Pressable
+            onPress={() => router.push('/(tabs)/projects')}
+            className="mt-4 bg-orange-500 py-3 px-6 rounded-xl"
+          >
+            <Text className="text-white font-semibold">Go to Projects</Text>
+          </Pressable>
+        </View>
+      )}
+
       {/* Loading State */}
-      {isLoading && (
+      {currentProjectId && isLoading && (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#F97316" />
           <Text className="mt-3 text-gray-500">Loading insights...</Text>
@@ -567,7 +597,7 @@ export default function InsightsScreen() {
       )}
 
       {/* Content */}
-      {!isLoading && (
+      {currentProjectId && !isLoading && (
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 40 }}
