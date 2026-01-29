@@ -34,6 +34,10 @@ import {
   Eye,
   Shield,
   Zap,
+  Sparkles,
+  Send,
+  Copy,
+  Printer,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -44,10 +48,12 @@ import {
   updateInsight,
   indexAllInsights,
   findSimilarInsights,
+  queryInsights,
   queryKeys,
   Insight,
   InsightsStats,
   InsightSearchFilters,
+  NLQueryResult,
 } from '@/lib/api';
 
 const CATEGORY_CONFIG: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
@@ -322,21 +328,36 @@ export default function InsightsScreen() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isIndexing, setIsIndexing] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const [isQuerying, setIsQuerying] = useState(false);
+  const [nlQueryResult, setNlQueryResult] = useState<NLQueryResult | null>(null);
+  const [nlError, setNlError] = useState<string | null>(null);
 
-  // Debounced search
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
+  // Execute NL query
+  const handleNLQuery = useCallback(async () => {
+    if (!searchQuery.trim()) return;
 
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
+    setIsQuerying(true);
+    setNlError(null);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      const result = await queryInsights(searchQuery, { format: 'checklist' });
+      setNlQueryResult(result);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error: any) {
+      console.error('NL query failed:', error);
+      setNlError(error.message || 'Query failed');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsQuerying(false);
     }
+  }, [searchQuery]);
 
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedQuery(text);
-    }, 300);
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    setNlQueryResult(null);
+    setNlError(null);
   }, []);
 
   // Fetch insights stats
@@ -357,14 +378,6 @@ export default function InsightsScreen() {
   const followUpsQuery = useQuery({
     queryKey: queryKeys.insights({ needsFollowUp: true, limit: 50 }),
     queryFn: () => getInsights({ needsFollowUp: true, limit: 50 }),
-    staleTime: 30000,
-  });
-
-  // Search insights
-  const searchQuery_result = useQuery({
-    queryKey: queryKeys.insights({ query: debouncedQuery, limit: 30 }),
-    queryFn: () => getInsights({ query: debouncedQuery, limit: 30 }),
-    enabled: activeTab === 'search' && debouncedQuery.length > 0,
     staleTime: 30000,
   });
 
@@ -408,18 +421,12 @@ export default function InsightsScreen() {
     }
   }, [queryClient]);
 
-  const clearSearch = useCallback(() => {
-    setSearchQuery('');
-    setDebouncedQuery('');
-  }, []);
-
   const isLoading = statsQuery.isLoading || insightsQuery.isLoading;
   const hasError = statsQuery.isError || insightsQuery.isError;
 
   const stats = statsQuery.data;
   const allInsights = insightsQuery.data || [];
   const followUps = followUpsQuery.data || [];
-  const searchResults = searchQuery_result.data || [];
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -718,68 +725,168 @@ export default function InsightsScreen() {
             </Animated.View>
           )}
 
-          {/* Search Tab */}
+          {/* AI Search Tab */}
           {activeTab === 'search' && (
             <Animated.View entering={FadeIn} className="px-4 pt-4">
-              {/* Search Bar */}
-              <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl px-4 py-3 mb-4">
-                <Search size={20} color="#9CA3AF" />
-                <TextInput
-                  value={searchQuery}
-                  onChangeText={handleSearchChange}
-                  placeholder="Search insights by keyword..."
-                  placeholderTextColor="#9CA3AF"
-                  className="flex-1 ml-3 text-gray-900 dark:text-white text-base"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="search"
-                />
-                {searchQuery.length > 0 && (
-                  <Pressable onPress={clearSearch} className="p-1">
-                    <X size={20} color="#9CA3AF" />
+              {/* AI Query Input */}
+              <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
+                <View className="flex-row items-center mb-3">
+                  <Sparkles size={18} color="#F97316" />
+                  <Text className="ml-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Ask AI
+                  </Text>
+                </View>
+                <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3">
+                  <TextInput
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="e.g., 'items for next building inspection'"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 text-gray-900 dark:text-white text-base"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="search"
+                    onSubmitEditing={handleNLQuery}
+                    multiline={false}
+                  />
+                  {searchQuery.length > 0 && (
+                    <Pressable onPress={clearSearch} className="p-1 mr-2">
+                      <X size={20} color="#9CA3AF" />
+                    </Pressable>
+                  )}
+                  <Pressable
+                    onPress={handleNLQuery}
+                    disabled={isQuerying || !searchQuery.trim()}
+                    className={cn(
+                      'p-2 rounded-full',
+                      searchQuery.trim() ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'
+                    )}
+                  >
+                    {isQuerying ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Send size={18} color="white" />
+                    )}
                   </Pressable>
+                </View>
+
+                {/* Example queries */}
+                {!nlQueryResult && !isQuerying && (
+                  <View className="mt-3">
+                    <Text className="text-xs text-gray-400 mb-2">Try asking:</Text>
+                    <View className="flex-row flex-wrap">
+                      {[
+                        'open safety issues',
+                        'electrician punch list',
+                        'items needing follow-up',
+                        'HVAC issues this week',
+                      ].map((example) => (
+                        <Pressable
+                          key={example}
+                          onPress={() => {
+                            setSearchQuery(example);
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          }}
+                          className="bg-gray-200 dark:bg-gray-600 px-3 py-1.5 rounded-full mr-2 mb-2"
+                        >
+                          <Text className="text-xs text-gray-600 dark:text-gray-300">{example}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
                 )}
               </View>
 
-              {/* Search Results */}
-              {searchQuery_result.isLoading && (
-                <View className="py-8 items-center">
-                  <ActivityIndicator size="small" color="#F97316" />
+              {/* Error State */}
+              {nlError && (
+                <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 mb-4">
+                  <View className="flex-row items-center">
+                    <AlertCircle size={18} color="#EF4444" />
+                    <Text className="ml-2 text-sm text-red-700 dark:text-red-300">{nlError}</Text>
+                  </View>
                 </View>
               )}
 
-              {debouncedQuery.length > 0 && searchResults.length > 0 && (
+              {/* Query Results */}
+              {nlQueryResult && (
                 <View>
-                  <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                    Results ({searchResults.length})
-                  </Text>
-                  {searchResults.map((insight, index) => (
-                    <Animated.View key={insight.id} entering={FadeInDown.delay(index * 20)}>
-                      <InsightCard
-                        insight={insight}
-                        onPress={() => router.push(`/insight-detail?id=${insight.id}`)}
-                        onToggleFollowUp={(needsFollowUp) => handleToggleFollowUp(insight.id, needsFollowUp)}
-                        onToggleResolved={(isResolved) => handleToggleResolved(insight.id, isResolved)}
-                      />
-                    </Animated.View>
-                  ))}
+                  {/* Summary Card */}
+                  <View className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 mb-4">
+                    <View className="flex-row items-start justify-between">
+                      <View className="flex-1">
+                        <Text className="text-sm font-semibold text-green-800 dark:text-green-300 mb-1">
+                          {nlQueryResult.summary}
+                        </Text>
+                        {nlQueryResult.parsed && (
+                          <View className="flex-row flex-wrap mt-2">
+                            {nlQueryResult.parsed.category !== 'all' && (
+                              <View className="bg-green-200 dark:bg-green-800 px-2 py-0.5 rounded-full mr-1 mb-1">
+                                <Text className="text-xs text-green-800 dark:text-green-200">
+                                  {nlQueryResult.parsed.category}
+                                </Text>
+                              </View>
+                            )}
+                            {nlQueryResult.parsed.status !== 'all' && (
+                              <View className="bg-green-200 dark:bg-green-800 px-2 py-0.5 rounded-full mr-1 mb-1">
+                                <Text className="text-xs text-green-800 dark:text-green-200">
+                                  {nlQueryResult.parsed.status}
+                                </Text>
+                              </View>
+                            )}
+                            {nlQueryResult.parsed.trades?.map((trade) => (
+                              <View key={trade} className="bg-blue-200 dark:bg-blue-800 px-2 py-0.5 rounded-full mr-1 mb-1">
+                                <Text className="text-xs text-blue-800 dark:text-blue-200">{trade}</Text>
+                              </View>
+                            ))}
+                            {nlQueryResult.parsed.systems?.map((system) => (
+                              <View key={system} className="bg-purple-200 dark:bg-purple-800 px-2 py-0.5 rounded-full mr-1 mb-1">
+                                <Text className="text-xs text-purple-800 dark:text-purple-200">{system}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Results List */}
+                  {nlQueryResult.results.length > 0 ? (
+                    <View>
+                      <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                        Results ({nlQueryResult.results.length})
+                      </Text>
+                      {nlQueryResult.results.map((insight, index) => (
+                        <Animated.View key={insight.id} entering={FadeInDown.delay(index * 20)}>
+                          <InsightCard
+                            insight={insight}
+                            onPress={() => router.push(`/insight-detail?id=${insight.id}`)}
+                            onToggleFollowUp={(needsFollowUp) => handleToggleFollowUp(insight.id, needsFollowUp)}
+                            onToggleResolved={(isResolved) => handleToggleResolved(insight.id, isResolved)}
+                          />
+                        </Animated.View>
+                      ))}
+                    </View>
+                  ) : (
+                    <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
+                      <Search size={32} color="#9CA3AF" />
+                      <Text className="mt-3 text-gray-500 text-center">
+                        No insights match your query.{'\n'}Try different keywords or index more data.
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
 
-              {debouncedQuery.length > 0 && !searchQuery_result.isLoading && searchResults.length === 0 && (
+              {/* Empty State */}
+              {!nlQueryResult && !isQuerying && !nlError && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-                  <Search size={32} color="#9CA3AF" />
-                  <Text className="mt-3 text-gray-500 text-center">
-                    No results found for "{debouncedQuery}"
+                  <Sparkles size={40} color="#F97316" />
+                  <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    AI-Powered Search
                   </Text>
-                </View>
-              )}
-
-              {debouncedQuery.length === 0 && (
-                <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-                  <Search size={32} color="#9CA3AF" />
-                  <Text className="mt-3 text-gray-500 text-center">
-                    Search insights by trade, location,{'\n'}system, inspector, or any keyword.
+                  <Text className="mt-2 text-sm text-gray-500 text-center">
+                    Ask questions in plain English like:{'\n'}
+                    "create a list of all items for{'\n'}the next building inspection"
                   </Text>
                 </View>
               )}
