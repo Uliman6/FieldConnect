@@ -122,7 +122,7 @@ async function search(req, res) {
       limit
     } = req.query;
 
-    const insights = await insightsService.search({
+    const filters = {
       query,
       projectId,
       category,
@@ -134,7 +134,13 @@ async function search(req, res) {
       startDate,
       endDate,
       limit: limit ? parseInt(limit) : undefined
-    });
+    };
+
+    console.log('[insights/search] Filters:', JSON.stringify(filters));
+
+    const insights = await insightsService.search(filters);
+
+    console.log(`[insights/search] Returning ${insights.length} insights`);
 
     res.json(insights);
   } catch (error) {
