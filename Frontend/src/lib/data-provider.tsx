@@ -742,12 +742,17 @@ function convertBackendEventToLocal(be: IndexedEvent, projectId: string): LocalE
     event_type: (be.eventType as EventType) || 'Other',
     severity: (be.severity as EventSeverity) || 'Medium',
     title: be.title || 'Untitled Event',
-    notes: '',
-    location: '',
-    trade_vendor: '',
+    description: be.description || '', // Include description
+    notes: be.notes || '',
+    location: be.location || '',
+    trade_vendor: be.tradeVendor || '',
     is_resolved: be.isResolved || false,
     resolved_at: null,
     linked_daily_log_id: null,
+    action_items: [], // Backend doesn't return action_items in list, will be fetched on detail view
+    item_status: be.itemStatus || undefined,
+    status_changed_at: be.statusChangedAt || undefined,
+    status_changed_by: be.statusChangedBy || undefined,
   };
 }
 

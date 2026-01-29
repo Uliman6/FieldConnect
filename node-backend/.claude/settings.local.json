@@ -21,7 +21,15 @@
       "Bash(mv *)",
       "Bash(git commit:*)",
       "Bash(grep:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(python:*)",
+      "Bash(cat:*)",
+      "Bash(EVENT_ID=\"8186cd49-b935-4751-95ae-1cf18fca7143\":*)",
+      "Bash(node -e:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdkMDNhNmRmLTQ2NmMtNDM1MS05ZWIxLTM0MTdmNTVjYjIwNyIsImVtYWlsIjoiYWRtaW5AZmllbGRjb25uZWN0LmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc2OTcxMDMxOCwiZXhwIjoxNzcwMzE1MTE4fQ.MB7gjsddDNU8ofAZBOpIWMJY-QbBgO4D884MiKXMaPs\")",
+      "Bash(python3:*)"
     ]
   }
 }
