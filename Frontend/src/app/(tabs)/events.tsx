@@ -234,9 +234,16 @@ export default function EventsScreen() {
   const events = useMemo(() => {
     const backendIds = new Set(backendEvents.map(e => e.id));
     // Include local events that haven't synced yet (not in backend)
-    const localOnlyEvents = localEvents.filter(e =>
-      e.project_id === currentProjectId && !backendIds.has(e.id)
-    );
+    // Check both: 1) local ID not in backend, 2) no backend ID mapping exists
+    const localOnlyEvents = localEvents.filter(e => {
+      if (e.project_id !== currentProjectId) return false;
+      // If local ID is in backend, skip (same ID)
+      if (backendIds.has(e.id)) return false;
+      // If this local event has been synced (has backend ID mapping), skip it
+      const backendId = getBackendId('events', e.id);
+      if (backendId && backendIds.has(backendId)) return false;
+      return true;
+    });
     return [...localOnlyEvents, ...backendEvents];
   }, [backendEvents, localEvents, currentProjectId]);
 
