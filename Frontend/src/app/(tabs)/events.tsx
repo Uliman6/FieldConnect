@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,15 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDailyLogStore } from '@/lib/store';
 import { Event, EventType, EventSeverity } from '@/lib/types';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { transcribeAudio } from '@/lib/transcription';
 import { syncEventToBackend } from '@/lib/sync';
-import { parseEventWithAI } from '@/lib/api';
+import { parseEventWithAI, getEvents as getEventsApi, queryKeys, IndexedEvent } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { useDataProvider, getBackendId } from '@/lib/data-provider';
 import {
   Mic,
   AlertTriangle,
@@ -173,14 +175,69 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
 
 export default function EventsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { refresh: refreshData } = useDataProvider();
   const [showRecorder, setShowRecorder] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const projects = useDailyLogStore((s) => s.projects);
-  const events = useDailyLogStore((s) => s.events);
+  const localEvents = useDailyLogStore((s) => s.events);
   const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
   const addEvent = useDailyLogStore((s) => s.addEvent);
   const updateEvent = useDailyLogStore((s) => s.updateEvent);
+
+  // Get backend project ID
+  const backendProjectId = currentProjectId
+    ? (getBackendId('projects', currentProjectId) || currentProjectId)
+    : undefined;
+
+  // Fetch events from backend for accurate sync
+  const eventsQuery = useQuery({
+    queryKey: queryKeys.events,
+    queryFn: async () => {
+      if (!backendProjectId) return [];
+      console.log('[events] Fetching events for project:', backendProjectId);
+      const events = await getEventsApi({ project_id: backendProjectId, limit: 100 });
+      console.log('[events] Fetched from backend:', events.length);
+      return events;
+    },
+    staleTime: 0, // Always fetch fresh
+    enabled: !!backendProjectId,
+  });
+
+  // Convert backend events to local format for display
+  const backendEvents: Event[] = useMemo(() => {
+    if (!eventsQuery.data) return [];
+    return eventsQuery.data.map((be: IndexedEvent) => ({
+      id: be.id,
+      project_id: be.project?.id || backendProjectId || '',
+      created_at: be.createdAt,
+      local_audio_uri: '',
+      transcript_text: be.transcriptText,
+      status: 'completed' as const,
+      event_type: (be.eventType as EventType) || 'Other',
+      severity: (be.severity as EventSeverity) || 'Medium',
+      title: be.title || 'Untitled Event',
+      description: be.description || '',
+      notes: be.notes || '',
+      location: be.location || '',
+      trade_vendor: be.tradeVendor || '',
+      is_resolved: be.isResolved || false,
+      resolved_at: null,
+      linked_daily_log_id: null,
+      action_items: [],
+      item_status: be.itemStatus || undefined,
+    }));
+  }, [eventsQuery.data, backendProjectId]);
+
+  // Merge local pending events (not yet synced) with backend events
+  const events = useMemo(() => {
+    const backendIds = new Set(backendEvents.map(e => e.id));
+    // Include local events that haven't synced yet (not in backend)
+    const localOnlyEvents = localEvents.filter(e =>
+      e.project_id === currentProjectId && !backendIds.has(e.id)
+    );
+    return [...localOnlyEvents, ...backendEvents];
+  }, [backendEvents, localEvents, currentProjectId]);
 
   // Sort events by created_at descending
   const sortedEvents = useMemo(() => {
@@ -264,18 +321,24 @@ export default function EventsScreen() {
             syncEventToBackend(updatedEvent).then(backendId => {
               if (backendId) {
                 console.log('[events] Event synced to backend:', backendId);
+                // Refresh the events list to show the synced event
+                queryClient.invalidateQueries({ queryKey: queryKeys.events });
               }
             });
           }
         } else {
           console.error('[events] Transcription failed:', result.error);
           // Still sync to backend even without transcription
-          syncEventToBackend(newEvent);
+          syncEventToBackend(newEvent).then(backendId => {
+            if (backendId) queryClient.invalidateQueries({ queryKey: queryKeys.events });
+          });
         }
       } catch (err) {
         console.error('[events] Transcription error:', err);
         // Still sync to backend even on error
-        syncEventToBackend(newEvent);
+        syncEventToBackend(newEvent).then(backendId => {
+          if (backendId) queryClient.invalidateQueries({ queryKey: queryKeys.events });
+        });
       }
     } else if (!currentProjectId) {
       // No project selected, show warning
@@ -286,10 +349,11 @@ export default function EventsScreen() {
     }
   };
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
-  };
+  const handleRefresh = useCallback(async () => {
+    console.log('[events] Refreshing...');
+    await queryClient.invalidateQueries({ queryKey: queryKeys.events });
+    await refreshData(); // Also refresh the data provider
+  }, [queryClient, refreshData]);
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
@@ -299,7 +363,7 @@ export default function EventsScreen() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl refreshing={eventsQuery.isFetching} onRefresh={handleRefresh} />
         }
       >
         {/* Project Selector Banner */}
