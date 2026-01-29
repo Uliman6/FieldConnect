@@ -191,8 +191,9 @@ export default function EventsScreen() {
     : undefined;
 
   // Fetch events from backend for accurate sync
+  // Include backendProjectId in query key so each project has separate cache
   const eventsQuery = useQuery({
-    queryKey: queryKeys.events,
+    queryKey: ['events', 'project', backendProjectId],
     queryFn: async () => {
       if (!backendProjectId) return [];
       console.log('[events] Fetching events for project:', backendProjectId);
@@ -322,7 +323,7 @@ export default function EventsScreen() {
               if (backendId) {
                 console.log('[events] Event synced to backend:', backendId);
                 // Refresh the events list to show the synced event
-                queryClient.invalidateQueries({ queryKey: queryKeys.events });
+                queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
               }
             });
           }
@@ -330,14 +331,14 @@ export default function EventsScreen() {
           console.error('[events] Transcription failed:', result.error);
           // Still sync to backend even without transcription
           syncEventToBackend(newEvent).then(backendId => {
-            if (backendId) queryClient.invalidateQueries({ queryKey: queryKeys.events });
+            if (backendId) queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
           });
         }
       } catch (err) {
         console.error('[events] Transcription error:', err);
         // Still sync to backend even on error
         syncEventToBackend(newEvent).then(backendId => {
-          if (backendId) queryClient.invalidateQueries({ queryKey: queryKeys.events });
+          if (backendId) queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
         });
       }
     } else if (!currentProjectId) {
@@ -351,7 +352,7 @@ export default function EventsScreen() {
 
   const handleRefresh = useCallback(async () => {
     console.log('[events] Refreshing...');
-    await queryClient.invalidateQueries({ queryKey: queryKeys.events });
+    await queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
     await refreshData(); // Also refresh the data provider
   }, [queryClient, refreshData]);
 
