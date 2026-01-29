@@ -332,6 +332,7 @@ export default function InsightsScreen() {
   const [isQuerying, setIsQuerying] = useState(false);
   const [nlQueryResult, setNlQueryResult] = useState<NLQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Execute NL query
   const handleNLQuery = useCallback(async () => {
@@ -367,11 +368,15 @@ export default function InsightsScreen() {
     staleTime: 30000,
   });
 
-  // Fetch all insights
+  // Fetch all insights (include test data to show everything)
   const insightsQuery = useQuery({
     queryKey: queryKeys.insights({ limit: 100 }),
-    queryFn: () => getInsights({ limit: 100 }),
-    staleTime: 30000,
+    queryFn: async () => {
+      const result = await getInsights({ limit: 100 });
+      console.log('[insights] Fetched insights:', result?.length || 0);
+      return result;
+    },
+    staleTime: 0, // Always fetch fresh data
   });
 
   // Fetch follow-up insights
@@ -421,6 +426,20 @@ export default function InsightsScreen() {
     }
   }, [queryClient]);
 
+  // Debug: Fetch raw data
+  const handleDebugFetch = useCallback(async () => {
+    try {
+      setDebugInfo('Fetching...');
+      const insights = await getInsights({ limit: 100 });
+      const stats = await getInsightsStats();
+      setDebugInfo(`API returned: ${insights.length} insights\nStats total: ${stats.total}\n\nFirst few titles:\n${insights.slice(0, 5).map((i: Insight) => `- ${i.title}`).join('\n')}`);
+      // Force refetch
+      queryClient.invalidateQueries({ queryKey: ['insights'] });
+    } catch (error: any) {
+      setDebugInfo(`Error: ${error.message}`);
+    }
+  }, [queryClient]);
+
   const isLoading = statsQuery.isLoading || insightsQuery.isLoading;
   const hasError = statsQuery.isError || insightsQuery.isError;
 
@@ -448,17 +467,25 @@ export default function InsightsScreen() {
             </Pressable>
           ),
           headerRight: () => (
-            <Pressable
-              onPress={handleIndexAll}
-              disabled={isIndexing}
-              className="p-2"
-            >
-              {isIndexing ? (
-                <ActivityIndicator size="small" color="#F97316" />
-              ) : (
-                <Database size={22} color="#F97316" />
-              )}
-            </Pressable>
+            <View className="flex-row items-center">
+              <Pressable
+                onPress={handleDebugFetch}
+                className="p-2 mr-1"
+              >
+                <BarChart3 size={20} color="#3B82F6" />
+              </Pressable>
+              <Pressable
+                onPress={handleIndexAll}
+                disabled={isIndexing}
+                className="p-2"
+              >
+                {isIndexing ? (
+                  <ActivityIndicator size="small" color="#F97316" />
+                ) : (
+                  <Database size={22} color="#F97316" />
+                )}
+              </Pressable>
+            </View>
           ),
         }}
       />
@@ -492,6 +519,24 @@ export default function InsightsScreen() {
           </Pressable>
         ))}
       </View>
+
+      {/* Debug Info */}
+      {debugInfo && (
+        <Pressable
+          onPress={() => setDebugInfo(null)}
+          className="mx-4 mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4"
+        >
+          <View className="flex-row items-center mb-2">
+            <BarChart3 size={16} color="#3B82F6" />
+            <Text className="ml-2 text-xs font-semibold text-blue-700 dark:text-blue-300">
+              Debug Info (tap to close)
+            </Text>
+          </View>
+          <Text className="text-xs text-blue-800 dark:text-blue-200 font-mono">
+            {debugInfo}
+          </Text>
+        </Pressable>
+      )}
 
       {/* Error State */}
       {hasError && (
