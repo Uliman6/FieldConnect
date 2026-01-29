@@ -29,6 +29,7 @@ import {
   Zap,
   RefreshCw,
   ExternalLink,
+  ChevronRight,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -36,9 +37,11 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/cn';
 import {
   getInsight,
+  getSimilarInsights,
   updateInsight,
   queryKeys,
   Insight,
+  SimilarInsight,
 } from '@/lib/api';
 import { useColorScheme } from '@/lib/useColorScheme';
 
@@ -90,7 +93,15 @@ export default function InsightDetailScreen() {
     enabled: !!id,
   });
 
+  // Fetch similar insights
+  const similarQuery = useQuery({
+    queryKey: queryKeys.similarInsights(id || ''),
+    queryFn: () => getSimilarInsights(id || '', { limit: 5, crossProject: true }),
+    enabled: !!id,
+  });
+
   const insight = insightQuery.data;
+  const similarInsights = similarQuery.data || [];
   const isLoading = insightQuery.isLoading;
   const hasError = insightQuery.isError;
 
@@ -476,6 +487,96 @@ export default function InsightDetailScreen() {
               </Pressable>
             )}
           </Animated.View>
+
+          {/* Similar Insights Section */}
+          {similarInsights.length > 0 && (
+            <Animated.View
+              entering={FadeInDown.delay(300)}
+              className="mx-4 mt-6 mb-4"
+            >
+              <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">
+                Similar Insights ({similarInsights.length})
+              </Text>
+              {similarInsights.map((similar, index) => {
+                const simCategoryConfig = CATEGORY_CONFIG[similar.category] || CATEGORY_CONFIG.issue;
+                const SimCategoryIcon = simCategoryConfig.icon;
+                const matchPercent = Math.round(similar.similarity * 100);
+
+                return (
+                  <Pressable
+                    key={similar.id}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push(`/insight-detail?id=${similar.id}`);
+                    }}
+                    className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3"
+                  >
+                    <View className="flex-row items-start justify-between">
+                      <View className="flex-1 mr-3">
+                        {/* Match Score & Category */}
+                        <View className="flex-row items-center mb-2">
+                          <View
+                            className="px-2 py-0.5 rounded-full mr-2"
+                            style={{ backgroundColor: '#10B981' + '20' }}
+                          >
+                            <Text className="text-xs font-bold" style={{ color: '#10B981' }}>
+                              {matchPercent}% match
+                            </Text>
+                          </View>
+                          <View
+                            className="flex-row items-center px-2 py-0.5 rounded-full"
+                            style={{ backgroundColor: simCategoryConfig.color + '20' }}
+                          >
+                            <SimCategoryIcon size={10} color={simCategoryConfig.color} />
+                            <Text
+                              className="text-xs font-medium ml-1"
+                              style={{ color: simCategoryConfig.color }}
+                            >
+                              {simCategoryConfig.label}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Title */}
+                        <Text
+                          className="text-sm font-semibold text-gray-900 dark:text-white mb-1"
+                          numberOfLines={2}
+                        >
+                          {similar.title}
+                        </Text>
+
+                        {/* Project (cross-project indicator) */}
+                        {similar.project && similar.project.id !== insight.project?.id && (
+                          <View className="flex-row items-center mb-1">
+                            <Building2 size={12} color="#F97316" />
+                            <Text className="text-xs text-orange-600 ml-1">
+                              {similar.project.name}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Matching tags */}
+                        <View className="flex-row flex-wrap mt-1">
+                          {similar.trades?.slice(0, 2).map((trade) => (
+                            <View key={trade} className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
+                              <Text className="text-xs text-blue-700 dark:text-blue-300">{trade}</Text>
+                            </View>
+                          ))}
+                          {similar.systems?.slice(0, 1).map((system) => (
+                            <View key={system} className="bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
+                              <Text className="text-xs text-purple-700 dark:text-purple-300">{system}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      <ChevronRight size={20} color="#9CA3AF" />
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </Animated.View>
+          )}
         </ScrollView>
       )}
     </View>

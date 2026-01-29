@@ -1249,6 +1249,36 @@ export async function getInsight(id: string): Promise<Insight> {
 }
 
 /**
+ * Get similar insights by insight ID (uses embeddings if available)
+ */
+export interface SimilarInsight {
+  id: string;
+  title: string;
+  category: string;
+  severity: string | null;
+  sourceType: string;
+  createdAt: string;
+  project: { id: string; name: string } | null;
+  similarity: number;
+  trades?: string[];
+  systems?: string[];
+  issueTypes?: string[];
+}
+
+export async function getSimilarInsights(
+  insightId: string,
+  options: { limit?: number; includeTest?: boolean; crossProject?: boolean } = {}
+): Promise<SimilarInsight[]> {
+  const params = new URLSearchParams();
+  if (options.limit) params.append('limit', String(options.limit));
+  if (options.includeTest !== undefined) params.append('includeTest', String(options.includeTest));
+  if (options.crossProject !== undefined) params.append('crossProject', String(options.crossProject));
+
+  const query = params.toString();
+  return apiFetch(`/api/insights/${insightId}/similar${query ? `?${query}` : ''}`);
+}
+
+/**
  * Get insights statistics
  */
 export async function getInsightsStats(options: {
@@ -2019,6 +2049,7 @@ export const queryKeys = {
   project: (id: string) => ['projects', id] as const,
   insights: (filters?: InsightSearchFilters) => ['insights', filters] as const,
   insight: (id: string) => ['insights', id] as const,
+  similarInsights: (id: string) => ['insights', id, 'similar'] as const,
   insightsStats: (projectId?: string, isTest?: boolean) => ['insights', 'stats', projectId, isTest] as const,
   templates: ['templates'] as const,
   template: (id: string) => ['templates', id] as const,
