@@ -1323,6 +1323,45 @@ export async function findSimilarInsights(
 }
 
 /**
+ * Natural language query for insights
+ * Example: "create a list of all items for next building inspection"
+ */
+export interface NLQueryResult {
+  originalQuery: string;
+  parsed: {
+    intent: string;
+    category: string;
+    timeFrame: string;
+    dateValue?: string;
+    trades: string[];
+    systems: string[];
+    locations: string[];
+    status: string;
+    keywords: string[];
+    outputFormat: string;
+  };
+  filters: Record<string, unknown>;
+  results: Insight[];
+  summary: string;
+  formatted?: string;
+}
+
+export async function queryInsights(
+  query: string,
+  options: { projectId?: string; includeTest?: boolean; format?: 'list' | 'checklist' } = {}
+): Promise<NLQueryResult> {
+  return apiFetch('/api/insights/query', {
+    method: 'POST',
+    body: JSON.stringify({
+      query,
+      projectId: options.projectId,
+      includeTest: options.includeTest,
+      format: options.format || 'list',
+    }),
+  });
+}
+
+/**
  * Index all daily log items into insights
  */
 export async function indexAllInsights(isTest: boolean = false): Promise<{
