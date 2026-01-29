@@ -26,6 +26,11 @@ router.delete('/test-data', requireRole('ADMIN'), insightsController.clearTestDa
 // POST /api/insights/find-similar-by-text
 router.post('/find-similar-by-text', insightsController.findSimilarByText);
 
+// Natural language query for insights
+// POST /api/insights/query
+// Example: "create a list of all items for next building inspection"
+router.post('/query', insightsController.nlQuery);
+
 // Create insight from event
 // POST /api/insights/from-event/:eventId
 router.post('/from-event/:eventId', requireRole('ADMIN', 'EDITOR'), insightsController.createFromEvent);

@@ -1,4 +1,5 @@
 const insightsService = require('../services/insights.service');
+const nlQueryService = require('../services/nl-query.service');
 
 /**
  * Insights Controller
@@ -350,6 +351,41 @@ async function backfillEmbeddings(req, res) {
   }
 }
 
+/**
+ * Natural language query for insights
+ * POST /api/insights/query
+ */
+async function nlQuery(req, res) {
+  try {
+    const { query, projectId, includeTest = false, format = 'list' } = req.body;
+
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({
+        error: 'Query required',
+        message: 'Please provide a search query'
+      });
+    }
+
+    const result = await nlQueryService.processQuery(query, {
+      projectId,
+      includeTest
+    });
+
+    // If checklist format requested, include formatted output
+    if (format === 'checklist' || result.parsed?.outputFormat === 'checklist' || result.parsed?.outputFormat === 'report') {
+      result.formatted = nlQueryService.formatAsChecklist(result.results, {
+        title: `Results for: ${query}`,
+        groupBy: result.parsed?.category !== 'all' ? 'severity' : 'category'
+      });
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error processing NL query:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   indexAll,
   backfillEmbeddings,
@@ -364,5 +400,6 @@ module.exports = {
   getStats,
   update,
   deleteInsight,
-  clearTestData
+  clearTestData,
+  nlQuery
 };
