@@ -24,10 +24,7 @@ import {
   BellOff,
   CheckCircle2,
   Clock,
-  Database,
   RefreshCw,
-  Filter,
-  BarChart3,
   FileText,
   AlertTriangle,
   Lightbulb,
@@ -36,8 +33,6 @@ import {
   Zap,
   Sparkles,
   Send,
-  Copy,
-  Printer,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -47,7 +42,6 @@ import {
   getInsights,
   getInsightsStats,
   updateInsight,
-  indexAllInsights,
   findSimilarInsights,
   queryInsights,
   queryKeys,
@@ -333,11 +327,9 @@ export default function InsightsScreen() {
 
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isIndexing, setIsIndexing] = useState(false);
   const [isQuerying, setIsQuerying] = useState(false);
   const [nlQueryResult, setNlQueryResult] = useState<NLQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Execute NL query
   const handleNLQuery = useCallback(async () => {
@@ -421,36 +413,6 @@ export default function InsightsScreen() {
     }
   }, [queryClient]);
 
-  // Handle index all
-  const handleIndexAll = useCallback(async () => {
-    setIsIndexing(true);
-    try {
-      const result = await indexAllInsights(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      queryClient.invalidateQueries({ queryKey: ['insights'] });
-      alert(`Indexed: ${result.results.events.indexed} events, ${result.results.pendingIssues.indexed} issues, ${result.results.inspectionNotes.indexed} inspections`);
-    } catch (error) {
-      console.error('Failed to index insights:', error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } finally {
-      setIsIndexing(false);
-    }
-  }, [queryClient]);
-
-  // Debug: Fetch raw data
-  const handleDebugFetch = useCallback(async () => {
-    try {
-      setDebugInfo('Fetching...');
-      const insights = await getInsights({ projectId: currentProjectId || undefined, limit: 100 });
-      const stats = await getInsightsStats({ projectId: currentProjectId || undefined });
-      setDebugInfo(`Project: ${currentProject?.name || 'None'}\nAPI returned: ${insights.length} insights\nStats total: ${stats.total}\n\nFirst few titles:\n${insights.slice(0, 5).map((i: Insight) => `- ${i.title}`).join('\n')}`);
-      // Force refetch
-      queryClient.invalidateQueries({ queryKey: ['insights'] });
-    } catch (error: any) {
-      setDebugInfo(`Error: ${error.message}`);
-    }
-  }, [queryClient, currentProjectId, currentProject]);
-
   const isLoading = statsQuery.isLoading || insightsQuery.isLoading;
   const hasError = statsQuery.isError || insightsQuery.isError;
 
@@ -476,27 +438,6 @@ export default function InsightsScreen() {
             >
               <ArrowLeft size={24} color="#FFF" />
             </Pressable>
-          ),
-          headerRight: () => (
-            <View className="flex-row items-center">
-              <Pressable
-                onPress={handleDebugFetch}
-                className="p-2 mr-1"
-              >
-                <BarChart3 size={20} color="#3B82F6" />
-              </Pressable>
-              <Pressable
-                onPress={handleIndexAll}
-                disabled={isIndexing}
-                className="p-2"
-              >
-                {isIndexing ? (
-                  <ActivityIndicator size="small" color="#F97316" />
-                ) : (
-                  <Database size={22} color="#F97316" />
-                )}
-              </Pressable>
-            </View>
           ),
         }}
       />
@@ -531,41 +472,15 @@ export default function InsightsScreen() {
         ))}
       </View>
 
-      {/* Debug Info */}
-      {debugInfo && (
-        <Pressable
-          onPress={() => setDebugInfo(null)}
-          className="mx-4 mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4"
-        >
-          <View className="flex-row items-center mb-2">
-            <BarChart3 size={16} color="#3B82F6" />
-            <Text className="ml-2 text-xs font-semibold text-blue-700 dark:text-blue-300">
-              Debug Info (tap to close)
-            </Text>
-          </View>
-          <Text className="text-xs text-blue-800 dark:text-blue-200 font-mono">
-            {debugInfo}
-          </Text>
-        </Pressable>
-      )}
-
       {/* Error State */}
       {hasError && (
         <View className="mx-4 mt-4 bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
           <View className="flex-row items-center">
             <AlertCircle size={20} color="#EF4444" />
             <Text className="ml-2 text-sm text-red-700 dark:text-red-300">
-              Unable to load insights. Make sure the backend is running and you've indexed data.
+              Unable to load insights. Please check your connection and try again.
             </Text>
           </View>
-          <Pressable
-            onPress={handleIndexAll}
-            className="mt-3 bg-red-100 dark:bg-red-800 py-2 px-4 rounded-lg self-start"
-          >
-            <Text className="text-sm font-medium text-red-700 dark:text-red-300">
-              Index Data Now
-            </Text>
-          </Pressable>
         </View>
       )}
 
@@ -721,22 +636,14 @@ export default function InsightsScreen() {
               {/* Empty State */}
               {stats.total === 0 && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-                  <Database size={48} color="#9CA3AF" />
+                  <Lightbulb size={48} color="#9CA3AF" />
                   <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
                     No Insights Yet
                   </Text>
                   <Text className="mt-2 text-sm text-gray-500 text-center">
-                    Index your events and daily log data to see insights and patterns.
+                    Record events to automatically generate insights.{'\n'}
+                    Insights help you track issues, patterns, and follow-ups.
                   </Text>
-                  <Pressable
-                    onPress={handleIndexAll}
-                    disabled={isIndexing}
-                    className="mt-4 bg-orange-500 py-3 px-6 rounded-xl"
-                  >
-                    <Text className="text-white font-semibold">
-                      {isIndexing ? 'Indexing...' : 'Index Data Now'}
-                    </Text>
-                  </Pressable>
                 </View>
               )}
             </Animated.View>

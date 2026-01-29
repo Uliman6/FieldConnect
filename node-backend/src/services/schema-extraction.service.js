@@ -187,7 +187,7 @@ Return the JSON with extracted field values.`;
    * @returns {object} - The created/updated EventSchemaData
    */
   async applySchemaToEvent(eventId, schemaId) {
-    // Get the event
+    // Get the event with all its existing data
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: { schemaData: true },
@@ -220,20 +220,59 @@ Return the JSON with extracted field values.`;
       schema
     );
 
+    // IMPORTANT: Preserve existing event data - don't override with AI extraction
+    // These fields were already generated when the event was created
+    const fieldValues = { ...extraction.fieldValues };
+
+    // Map event fields to common schema field names
+    const eventFieldMapping = {
+      // Use event's clean description if it exists
+      description: event.description,
+      // Location field
+      location: event.location,
+      // Trade/vendor field
+      trade: event.tradeVendor,
+      trade_vendor: event.tradeVendor,
+      responsible_party: event.tradeVendor,
+      assigned_to: event.tradeVendor,
+      // Title field
+      title: event.title,
+      item_title: event.title,
+      // Notes field
+      notes: event.notes,
+      additional_notes: event.notes,
+    };
+
+    // For each field in the schema, prefer event data over AI extraction
+    const schemaFields = schema.fields || [];
+    for (const field of schemaFields) {
+      const fieldName = field.name.toLowerCase();
+
+      // Check if we have existing event data for this field
+      for (const [eventField, eventValue] of Object.entries(eventFieldMapping)) {
+        if (eventValue && fieldName.includes(eventField)) {
+          // Prefer event's existing data over AI extraction
+          fieldValues[field.name] = eventValue;
+          console.log(`[schema-extraction] Using event.${eventField} for field "${field.name}"`);
+          break;
+        }
+      }
+    }
+
     // Create or update EventSchemaData
     const schemaData = await prisma.eventSchemaData.upsert({
       where: { eventId },
       create: {
         eventId,
         schemaId,
-        fieldValues: extraction.fieldValues,
+        fieldValues,
         extractedAt: new Date(),
         extractionConfidence: extraction.confidence,
         wasManuallyEdited: false,
       },
       update: {
         schemaId,
-        fieldValues: extraction.fieldValues,
+        fieldValues,
         extractedAt: new Date(),
         extractionConfidence: extraction.confidence,
         wasManuallyEdited: false,
