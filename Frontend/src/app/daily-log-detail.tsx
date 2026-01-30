@@ -1013,15 +1013,15 @@ export default function DailyLogDetailScreen() {
   const [editingMaterial, setEditingMaterial] = useState<any>(null);
   const [editingInspection, setEditingInspection] = useState<any>(null);
 
-  // Fetch daily log from backend
-  const { data: log, isLoading, isError, error, refetch } = useQuery({
-    queryKey: queryKeys.dailyLog(id!),
-    queryFn: () => getDailyLog(id!),
-    enabled: !!id,
-  });
-
-  // Get backend ID for photos (daily logs may have local IDs that differ from backend IDs)
+  // Get backend ID (daily logs may have local IDs that differ from backend IDs)
   const backendDailyLogId = id ? (getBackendId('dailyLogs', id) || id) : '';
+
+  // Fetch daily log from backend using the mapped backend ID
+  const { data: log, isLoading, isError, error, refetch } = useQuery({
+    queryKey: queryKeys.dailyLog(backendDailyLogId),
+    queryFn: () => getDailyLog(backendDailyLogId),
+    enabled: !!backendDailyLogId,
+  });
 
   // Fetch photos for the daily log
   const photosQuery = useQuery({
@@ -1030,106 +1030,106 @@ export default function DailyLogDetailScreen() {
     enabled: !!backendDailyLogId && !!id,
   });
 
-  // Mutations
-  const invalidateLog = () => queryClient.invalidateQueries({ queryKey: queryKeys.dailyLog(id!) });
+  // Mutations - use backendDailyLogId for all API calls
+  const invalidateLog = () => queryClient.invalidateQueries({ queryKey: queryKeys.dailyLog(backendDailyLogId) });
 
   const addTaskMutation = useMutation({
-    mutationFn: (data: any) => addTaskApi(id!, data),
+    mutationFn: (data: any) => addTaskApi(backendDailyLogId, data),
     onSuccess: () => { invalidateLog(); setEditingTask(null); },
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ taskId, data }: { taskId: string; data: any }) => updateTaskApi(id!, taskId, data),
+    mutationFn: ({ taskId, data }: { taskId: string; data: any }) => updateTaskApi(backendDailyLogId, taskId, data),
     onSuccess: () => { invalidateLog(); setEditingTask(null); },
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: (taskId: string) => deleteTaskApi(id!, taskId),
+    mutationFn: (taskId: string) => deleteTaskApi(backendDailyLogId, taskId),
     onSuccess: invalidateLog,
   });
 
   const addIssueMutation = useMutation({
-    mutationFn: (data: any) => addPendingIssueApi(id!, data),
+    mutationFn: (data: any) => addPendingIssueApi(backendDailyLogId, data),
     onSuccess: () => { invalidateLog(); setEditingIssue(null); },
   });
 
   const updateIssueMutation = useMutation({
-    mutationFn: ({ issueId, data }: { issueId: string; data: any }) => updatePendingIssueApi(id!, issueId, data),
+    mutationFn: ({ issueId, data }: { issueId: string; data: any }) => updatePendingIssueApi(backendDailyLogId, issueId, data),
     onSuccess: () => { invalidateLog(); setEditingIssue(null); },
   });
 
   const deleteIssueMutation = useMutation({
-    mutationFn: (issueId: string) => deletePendingIssueApi(id!, issueId),
+    mutationFn: (issueId: string) => deletePendingIssueApi(backendDailyLogId, issueId),
     onSuccess: invalidateLog,
   });
 
   const addVisitorMutation = useMutation({
-    mutationFn: (data: any) => addVisitorApi(id!, data),
+    mutationFn: (data: any) => addVisitorApi(backendDailyLogId, data),
     onSuccess: () => { invalidateLog(); setEditingVisitor(null); },
   });
 
   const updateVisitorMutation = useMutation({
-    mutationFn: ({ visitorId, data }: { visitorId: string; data: any }) => updateVisitorApi(id!, visitorId, data),
+    mutationFn: ({ visitorId, data }: { visitorId: string; data: any }) => updateVisitorApi(backendDailyLogId, visitorId, data),
     onSuccess: () => { invalidateLog(); setEditingVisitor(null); },
   });
 
   const deleteVisitorMutation = useMutation({
-    mutationFn: (visitorId: string) => deleteVisitorApi(id!, visitorId),
+    mutationFn: (visitorId: string) => deleteVisitorApi(backendDailyLogId, visitorId),
     onSuccess: invalidateLog,
   });
 
   const addEquipmentMutation = useMutation({
-    mutationFn: (data: any) => addEquipmentApi(id!, data),
+    mutationFn: (data: any) => addEquipmentApi(backendDailyLogId, data),
     onSuccess: () => { invalidateLog(); setEditingEquipment(null); },
   });
 
   const updateEquipmentMutation = useMutation({
-    mutationFn: ({ equipmentId, data }: { equipmentId: string; data: any }) => updateEquipmentApi(id!, equipmentId, data),
+    mutationFn: ({ equipmentId, data }: { equipmentId: string; data: any }) => updateEquipmentApi(backendDailyLogId, equipmentId, data),
     onSuccess: () => { invalidateLog(); setEditingEquipment(null); },
   });
 
   const deleteEquipmentMutation = useMutation({
-    mutationFn: (equipmentId: string) => deleteEquipmentApi(id!, equipmentId),
+    mutationFn: (equipmentId: string) => deleteEquipmentApi(backendDailyLogId, equipmentId),
     onSuccess: invalidateLog,
   });
 
   const addMaterialMutation = useMutation({
-    mutationFn: (data: any) => addMaterialApi(id!, data),
+    mutationFn: (data: any) => addMaterialApi(backendDailyLogId, data),
     onSuccess: () => { invalidateLog(); setEditingMaterial(null); },
   });
 
   const updateMaterialMutation = useMutation({
-    mutationFn: ({ materialId, data }: { materialId: string; data: any }) => updateMaterialApi(id!, materialId, data),
+    mutationFn: ({ materialId, data }: { materialId: string; data: any }) => updateMaterialApi(backendDailyLogId, materialId, data),
     onSuccess: () => { invalidateLog(); setEditingMaterial(null); },
   });
 
   const deleteMaterialMutation = useMutation({
-    mutationFn: (materialId: string) => deleteMaterialApi(id!, materialId),
+    mutationFn: (materialId: string) => deleteMaterialApi(backendDailyLogId, materialId),
     onSuccess: invalidateLog,
   });
 
   const addInspectionMutation = useMutation({
-    mutationFn: (data: any) => addInspectionNoteApi(id!, data),
+    mutationFn: (data: any) => addInspectionNoteApi(backendDailyLogId, data),
     onSuccess: () => { invalidateLog(); setEditingInspection(null); },
   });
 
   const updateInspectionMutation = useMutation({
-    mutationFn: ({ noteId, data }: { noteId: string; data: any }) => updateInspectionNoteApi(id!, noteId, data),
+    mutationFn: ({ noteId, data }: { noteId: string; data: any }) => updateInspectionNoteApi(backendDailyLogId, noteId, data),
     onSuccess: () => { invalidateLog(); setEditingInspection(null); },
   });
 
   const deleteInspectionMutation = useMutation({
-    mutationFn: (noteId: string) => deleteInspectionNoteApi(id!, noteId),
+    mutationFn: (noteId: string) => deleteInspectionNoteApi(backendDailyLogId, noteId),
     onSuccess: invalidateLog,
   });
 
   // Handlers
   const handleViewPdf = useCallback(async () => {
-    if (!id) return;
+    if (!backendDailyLogId) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsLoadingPdf(true);
     try {
-      const blobUrl = await fetchDailyLogPdf(id, true);
+      const blobUrl = await fetchDailyLogPdf(backendDailyLogId, true);
       if (Platform.OS === 'web') {
         window.open(blobUrl, '_blank');
       } else {
