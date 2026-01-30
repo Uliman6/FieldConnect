@@ -39,7 +39,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
-import { getBackendId } from '@/lib/id-mapping';
+import { getBackendId } from '@/lib/data-provider';
 import {
   getInsights,
   getInsightsStats,
