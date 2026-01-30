@@ -716,7 +716,7 @@ export default function InsightsScreen() {
 
           {/* AI Search Tab */}
           {activeTab === 'search' && (
-            <Animated.View entering={FadeIn} className="px-4 pt-4">
+            <View className="px-4 pt-4">
               {/* AI Query Input */}
               <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
                 <View className="flex-row items-center mb-3">
@@ -736,13 +736,15 @@ export default function InsightsScreen() {
                     autoCorrect={false}
                     returnKeyType="search"
                     onSubmitEditing={handleNLQuery}
-                    multiline={false}
                   />
-                  {searchQuery.length > 0 && (
-                    <Pressable onPress={clearSearch} className="p-1 mr-2">
-                      <X size={20} color="#9CA3AF" />
-                    </Pressable>
-                  )}
+                  <Pressable
+                    onPress={clearSearch}
+                    className="p-1 mr-2"
+                    style={{ opacity: searchQuery.length > 0 ? 1 : 0 }}
+                    disabled={searchQuery.length === 0}
+                  >
+                    <X size={20} color="#9CA3AF" />
+                  </Pressable>
                   <Pressable
                     onPress={handleNLQuery}
                     disabled={isQuerying || !searchQuery.trim()}
@@ -879,7 +881,7 @@ export default function InsightsScreen() {
                   </Text>
                 </View>
               )}
-            </Animated.View>
+            </View>
           )}
         </ScrollView>
       )}
