@@ -337,6 +337,7 @@ export default function InsightsScreen() {
   const [isQuerying, setIsQuerying] = useState(false);
   const [nlQueryResult, setNlQueryResult] = useState<NLQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);
+  const searchInputRef = useRef<TextInput>(null);
 
   // Execute NL query
   const handleNLQuery = useCallback(async () => {
@@ -727,15 +728,22 @@ export default function InsightsScreen() {
                 </View>
                 <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3">
                   <TextInput
+                    ref={searchInputRef}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     placeholder="e.g., 'items for next building inspection'"
                     placeholderTextColor="#9CA3AF"
-                    className="flex-1 text-gray-900 dark:text-white text-base"
+                    style={{
+                      flex: 1,
+                      fontSize: 16,
+                      color: '#111827',
+                      outlineStyle: 'none',
+                    } as any}
                     autoCapitalize="none"
                     autoCorrect={false}
                     returnKeyType="search"
                     onSubmitEditing={handleNLQuery}
+                    blurOnSubmit={false}
                   />
                   <Pressable
                     onPress={clearSearch}
