@@ -22,6 +22,63 @@ function parseDate(dateInput) {
 }
 
 /**
+ * Map pending issue categories to event types
+ */
+function mapIssueCategoryToEventType(category) {
+  const categoryMap = {
+    'Weather': 'Weather',
+    'Safety': 'Safety',
+    'Quality': 'Quality',
+    'Schedule': 'Delay',
+    'Materials': 'Materials',
+    'Coordination': 'Coordination',
+    'Other': 'Issue'
+  };
+  return categoryMap[category] || 'Issue';
+}
+
+/**
+ * Create a standalone Event from a pending issue extracted from a daily log
+ * @param {Object} issue - The pending issue data
+ * @param {Object} dailyLog - The daily log the issue was extracted from
+ * @param {string} projectId - The project ID
+ * @returns {Promise<Object>} The created event
+ */
+async function createEventFromIssue(issue, dailyLog, projectId) {
+  try {
+    const dailyLogDate = dailyLog.date ? new Date(dailyLog.date).toLocaleDateString() : 'unknown date';
+
+    const event = await prisma.event.create({
+      data: {
+        projectId,
+        linkedDailyLogId: dailyLog.id,
+        title: issue.title,
+        description: issue.description,
+        eventType: mapIssueCategoryToEventType(issue.category),
+        severity: issue.severity || 'Medium',
+        location: issue.location,
+        tradeVendor: issue.assignee,
+        notes: `Extracted from daily log: ${dailyLogDate}`,
+        isResolved: false,
+        itemStatus: 'OPEN'
+      }
+    });
+
+    console.log(`[daily-logs] Created event ${event.id} from pending issue "${issue.title}"`);
+
+    // Auto-index to insights (async, non-blocking)
+    insightsService.createFromEvent(event.id).catch(err =>
+      console.error(`[daily-logs] Auto-index failed for event ${event.id}: ${err.message}`)
+    );
+
+    return event;
+  } catch (err) {
+    console.error(`[daily-logs] Failed to create event from issue "${issue.title}": ${err.message}`);
+    return null;
+  }
+}
+
+/**
  * Daily Logs Controller - CRUD operations for daily logs
  */
 class DailyLogsController {
@@ -311,6 +368,37 @@ class DailyLogsController {
         }
       });
 
+      // Create standalone events from extracted pending issues (async, non-blocking)
+      if (dailyLog.pendingIssues && dailyLog.pendingIssues.length > 0) {
+        console.log(`[daily-logs] Creating ${dailyLog.pendingIssues.length} events from pending issues`);
+        for (const issue of dailyLog.pendingIssues) {
+          createEventFromIssue(issue, dailyLog, project_id).catch(err =>
+            console.error(`[daily-logs] Event creation failed: ${err.message}`)
+          );
+        }
+      }
+
+      // Also create events from inspection notes that need follow-up
+      if (dailyLog.inspectionNotes && dailyLog.inspectionNotes.length > 0) {
+        const followUpNotes = dailyLog.inspectionNotes.filter(n => n.followUpNeeded);
+        if (followUpNotes.length > 0) {
+          console.log(`[daily-logs] Creating ${followUpNotes.length} events from inspection notes needing follow-up`);
+          for (const note of followUpNotes) {
+            const issueFromNote = {
+              title: `${note.inspectionType || 'Inspection'} Follow-up Required`,
+              description: note.notes || `Follow-up needed for ${note.inspectionType} inspection by ${note.inspectorName || 'inspector'}`,
+              category: 'Quality',
+              severity: 'Medium',
+              location: null,
+              assignee: note.ahj || note.inspectorName
+            };
+            createEventFromIssue(issueFromNote, dailyLog, project_id).catch(err =>
+              console.error(`[daily-logs] Event creation from inspection failed: ${err.message}`)
+            );
+          }
+        }
+      }
+
       res.status(201).json(dailyLog);
     } catch (err) {
       next(err);
@@ -428,6 +516,16 @@ class DailyLogsController {
       const { id } = req.params;
       const { title, description, category, severity, assignee, due_date, external_entity, location } = req.body;
 
+      // First get the daily log to get project ID
+      const dailyLog = await prisma.dailyLog.findUnique({
+        where: { id },
+        select: { id: true, date: true, projectId: true }
+      });
+
+      if (!dailyLog) {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+
       const issue = await prisma.pendingIssue.create({
         data: {
           dailyLogId: id,
@@ -445,6 +543,11 @@ class DailyLogsController {
       // Auto-index to insights (async, non-blocking)
       insightsService.createFromPendingIssue(issue.id).catch(err =>
         console.error(`[daily-logs] Auto-index failed for pending issue ${issue.id}: ${err.message}`)
+      );
+
+      // Create standalone event from the pending issue (async, non-blocking)
+      createEventFromIssue(issue, dailyLog, dailyLog.projectId).catch(err =>
+        console.error(`[daily-logs] Event creation failed: ${err.message}`)
       );
 
       res.status(201).json(issue);
@@ -582,6 +685,37 @@ class DailyLogsController {
           additionalWorkEntries: true
         }
       });
+
+      // Create standalone events from extracted pending issues (async, non-blocking)
+      if (dailyLog.pendingIssues && dailyLog.pendingIssues.length > 0) {
+        console.log(`[daily-logs/from-transcript] Creating ${dailyLog.pendingIssues.length} events from pending issues`);
+        for (const issue of dailyLog.pendingIssues) {
+          createEventFromIssue(issue, dailyLog, project_id).catch(err =>
+            console.error(`[daily-logs] Event creation failed: ${err.message}`)
+          );
+        }
+      }
+
+      // Also create events from inspection notes that need follow-up
+      if (dailyLog.inspectionNotes && dailyLog.inspectionNotes.length > 0) {
+        const followUpNotes = dailyLog.inspectionNotes.filter(n => n.followUpNeeded);
+        if (followUpNotes.length > 0) {
+          console.log(`[daily-logs/from-transcript] Creating ${followUpNotes.length} events from inspection notes needing follow-up`);
+          for (const note of followUpNotes) {
+            const issueFromNote = {
+              title: `${note.inspectionType || 'Inspection'} Follow-up Required`,
+              description: note.notes || `Follow-up needed for ${note.inspectionType} inspection by ${note.inspectorName || 'inspector'}`,
+              category: 'Quality',
+              severity: 'Medium',
+              location: null,
+              assignee: note.ahj || note.inspectorName
+            };
+            createEventFromIssue(issueFromNote, dailyLog, project_id).catch(err =>
+              console.error(`[daily-logs] Event creation from inspection failed: ${err.message}`)
+            );
+          }
+        }
+      }
 
       res.status(201).json({
         ...dailyLog,
