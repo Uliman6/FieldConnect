@@ -320,6 +320,108 @@ function TopItemsList({
 
 type TabType = 'dashboard' | 'all' | 'follow-ups' | 'search';
 
+// Separate component to prevent re-render focus loss
+const SearchInputBox = React.memo(function SearchInputBox({
+  onSearch,
+  onSetExample,
+  isQuerying,
+}: {
+  onSearch: (query: string) => void;
+  onSetExample: (example: string) => void;
+  isQuerying: boolean;
+}) {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleSubmit = useCallback(() => {
+    if (inputValue.trim()) {
+      onSearch(inputValue.trim());
+    }
+  }, [inputValue, onSearch]);
+
+  const handleClear = useCallback(() => {
+    setInputValue('');
+  }, []);
+
+  const handleExamplePress = useCallback((example: string) => {
+    setInputValue(example);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, []);
+
+  return (
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
+      <View className="flex-row items-center mb-3">
+        <Sparkles size={18} color="#F97316" />
+        <Text className="ml-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+          Ask AI
+        </Text>
+      </View>
+      <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3">
+        <TextInput
+          value={inputValue}
+          onChangeText={setInputValue}
+          placeholder="e.g., 'items for next building inspection'"
+          placeholderTextColor="#9CA3AF"
+          style={{
+            flex: 1,
+            fontSize: 16,
+            color: '#111827',
+            outlineStyle: 'none',
+          } as any}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          onSubmitEditing={handleSubmit}
+        />
+        <Pressable
+          onPress={handleClear}
+          className="p-1 mr-2"
+          style={{ opacity: inputValue.length > 0 ? 1 : 0 }}
+          disabled={inputValue.length === 0}
+        >
+          <X size={20} color="#9CA3AF" />
+        </Pressable>
+        <Pressable
+          onPress={handleSubmit}
+          disabled={isQuerying || !inputValue.trim()}
+          className={cn(
+            'p-2 rounded-full',
+            inputValue.trim() ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'
+          )}
+        >
+          {isQuerying ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Send size={18} color="white" />
+          )}
+        </Pressable>
+      </View>
+
+      {/* Example queries */}
+      {!isQuerying && (
+        <View className="mt-3">
+          <Text className="text-xs text-gray-400 mb-2">Try asking:</Text>
+          <View className="flex-row flex-wrap">
+            {[
+              'open safety issues',
+              'electrician punch list',
+              'items needing follow-up',
+              'HVAC issues this week',
+            ].map((example) => (
+              <Pressable
+                key={example}
+                onPress={() => handleExamplePress(example)}
+                className="bg-gray-200 dark:bg-gray-600 px-3 py-1.5 rounded-full mr-2 mb-2"
+              >
+                <Text className="text-xs text-gray-600 dark:text-gray-300">{example}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+    </View>
+  );
+});
+
 export default function InsightsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -333,22 +435,20 @@ export default function InsightsScreen() {
     : undefined;
 
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [searchQuery, setSearchQuery] = useState('');
   const [isQuerying, setIsQuerying] = useState(false);
   const [nlQueryResult, setNlQueryResult] = useState<NLQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);
-  const searchInputRef = useRef<TextInput>(null);
 
-  // Execute NL query
-  const handleNLQuery = useCallback(async () => {
-    if (!searchQuery.trim()) return;
+  // Execute NL query - receives query from SearchInputBox
+  const handleNLQuery = useCallback(async (query: string) => {
+    if (!query.trim()) return;
 
     setIsQuerying(true);
     setNlError(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const result = await queryInsights(searchQuery, {
+      const result = await queryInsights(query, {
         projectId: backendProjectId,
         format: 'checklist'
       });
@@ -361,13 +461,7 @@ export default function InsightsScreen() {
     } finally {
       setIsQuerying(false);
     }
-  }, [searchQuery, backendProjectId]);
-
-  const clearSearch = useCallback(() => {
-    setSearchQuery('');
-    setNlQueryResult(null);
-    setNlError(null);
-  }, []);
+  }, [backendProjectId]);
 
   // Fetch insights stats for current project
   const statsQuery = useQuery({
@@ -718,83 +812,12 @@ export default function InsightsScreen() {
           {/* AI Search Tab */}
           {activeTab === 'search' && (
             <View className="px-4 pt-4">
-              {/* AI Query Input */}
-              <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
-                <View className="flex-row items-center mb-3">
-                  <Sparkles size={18} color="#F97316" />
-                  <Text className="ml-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Ask AI
-                  </Text>
-                </View>
-                <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3">
-                  <TextInput
-                    ref={searchInputRef}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholder="e.g., 'items for next building inspection'"
-                    placeholderTextColor="#9CA3AF"
-                    style={{
-                      flex: 1,
-                      fontSize: 16,
-                      color: '#111827',
-                      outlineStyle: 'none',
-                    } as any}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="search"
-                    onSubmitEditing={handleNLQuery}
-                    blurOnSubmit={false}
-                  />
-                  <Pressable
-                    onPress={clearSearch}
-                    className="p-1 mr-2"
-                    style={{ opacity: searchQuery.length > 0 ? 1 : 0 }}
-                    disabled={searchQuery.length === 0}
-                  >
-                    <X size={20} color="#9CA3AF" />
-                  </Pressable>
-                  <Pressable
-                    onPress={handleNLQuery}
-                    disabled={isQuerying || !searchQuery.trim()}
-                    className={cn(
-                      'p-2 rounded-full',
-                      searchQuery.trim() ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'
-                    )}
-                  >
-                    {isQuerying ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <Send size={18} color="white" />
-                    )}
-                  </Pressable>
-                </View>
-
-                {/* Example queries */}
-                {!nlQueryResult && !isQuerying && (
-                  <View className="mt-3">
-                    <Text className="text-xs text-gray-400 mb-2">Try asking:</Text>
-                    <View className="flex-row flex-wrap">
-                      {[
-                        'open safety issues',
-                        'electrician punch list',
-                        'items needing follow-up',
-                        'HVAC issues this week',
-                      ].map((example) => (
-                        <Pressable
-                          key={example}
-                          onPress={() => {
-                            setSearchQuery(example);
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          }}
-                          className="bg-gray-200 dark:bg-gray-600 px-3 py-1.5 rounded-full mr-2 mb-2"
-                        >
-                          <Text className="text-xs text-gray-600 dark:text-gray-300">{example}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </View>
+              {/* AI Query Input - Separate component to prevent focus loss */}
+              <SearchInputBox
+                onSearch={handleNLQuery}
+                onSetExample={() => {}}
+                isQuerying={isQuerying}
+              />
 
               {/* Error State */}
               {nlError && (
