@@ -29,7 +29,8 @@ import {
   updateEventApi,
   getProjects,
 } from './api';
-import { setBackendId, getBackendId } from './data-provider';
+// Note: With local-first UUID architecture, we no longer need ID mapping
+// The client-generated UUID is used directly as the backend ID
 
 // App version constant - update this when releasing new versions
 const APP_VERSION = '1.0.0';
@@ -804,55 +805,30 @@ export function getDateRange(days: number): { date_from: string; date_to: string
 // ============================================
 // REAL-TIME BACKEND SYNC FUNCTIONS
 // ============================================
-
-// Track backend IDs for local entities (maps local ID -> backend ID)
-const backendIdMap = {
-  projects: new Map<string, string>(),
-  dailyLogs: new Map<string, string>(),
-  events: new Map<string, string>(),
-};
+// With local-first UUID architecture:
+// - Client generates UUIDs that become the permanent IDs
+// - Backend accepts client-provided IDs (idempotent creates)
+// - No mapping needed: local ID = backend ID
 
 /**
- * Sync a project to the backend (creates if new, returns backend ID)
- * IMPORTANT: Checks for existing project by name to prevent duplicates
+ * Sync a project to the backend (creates if new, returns ID)
+ * Local-first: Sends client UUID, backend accepts it or returns existing
  */
 export async function syncProjectToBackend(project: Project): Promise<string | null> {
   try {
-    // Check if already synced (check persisted map first, then in-memory cache)
-    const existingBackendId = getBackendId('projects', project.id) || backendIdMap.projects.get(project.id);
-    if (existingBackendId) {
-      // Update in-memory cache
-      backendIdMap.projects.set(project.id, existingBackendId);
-      return existingBackendId;
-    }
+    console.log('[sync] Syncing project to backend:', project.name, 'ID:', project.id);
 
-    // IMPORTANT: Check if project with same name already exists in backend
-    // This prevents creating duplicate projects
-    console.log('[sync] Checking for existing project by name:', project.name);
-    const backendProjects = await getProjects();
-    const existingByName = backendProjects.find(
-      (bp) => bp.name.toLowerCase() === project.name.toLowerCase()
-    );
-
-    if (existingByName) {
-      console.log('[sync] Found existing project by name:', project.name, '->', existingByName.id);
-      backendIdMap.projects.set(project.id, existingByName.id);
-      setBackendId('projects', project.id, existingByName.id);
-      return existingByName.id;
-    }
-
-    // No existing project found, create new one
-    console.log('[sync] Creating new project in backend:', project.name);
+    // With local-first architecture, we send the client's UUID to the backend
+    // Backend will either create with this ID or return existing (idempotent)
     const result = await createProjectApi({
+      id: project.id, // Send client-generated UUID
       name: project.name,
       number: project.number || undefined,
       address: project.address || undefined,
     });
 
-    backendIdMap.projects.set(project.id, result.id);
-    setBackendId('projects', project.id, result.id);
-    console.log('[sync] Project created:', project.id, '->', result.id);
-    return result.id;
+    console.log('[sync] Project synced:', project.id);
+    return result.id; // Should be same as project.id
   } catch (error) {
     console.error('[sync] Failed to sync project:', error);
     return null;
@@ -861,49 +837,23 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
 
 /**
  * Sync a daily log to the backend
+ * Local-first: Sends client UUID, backend accepts it or returns existing
  * Parses transcription from voice artifacts to extract structured data
  */
 export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string | null> {
   try {
-    // Check if already synced (check persisted map first, then in-memory cache)
-    const existingBackendId = getBackendId('dailyLogs', dailyLog.id) || backendIdMap.dailyLogs.get(dailyLog.id);
-    if (existingBackendId) {
-      // Update in-memory cache
-      backendIdMap.dailyLogs.set(dailyLog.id, existingBackendId);
-      console.log('[sync] Updating daily log in backend:', existingBackendId);
-      await updateDailyLogApi(existingBackendId, {
-        preparedBy: dailyLog.prepared_by || undefined,
-        status: dailyLog.status || undefined,
-        weather: dailyLog.weather || undefined,
-        dailyTotalsWorkers: dailyLog.daily_totals_workers || undefined,
-        dailyTotalsHours: dailyLog.daily_totals_hours || undefined,
-      });
+    console.log('[sync] Syncing daily log to backend:', dailyLog.id);
 
-      // Update sync status
-      const store = useDailyLogStore.getState();
-      store.updateDailyLog(dailyLog.id, {
-        sync_status: 'synced',
-        last_synced_at: new Date().toISOString(),
-      });
-
-      return existingBackendId;
+    // With local-first architecture, project ID is already a valid UUID
+    // Ensure the project is synced first
+    const store = useDailyLogStore.getState();
+    const project = store.projects.find(p => p.id === dailyLog.project_id);
+    if (project) {
+      await syncProjectToBackend(project);
     }
 
-    // Get backend project ID (check persisted map first)
-    let backendProjectId = getBackendId('projects', dailyLog.project_id) || backendIdMap.projects.get(dailyLog.project_id);
-    if (!backendProjectId) {
-      // Try to sync the project first
-      const store = useDailyLogStore.getState();
-      const project = store.projects.find(p => p.id === dailyLog.project_id);
-      if (project) {
-        backendProjectId = await syncProjectToBackend(project);
-      }
-    }
-
-    if (!backendProjectId) {
-      console.error('[sync] Cannot sync daily log: project not synced');
-      return null;
-    }
+    // Use the project_id directly (it's already a UUID)
+    const projectId = dailyLog.project_id;
 
     // Extract transcription from voice artifacts
     let transcriptText = '';
@@ -929,13 +879,15 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
       console.log('[sync] Using AI parsing for transcript, length:', transcriptText.length);
 
       result = await createDailyLogFromTranscript({
-        projectId: backendProjectId,
+        id: dailyLog.id, // Send client-generated UUID
+        projectId: projectId,
         transcript: transcriptText,
         date: dailyLog.date,
         preparedBy: dailyLog.prepared_by || undefined,
       });
 
       console.log('[sync] AI parsed daily log created:', {
+        id: result.id,
         tasks: result.tasks?.length || 0,
         pendingIssues: result.pendingIssues?.length || 0,
         inspectionNotes: result.inspectionNotes?.length || 0,
@@ -993,7 +945,8 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
       }));
 
       result = await createDailyLogApi({
-        projectId: backendProjectId,
+        id: dailyLog.id, // Send client-generated UUID
+        projectId: projectId,
         date: dailyLog.date,
         preparedBy: dailyLog.prepared_by || undefined,
         status: dailyLog.status || 'draft',
@@ -1009,13 +962,10 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
       });
     }
 
-    backendIdMap.dailyLogs.set(dailyLog.id, result.id);
-    setBackendId('dailyLogs', dailyLog.id, result.id);
-    console.log('[sync] Daily log synced:', dailyLog.id, '->', result.id);
+    console.log('[sync] Daily log synced:', dailyLog.id);
 
     // Update sync status in store
-    const store = useDailyLogStore.getState();
-    store.updateDailyLog(dailyLog.id, {
+    useDailyLogStore.getState().updateDailyLog(dailyLog.id, {
       sync_status: 'synced',
       last_synced_at: new Date().toISOString(),
     });
@@ -1025,8 +975,7 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
     console.error('[sync] Failed to sync daily log:', error);
 
     // Update sync status to error
-    const store = useDailyLogStore.getState();
-    store.updateDailyLog(dailyLog.id, {
+    useDailyLogStore.getState().updateDailyLog(dailyLog.id, {
       sync_status: 'error',
     });
 
@@ -1036,48 +985,26 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
 
 /**
  * Sync an event to the backend
+ * Local-first: Sends client UUID, backend accepts it or returns existing
  */
 export async function syncEventToBackend(event: Event): Promise<string | null> {
   try {
-    // Check if already synced (check persisted map first, then in-memory cache)
-    const existingBackendId = getBackendId('events', event.id) || backendIdMap.events.get(event.id);
-    if (existingBackendId) {
-      // Update in-memory cache
-      backendIdMap.events.set(event.id, existingBackendId);
-      console.log('[sync] Updating event in backend:', existingBackendId);
-      await updateEventApi(existingBackendId, {
-        title: event.title || undefined,
-        description: event.description || undefined,
-        transcriptText: event.transcript_text || undefined,
-        eventType: event.event_type || undefined,
-        severity: event.severity || undefined,
-        notes: event.notes || undefined,
-        location: event.location || undefined,
-        tradeVendor: event.trade_vendor || undefined,
-        isResolved: event.is_resolved,
-      });
-      return existingBackendId;
+    console.log('[sync] Syncing event to backend:', event.id);
+
+    // With local-first architecture, ensure project is synced first
+    const store = useDailyLogStore.getState();
+    const project = store.projects.find(p => p.id === event.project_id);
+    if (project) {
+      await syncProjectToBackend(project);
     }
 
-    // Get backend project ID (check persisted map first)
-    let backendProjectId = getBackendId('projects', event.project_id) || backendIdMap.projects.get(event.project_id);
-    if (!backendProjectId) {
-      // Try to sync the project first
-      const store = useDailyLogStore.getState();
-      const project = store.projects.find(p => p.id === event.project_id);
-      if (project) {
-        backendProjectId = await syncProjectToBackend(project);
-      }
-    }
+    // Use the project_id directly (it's already a UUID)
+    const projectId = event.project_id;
 
-    if (!backendProjectId) {
-      console.error('[sync] Cannot sync event: project not synced');
-      return null;
-    }
-
-    console.log('[sync] Creating event in backend');
+    console.log('[sync] Creating/updating event in backend');
     const result = await createEventApi({
-      projectId: backendProjectId,
+      id: event.id, // Send client-generated UUID
+      projectId: projectId,
       title: event.title || undefined,
       description: event.description || undefined,
       transcriptText: event.transcript_text || undefined,
@@ -1089,10 +1016,8 @@ export async function syncEventToBackend(event: Event): Promise<string | null> {
       isResolved: event.is_resolved,
     });
 
-    backendIdMap.events.set(event.id, result.id);
-    setBackendId('events', event.id, result.id); // Persist to data-provider map
-    console.log('[sync] Event synced:', event.id, '->', result.id);
-    return result.id;
+    console.log('[sync] Event synced:', event.id);
+    return result.id; // Should be same as event.id
   } catch (error) {
     console.error('[sync] Failed to sync event:', error);
     return null;
@@ -1154,31 +1079,32 @@ export async function syncAllDataToBackend(): Promise<{
 
 /**
  * Load backend ID mappings by matching names
- * Call this on app startup to restore mappings
+ * @deprecated With local-first UUID architecture, this is no longer needed.
+ * Client UUIDs are used directly as backend IDs.
  */
 export async function loadBackendMappings(): Promise<void> {
-  try {
-    const store = useDailyLogStore.getState();
-    const backendProjects = await getProjects();
-
-    // Match local projects to backend by name
-    for (const localProject of store.projects) {
-      const match = backendProjects.find(bp => bp.name === localProject.name);
-      if (match) {
-        backendIdMap.projects.set(localProject.id, match.id);
-        setBackendId('projects', localProject.id, match.id);
-      }
-    }
-
-    console.log('[sync] Loaded project mappings:', backendIdMap.projects.size);
-  } catch (error) {
-    console.error('[sync] Failed to load backend mappings:', error);
-  }
+  // With local-first architecture, no mapping is needed
+  // Client-generated UUIDs are used directly as backend IDs
+  console.log('[sync] Local-first architecture: no ID mapping needed');
 }
 
 /**
- * Check if entity is synced (uses persisted backend ID map)
+ * Check if entity is synced
+ * With local-first architecture, we can check sync_status on the entity
  */
 export function isSynced(type: 'projects' | 'dailyLogs' | 'events', localId: string): boolean {
-  return !!getBackendId(type, localId) || backendIdMap[type].has(localId);
+  const store = useDailyLogStore.getState();
+
+  if (type === 'projects') {
+    // Projects don't have sync status, assume synced if they exist
+    return store.projects.some(p => p.id === localId);
+  } else if (type === 'dailyLogs') {
+    const log = store.dailyLogs.find(l => l.id === localId);
+    return log?.sync_status === 'synced';
+  } else if (type === 'events') {
+    const event = store.events.find(e => e.id === localId);
+    return event?.sync_status === 'synced';
+  }
+
+  return false;
 }

@@ -570,6 +570,7 @@ export async function getProject(id: string): Promise<ProjectSummary> {
  * Create a new project
  */
 export async function createProject(data: {
+  id?: string; // Client-provided ID for local-first sync
   name: string;
   number?: string;
   address?: string;
@@ -593,6 +594,7 @@ export async function deleteProjectApi(id: string): Promise<void> {
  * Create a new daily log with nested data
  */
 export async function createDailyLog(data: {
+  id?: string; // Client-provided ID for local-first sync
   projectId: string;
   date: string;
   preparedBy?: string;
@@ -649,6 +651,7 @@ export async function createDailyLog(data: {
   return apiFetch('/api/daily-logs', {
     method: 'POST',
     body: JSON.stringify({
+      id: data.id, // Client-provided ID for local-first sync
       project_id: data.projectId,
       date: dateWithTime,
       prepared_by: data.preparedBy,
@@ -706,6 +709,7 @@ export async function deleteDailyLogApi(id: string): Promise<void> {
  * This sends the raw transcript to the backend for AI-powered parsing
  */
 export async function createDailyLogFromTranscript(data: {
+  id?: string; // Client-provided ID for local-first sync
   projectId: string;
   transcript: string;
   date?: string;
@@ -719,6 +723,7 @@ export async function createDailyLogFromTranscript(data: {
   return apiFetch('/api/daily-logs/from-transcript', {
     method: 'POST',
     body: JSON.stringify({
+      id: data.id, // Client-provided ID for local-first sync
       project_id: data.projectId,
       transcript: data.transcript,
       date: dateWithTime,
@@ -731,6 +736,7 @@ export async function createDailyLogFromTranscript(data: {
  * Create a new event
  */
 export async function createEvent(data: {
+  id?: string; // Client-provided ID for local-first sync
   projectId: string;
   title?: string;
   transcriptText?: string;
@@ -745,6 +751,7 @@ export async function createEvent(data: {
   return apiFetch('/api/events', {
     method: 'POST',
     body: JSON.stringify({
+      id: data.id, // Client-provided ID for local-first sync
       project_id: data.projectId,
       title: data.title,
       transcript_text: data.transcriptText,

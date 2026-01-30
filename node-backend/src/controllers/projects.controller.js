@@ -103,10 +103,11 @@ class ProjectsController {
   /**
    * POST /api/projects
    * Create a new project
+   * Accepts client-provided ID for local-first architecture
    */
   async create(req, res, next) {
     try {
-      const { name, number, address } = req.body;
+      const { id, name, number, address } = req.body;
 
       if (!name) {
         return res.status(400).json({
@@ -115,8 +116,18 @@ class ProjectsController {
         });
       }
 
+      // If client provided an ID, check if it already exists (idempotent create)
+      if (id) {
+        const existing = await prisma.project.findUnique({ where: { id } });
+        if (existing) {
+          // Return existing project (idempotent)
+          return res.status(200).json(existing);
+        }
+      }
+
       const project = await prisma.project.create({
         data: {
+          ...(id && { id }), // Use client-provided ID if available
           name,
           number,
           address

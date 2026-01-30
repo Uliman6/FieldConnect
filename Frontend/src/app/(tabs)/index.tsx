@@ -12,6 +12,7 @@ import {
   Mic,
   FileText,
   CheckCircle2,
+  Cloud,
 } from 'lucide-react-native';
 import { useDailyLogStore } from '@/lib/store';
 import { InputField } from '@/components/ui';
@@ -43,8 +44,9 @@ export default function DailyLogScreen() {
   const addVoiceArtifact = useDailyLogStore((s) => s.addVoiceArtifact);
   const updateVoiceArtifact = useDailyLogStore((s) => s.updateVoiceArtifact);
 
-  // Transcription state
+  // Transcription and sync state
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
 
   // Date picker state
@@ -178,19 +180,29 @@ export default function DailyLogScreen() {
           status: 'transcribed',
         });
 
-        // Sync to backend after transcription
-        const updatedLog = useDailyLogStore.getState().dailyLogs.find(l => l.id === log.id);
-        if (updatedLog) {
-          syncDailyLogToBackend(updatedLog);
+        // Sync to backend after transcription - wait for it to complete
+        setIsTranscribing(false);
+        setIsSyncing(true);
+
+        try {
+          const updatedLog = useDailyLogStore.getState().dailyLogs.find(l => l.id === log.id);
+          if (updatedLog) {
+            await syncDailyLogToBackend(updatedLog);
+          }
+        } catch (syncError) {
+          console.error('[daily-log] Sync failed:', syncError);
+          // Don't block the user if sync fails - they can retry later
+        } finally {
+          setIsSyncing(false);
         }
       } else {
         setTranscriptionError(result.error || 'Transcription failed');
         updateVoiceArtifact(log.id, artifactId, { status: 'error' });
+        setIsTranscribing(false);
       }
     } catch (error) {
       setTranscriptionError('Transcription failed');
       updateVoiceArtifact(log.id, artifactId, { status: 'error' });
-    } finally {
       setIsTranscribing(false);
     }
   }, [log, updateVoiceArtifact]);
@@ -434,12 +446,26 @@ export default function DailyLogScreen() {
         {hasRecording && (
           <View className={cn(
             'rounded-2xl p-4 mb-4',
-            hasTranscript
+            hasTranscript && !isSyncing
               ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-              : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
+              : isSyncing
+                ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
           )}>
             <View className="flex-row items-center">
-              {hasTranscript ? (
+              {isSyncing ? (
+                <>
+                  <Cloud size={24} color="#3B82F6" />
+                  <View className="ml-3 flex-1">
+                    <Text className="font-semibold text-blue-800 dark:text-blue-200">
+                      Syncing to Cloud
+                    </Text>
+                    <Text className="text-sm text-blue-600 dark:text-blue-400">
+                      Please wait while we save your daily log...
+                    </Text>
+                  </View>
+                </>
+              ) : hasTranscript ? (
                 <>
                   <CheckCircle2 size={24} color="#22C55E" />
                   <View className="ml-3 flex-1">
@@ -472,11 +498,21 @@ export default function DailyLogScreen() {
         {hasRecording && (
           <Pressable
             onPress={handleEditLog}
-            className="bg-orange-500 rounded-xl py-4 px-6 flex-row items-center justify-center"
+            disabled={isTranscribing || isSyncing}
+            className={cn(
+              'rounded-xl py-4 px-6 flex-row items-center justify-center',
+              isTranscribing || isSyncing
+                ? 'bg-gray-300 dark:bg-gray-600'
+                : 'bg-orange-500'
+            )}
           >
             <FileText size={20} color="white" />
             <Text className="ml-2 text-white font-semibold text-base">
-              View & Edit Report Details
+              {isTranscribing
+                ? 'Transcribing...'
+                : isSyncing
+                  ? 'Syncing...'
+                  : 'View & Edit Report Details'}
             </Text>
           </Pressable>
         )}

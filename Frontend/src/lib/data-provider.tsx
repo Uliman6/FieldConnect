@@ -163,11 +163,12 @@ async function clearOfflineQueue(): Promise<void> {
 }
 
 // ============================================
-// BACKEND ID MAPPING
+// BACKEND ID MAPPING (DEPRECATED)
 // ============================================
+// With local-first UUID architecture, mapping is no longer needed.
+// Client-generated UUIDs are used directly as backend IDs.
+// These functions are kept for backward compatibility but now just return the ID directly.
 
-// Maps local IDs to backend IDs (persisted in localStorage)
-const BACKEND_ID_MAP_KEY = 'fieldconnect-backend-ids';
 const CURRENT_PROJECT_KEY = 'fieldconnect-current-project';
 
 interface BackendIdMap {
@@ -176,43 +177,24 @@ interface BackendIdMap {
   events: Record<string, string>;
 }
 
-function loadBackendIdMap(): BackendIdMap {
-  if (Platform.OS !== 'web') {
-    return { projects: {}, dailyLogs: {}, events: {} };
-  }
-
-  try {
-    const stored = localStorage.getItem(BACKEND_ID_MAP_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error('[data] Failed to load backend ID map:', error);
-  }
-  return { projects: {}, dailyLogs: {}, events: {} };
-}
-
-function saveBackendIdMap(map: BackendIdMap): void {
-  if (Platform.OS !== 'web') {
-    return;
-  }
-
-  try {
-    localStorage.setItem(BACKEND_ID_MAP_KEY, JSON.stringify(map));
-  } catch (error) {
-    console.error('[data] Failed to save backend ID map:', error);
-  }
-}
-
-let backendIdMap = loadBackendIdMap();
-
+/**
+ * Get backend ID for a local entity
+ * @deprecated With local-first UUID architecture, local ID = backend ID
+ * This function now just returns the localId directly
+ */
 export function getBackendId(type: keyof BackendIdMap, localId: string): string | null {
-  return backendIdMap[type][localId] || null;
+  // With local-first architecture, the local UUID IS the backend ID
+  return localId;
 }
 
+/**
+ * Set backend ID mapping for a local entity
+ * @deprecated With local-first UUID architecture, no mapping is needed
+ * This function is now a no-op
+ */
 export function setBackendId(type: keyof BackendIdMap, localId: string, backendId: string): void {
-  backendIdMap[type][localId] = backendId;
-  saveBackendIdMap(backendIdMap);
+  // With local-first architecture, no mapping is needed
+  // The local UUID IS the backend ID
 }
 
 // ============================================
@@ -314,28 +296,37 @@ export function DataProvider({ children }: DataProviderProps) {
       const backendProjectIds = new Set(backendProjects.map((bp) => bp.id));
 
       // For each backend project, either update existing or add new
+      // With local-first UUID architecture, IDs match directly
       for (const bp of backendProjects) {
-        // Check if we already have this project (by backend ID mapping or by name)
-        const existingByMapping = Object.entries(backendIdMap.projects).find(
-          ([, backendId]) => backendId === bp.id
-        );
+        // Check if we already have this project (by ID or by name)
+        const existingById = store.projects.find((p) => p.id === bp.id);
         const existingByName = store.projects.find((p) => p.name === bp.name);
 
-        if (existingByMapping) {
-          // Already mapped, update mapping
-          setBackendId('projects', existingByMapping[0], bp.id);
+        if (existingById) {
+          // Already have this project by ID, skip
+          continue;
         } else if (existingByName) {
-          // Found by name, create mapping
-          setBackendId('projects', existingByName.id, bp.id);
-          console.log('[data] Mapped existing project:', existingByName.name);
+          // Found by name with different ID - update the ID to match backend
+          // This handles migration from old custom IDs to new UUIDs
+          useDailyLogStore.setState((s) => ({
+            projects: s.projects.map((p) =>
+              p.id === existingByName.id ? { ...p, id: bp.id } : p
+            ),
+            // Also update references in daily logs and events
+            dailyLogs: s.dailyLogs.map((l) =>
+              l.project_id === existingByName.id ? { ...l, project_id: bp.id } : l
+            ),
+            events: s.events.map((e) =>
+              e.project_id === existingByName.id ? { ...e, project_id: bp.id } : e
+            ),
+          }));
+          console.log('[data] Updated project ID to match backend:', existingByName.name, '->', bp.id);
         } else {
           // New project from backend - add directly to store with backend ID
           const converted = convertBackendProjectToLocal(bp);
-          // Directly set the project in store using the backend ID
           useDailyLogStore.setState((s) => ({
             projects: [...s.projects, converted],
           }));
-          setBackendId('projects', bp.id, bp.id);
           console.log('[data] Added project from backend:', bp.name);
         }
       }
@@ -343,10 +334,9 @@ export function DataProvider({ children }: DataProviderProps) {
       // Remove local projects that don't exist on backend anymore
       const currentStoreAfterSync = useDailyLogStore.getState();
       const projectsToRemove = currentStoreAfterSync.projects.filter((localProject) => {
-        // Check if this local project has a backend mapping
-        const backendId = backendIdMap.projects[localProject.id] || localProject.id;
+        // With local-first architecture, local ID = backend ID
         // Keep only if it exists on backend
-        return !backendProjectIds.has(backendId) && !backendProjectIds.has(localProject.id);
+        return !backendProjectIds.has(localProject.id);
       });
 
       if (projectsToRemove.length > 0) {
@@ -373,12 +363,9 @@ export function DataProvider({ children }: DataProviderProps) {
       const addedEventIds = new Set<string>();
 
       for (const be of backendEvents) {
-        // Skip if we already have this event locally (by ID or by backend mapping)
-        const existingByMapping = Object.entries(backendIdMap.events).find(
-          ([, backendId]) => backendId === be.id
-        );
-
-        if (localEventIds.has(be.id) || existingByMapping) {
+        // Skip if we already have this event locally (by ID)
+        // With local-first architecture, IDs match directly
+        if (localEventIds.has(be.id)) {
           continue;
         }
 
@@ -391,7 +378,6 @@ export function DataProvider({ children }: DataProviderProps) {
           useDailyLogStore.setState((s) => ({
             events: [...s.events, localEvent],
           }));
-          setBackendId('events', be.id, be.id);
           addedEventIds.add(be.id);
         }
       }
@@ -406,10 +392,9 @@ export function DataProvider({ children }: DataProviderProps) {
       // Remove local events that don't exist on backend anymore
       const storeAfterEventSync = useDailyLogStore.getState();
       const eventsToRemove = storeAfterEventSync.events.filter((localEvent) => {
-        // Check if this local event has a backend mapping
-        const backendId = backendIdMap.events[localEvent.id] || localEvent.id;
+        // With local-first architecture, local ID = backend ID
         // Keep only if it exists on backend
-        return !backendEventIds.has(backendId) && !backendEventIds.has(localEvent.id);
+        return !backendEventIds.has(localEvent.id);
       });
 
       if (eventsToRemove.length > 0) {
@@ -433,16 +418,9 @@ export function DataProvider({ children }: DataProviderProps) {
       // Add backend logs that don't exist locally
       const addedLogIds = new Set<string>();
       for (const bl of backendDailyLogs) {
-        // Skip if we already have this log locally (by ID or by backend mapping)
-        const existingByMapping = Object.entries(backendIdMap.dailyLogs).find(
-          ([, backendId]) => backendId === bl.id
-        );
-
-        if (localLogIds.has(bl.id) || existingByMapping) {
-          // Update mapping if needed
-          if (!existingByMapping) {
-            setBackendId('dailyLogs', bl.id, bl.id);
-          }
+        // Skip if we already have this log locally (by ID)
+        // With local-first architecture, IDs match directly
+        if (localLogIds.has(bl.id)) {
           continue;
         }
 
@@ -455,7 +433,6 @@ export function DataProvider({ children }: DataProviderProps) {
           useDailyLogStore.setState((s) => ({
             dailyLogs: [...s.dailyLogs, localLog],
           }));
-          setBackendId('dailyLogs', bl.id, bl.id);
           addedLogIds.add(bl.id);
         }
       }
@@ -464,22 +441,23 @@ export function DataProvider({ children }: DataProviderProps) {
         console.log('[data] Added daily logs from backend:', addedLogIds.size);
       }
 
-      // Push local-only logs to backend (logs without backend ID mapping)
+      // Push local-only logs to backend (logs not on backend yet)
       const storeAfterFetch = useDailyLogStore.getState();
       const localOnlyLogs = storeAfterFetch.dailyLogs.filter((localLog) => {
-        const backendId = backendIdMap.dailyLogs[localLog.id];
-        return !backendId && !backendLogIds.has(localLog.id);
+        // With local-first architecture, local ID = backend ID
+        return !backendLogIds.has(localLog.id);
       });
 
       if (localOnlyLogs.length > 0) {
         console.log('[data] Syncing local-only daily logs to backend:', localOnlyLogs.length);
         for (const localLog of localOnlyLogs) {
           try {
-            // Get backend project ID
-            const backendProjectId = backendIdMap.projects[localLog.project_id] || localLog.project_id;
+            // With local-first architecture, project_id is already a valid UUID
+            const projectId = localLog.project_id;
 
             const result = await createDailyLogApi({
-              projectId: backendProjectId,
+              id: localLog.id, // Send client-generated UUID
+              projectId: projectId,
               date: localLog.date,
               preparedBy: localLog.prepared_by || undefined,
               status: localLog.status || undefined,

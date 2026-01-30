@@ -266,9 +266,21 @@ export function createEmptyDailyLog(projectId: string): DailyLog {
   };
 }
 
-// Helper to generate IDs
+// Helper to generate proper UUIDs (standard v4 format)
+// Using crypto.randomUUID() which is available in modern browsers and Node.js
+// This generates collision-proof UUIDs that can be used as both local and backend IDs
 export function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  // crypto.randomUUID() is available in all modern environments
+  // Falls back to a manual implementation for older environments
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for environments without crypto.randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 // Helper to create empty entries
