@@ -190,10 +190,12 @@ class DailyLogsController {
    * POST /api/daily-logs
    * Create a new daily log
    * If transcript is provided, uses AI parsing to extract structured data
+   * Accepts client-provided ID for local-first architecture
    */
   async create(req, res, next) {
     try {
       let {
+        id, // Client-provided ID for local-first sync
         project_id,
         date,
         prepared_by,
@@ -223,6 +225,27 @@ class DailyLogsController {
           error: 'Validation Error',
           message: 'date is required'
         });
+      }
+
+      // If client provided an ID, check if it already exists (idempotent create)
+      if (id) {
+        const existing = await prisma.dailyLog.findUnique({
+          where: { id },
+          include: {
+            project: true,
+            tasks: true,
+            visitors: true,
+            equipment: true,
+            materials: true,
+            pendingIssues: true,
+            inspectionNotes: true,
+            additionalWorkEntries: true
+          }
+        });
+        if (existing) {
+          // Return existing daily log (idempotent)
+          return res.status(200).json(existing);
+        }
       }
 
       // Verify project exists
@@ -286,6 +309,7 @@ class DailyLogsController {
 
       const dailyLog = await prisma.dailyLog.create({
         data: {
+          ...(id && { id }), // Use client-provided ID if available
           projectId: project_id,
           date: parseDate(date),
           preparedBy: prepared_by,
@@ -559,10 +583,11 @@ class DailyLogsController {
   /**
    * POST /api/daily-logs/from-transcript
    * Create a new daily log from a voice transcript using AI parsing
+   * Accepts client-provided ID for local-first architecture
    */
   async createFromTranscript(req, res, next) {
     try {
-      const { project_id, transcript, date, prepared_by } = req.body;
+      const { id, project_id, transcript, date, prepared_by } = req.body;
 
       if (!project_id) {
         return res.status(400).json({
@@ -576,6 +601,27 @@ class DailyLogsController {
           error: 'Validation Error',
           message: 'transcript is required'
         });
+      }
+
+      // If client provided an ID, check if it already exists (idempotent create)
+      if (id) {
+        const existing = await prisma.dailyLog.findUnique({
+          where: { id },
+          include: {
+            project: true,
+            tasks: true,
+            visitors: true,
+            equipment: true,
+            materials: true,
+            pendingIssues: true,
+            inspectionNotes: true,
+            additionalWorkEntries: true
+          }
+        });
+        if (existing) {
+          // Return existing daily log (idempotent)
+          return res.status(200).json(existing);
+        }
       }
 
       // Verify project exists
@@ -606,6 +652,7 @@ class DailyLogsController {
       // Create the daily log with parsed data
       const dailyLog = await prisma.dailyLog.create({
         data: {
+          ...(id && { id }), // Use client-provided ID if available
           projectId: project_id,
           date: parseDate(date),
           preparedBy: prepared_by || null,

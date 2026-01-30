@@ -198,10 +198,12 @@ class EventsController {
   /**
    * POST /api/events
    * Create a new event
+   * Accepts client-provided ID for local-first architecture
    */
   async create(req, res, next) {
     try {
       const {
+        id, // Client-provided ID for local-first sync
         project_id,
         transcript_text,
         event_type,
@@ -222,6 +224,18 @@ class EventsController {
         });
       }
 
+      // If client provided an ID, check if it already exists (idempotent create)
+      if (id) {
+        const existing = await prisma.event.findUnique({
+          where: { id },
+          include: { project: true }
+        });
+        if (existing) {
+          // Return existing event (idempotent)
+          return res.status(200).json(existing);
+        }
+      }
+
       // Verify project exists
       const project = await prisma.project.findUnique({
         where: { id: project_id }
@@ -236,6 +250,7 @@ class EventsController {
 
       const event = await prisma.event.create({
         data: {
+          ...(id && { id }), // Use client-provided ID if available
           projectId: project_id,
           transcriptText: transcript_text,
           eventType: event_type,
