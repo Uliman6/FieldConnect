@@ -39,6 +39,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
+import { getBackendId } from '@/lib/id-mapping';
 import {
   getInsights,
   getInsightsStats,
@@ -326,6 +327,11 @@ export default function InsightsScreen() {
   const projects = useDailyLogStore((s) => s.projects);
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
+  // Get backend project ID for API calls
+  const backendProjectId = currentProjectId
+    ? (getBackendId('projects', currentProjectId) || currentProjectId)
+    : undefined;
+
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isQuerying, setIsQuerying] = useState(false);
@@ -342,7 +348,7 @@ export default function InsightsScreen() {
 
     try {
       const result = await queryInsights(searchQuery, {
-        projectId: currentProjectId || undefined,
+        projectId: backendProjectId,
         format: 'checklist'
       });
       setNlQueryResult(result);
@@ -354,7 +360,7 @@ export default function InsightsScreen() {
     } finally {
       setIsQuerying(false);
     }
-  }, [searchQuery, currentProjectId]);
+  }, [searchQuery, backendProjectId]);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
@@ -364,30 +370,30 @@ export default function InsightsScreen() {
 
   // Fetch insights stats for current project
   const statsQuery = useQuery({
-    queryKey: queryKeys.insightsStats(currentProjectId || undefined),
-    queryFn: () => getInsightsStats({ projectId: currentProjectId || undefined }),
+    queryKey: queryKeys.insightsStats(backendProjectId),
+    queryFn: () => getInsightsStats({ projectId: backendProjectId }),
     staleTime: 30000,
-    enabled: !!currentProjectId,
+    enabled: !!backendProjectId,
   });
 
   // Fetch all insights for current project
   const insightsQuery = useQuery({
-    queryKey: queryKeys.insights({ projectId: currentProjectId || undefined, limit: 100 }),
+    queryKey: queryKeys.insights({ projectId: backendProjectId, limit: 100 }),
     queryFn: async () => {
-      const result = await getInsights({ projectId: currentProjectId || undefined, limit: 100 });
-      console.log('[insights] Fetched insights for project:', currentProjectId, result?.length || 0);
+      const result = await getInsights({ projectId: backendProjectId, limit: 100 });
+      console.log('[insights] Fetched insights for project:', backendProjectId, result?.length || 0);
       return result;
     },
     staleTime: 0, // Always fetch fresh data
-    enabled: !!currentProjectId,
+    enabled: !!backendProjectId,
   });
 
   // Fetch follow-up insights for current project
   const followUpsQuery = useQuery({
-    queryKey: queryKeys.insights({ projectId: currentProjectId || undefined, needsFollowUp: true, limit: 50 }),
-    queryFn: () => getInsights({ projectId: currentProjectId || undefined, needsFollowUp: true, limit: 50 }),
+    queryKey: queryKeys.insights({ projectId: backendProjectId, needsFollowUp: true, limit: 50 }),
+    queryFn: () => getInsights({ projectId: backendProjectId, needsFollowUp: true, limit: 50 }),
     staleTime: 30000,
-    enabled: !!currentProjectId,
+    enabled: !!backendProjectId,
   });
 
   // Handle follow-up toggle
@@ -505,7 +511,7 @@ export default function InsightsScreen() {
       )}
 
       {/* Loading State */}
-      {currentProjectId && isLoading && (
+      {backendProjectId && isLoading && (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#F97316" />
           <Text className="mt-3 text-gray-500">Loading insights...</Text>
@@ -513,7 +519,7 @@ export default function InsightsScreen() {
       )}
 
       {/* Content */}
-      {currentProjectId && !isLoading && (
+      {backendProjectId && !isLoading && (
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 40 }}
