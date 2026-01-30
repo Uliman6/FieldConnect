@@ -62,13 +62,14 @@ class NLQueryService {
 
 Extract the following from the query:
 - intent: The main action (list, find, search, summarize, export, count)
-- category: Type of items (inspection, safety, quality, delay, rework, issue, observation, all)
+- category: Category of items (safety, quality, delay, rework, issue, observation, learning, cost_impact, all)
+- sourceType: Source type (inspection_note, event, pending_issue, additional_work, manual, all) - use "inspection_note" when user mentions inspections
 - timeFrame: Time reference (today, this_week, last_week, this_month, before_date, after_date, all)
 - dateValue: Specific date if mentioned (ISO format)
 - trades: Specific trades mentioned (electrician, plumber, HVAC, concrete, framing, etc.)
 - systems: Building systems mentioned (HVAC, electrical, plumbing, fire_alarm, sprinkler, BMS, etc.)
 - locations: Specific locations (floor numbers, grid references, areas)
-- status: Item status (open, resolved, needs_follow_up, all)
+- status: Item status (open, resolved, needs_follow_up, all) - "open" means NOT resolved, "resolved" means completed/closed
 - keywords: Other important search terms
 - outputFormat: Desired output (list, summary, report, checklist)
 
@@ -114,6 +115,7 @@ Return JSON only, no explanation.`
     const parsed = {
       intent: 'list',
       category: 'all',
+      sourceType: 'all',
       timeFrame: 'all',
       trades: [],
       systems: [],
@@ -128,12 +130,17 @@ Return JSON only, no explanation.`
     if (lower.includes('summarize') || lower.includes('summary')) parsed.intent = 'summarize';
     if (lower.includes('export') || lower.includes('print') || lower.includes('report')) parsed.outputFormat = 'report';
 
+    // Source type detection (check before category)
+    if (lower.includes('inspection')) parsed.sourceType = 'inspection_note';
+    if (lower.includes('pending issue') || lower.includes('pending')) parsed.sourceType = 'pending_issue';
+
     // Category detection
-    if (lower.includes('inspection')) parsed.category = 'inspection';
     if (lower.includes('safety')) parsed.category = 'safety';
     if (lower.includes('quality')) parsed.category = 'quality';
     if (lower.includes('delay')) parsed.category = 'delay';
+    if (lower.includes('rework')) parsed.category = 'rework';
     if (lower.includes('punch') || lower.includes('punchlist')) parsed.category = 'issue';
+    if (lower.includes('observation')) parsed.category = 'observation';
 
     // Time detection
     if (lower.includes('today')) parsed.timeFrame = 'today';
@@ -142,18 +149,18 @@ Return JSON only, no explanation.`
     if (lower.includes('this month')) parsed.timeFrame = 'this_month';
 
     // Status detection
-    if (lower.includes('open') || lower.includes('unresolved')) parsed.status = 'open';
-    if (lower.includes('resolved') || lower.includes('closed')) parsed.status = 'resolved';
-    if (lower.includes('follow up') || lower.includes('follow-up')) parsed.status = 'needs_follow_up';
+    if (lower.includes('open') || lower.includes('unresolved') || lower.includes('not resolved')) parsed.status = 'open';
+    if (lower.includes('resolved') || lower.includes('closed') || lower.includes('completed')) parsed.status = 'resolved';
+    if (lower.includes('follow up') || lower.includes('follow-up') || lower.includes('followup')) parsed.status = 'needs_follow_up';
 
     // Trade detection
-    const trades = ['electrician', 'plumber', 'hvac', 'concrete', 'framing', 'drywall', 'painter', 'roofer'];
+    const trades = ['electrician', 'plumber', 'hvac', 'concrete', 'framing', 'drywall', 'painter', 'roofer', 'glass', 'glazing', 'mechanical'];
     trades.forEach(trade => {
       if (lower.includes(trade)) parsed.trades.push(trade);
     });
 
     // System detection
-    const systems = ['hvac', 'electrical', 'plumbing', 'fire alarm', 'sprinkler', 'bms', 'elevator'];
+    const systems = ['hvac', 'electrical', 'plumbing', 'fire alarm', 'sprinkler', 'bms', 'elevator', 'curtain wall', 'mullion'];
     systems.forEach(system => {
       if (lower.includes(system)) parsed.systems.push(system);
     });
@@ -171,17 +178,23 @@ Return JSON only, no explanation.`
     if (projectId) filters.projectId = projectId;
     if (!includeTest) filters.isTest = false;
 
+    // Source type filter (for inspection_note, pending_issue, etc.)
+    if (parsed.sourceType && parsed.sourceType !== 'all') {
+      filters.sourceType = parsed.sourceType;
+    }
+
     // Category filter
     if (parsed.category && parsed.category !== 'all') {
       // Map query categories to database categories
       const categoryMap = {
-        inspection: 'observation',
         safety: 'safety',
         quality: 'quality',
         delay: 'delay',
         rework: 'rework',
         issue: 'issue',
-        observation: 'observation'
+        observation: 'observation',
+        learning: 'learning',
+        cost_impact: 'cost_impact'
       };
       filters.category = categoryMap[parsed.category] || parsed.category;
     }
