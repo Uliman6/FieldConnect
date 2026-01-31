@@ -603,9 +603,22 @@ class DailyLogsController {
         });
       }
 
-      // If client provided an ID, check if it already exists (idempotent create)
+      // Verify project exists
+      const project = await prisma.project.findUnique({
+        where: { id: project_id }
+      });
+
+      if (!project) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Project not found'
+        });
+      }
+
+      // If client provided an ID, check if it already exists
+      let existingLog = null;
       if (id) {
-        const existing = await prisma.dailyLog.findUnique({
+        existingLog = await prisma.dailyLog.findUnique({
           where: { id },
           include: {
             project: true,
@@ -618,22 +631,28 @@ class DailyLogsController {
             additionalWorkEntries: true
           }
         });
-        if (existing) {
-          // Return existing daily log (idempotent)
-          return res.status(200).json(existing);
+
+        // Check if existing log has meaningful content
+        if (existingLog) {
+          const hasContent =
+            (existingLog.tasks?.length > 0) ||
+            (existingLog.pendingIssues?.length > 0) ||
+            (existingLog.inspectionNotes?.length > 0) ||
+            (existingLog.visitors?.length > 0) ||
+            (existingLog.equipment?.length > 0) ||
+            (existingLog.materials?.length > 0) ||
+            (existingLog.dailyTotalsWorkers && existingLog.dailyTotalsWorkers > 0) ||
+            (existingLog.dailyTotalsHours && existingLog.dailyTotalsHours > 0);
+
+          // If existing log has content, return it (idempotent - don't re-parse)
+          if (hasContent) {
+            console.log('[daily-logs/from-transcript] Existing log has content, returning as-is:', id);
+            return res.status(200).json(existingLog);
+          }
+
+          // Log exists but is empty - we'll update it with parsed content
+          console.log('[daily-logs/from-transcript] Existing log is empty, will update with parsed content:', id);
         }
-      }
-
-      // Verify project exists
-      const project = await prisma.project.findUnique({
-        where: { id: project_id }
-      });
-
-      if (!project) {
-        return res.status(404).json({
-          error: 'Not Found',
-          message: 'Project not found'
-        });
       }
 
       // Parse the transcript using AI
@@ -649,34 +668,136 @@ class DailyLogsController {
         });
       }
 
-      // Create the daily log with parsed data
-      const dailyLog = await prisma.dailyLog.create({
-        data: {
-          ...(id && { id }), // Use client-provided ID if available
-          projectId: project_id,
-          date: parseDate(date),
-          preparedBy: prepared_by || null,
-          status: 'draft',
-          dailyTotalsWorkers: parsed.dailyTotals?.daily_totals_workers || 0,
-          dailyTotalsHours: parsed.dailyTotals?.daily_totals_hours || 0,
-          weather: parsed.weather || null,
-          tasks: parsed.tasks?.length > 0 ? {
-            create: parsed.tasks.map(t => ({
-              companyName: t.company_name || null,
-              workers: t.workers || null,
-              hours: t.hours || null,
-              taskDescription: t.task_description || null,
-              notes: t.notes || null
-            }))
-          } : undefined,
-          visitors: parsed.visitors?.length > 0 ? {
-            create: parsed.visitors.map(v => ({
-              time: v.time || null,
-              companyName: v.company_name || null,
-              visitorName: v.visitor_name || null,
-              notes: v.notes || null
-            }))
-          } : undefined,
+      let dailyLog;
+
+      // If we have an existing empty log, update it instead of creating
+      if (existingLog) {
+        // First, delete any empty nested records
+        await prisma.task.deleteMany({ where: { dailyLogId: id } });
+        await prisma.visitor.deleteMany({ where: { dailyLogId: id } });
+        await prisma.equipment.deleteMany({ where: { dailyLogId: id } });
+        await prisma.material.deleteMany({ where: { dailyLogId: id } });
+        await prisma.pendingIssue.deleteMany({ where: { dailyLogId: id } });
+        await prisma.inspectionNote.deleteMany({ where: { dailyLogId: id } });
+        await prisma.additionalWorkEntry.deleteMany({ where: { dailyLogId: id } });
+
+        // Update the log with parsed data
+        dailyLog = await prisma.dailyLog.update({
+          where: { id },
+          data: {
+            preparedBy: prepared_by || existingLog.preparedBy,
+            dailyTotalsWorkers: parsed.dailyTotals?.daily_totals_workers || 0,
+            dailyTotalsHours: parsed.dailyTotals?.daily_totals_hours || 0,
+            weather: parsed.weather || null,
+            tasks: parsed.tasks?.length > 0 ? {
+              create: parsed.tasks.map(t => ({
+                companyName: t.company_name || null,
+                workers: t.workers || null,
+                hours: t.hours || null,
+                taskDescription: t.task_description || null,
+                notes: t.notes || null
+              }))
+            } : undefined,
+            visitors: parsed.visitors?.length > 0 ? {
+              create: parsed.visitors.map(v => ({
+                time: v.time || null,
+                companyName: v.company_name || null,
+                visitorName: v.visitor_name || null,
+                notes: v.notes || null
+              }))
+            } : undefined,
+            equipment: parsed.equipment?.length > 0 ? {
+              create: parsed.equipment.map(e => ({
+                equipmentType: e.equipment_type || null,
+                quantity: e.quantity || null,
+                hours: e.hours || null,
+                notes: e.notes || null
+              }))
+            } : undefined,
+            materials: parsed.materials?.length > 0 ? {
+              create: parsed.materials.map(m => ({
+                material: m.material || null,
+                quantity: m.quantity || null,
+                unit: m.unit || null,
+                supplier: m.supplier || null,
+                notes: m.notes || null
+              }))
+            } : undefined,
+            pendingIssues: parsed.pendingIssues?.length > 0 ? {
+              create: parsed.pendingIssues.map(i => ({
+                title: i.title || 'Untitled Issue',
+                description: i.description || null,
+                category: i.category || null,
+                severity: i.severity?.toLowerCase() || null,
+                assignee: i.assignee || null,
+                location: i.location || null
+              }))
+            } : undefined,
+            inspectionNotes: parsed.inspectionNotes?.length > 0 ? {
+              create: parsed.inspectionNotes.map(n => ({
+                inspectorName: n.inspector_name || null,
+                ahj: n.ahj || null,
+                inspectionType: n.inspection_type || null,
+                result: n.result || null,
+                notes: n.notes || null,
+                followUpNeeded: n.follow_up_needed || false
+              }))
+            } : undefined,
+            additionalWorkEntries: parsed.additionalWork?.length > 0 ? {
+              create: parsed.additionalWork.map(a => ({
+                category: a.category || 'General',
+                description: a.description || null
+              }))
+            } : undefined
+          },
+          include: {
+            project: true,
+            tasks: true,
+            visitors: true,
+            equipment: true,
+            materials: true,
+            pendingIssues: true,
+            inspectionNotes: true,
+            additionalWorkEntries: true
+          }
+        });
+
+        console.log('[daily-logs/from-transcript] Updated existing log with parsed data:', {
+          id: dailyLog.id,
+          tasks: dailyLog.tasks?.length || 0,
+          pendingIssues: dailyLog.pendingIssues?.length || 0,
+          dailyTotalsWorkers: dailyLog.dailyTotalsWorkers,
+          dailyTotalsHours: dailyLog.dailyTotalsHours
+        });
+      } else {
+        // Create new daily log with parsed data
+        dailyLog = await prisma.dailyLog.create({
+          data: {
+            ...(id && { id }), // Use client-provided ID if available
+            projectId: project_id,
+            date: parseDate(date),
+            preparedBy: prepared_by || null,
+            status: 'draft',
+            dailyTotalsWorkers: parsed.dailyTotals?.daily_totals_workers || 0,
+            dailyTotalsHours: parsed.dailyTotals?.daily_totals_hours || 0,
+            weather: parsed.weather || null,
+            tasks: parsed.tasks?.length > 0 ? {
+              create: parsed.tasks.map(t => ({
+                companyName: t.company_name || null,
+                workers: t.workers || null,
+                hours: t.hours || null,
+                taskDescription: t.task_description || null,
+                notes: t.notes || null
+              }))
+            } : undefined,
+            visitors: parsed.visitors?.length > 0 ? {
+              create: parsed.visitors.map(v => ({
+                time: v.time || null,
+                companyName: v.company_name || null,
+                visitorName: v.visitor_name || null,
+                notes: v.notes || null
+              }))
+            } : undefined,
           equipment: parsed.equipment?.length > 0 ? {
             create: parsed.equipment.map(e => ({
               equipmentType: e.equipment_type || null,
@@ -732,6 +853,7 @@ class DailyLogsController {
           additionalWorkEntries: true
         }
       });
+    }
 
       // Create standalone events from extracted pending issues (async, non-blocking)
       if (dailyLog.pendingIssues && dailyLog.pendingIssues.length > 0) {
