@@ -27,6 +27,7 @@ import {
   updateEventTemplateData,
   fetchFilledPdf,
   deleteEventApi,
+  updateEventApi,
   getDocumentSchemas,
   applySchemaToEvent,
   updateEventSchemaData,
@@ -765,7 +766,23 @@ export default function EventDetailScreen() {
 
   // Determine if we're viewing a local or backend event
   const isLocalEvent = !!localEvent;
-  const event = localEvent;
+  // Use local event if available, otherwise use backend event (converted to local format)
+  const event = localEvent || (backendEvent ? {
+    id: backendEvent.id,
+    project_id: backendEvent.projectId,
+    title: backendEvent.title || '',
+    description: backendEvent.description || '',
+    event_type: (backendEvent.eventType || 'Other') as EventType,
+    severity: (backendEvent.severity || 'Medium') as EventSeverity,
+    location: backendEvent.location || '',
+    trade_vendor: backendEvent.tradeVendor || '',
+    transcript_text: backendEvent.transcriptText || '',
+    is_resolved: backendEvent.isResolved || false,
+    notes: backendEvent.notes || '',
+    action_items: backendEvent.actionItems || [],
+    local_audio_uri: undefined,
+    created_at: backendEvent.createdAt,
+  } as Event : null);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -908,6 +925,33 @@ export default function EventDetailScreen() {
     },
   });
 
+  // Update backend event mutation (for events not in local store)
+  const updateBackendEventMutation = useMutation({
+    mutationFn: async (data: {
+      title?: string;
+      description?: string;
+      eventType?: string;
+      severity?: string;
+      location?: string;
+      tradeVendor?: string;
+      notes?: string;
+      isResolved?: boolean;
+    }) => {
+      const eventId = id || '';
+      return updateEventApi(eventId, data);
+    },
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setHasChanges(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.event(id || '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.events });
+    },
+    onError: (error) => {
+      console.error('[event-detail] Failed to update backend event:', error);
+      Alert.alert('Error', 'Failed to save changes. Please try again.');
+    },
+  });
+
   const project = localEvent
     ? projects.find((p) => p.id === localEvent.project_id)
     : backendEvent?.project;
@@ -983,140 +1027,6 @@ export default function EventDetailScreen() {
     );
   }
 
-  // Show backend event in read-only mode if not found locally
-  if (!localEvent && backendEvent) {
-    return (
-      <View className="flex-1 bg-gray-50 dark:bg-gray-900">
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            headerTitle: 'Event Details',
-            headerStyle: { backgroundColor: isDark ? '#111' : '#FFF' },
-            headerTintColor: isDark ? '#FFF' : '#111',
-            headerLeft: () => (
-              <Pressable onPress={() => router.back()} className="p-2">
-                <ArrowLeft size={24} color={isDark ? '#FFF' : '#111'} />
-              </Pressable>
-            ),
-          }}
-        />
-        <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
-          <Animated.View
-            entering={FadeIn}
-            className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
-          >
-            {/* Header badges */}
-            <View className="flex-row items-center mb-3">
-              {backendEvent.eventType && (
-                <View
-                  className="px-2 py-0.5 rounded-full mr-2"
-                  style={{ backgroundColor: EVENT_TYPE_COLORS[backendEvent.eventType as EventType] + '20' }}
-                >
-                  <Text
-                    className="text-xs font-semibold"
-                    style={{ color: EVENT_TYPE_COLORS[backendEvent.eventType as EventType] }}
-                  >
-                    {backendEvent.eventType}
-                  </Text>
-                </View>
-              )}
-              {backendEvent.severity && (
-                <View
-                  className="px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: SEVERITY_COLORS[backendEvent.severity as EventSeverity] + '20' }}
-                >
-                  <Text
-                    className="text-xs font-medium"
-                    style={{ color: SEVERITY_COLORS[backendEvent.severity as EventSeverity] }}
-                  >
-                    {backendEvent.severity}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Title */}
-            <Text className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-              {backendEvent.title || 'Untitled Event'}
-            </Text>
-
-            {/* Project & Date */}
-            <View className="flex-row items-center mb-3">
-              {backendEvent.project && (
-                <View className="flex-row items-center mr-4">
-                  <Building2 size={14} color="#9CA3AF" />
-                  <Text className="text-sm text-gray-500 ml-1">
-                    {backendEvent.project.name}
-                  </Text>
-                </View>
-              )}
-              <View className="flex-row items-center">
-                <Calendar size={14} color="#9CA3AF" />
-                <Text className="text-sm text-gray-500 ml-1">
-                  {format(new Date(backendEvent.createdAt), 'MMM d, yyyy')}
-                </Text>
-              </View>
-            </View>
-
-            {/* Transcript */}
-            {backendEvent.transcriptText && (
-              <View className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mt-2">
-                <View className="flex-row items-center mb-2">
-                  <FileText size={16} color="#3B82F6" />
-                  <Text className="ml-2 text-sm font-medium text-blue-700 dark:text-blue-300">
-                    Transcript
-                  </Text>
-                </View>
-                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-5">
-                  {backendEvent.transcriptText}
-                </Text>
-              </View>
-            )}
-
-            {/* Index data */}
-            {backendEvent.index && (
-              <View className="mt-4">
-                {/* Trades */}
-                {backendEvent.index.trades && backendEvent.index.trades.length > 0 && (
-                  <View className="flex-row flex-wrap mb-2">
-                    {backendEvent.index.trades.map((trade) => (
-                      <View key={trade} className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mr-1 mb-1">
-                        <Text className="text-xs text-blue-700 dark:text-blue-300">{trade}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                {/* Cost Impact */}
-                {backendEvent.index.costImpact && (
-                  <View className="flex-row items-center bg-red-50 dark:bg-red-900/20 rounded-lg p-3 mt-2">
-                    <Text className="text-sm text-red-600 font-semibold">
-                      Cost Impact: ${backendEvent.index.costImpact.toLocaleString()}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Resolved status */}
-            {backendEvent.isResolved && (
-              <View className="flex-row items-center mt-4">
-                <CheckCircle2 size={16} color="#10B981" />
-                <Text className="ml-1 text-sm text-green-600">Resolved</Text>
-              </View>
-            )}
-          </Animated.View>
-
-          {/* Info banner */}
-          <View className="mx-4 mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
-            <Text className="text-sm text-blue-700 dark:text-blue-300 text-center">
-              This event is stored on the server. To edit, record a new event locally.
-            </Text>
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
-
   // Event not found in either place
   if (!localEvent && backendError) {
     return (
@@ -1178,16 +1088,29 @@ export default function EventDetailScreen() {
   };
 
   const handleSave = () => {
-    updateEvent(event.id, {
-      title: title || 'Untitled Event',
-      description,
-      event_type: eventType,
-      severity,
-      location,
-      trade_vendor: tradeVendor,
-    });
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setHasChanges(false);
+    if (isLocalEvent) {
+      // Save to local store
+      updateEvent(event.id, {
+        title: title || 'Untitled Event',
+        description,
+        event_type: eventType,
+        severity,
+        location,
+        trade_vendor: tradeVendor,
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setHasChanges(false);
+    } else {
+      // Save to backend directly
+      updateBackendEventMutation.mutate({
+        title: title || 'Untitled Event',
+        description,
+        eventType,
+        severity,
+        location,
+        tradeVendor,
+      });
+    }
   };
 
   // Template handlers
