@@ -782,6 +782,7 @@ export default function EventDetailScreen() {
     action_items: backendEvent.actionItems || [],
     local_audio_uri: undefined,
     created_at: backendEvent.createdAt,
+    linked_daily_log_id: (backendEvent as any).linkedDailyLogId || undefined,
   } as Event : null);
 
   const [title, setTitle] = useState('');
@@ -1835,7 +1836,7 @@ export default function EventDetailScreen() {
         )}
 
         {/* Apply to Document Section (AI-powered extraction) */}
-        {schemasQuery.data && schemasQuery.data.length > 0 && event.transcript_text && (
+        {schemasQuery.data && schemasQuery.data.length > 0 && (event.transcript_text || description) && (
           <Animated.View
             entering={FadeInDown.delay(275)}
             className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"

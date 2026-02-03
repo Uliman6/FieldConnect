@@ -41,8 +41,8 @@ const applySchema = async (req, res) => {
     if (error.message === 'Schema not found') {
       return res.status(404).json({ error: 'Schema not found' });
     }
-    if (error.message === 'Event has no transcript text') {
-      return res.status(400).json({ error: 'Event has no transcript text to extract from' });
+    if (error.message === 'Event has no transcript text' || error.message === 'Event has no transcript text or description to extract from') {
+      return res.status(400).json({ error: 'Event has no text content to extract from' });
     }
     if (error.message === 'Schema is not active') {
       return res.status(400).json({ error: 'Schema is not active' });

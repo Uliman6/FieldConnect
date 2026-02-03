@@ -197,8 +197,13 @@ Return the JSON with extracted field values.`;
       throw new Error('Event not found');
     }
 
-    if (!event.transcriptText) {
-      throw new Error('Event has no transcript text');
+    // Use transcript if available, otherwise use description + title + notes
+    // This allows events created from daily logs (which have descriptions but no transcripts) to use document schemas
+    const textToExtractFrom = event.transcriptText ||
+      [event.title, event.description, event.notes].filter(Boolean).join('. ');
+
+    if (!textToExtractFrom || textToExtractFrom.trim().length < 10) {
+      throw new Error('Event has no transcript text or description to extract from');
     }
 
     // Get the schema
@@ -214,9 +219,9 @@ Return the JSON with extracted field values.`;
       throw new Error('Schema is not active');
     }
 
-    // Extract fields from transcript
+    // Extract fields from transcript or description
     const extraction = await this.extractFieldsFromTranscript(
-      event.transcriptText,
+      textToExtractFrom,
       schema
     );
 
