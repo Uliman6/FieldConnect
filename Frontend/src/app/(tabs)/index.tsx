@@ -22,10 +22,12 @@ import { SyncStatusBadge } from '@/components/SyncStatus';
 import { syncDailyLogs, syncDailyLogToBackend } from '@/lib/sync';
 import { transcribeAudio } from '@/lib/transcription';
 import { cn } from '@/lib/cn';
+import { useLanguage } from '@/i18n/LanguageProvider';
 
 export default function DailyLogScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t, transcriptionLanguage } = useLanguage();
 
   // Store selectors
   const currentLogId = useDailyLogStore((s) => s.currentLogId);
@@ -172,7 +174,7 @@ export default function DailyLogScreen() {
     setTranscriptionError(null);
 
     try {
-      const result = await transcribeAudio(audioUri);
+      const result = await transcribeAudio(audioUri, { language: transcriptionLanguage });
 
       if (result.success && result.text) {
         updateVoiceArtifact(log.id, artifactId, {
@@ -205,7 +207,7 @@ export default function DailyLogScreen() {
       updateVoiceArtifact(log.id, artifactId, { status: 'error' });
       setIsTranscribing(false);
     }
-  }, [log, updateVoiceArtifact]);
+  }, [log, updateVoiceArtifact, transcriptionLanguage]);
 
   // Navigate to edit page
   const handleEditLog = useCallback(() => {
@@ -223,10 +225,10 @@ export default function DailyLogScreen() {
           <FileText size={40} color="#F97316" />
         </View>
         <Text className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-2">
-          No Project Selected
+          {t('projects.projectRequired')}
         </Text>
         <Text className="text-gray-500 dark:text-gray-400 text-center">
-          Select a project from the Projects tab to start recording your daily log.
+          {t('projects.selectProject')}
         </Text>
       </View>
     );
@@ -247,7 +249,7 @@ export default function DailyLogScreen() {
       >
         <View className="flex-row items-center justify-between mb-3">
           <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-            Daily Log
+            {t('dailyLog.title')}
           </Text>
           <SyncStatusBadge
             status={log.sync_status ?? 'pending'}
@@ -305,7 +307,7 @@ export default function DailyLogScreen() {
                 className="bg-white dark:bg-gray-900 rounded-2xl p-4 mx-4 w-full max-w-sm"
               >
                 <Text className="text-lg font-semibold text-gray-900 dark:text-white text-center mb-4">
-                  Select Date
+                  {t('dailyLog.date')}
                 </Text>
                 <DateTimePicker
                   value={tempDate ?? parseISO(log.date)}
@@ -331,7 +333,7 @@ export default function DailyLogScreen() {
                       className="flex-1 py-3 mr-2 bg-gray-200 dark:bg-gray-700 rounded-xl"
                     >
                       <Text className="text-center font-medium text-gray-700 dark:text-gray-300">
-                        Cancel
+                        {t('common.cancel')}
                       </Text>
                     </Pressable>
                     <Pressable
@@ -339,7 +341,7 @@ export default function DailyLogScreen() {
                       className="flex-1 py-3 ml-2 bg-orange-500 rounded-xl"
                     >
                       <Text className="text-center font-medium text-white">
-                        Confirm
+                        {t('common.confirm')}
                       </Text>
                     </Pressable>
                   </View>
@@ -382,10 +384,10 @@ export default function DailyLogScreen() {
             </View>
             <View className="ml-3 flex-1">
               <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-                Voice Recording
+                {t('dailyLog.startRecording')}
               </Text>
               <Text className="text-sm text-gray-500 dark:text-gray-400">
-                Record your daily log summary
+                {t('dailyLog.tapToRecord')}
               </Text>
             </View>
           </View>
@@ -458,10 +460,10 @@ export default function DailyLogScreen() {
                   <Cloud size={24} color="#3B82F6" />
                   <View className="ml-3 flex-1">
                     <Text className="font-semibold text-blue-800 dark:text-blue-200">
-                      Syncing to Cloud
+                      {t('sync.syncing')}
                     </Text>
                     <Text className="text-sm text-blue-600 dark:text-blue-400">
-                      Please wait while we save your daily log...
+                      {t('common.loading')}
                     </Text>
                   </View>
                 </>
@@ -470,10 +472,10 @@ export default function DailyLogScreen() {
                   <CheckCircle2 size={24} color="#22C55E" />
                   <View className="ml-3 flex-1">
                     <Text className="font-semibold text-green-800 dark:text-green-200">
-                      Recording Transcribed
+                      {t('sync.synced')}
                     </Text>
                     <Text className="text-sm text-green-600 dark:text-green-400">
-                      Your daily log has been processed and synced
+                      {t('common.success')}
                     </Text>
                   </View>
                 </>
@@ -482,10 +484,10 @@ export default function DailyLogScreen() {
                   <Mic size={24} color="#EAB308" />
                   <View className="ml-3 flex-1">
                     <Text className="font-semibold text-yellow-800 dark:text-yellow-200">
-                      Recording Saved
+                      {t('dailyLog.recording')}
                     </Text>
                     <Text className="text-sm text-yellow-600 dark:text-yellow-400">
-                      {isTranscribing ? 'Transcribing...' : 'Waiting for transcription'}
+                      {isTranscribing ? t('dailyLog.transcribing') : t('dailyLog.processing')}
                     </Text>
                   </View>
                 </>
@@ -509,10 +511,10 @@ export default function DailyLogScreen() {
             <FileText size={20} color="white" />
             <Text className="ml-2 text-white font-semibold text-base">
               {isTranscribing
-                ? 'Transcribing...'
+                ? t('dailyLog.transcribing')
                 : isSyncing
-                  ? 'Syncing...'
-                  : 'View & Edit Report Details'}
+                  ? t('sync.syncing')
+                  : t('dailyLog.viewEdit')}
             </Text>
           </Pressable>
         )}
