@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useAuthStore } from '@/lib/auth-store';
 import { DataProvider, useDataProvider } from '@/lib/data-provider';
+import { LanguageProvider } from '@/i18n/LanguageProvider';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -118,12 +119,14 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <KeyboardProvider>
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-          <RootLayoutNav colorScheme={colorScheme} />
-        </KeyboardProvider>
-      </GestureHandlerRootView>
+      <LanguageProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <KeyboardProvider>
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+            <RootLayoutNav colorScheme={colorScheme} />
+          </KeyboardProvider>
+        </GestureHandlerRootView>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
