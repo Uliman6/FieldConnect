@@ -30,6 +30,7 @@ import {
 } from 'lucide-react-native';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import {
   getDailyLogs,
   getProjects,
@@ -79,11 +80,33 @@ export default function LogsHistoryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>('daily_log');
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+
+  // Translatable category labels
+  const getCategoryLabel = (key: DocumentCategory) => {
+    switch (key) {
+      case 'daily_log': return t('history.dailyLogs');
+      case 'punch_list': return t('history.punchLists');
+      case 'rfi': return t('history.rfis');
+      default: return key;
+    }
+  };
+
+  // Translatable status labels
+  const getStatusLabel = (key: StatusFilter) => {
+    switch (key) {
+      case 'ALL': return t('common.all');
+      case 'OPEN': return t('checklist.open');
+      case 'IN_PROGRESS': return t('checklist.inProgress');
+      case 'CLOSED': return t('checklist.closed');
+      default: return key;
+    }
+  };
 
   // Fetch projects
   const projectsQuery = useQuery({
@@ -349,7 +372,7 @@ export default function LogsHistoryScreen() {
         {/* Header */}
         <View className="px-4 pt-4 pb-2">
           <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-            Documents
+            {t('history.documents')}
           </Text>
           <View className="flex-row items-center mt-1">
             <Building2 size={14} color={currentProject ? '#F97316' : '#9CA3AF'} />
@@ -357,7 +380,7 @@ export default function LogsHistoryScreen() {
               'ml-1 text-sm font-medium',
               currentProject ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'
             )}>
-              {currentProject ? currentProject.name : 'All Projects'}
+              {currentProject ? currentProject.name : t('history.allProjects')}
             </Text>
           </View>
         </View>
@@ -396,7 +419,7 @@ export default function LogsHistoryScreen() {
                       isActive ? 'text-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-400'
                     )}
                   >
-                    {config.label}
+                    {getCategoryLabel(key)}
                   </Text>
                 </Pressable>
               );
@@ -410,7 +433,7 @@ export default function LogsHistoryScreen() {
             <View className="flex-row items-center">
               <CloudOff size={20} color="#EF4444" />
               <Text className="ml-2 text-sm text-red-700 dark:text-red-300">
-                Unable to connect to server.
+                {t('errors.network')}
               </Text>
             </View>
           </View>
@@ -420,7 +443,7 @@ export default function LogsHistoryScreen() {
         {isLoading && (
           <View className="flex-1 items-center justify-center py-20">
             <ActivityIndicator size="large" color="#F97316" />
-            <Text className="mt-3 text-gray-500">Loading...</Text>
+            <Text className="mt-3 text-gray-500">{t('common.loading')}</Text>
           </View>
         )}
 
@@ -454,10 +477,10 @@ export default function LogsHistoryScreen() {
               <View className="items-center py-12">
                 <Building2 size={48} color="#9CA3AF" />
                 <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4 text-center">
-                  Select a project
+                  {t('projects.selectProject')}
                 </Text>
                 <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2 px-8">
-                  Choose a project from the Projects tab to view {selectedCategory === 'punch_list' ? 'punch lists' : 'RFIs'}
+                  {t('history.chooseProjectToView', { type: selectedCategory === 'punch_list' ? t('history.punchLists').toLowerCase() : t('history.rfis') })}
                 </Text>
               </View>
             ) : (
@@ -491,7 +514,7 @@ export default function LogsHistoryScreen() {
                               isActive ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
                             )}
                           >
-                            {config.label}
+                            {getStatusLabel(key)}
                           </Text>
                           <View
                             className={cn(
@@ -534,19 +557,29 @@ export default function LogsHistoryScreen() {
 }
 
 function EmptyState({ category }: { category: DocumentCategory }) {
+  const { t } = useLanguage();
   const config = CATEGORY_CONFIG[category];
   const Icon = config.icon;
+
+  const getCategoryLabel = (key: DocumentCategory) => {
+    switch (key) {
+      case 'daily_log': return t('history.dailyLogs');
+      case 'punch_list': return t('history.punchLists');
+      case 'rfi': return t('history.rfis');
+      default: return key;
+    }
+  };
 
   return (
     <View className="items-center py-12">
       <Icon size={48} color="#9CA3AF" />
       <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
-        No {config.label.toLowerCase()} yet
+        {t('history.noItemsYet', { type: getCategoryLabel(category).toLowerCase() })}
       </Text>
       <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2 px-8">
         {category === 'daily_log'
-          ? 'Create a daily log to see it here'
-          : `Record an event and apply it to a ${category === 'punch_list' ? 'Punch List' : 'RFI'}`}
+          ? t('history.createDailyLogPrompt')
+          : t('history.createDocPrompt', { type: category === 'punch_list' ? t('history.punchList') : t('history.rfi') })}
       </Text>
     </View>
   );
@@ -569,6 +602,7 @@ function DailyLogCard({
   onDelete: () => void;
   isDeleting: boolean;
 }) {
+  const { t } = useLanguage();
   const logDate = parseLocalDate(log.date);
   const isLogToday = isToday(logDate);
   const issueCount = log._count.pendingIssues;
@@ -585,7 +619,7 @@ function DailyLogCard({
             {isLogToday && (
               <View className="ml-2 px-2 py-0.5 bg-green-100 dark:bg-green-900 rounded">
                 <Text className="text-xs font-medium text-green-600 dark:text-green-400">
-                  Today
+                  {t('dateTime.today')}
                 </Text>
               </View>
             )}
@@ -605,7 +639,7 @@ function DailyLogCard({
               <View className="flex-row items-center mr-4">
                 <Users size={14} color="#6B7280" />
                 <Text className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                  {log.dailyTotalsWorkers} workers
+                  {log.dailyTotalsWorkers} {t('dailyLog.workers').toLowerCase()}
                 </Text>
               </View>
             )}
@@ -613,7 +647,7 @@ function DailyLogCard({
               <View className="flex-row items-center mr-4">
                 <Clock size={14} color="#6B7280" />
                 <Text className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                  {log.dailyTotalsHours} hrs
+                  {log.dailyTotalsHours} {t('dailyLog.hrs')}
                 </Text>
               </View>
             )}
@@ -623,7 +657,7 @@ function DailyLogCard({
             <View className="flex-row items-center mt-2">
               <AlertTriangle size={14} color="#EF4444" />
               <Text className="ml-1 text-sm font-medium text-red-500">
-                {issueCount} {issueCount === 1 ? 'issue' : 'issues'}
+                {issueCount} {issueCount === 1 ? t('dailyLog.issue') : t('dailyLog.issues')}
               </Text>
             </View>
           )}
@@ -658,12 +692,12 @@ function DailyLogCard({
 
       <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
         <Text className="text-xs text-gray-400 dark:text-gray-500">
-          {log.preparedBy ? `By ${log.preparedBy}` : 'No author'}
+          {log.preparedBy ? `${t('dailyLog.preparedBy')} ${log.preparedBy}` : t('dailyLog.noAuthor')}
           {' · '}
-          {log.status || 'draft'}
+          {log.status || t('dailyLog.draft')}
         </Text>
         <Pressable onPress={onEdit} className="flex-row items-center">
-          <Text className="text-xs font-medium text-blue-500">View Details</Text>
+          <Text className="text-xs font-medium text-blue-500">{t('dailyLog.viewDetails')}</Text>
           <ChevronRight size={14} color="#3B82F6" />
         </Pressable>
       </View>
@@ -779,6 +813,7 @@ function ChecklistItemCard({
   onStatusChange: (newStatus: 'OPEN' | 'IN_PROGRESS' | 'CLOSED') => void;
   isUpdating: boolean;
 }) {
+  const { t } = useLanguage();
   const config = CATEGORY_CONFIG[category];
   const Icon = config.icon;
   const fieldValues = event.schemaData?.fieldValues || {};
@@ -794,6 +829,17 @@ function ChecklistItemCard({
     if (currentStatus === 'OPEN') return 'IN_PROGRESS';
     if (currentStatus === 'IN_PROGRESS') return 'CLOSED';
     return 'OPEN';
+  };
+
+  // Translatable status labels
+  const getStatusLabel = (key: string) => {
+    switch (key) {
+      case 'ALL': return t('common.all');
+      case 'OPEN': return t('checklist.open');
+      case 'IN_PROGRESS': return t('checklist.inProgress');
+      case 'CLOSED': return t('checklist.closed');
+      default: return key;
+    }
   };
 
   const StatusIcon = statusConfig.icon;
@@ -843,7 +889,7 @@ function ChecklistItemCard({
               style={{ backgroundColor: statusConfig.bgColor }}
             >
               <Text className="text-xs font-medium" style={{ color: statusConfig.color }}>
-                {statusConfig.label}
+                {getStatusLabel(currentStatus)}
               </Text>
             </View>
           </View>
@@ -867,7 +913,7 @@ function ChecklistItemCard({
           <View className="flex-row items-center mt-2 flex-wrap">
             <Icon size={12} color="#9CA3AF" />
             <Text className="ml-1 text-xs text-gray-400 dark:text-gray-500">
-              {category === 'punch_list' ? 'Punch List' : 'RFI'}
+              {category === 'punch_list' ? t('history.punchList') : t('history.rfi')}
             </Text>
             <Text className="mx-2 text-gray-300 dark:text-gray-600">·</Text>
             <Calendar size={12} color="#9CA3AF" />

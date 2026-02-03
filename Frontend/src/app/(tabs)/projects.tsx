@@ -18,6 +18,7 @@ import {
   Brain,
 } from 'lucide-react-native';
 import { useDailyLogStore } from '@/lib/store';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import { Button, InputField } from '@/components/ui';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { cn } from '@/lib/cn';
@@ -29,6 +30,7 @@ export default function ProjectsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const projects = useDailyLogStore((s) => s.projects);
   const dailyLogs = useDailyLogStore((s) => s.dailyLogs);
@@ -174,10 +176,10 @@ export default function ProjectsScreen() {
         {/* Header */}
         <View className="px-4 pt-4 pb-2">
           <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-            Projects
+            {t('projects.title')}
           </Text>
           <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Select a project to view or create daily logs
+            {t('projects.selectToView')}
           </Text>
         </View>
 
@@ -187,10 +189,10 @@ export default function ProjectsScreen() {
             <View className="items-center py-12">
               <Building2 size={48} color="#9CA3AF" />
               <Text className="text-lg font-medium text-gray-500 dark:text-gray-400 mt-4">
-                No projects yet
+                {t('projects.noProjects')}
               </Text>
               <Text className="text-sm text-gray-400 dark:text-gray-500 text-center mt-2">
-                Create your first project to start logging daily activities
+                {t('projects.createFirst')}
               </Text>
             </View>
           ) : (
@@ -237,16 +239,16 @@ export default function ProjectsScreen() {
                     <View className="flex-row items-center mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                       <FileText size={16} color="#6B7280" />
                       <Text className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                        {logCount} {logCount === 1 ? 'log' : 'logs'}
+                        {logCount} {t('projects.logs')}
                       </Text>
                       {eventCount > 0 && (
                         <Text className="ml-3 text-sm text-gray-400 dark:text-gray-500">
-                          {eventCount} {eventCount === 1 ? 'event' : 'events'}
+                          {eventCount} {t('projects.events')}
                         </Text>
                       )}
                       {latestLog && (
                         <Text className="ml-3 text-sm text-gray-400 dark:text-gray-500">
-                          Last: {format(new Date(latestLog.date), 'MMM d')}
+                          {t('projects.last')} {format(new Date(latestLog.date), 'MMM d')}
                         </Text>
                       )}
                     </View>
@@ -263,7 +265,7 @@ export default function ProjectsScreen() {
                     >
                       <Trash2 size={16} color="#EF4444" />
                       <Text className="ml-2 text-sm font-medium text-red-500">
-                        Delete Project
+                        {t('projects.deleteProject')}
                       </Text>
                     </Pressable>
                   </View>
@@ -276,7 +278,7 @@ export default function ProjectsScreen() {
         {/* Add Project Button */}
         <View className="px-4 mt-4">
           <Button
-            title="New Project"
+            title={t('projects.newProject')}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               setShowNewProject(true);
@@ -289,7 +291,7 @@ export default function ProjectsScreen() {
         {/* Import Button */}
         <View className="px-4 mt-3">
           <Button
-            title="Import Data"
+            title={t('import.title')}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               router.push('/import');
@@ -302,7 +304,7 @@ export default function ProjectsScreen() {
         {/* Manage Templates Button */}
         <View className="px-4 mt-3">
           <Button
-            title="Manage Templates"
+            title={t('schemas.manageTemplates')}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               router.push('/templates');
@@ -315,7 +317,7 @@ export default function ProjectsScreen() {
         {/* Document Schemas Button */}
         <View className="px-4 mt-3">
           <Button
-            title="Document Schemas"
+            title={t('schemas.title')}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               router.push('/schemas');
@@ -341,14 +343,14 @@ export default function ProjectsScreen() {
               <X size={24} color="#6B7280" />
             </Pressable>
             <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-              New Project
+              {t('projects.newProject')}
             </Text>
             <View className="w-10" />
           </View>
 
           <ScrollView className="flex-1 px-4 pt-4">
             <InputField
-              label="Project Name *"
+              label={`${t('projects.name')} *`}
               value={newProjectName}
               onChangeText={setNewProjectName}
               placeholder="e.g., Downtown Office Building"
@@ -356,14 +358,14 @@ export default function ProjectsScreen() {
             />
 
             <InputField
-              label="Project Number"
+              label={t('projects.projectNumber')}
               value={newProjectNumber}
               onChangeText={setNewProjectNumber}
               placeholder="e.g., PRJ-2024-001"
             />
 
             <AddressAutocomplete
-              label="Project Address"
+              label={t('projects.address')}
               value={newProjectAddress}
               onChangeText={setNewProjectAddress}
               onSelectAddress={(address) => {
@@ -371,12 +373,12 @@ export default function ProjectsScreen() {
                   Haptics.selectionAsync();
                 }
               }}
-              placeholder="Start typing city or address..."
+              placeholder={t('projects.addressPlaceholder')}
             />
 
             <View className="mt-6">
               <Button
-                title="Create Project"
+                title={t('projects.createProject')}
                 onPress={handleCreateProject}
                 variant="primary"
                 disabled={!newProjectName.trim()}
@@ -402,11 +404,11 @@ export default function ProjectsScreen() {
               </View>
 
               <Text className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
-                Delete Project?
+                {t('projects.deleteConfirmTitle')}
               </Text>
 
               <Text className="text-sm text-gray-600 dark:text-gray-400 text-center mb-4">
-                Are you sure you want to delete{' '}
+                {t('projects.deleteConfirmMessage')}{' '}
                 <Text className="font-semibold text-gray-900 dark:text-white">
                   {projectToDelete?.name}
                 </Text>
@@ -416,14 +418,14 @@ export default function ProjectsScreen() {
               {projectToDelete && (
                 <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-3 mb-4">
                   <Text className="text-sm text-red-700 dark:text-red-300 text-center">
-                    This will permanently delete:
+                    {t('projects.deleteWarning')}
                   </Text>
                   <View className="flex-row justify-center mt-2 gap-4">
                     <Text className="text-sm font-medium text-red-600 dark:text-red-400">
-                      {getProjectLogCount(projectToDelete.id)} logs
+                      {getProjectLogCount(projectToDelete.id)} {t('projects.logs')}
                     </Text>
                     <Text className="text-sm font-medium text-red-600 dark:text-red-400">
-                      {getProjectEventCount(projectToDelete.id)} events
+                      {getProjectEventCount(projectToDelete.id)} {t('projects.events')}
                     </Text>
                   </View>
                 </View>
@@ -436,7 +438,7 @@ export default function ProjectsScreen() {
                 className="flex-1 py-4 items-center border-r border-gray-200 dark:border-gray-800"
               >
                 <Text className="text-base font-medium text-gray-600 dark:text-gray-400">
-                  Cancel
+                  {t('common.cancel')}
                 </Text>
               </Pressable>
               <Pressable
@@ -444,7 +446,7 @@ export default function ProjectsScreen() {
                 className="flex-1 py-4 items-center"
               >
                 <Text className="text-base font-semibold text-red-500">
-                  Delete
+                  {t('common.delete')}
                 </Text>
               </Pressable>
             </View>

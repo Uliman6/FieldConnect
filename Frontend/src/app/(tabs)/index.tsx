@@ -286,7 +286,7 @@ export default function DailyLogScreen() {
             </Pressable>
           </View>
           <Text className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
-            Tap date to change
+            {t('dailyLog.tapDateToChange')}
           </Text>
         </View>
 
@@ -369,10 +369,10 @@ export default function DailyLogScreen() {
         {/* Prepared by */}
         <View className="mb-4">
           <InputField
-            label="Prepared By"
+            label={t('dailyLog.preparedBy')}
             value={log.prepared_by}
             onChangeText={(text) => updateDailyLog(log.id, { prepared_by: text })}
-            placeholder="Your name"
+            placeholder={t('dailyLog.yourName')}
           />
         </View>
 
@@ -522,7 +522,7 @@ export default function DailyLogScreen() {
         {/* Info text */}
         <View className="mt-6 px-2">
           <Text className="text-center text-sm text-gray-500 dark:text-gray-400">
-            Record your daily observations, then view the report in History to make edits or download the PDF.
+            {t('dailyLog.infoText')}
           </Text>
         </View>
       </View>

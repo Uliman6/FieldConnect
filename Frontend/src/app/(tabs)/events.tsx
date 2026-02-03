@@ -16,6 +16,7 @@ import { syncEventToBackend } from '@/lib/sync';
 import { parseEventWithAI, getEvents as getEventsApi, queryKeys, IndexedEvent } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useDataProvider, getBackendId } from '@/lib/data-provider';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import {
   Mic,
   AlertTriangle,
@@ -46,6 +47,7 @@ const SEVERITY_COLORS: Record<EventSeverity, string> = {
 };
 
 function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
+  const { t } = useLanguage();
   const projects = useDailyLogStore((s) => s.projects);
   const project = projects.find((p) => p.id === event.project_id);
 
@@ -55,12 +57,14 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
     const diffMs = now.getTime() - created.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 1) return t('dateTime.justNow');
+    if (diffMins < 60) return t('dateTime.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('dateTime.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('dateTime.daysAgo', { count: diffDays });
     return created.toLocaleDateString();
-  }, [event.created_at]);
+  }, [event.created_at, t]);
 
   return (
     <Pressable
@@ -78,7 +82,7 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
                 className="text-xs font-semibold"
                 style={{ color: EVENT_TYPE_COLORS[event.event_type] }}
               >
-                {event.event_type}
+                {t(`events.types.${event.event_type.toLowerCase()}`) || event.event_type}
               </Text>
             </View>
             <View
@@ -89,7 +93,7 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
                 className="text-xs font-medium"
                 style={{ color: SEVERITY_COLORS[event.severity] }}
               >
-                {event.severity}
+                {t(`events.severities.${event.severity.toLowerCase()}`) || event.severity}
               </Text>
             </View>
           </View>
@@ -107,7 +111,7 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
               <View className="flex-row items-center mb-1">
                 <AlertTriangle size={12} color="#F59E0B" />
                 <Text className="text-xs font-semibold text-amber-700 dark:text-amber-400 ml-1">
-                  Action Needed
+                  {t('events.actionItems')}
                 </Text>
               </View>
               {event.action_items.slice(0, 2).map((item, idx) => (
@@ -155,12 +159,12 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
           {event.is_resolved ? (
             <View className="flex-row items-center">
               <CheckCircle2 size={14} color="#10B981" />
-              <Text className="text-xs text-green-600 ml-1">Resolved</Text>
+              <Text className="text-xs text-green-600 ml-1">{t('events.resolved')}</Text>
             </View>
           ) : event.linked_daily_log_id ? (
             <View className="flex-row items-center">
               <Radio size={14} color="#3B82F6" />
-              <Text className="text-xs text-blue-600 ml-1">Logged</Text>
+              <Text className="text-xs text-blue-600 ml-1">{t('events.logged')}</Text>
             </View>
           ) : null}
 
@@ -177,6 +181,7 @@ export default function EventsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { refresh: refreshData } = useDataProvider();
+  const { t } = useLanguage();
   const [showRecorder, setShowRecorder] = useState(false);
 
   const projects = useDailyLogStore((s) => s.projects);
@@ -380,7 +385,7 @@ export default function EventsScreen() {
             <View className="flex-row items-center">
               <Building2 size={18} color="#F97316" />
               <Text className="ml-2 text-sm font-medium text-orange-700 dark:text-orange-300">
-                Recording for: {currentProject.name}
+                {t('events.recordingFor')} {currentProject.name}
               </Text>
             </View>
           </View>
@@ -392,7 +397,7 @@ export default function EventsScreen() {
             <View className="flex-row items-center">
               <AlertTriangle size={18} color="#F59E0B" />
               <Text className="ml-2 text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                Tap to select a project first
+                {t('projects.projectRequired')}
               </Text>
             </View>
           </Pressable>
@@ -404,7 +409,7 @@ export default function EventsScreen() {
             <View className="flex-row items-center">
               <AlertTriangle size={18} color="#F59E0B" />
               <Text className="ml-2 text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                Create a project to start capturing events
+                {t('projects.createFirst')}
               </Text>
             </View>
           </Pressable>
@@ -418,18 +423,18 @@ export default function EventsScreen() {
           {showRecorder ? (
             <View>
               <Text className="text-center text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recording Event
+                {t('events.recordEvent')}
               </Text>
               <VoiceRecorder
                 onTranscription={handleRecordComplete}
-                placeholder="Hold to record event"
+                placeholder={t('dailyLog.holdToRecord')}
                 disabled={!currentProjectId}
               />
               <Pressable
                 onPress={() => setShowRecorder(false)}
                 className="mt-4 py-2"
               >
-                <Text className="text-center text-sm text-gray-500">Cancel</Text>
+                <Text className="text-center text-sm text-gray-500">{t('common.cancel')}</Text>
               </Pressable>
             </View>
           ) : (
@@ -452,7 +457,7 @@ export default function EventsScreen() {
             >
               <Mic size={24} color="white" />
               <Text className="ml-3 text-lg font-semibold text-white">
-                Record Event
+                {t('events.recordEvent')}
               </Text>
             </Pressable>
           )}
@@ -461,14 +466,14 @@ export default function EventsScreen() {
         {/* Today's Events */}
         <View className="px-4 mt-6">
           <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-            Today ({todayEvents.length})
+            {t('events.today')} ({todayEvents.length})
           </Text>
 
           {todayEvents.length === 0 ? (
             <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 items-center">
               <Mic size={32} color="#9CA3AF" />
               <Text className="mt-3 text-gray-500 dark:text-gray-400 text-center">
-                No events recorded today.{'\n'}Tap the button above to capture one.
+                {t('events.noEvents')}{'\n'}{t('events.createFirst')}
               </Text>
             </View>
           ) : (
@@ -487,7 +492,7 @@ export default function EventsScreen() {
         {olderEvents.length > 0 && (
           <View className="px-4 mt-6">
             <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              Earlier ({olderEvents.length})
+              {t('events.earlier')} ({olderEvents.length})
             </Text>
 
             {olderEvents.slice(0, 10).map((event, index) => (
@@ -502,7 +507,7 @@ export default function EventsScreen() {
             {olderEvents.length > 10 && (
               <Pressable className="py-3">
                 <Text className="text-center text-orange-500 font-medium">
-                  View all {olderEvents.length} events
+                  {t('events.viewAll', { count: olderEvents.length })}
                 </Text>
               </Pressable>
             )}
