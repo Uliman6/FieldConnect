@@ -23,7 +23,7 @@ class NLQueryService {
     const parsed = await this.parseQueryWithAI(query);
 
     // Build filters from parsed intent
-    const filters = this.buildFilters(parsed, { projectId, includeTest });
+    const filters = this.buildFilters(parsed, { projectId, includeTest, originalQuery: query });
 
     // Execute the search
     const results = await this.executeSearch(filters, parsed);
@@ -173,7 +173,7 @@ Return JSON only, no explanation.`
    */
   buildFilters(parsed, context) {
     const filters = {};
-    const { projectId, includeTest } = context;
+    const { projectId, includeTest, originalQuery } = context;
 
     if (projectId) filters.projectId = projectId;
     if (!includeTest) filters.isTest = false;
@@ -241,6 +241,20 @@ Return JSON only, no explanation.`
 
     if (searchTerms.length > 0) {
       filters.query = searchTerms.join(' ');
+    }
+
+    // If no specific search terms extracted, use the original query words as fallback
+    // This ensures text searches like "material" or "material damage" work
+    if (!filters.query) {
+      // Extract significant words from the original query (skip common words)
+      const stopWords = ['find', 'search', 'list', 'show', 'all', 'any', 'the', 'a', 'an', 'for', 'with', 'related', 'issues', 'items', 'events', 'pull', 'get', 'me'];
+      const queryWords = (originalQuery || '')
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !stopWords.includes(w));
+      if (queryWords.length > 0) {
+        filters.query = queryWords.join(' ');
+      }
     }
 
     return filters;

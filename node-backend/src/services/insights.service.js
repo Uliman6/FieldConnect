@@ -622,7 +622,8 @@ class InsightsService {
       whereClause.OR = [
         { title: { contains: query, mode: 'insensitive' } },
         { description: { contains: query, mode: 'insensitive' } },
-        { keywordsSummary: { contains: query, mode: 'insensitive' } }
+        { keywordsSummary: { contains: query, mode: 'insensitive' } },
+        { rawText: { contains: query, mode: 'insensitive' } }
       ];
     }
 
