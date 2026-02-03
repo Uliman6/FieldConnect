@@ -38,7 +38,8 @@ class InsightsService {
     const testFlag = isTest !== null ? isTest : (event.project?.isTest || false);
 
     // Extract keywords using the event indexer
-    const text = `${event.transcriptText || ''} ${event.title || ''} ${event.notes || ''}`;
+    // Include description for events created from daily logs that don't have transcripts
+    const text = `${event.transcriptText || ''} ${event.description || ''} ${event.title || ''} ${event.notes || ''}`;
     const extracted = eventIndexer.extractAllKeywords(text);
 
     // Determine category based on extracted issue types
@@ -64,7 +65,7 @@ class InsightsService {
         dailyLogId: event.linkedDailyLogId,
         title,
         description: event.description || event.notes,
-        rawText: event.transcriptText,
+        rawText: event.transcriptText || event.description || event.notes,
         category,
         severity: event.severity,
         inspectors: extracted.inspectors,
