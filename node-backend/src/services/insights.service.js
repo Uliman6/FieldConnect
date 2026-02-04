@@ -635,7 +635,9 @@ class InsightsService {
         { title: { contains: query, mode: 'insensitive' } },
         { description: { contains: query, mode: 'insensitive' } },
         { keywordsSummary: { contains: query, mode: 'insensitive' } },
-        { rawText: { contains: query, mode: 'insensitive' } }
+        { rawText: { contains: query, mode: 'insensitive' } },
+        { sourceType: { contains: query, mode: 'insensitive' } },
+        { category: { contains: query, mode: 'insensitive' } }
       ];
     }
 
