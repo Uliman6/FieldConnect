@@ -17,6 +17,7 @@ import {
   Wrench,
   DollarSign,
   ChevronRight,
+  ChevronDown,
   X,
   Building2,
   ArrowLeft,
@@ -35,6 +36,8 @@ import {
   Send,
   BarChart3,
   Download,
+  Check,
+  Filter,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -55,13 +58,122 @@ import {
   NLQueryResult,
 } from '@/lib/api';
 
-// Filter state type
+// Filter state type - now supports multiple selections
 interface ActiveFilters {
-  category?: string;
-  sourceType?: string;
-  trade?: string;
-  issueType?: string;
-  system?: string;
+  categories: string[];
+  sourceTypes: string[];
+  trades: string[];
+  issueTypes: string[];
+  systems: string[];
+}
+
+const EMPTY_FILTERS: ActiveFilters = {
+  categories: [],
+  sourceTypes: [],
+  trades: [],
+  issueTypes: [],
+  systems: [],
+};
+
+// Multi-select filter dropdown component
+function FilterDropdown({
+  label,
+  icon: Icon,
+  options,
+  selectedValues,
+  onToggle,
+  color = '#6B7280',
+}: {
+  label: string;
+  icon: React.ComponentType<{ size: number; color: string }>;
+  options: { value: string; label: string }[];
+  selectedValues: string[];
+  onToggle: (value: string) => void;
+  color?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const hasSelection = selectedValues.length > 0;
+
+  return (
+    <View className="flex-1 mr-2 last:mr-0">
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setIsOpen(!isOpen);
+        }}
+        className={cn(
+          'flex-row items-center justify-between px-3 py-2 rounded-lg border',
+          hasSelection
+            ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700'
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+        )}
+      >
+        <View className="flex-row items-center flex-1">
+          <Icon size={14} color={hasSelection ? '#F97316' : color} />
+          <Text
+            className={cn(
+              'text-xs ml-1.5 flex-1',
+              hasSelection
+                ? 'text-orange-700 dark:text-orange-300 font-medium'
+                : 'text-gray-600 dark:text-gray-400'
+            )}
+            numberOfLines={1}
+          >
+            {hasSelection ? `${label} (${selectedValues.length})` : label}
+          </Text>
+        </View>
+        <ChevronDown
+          size={14}
+          color={hasSelection ? '#F97316' : '#9CA3AF'}
+          style={{ transform: [{ rotate: isOpen ? '180deg' : '0deg' }] }}
+        />
+      </Pressable>
+
+      {isOpen && (
+        <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg z-50 max-h-48">
+          <ScrollView nestedScrollEnabled>
+            {options.map((option) => {
+              const isSelected = selectedValues.includes(option.value);
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    onToggle(option.value);
+                  }}
+                  className={cn(
+                    'flex-row items-center px-3 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0',
+                    isSelected && 'bg-orange-50 dark:bg-orange-900/20'
+                  )}
+                >
+                  <View
+                    className={cn(
+                      'w-4 h-4 rounded border mr-2 items-center justify-center',
+                      isSelected
+                        ? 'bg-orange-500 border-orange-500'
+                        : 'border-gray-300 dark:border-gray-600'
+                    )}
+                  >
+                    {isSelected && <Check size={10} color="white" />}
+                  </View>
+                  <Text
+                    className={cn(
+                      'text-sm flex-1',
+                      isSelected
+                        ? 'text-orange-700 dark:text-orange-300 font-medium'
+                        : 'text-gray-700 dark:text-gray-300'
+                    )}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
 }
 
 const CATEGORY_CONFIG: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
@@ -458,11 +570,24 @@ export default function InsightsScreen() {
   const [isQuerying, setIsQuerying] = useState(false);
   const [nlQueryResult, setNlQueryResult] = useState<NLQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);
-  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({});
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
   const [isExporting, setIsExporting] = useState(false);
 
   // Check if any filters are active
-  const hasActiveFilters = Object.values(activeFilters).some(Boolean);
+  const hasActiveFilters =
+    activeFilters.categories.length > 0 ||
+    activeFilters.sourceTypes.length > 0 ||
+    activeFilters.trades.length > 0 ||
+    activeFilters.issueTypes.length > 0 ||
+    activeFilters.systems.length > 0;
+
+  // Count total active filter selections
+  const activeFilterCount =
+    activeFilters.categories.length +
+    activeFilters.sourceTypes.length +
+    activeFilters.trades.length +
+    activeFilters.issueTypes.length +
+    activeFilters.systems.length;
 
   // Execute NL query - receives query from SearchInputBox
   const handleNLQuery = useCallback(async (query: string) => {
@@ -505,14 +630,21 @@ export default function InsightsScreen() {
         limit: 100,
       };
 
-      // Apply active filters
-      if (activeFilters.category) filters.category = activeFilters.category;
-      if (activeFilters.sourceType) filters.sourceType = activeFilters.sourceType;
-      // For trade, issueType, system - we pass them as query text
-      if (activeFilters.trade || activeFilters.issueType || activeFilters.system) {
-        filters.query = [activeFilters.trade, activeFilters.issueType, activeFilters.system]
-          .filter(Boolean)
-          .join(' ');
+      // Apply active filters - categories and sourceTypes as comma-separated
+      if (activeFilters.categories.length > 0) {
+        filters.category = activeFilters.categories.join(',');
+      }
+      if (activeFilters.sourceTypes.length > 0) {
+        filters.sourceType = activeFilters.sourceTypes.join(',');
+      }
+      // For trades, issueTypes, systems - pass as query text
+      const queryParts = [
+        ...activeFilters.trades,
+        ...activeFilters.issueTypes,
+        ...activeFilters.systems,
+      ];
+      if (queryParts.length > 0) {
+        filters.query = queryParts.join(' ');
       }
 
       const result = await getInsights(filters);
@@ -555,25 +687,45 @@ export default function InsightsScreen() {
     }
   }, [queryClient]);
 
-  // Filter handlers
-  const handleSetFilter = useCallback((filterType: keyof ActiveFilters, value: string) => {
+  // Filter handlers - toggle individual values in arrays
+  const handleToggleFilter = useCallback((filterType: keyof ActiveFilters, value: string) => {
+    setActiveFilters(prev => {
+      const currentValues = prev[filterType] as string[];
+      const isSelected = currentValues.includes(value);
+      return {
+        ...prev,
+        [filterType]: isSelected
+          ? currentValues.filter(v => v !== value)
+          : [...currentValues, value],
+      };
+    });
+  }, []);
+
+  // Add a filter and switch to All tab (used from Dashboard clicks)
+  const handleAddFilter = useCallback((filterType: keyof ActiveFilters, value: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setActiveFilters(prev => ({ ...prev, [filterType]: value }));
+    setActiveFilters(prev => {
+      const currentValues = prev[filterType] as string[];
+      if (currentValues.includes(value)) return prev;
+      return {
+        ...prev,
+        [filterType]: [...currentValues, value],
+      };
+    });
     setActiveTab('all'); // Switch to All tab to see filtered results
   }, []);
 
-  const handleClearFilter = useCallback((filterType: keyof ActiveFilters) => {
+  const handleClearFilterType = useCallback((filterType: keyof ActiveFilters) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setActiveFilters(prev => {
-      const next = { ...prev };
-      delete next[filterType];
-      return next;
-    });
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: [],
+    }));
   }, []);
 
   const handleClearAllFilters = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setActiveFilters({});
+    setActiveFilters(EMPTY_FILTERS);
   }, []);
 
   // Export PDF handler
@@ -584,11 +736,11 @@ export default function InsightsScreen() {
     try {
       const pdfUrl = await fetchInsightsExportPdf({
         projectId: backendProjectId,
-        category: activeFilters.category,
-        sourceType: activeFilters.sourceType,
-        trade: activeFilters.trade,
-        issueType: activeFilters.issueType,
-        system: activeFilters.system,
+        category: activeFilters.categories.length > 0 ? activeFilters.categories.join(',') : undefined,
+        sourceType: activeFilters.sourceTypes.length > 0 ? activeFilters.sourceTypes.join(',') : undefined,
+        trade: activeFilters.trades.length > 0 ? activeFilters.trades.join(',') : undefined,
+        issueType: activeFilters.issueTypes.length > 0 ? activeFilters.issueTypes.join(',') : undefined,
+        system: activeFilters.systems.length > 0 ? activeFilters.systems.join(',') : undefined,
       });
 
       // Open PDF in new tab (web) or share (native)
@@ -765,7 +917,7 @@ export default function InsightsScreen() {
                       return (
                         <Pressable
                           key={item.category}
-                          onPress={() => handleSetFilter('category', item.category)}
+                          onPress={() => handleAddFilter('categories', item.category)}
                           className="flex-row items-center px-3 py-1.5 rounded-full mr-2 mb-2"
                           style={{ backgroundColor: config.color + '20' }}
                         >
@@ -792,7 +944,7 @@ export default function InsightsScreen() {
                     {stats.bySourceType.map((item) => (
                       <Pressable
                         key={item.sourceType}
-                        onPress={() => handleSetFilter('sourceType', item.sourceType)}
+                        onPress={() => handleAddFilter('sourceTypes', item.sourceType)}
                         className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full mr-2 mb-2"
                       >
                         <Text className="text-xs font-medium text-gray-600 dark:text-gray-300">
@@ -810,7 +962,7 @@ export default function InsightsScreen() {
                 items={stats.topTrades}
                 icon={Wrench}
                 color="#3B82F6"
-                onItemPress={(name) => handleSetFilter('trade', name)}
+                onItemPress={(name) => handleAddFilter('trades', name)}
               />
 
               <TopItemsList
@@ -818,7 +970,7 @@ export default function InsightsScreen() {
                 items={stats.topIssueTypes}
                 icon={AlertTriangle}
                 color="#F59E0B"
-                onItemPress={(name) => handleSetFilter('issueType', name)}
+                onItemPress={(name) => handleAddFilter('issueTypes', name)}
               />
 
               <TopItemsList
@@ -826,7 +978,7 @@ export default function InsightsScreen() {
                 items={stats.topSystems}
                 icon={Zap}
                 color="#8B5CF6"
-                onItemPress={(name) => handleSetFilter('system', name)}
+                onItemPress={(name) => handleAddFilter('systems', name)}
               />
 
               {/* Empty State */}
@@ -850,9 +1002,12 @@ export default function InsightsScreen() {
             <Animated.View entering={FadeIn} className="px-4 pt-4">
               {/* Header with title and export button */}
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                  {hasActiveFilters ? 'Filtered' : 'All'} Insights ({allInsights.length})
-                </Text>
+                <View className="flex-row items-center">
+                  <Filter size={14} color="#6B7280" />
+                  <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide ml-1">
+                    {hasActiveFilters ? `Filtered (${activeFilterCount})` : 'All'} - {allInsights.length} items
+                  </Text>
+                </View>
                 <Pressable
                   onPress={handleExportPdf}
                   disabled={isExporting || allInsights.length === 0}
@@ -879,12 +1034,67 @@ export default function InsightsScreen() {
                 </Pressable>
               </View>
 
-              {/* Active Filters Bar */}
+              {/* Filter Dropdowns Row */}
+              {stats && (
+                <View className="flex-row mb-3" style={{ zIndex: 100 }}>
+                  <FilterDropdown
+                    label="Category"
+                    icon={AlertCircle}
+                    color="#EF4444"
+                    options={stats.byCategory.map(c => ({
+                      value: c.category,
+                      label: `${CATEGORY_CONFIG[c.category]?.label || c.category} (${c.count})`,
+                    }))}
+                    selectedValues={activeFilters.categories}
+                    onToggle={(value) => handleToggleFilter('categories', value)}
+                  />
+                  <FilterDropdown
+                    label="Source"
+                    icon={FileText}
+                    color="#3B82F6"
+                    options={stats.bySourceType.map(s => ({
+                      value: s.sourceType,
+                      label: `${SOURCE_LABELS[s.sourceType] || s.sourceType} (${s.count})`,
+                    }))}
+                    selectedValues={activeFilters.sourceTypes}
+                    onToggle={(value) => handleToggleFilter('sourceTypes', value)}
+                  />
+                </View>
+              )}
+
+              {stats && (
+                <View className="flex-row mb-3" style={{ zIndex: 90 }}>
+                  <FilterDropdown
+                    label="Trade"
+                    icon={Wrench}
+                    color="#3B82F6"
+                    options={stats.topTrades.map(t => ({
+                      value: t.name,
+                      label: `${t.name} (${t.count})`,
+                    }))}
+                    selectedValues={activeFilters.trades}
+                    onToggle={(value) => handleToggleFilter('trades', value)}
+                  />
+                  <FilterDropdown
+                    label="System"
+                    icon={Zap}
+                    color="#8B5CF6"
+                    options={stats.topSystems.map(s => ({
+                      value: s.name,
+                      label: `${s.name} (${s.count})`,
+                    }))}
+                    selectedValues={activeFilters.systems}
+                    onToggle={(value) => handleToggleFilter('systems', value)}
+                  />
+                </View>
+              )}
+
+              {/* Active Filters Summary & Clear */}
               {hasActiveFilters && (
                 <View className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 mb-3">
                   <View className="flex-row items-center justify-between mb-2">
                     <Text className="text-xs font-semibold text-orange-800 dark:text-orange-300">
-                      Active Filters
+                      Active Filters ({activeFilterCount})
                     </Text>
                     <Pressable onPress={handleClearAllFilters}>
                       <Text className="text-xs text-orange-600 dark:text-orange-400 underline">
@@ -893,61 +1103,66 @@ export default function InsightsScreen() {
                     </Pressable>
                   </View>
                   <View className="flex-row flex-wrap">
-                    {activeFilters.category && (
+                    {activeFilters.categories.map((cat) => (
                       <Pressable
-                        onPress={() => handleClearFilter('category')}
+                        key={`cat-${cat}`}
+                        onPress={() => handleToggleFilter('categories', cat)}
                         className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
                       >
                         <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
-                          Category: {CATEGORY_CONFIG[activeFilters.category]?.label || activeFilters.category}
+                          {CATEGORY_CONFIG[cat]?.label || cat}
                         </Text>
                         <X size={12} color="#9CA3AF" />
                       </Pressable>
-                    )}
-                    {activeFilters.sourceType && (
+                    ))}
+                    {activeFilters.sourceTypes.map((src) => (
                       <Pressable
-                        onPress={() => handleClearFilter('sourceType')}
+                        key={`src-${src}`}
+                        onPress={() => handleToggleFilter('sourceTypes', src)}
                         className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
                       >
                         <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
-                          Source: {SOURCE_LABELS[activeFilters.sourceType] || activeFilters.sourceType}
+                          {SOURCE_LABELS[src] || src}
                         </Text>
                         <X size={12} color="#9CA3AF" />
                       </Pressable>
-                    )}
-                    {activeFilters.trade && (
+                    ))}
+                    {activeFilters.trades.map((trade) => (
                       <Pressable
-                        onPress={() => handleClearFilter('trade')}
+                        key={`trade-${trade}`}
+                        onPress={() => handleToggleFilter('trades', trade)}
                         className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
                       >
                         <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
-                          Trade: {activeFilters.trade}
+                          {trade}
                         </Text>
                         <X size={12} color="#9CA3AF" />
                       </Pressable>
-                    )}
-                    {activeFilters.issueType && (
+                    ))}
+                    {activeFilters.issueTypes.map((issue) => (
                       <Pressable
-                        onPress={() => handleClearFilter('issueType')}
+                        key={`issue-${issue}`}
+                        onPress={() => handleToggleFilter('issueTypes', issue)}
                         className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
                       >
                         <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
-                          Issue: {activeFilters.issueType}
+                          {issue}
                         </Text>
                         <X size={12} color="#9CA3AF" />
                       </Pressable>
-                    )}
-                    {activeFilters.system && (
+                    ))}
+                    {activeFilters.systems.map((system) => (
                       <Pressable
-                        onPress={() => handleClearFilter('system')}
+                        key={`system-${system}`}
+                        onPress={() => handleToggleFilter('systems', system)}
                         className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
                       >
                         <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
-                          System: {activeFilters.system}
+                          {system}
                         </Text>
                         <X size={12} color="#9CA3AF" />
                       </Pressable>
-                    )}
+                    ))}
                   </View>
                 </View>
               )}

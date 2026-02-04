@@ -633,9 +633,29 @@ class InsightsService {
     // Build base where clause (non-text filters)
     const baseWhere = {};
     if (projectId) baseWhere.projectId = projectId;
-    if (category) baseWhere.category = category;
+
+    // Handle comma-separated category values (e.g., "quality,rework")
+    if (category) {
+      const categories = category.split(',').map(c => c.trim()).filter(Boolean);
+      if (categories.length === 1) {
+        baseWhere.category = categories[0];
+      } else if (categories.length > 1) {
+        baseWhere.category = { in: categories };
+      }
+    }
+
     if (severity) baseWhere.severity = severity;
-    if (sourceType) baseWhere.sourceType = sourceType;
+
+    // Handle comma-separated sourceType values (e.g., "event,pending_issue")
+    if (sourceType) {
+      const sourceTypes = sourceType.split(',').map(s => s.trim()).filter(Boolean);
+      if (sourceTypes.length === 1) {
+        baseWhere.sourceType = sourceTypes[0];
+      } else if (sourceTypes.length > 1) {
+        baseWhere.sourceType = { in: sourceTypes };
+      }
+    }
+
     if (needsFollowUp !== undefined) baseWhere.needsFollowUp = needsFollowUp;
     if (isResolved !== undefined) baseWhere.isResolved = isResolved;
     if (isTest !== undefined) baseWhere.isTest = isTest;
