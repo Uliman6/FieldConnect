@@ -29,7 +29,8 @@
       "Bash(tasklist:*)",
       "Bash(findstr:*)",
       "Bash(TOKEN=\"***REMOVED***\")",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''https://fieldconnect.onrender.com/api/insights/query'' -Method Post -Headers @{''Authorization''=''Bearer ***REMOVED***''; ''Content-Type''=''application/json''} -Body ''{\"\"query\"\":\"\"material damage\"\"}'' | ConvertTo-Json -Depth 5\")"
     ]
   }
 }
