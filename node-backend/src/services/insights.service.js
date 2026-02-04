@@ -666,69 +666,118 @@ class InsightsService {
 
     console.log(`[insights/search] Got ${candidates.length} candidates, searching for: "${query}"`);
 
-    // Search query terms (split into words for flexible matching)
+    // Filter out common/generic words that match too broadly
+    const stopWords = ['items', 'item', 'things', 'thing', 'stuff', 'related', 'all', 'any',
+                       'the', 'a', 'an', 'for', 'with', 'about', 'find', 'show', 'list',
+                       'get', 'search', 'query', 'look', 'need', 'want', 'please'];
+
     const queryLower = query.toLowerCase().trim();
-    const queryWords = queryLower.split(/\s+/).filter(w => w.length > 1);
+    const queryWords = queryLower.split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.includes(w));
+
+    // If all words were filtered out, try with the original words (minus very short ones)
+    const searchWords = queryWords.length > 0
+      ? queryWords
+      : queryLower.split(/\s+/).filter(w => w.length > 2);
+
+    console.log(`[insights/search] Search words after filtering: [${searchWords.join(', ')}]`);
+
+    if (searchWords.length === 0) {
+      console.log(`[insights/search] No valid search words, returning empty`);
+      return [];
+    }
 
     // Score each candidate by how many fields match
     const scored = candidates.map(insight => {
       let score = 0;
       const matchedFields = [];
+      const matchedWords = new Set();
 
-      // Helper to check if text contains any query word
-      const textMatches = (text) => {
-        if (!text) return false;
+      // Helper to check if text contains query words and track which ones
+      const textMatches = (text, fieldWeight) => {
+        if (!text) return 0;
         const textLower = text.toLowerCase();
-        return queryWords.some(word => textLower.includes(word));
-      };
-
-      // Helper to check if JSON array contains any query word
-      const arrayMatches = (arr) => {
-        if (!arr || !Array.isArray(arr)) return false;
-        return arr.some(item => {
-          if (typeof item === 'string') {
-            return queryWords.some(word => item.toLowerCase().includes(word));
+        let fieldScore = 0;
+        searchWords.forEach(word => {
+          if (textLower.includes(word)) {
+            fieldScore += fieldWeight;
+            matchedWords.add(word);
           }
-          return false;
         });
+        return fieldScore;
       };
 
-      // Check all text fields
-      if (textMatches(insight.title)) { score += 10; matchedFields.push('title'); }
-      if (textMatches(insight.description)) { score += 5; matchedFields.push('description'); }
-      if (textMatches(insight.rawText)) { score += 3; matchedFields.push('rawText'); }
-      if (textMatches(insight.keywordsSummary)) { score += 2; matchedFields.push('keywordsSummary'); }
-      if (textMatches(insight.followUpReason)) { score += 2; matchedFields.push('followUpReason'); }
+      // Helper to check if JSON array contains query words
+      const arrayMatches = (arr, fieldWeight) => {
+        if (!arr || !Array.isArray(arr)) return 0;
+        let fieldScore = 0;
+        arr.forEach(item => {
+          if (typeof item === 'string') {
+            const itemLower = item.toLowerCase();
+            searchWords.forEach(word => {
+              if (itemLower.includes(word)) {
+                fieldScore += fieldWeight;
+                matchedWords.add(word);
+              }
+            });
+          }
+        });
+        return fieldScore;
+      };
+
+      // Check all text fields (higher weight for title)
+      const titleScore = textMatches(insight.title, 10);
+      if (titleScore > 0) { score += titleScore; matchedFields.push('title'); }
+
+      const descScore = textMatches(insight.description, 5);
+      if (descScore > 0) { score += descScore; matchedFields.push('description'); }
+
+      const rawScore = textMatches(insight.rawText, 3);
+      if (rawScore > 0) { score += rawScore; matchedFields.push('rawText'); }
+
+      const kwScore = textMatches(insight.keywordsSummary, 2);
+      if (kwScore > 0) { score += kwScore; matchedFields.push('keywordsSummary'); }
 
       // Check JSON array fields
-      if (arrayMatches(insight.trades)) { score += 4; matchedFields.push('trades'); }
-      if (arrayMatches(insight.systems)) { score += 4; matchedFields.push('systems'); }
-      if (arrayMatches(insight.materials)) { score += 3; matchedFields.push('materials'); }
-      if (arrayMatches(insight.locations)) { score += 3; matchedFields.push('locations'); }
-      if (arrayMatches(insight.issueTypes)) { score += 3; matchedFields.push('issueTypes'); }
-      if (arrayMatches(insight.inspectors)) { score += 2; matchedFields.push('inspectors'); }
+      const tradeScore = arrayMatches(insight.trades, 4);
+      if (tradeScore > 0) { score += tradeScore; matchedFields.push('trades'); }
+
+      const sysScore = arrayMatches(insight.systems, 4);
+      if (sysScore > 0) { score += sysScore; matchedFields.push('systems'); }
+
+      const matScore = arrayMatches(insight.materials, 3);
+      if (matScore > 0) { score += matScore; matchedFields.push('materials'); }
+
+      const locScore = arrayMatches(insight.locations, 3);
+      if (locScore > 0) { score += locScore; matchedFields.push('locations'); }
 
       // Check sourceType (e.g., "inspection" should match "inspection_note")
-      if (insight.sourceType && queryWords.some(w => insight.sourceType.toLowerCase().includes(w))) {
-        score += 3;
-        matchedFields.push('sourceType');
+      if (insight.sourceType) {
+        const stLower = insight.sourceType.toLowerCase();
+        searchWords.forEach(word => {
+          if (stLower.includes(word)) {
+            score += 5;
+            matchedFields.push('sourceType');
+            matchedWords.add(word);
+          }
+        });
       }
 
-      // Check category
-      if (insight.category && queryWords.some(w => insight.category.toLowerCase().includes(w))) {
-        score += 3;
-        matchedFields.push('category');
-      }
-
-      return { ...insight, _score: score, _matchedFields: matchedFields };
+      return {
+        ...insight,
+        _score: score,
+        _matchedFields: matchedFields,
+        _matchedWords: Array.from(matchedWords)
+      };
     });
 
-    // Filter to only matches and sort by score
+    // Require minimum score (at least one meaningful match in an important field)
+    const MIN_SCORE = 5;
     const results = scored
-      .filter(r => r._score > 0)
+      .filter(r => r._score >= MIN_SCORE)
       .sort((a, b) => b._score - a._score)
       .slice(0, limit)
-      .map(({ _score, _matchedFields, ...insight }) => insight);
+      .map(({ _score, _matchedFields, _matchedWords, ...insight }) => insight);
 
     console.log(`[insights/search] Found ${results.length} matching results`);
     if (results.length > 0) {

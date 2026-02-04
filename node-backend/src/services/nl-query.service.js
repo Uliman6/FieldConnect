@@ -254,8 +254,8 @@ Return JSON only, no explanation.`
       try {
         console.log(`[nl-query] Attempting semantic search...`);
         const semanticResults = await insightsService.findSimilarByText(originalQuery, {
-          limit: 50,
-          threshold: 0.5, // Lower threshold for broader matches
+          limit: 30,
+          threshold: 0.68, // Higher threshold = more relevant results only
           projectId: filters.projectId
         });
 
@@ -294,10 +294,11 @@ Return JSON only, no explanation.`
     }
 
     // STEP 2: Fall back to keyword search (comprehensive field matching)
+    // Only use keyword search if semantic search failed completely
     console.log(`[nl-query] Using keyword search as fallback`);
     const results = await insightsService.search({
       ...filters,
-      limit: 100
+      limit: 50
     });
 
     console.log(`[nl-query] Keyword search returned ${results.length} results`);
