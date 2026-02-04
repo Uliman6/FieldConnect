@@ -495,6 +495,15 @@ Return a JSON object with the structure described. Only include categories that 
           notes: this.cleanText(t.notes || '', companyName)
         };
       }).filter(t => t.company_name || t.task_description);
+
+      // Default hours to 8 if company and workers are specified but hours is missing
+      // This is a safe assumption for a standard work day unless notes indicate otherwise
+      for (const task of normalized.tasks) {
+        if (task.company_name && task.workers > 0 && (!task.hours || task.hours === 0)) {
+          task.hours = 8;
+          console.log(`[transcript-parser] AI: Defaulting hours to 8 for ${task.company_name} (${task.workers} workers)`);
+        }
+      }
     }
 
     // Normalize visitors
@@ -802,6 +811,15 @@ Return a JSON object with the structure described. Only include categories that 
             if (task.hours === 0) task.hours = workInfo.hours;
           }
         }
+      }
+    }
+
+    // Default hours to 8 if company and workers are specified but hours is missing
+    // This is a safe assumption for a standard work day unless notes indicate otherwise
+    for (const task of tasks) {
+      if (task.company_name && task.workers > 0 && (!task.hours || task.hours === 0)) {
+        task.hours = 8;
+        console.log(`[transcript-parser] Defaulting hours to 8 for ${task.company_name} (${task.workers} workers)`);
       }
     }
 
