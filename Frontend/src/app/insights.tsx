@@ -34,6 +34,7 @@ import {
   Sparkles,
   Send,
   BarChart3,
+  Download,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -46,12 +47,22 @@ import {
   updateInsight,
   findSimilarInsights,
   queryInsights,
+  fetchInsightsExportPdf,
   queryKeys,
   Insight,
   InsightsStats,
   InsightSearchFilters,
   NLQueryResult,
 } from '@/lib/api';
+
+// Filter state type
+interface ActiveFilters {
+  category?: string;
+  sourceType?: string;
+  trade?: string;
+  issueType?: string;
+  system?: string;
+}
 
 const CATEGORY_CONFIG: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
   issue: { color: '#EF4444', icon: AlertCircle, label: 'Issue' },
@@ -283,11 +294,13 @@ function TopItemsList({
   items,
   icon: Icon,
   color,
+  onItemPress,
 }: {
   title: string;
   items: { name: string; count: number }[];
   icon: React.ComponentType<{ size: number; color: string }>;
   color: string;
+  onItemPress?: (name: string) => void;
 }) {
   if (!items || items.length === 0) return null;
 
@@ -300,8 +313,14 @@ function TopItemsList({
         </Text>
       </View>
       {items.slice(0, 5).map((item) => (
-        <View
+        <Pressable
           key={item.name}
+          onPress={() => {
+            if (onItemPress) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onItemPress(item.name);
+            }
+          }}
           className="flex-row items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
         >
           <Text className="text-sm text-gray-600 dark:text-gray-400 flex-1" numberOfLines={1}>
@@ -312,7 +331,8 @@ function TopItemsList({
               {item.count}
             </Text>
           </View>
-        </View>
+          {onItemPress && <ChevronRight size={14} color="#9CA3AF" className="ml-1" />}
+        </Pressable>
       ))}
     </View>
   );
@@ -438,6 +458,11 @@ export default function InsightsScreen() {
   const [isQuerying, setIsQuerying] = useState(false);
   const [nlQueryResult, setNlQueryResult] = useState<NLQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({});
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Check if any filters are active
+  const hasActiveFilters = Object.values(activeFilters).some(Boolean);
 
   // Execute NL query - receives query from SearchInputBox
   const handleNLQuery = useCallback(async (query: string) => {
@@ -471,12 +496,27 @@ export default function InsightsScreen() {
     enabled: !!backendProjectId,
   });
 
-  // Fetch all insights for current project
+  // Fetch all insights for current project with filters
   const insightsQuery = useQuery({
-    queryKey: queryKeys.insights({ projectId: backendProjectId, limit: 100 }),
+    queryKey: queryKeys.insights({ projectId: backendProjectId, ...activeFilters, limit: 100 }),
     queryFn: async () => {
-      const result = await getInsights({ projectId: backendProjectId, limit: 100 });
-      console.log('[insights] Fetched insights for project:', backendProjectId, result?.length || 0);
+      const filters: InsightSearchFilters = {
+        projectId: backendProjectId,
+        limit: 100,
+      };
+
+      // Apply active filters
+      if (activeFilters.category) filters.category = activeFilters.category;
+      if (activeFilters.sourceType) filters.sourceType = activeFilters.sourceType;
+      // For trade, issueType, system - we pass them as query text
+      if (activeFilters.trade || activeFilters.issueType || activeFilters.system) {
+        filters.query = [activeFilters.trade, activeFilters.issueType, activeFilters.system]
+          .filter(Boolean)
+          .join(' ');
+      }
+
+      const result = await getInsights(filters);
+      console.log('[insights] Fetched insights for project:', backendProjectId, 'filters:', activeFilters, 'count:', result?.length || 0);
       return result;
     },
     staleTime: 0, // Always fetch fresh data
@@ -514,6 +554,55 @@ export default function InsightsScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   }, [queryClient]);
+
+  // Filter handlers
+  const handleSetFilter = useCallback((filterType: keyof ActiveFilters, value: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setActiveFilters(prev => ({ ...prev, [filterType]: value }));
+    setActiveTab('all'); // Switch to All tab to see filtered results
+  }, []);
+
+  const handleClearFilter = useCallback((filterType: keyof ActiveFilters) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setActiveFilters(prev => {
+      const next = { ...prev };
+      delete next[filterType];
+      return next;
+    });
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setActiveFilters({});
+  }, []);
+
+  // Export PDF handler
+  const handleExportPdf = useCallback(async () => {
+    setIsExporting(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      const pdfUrl = await fetchInsightsExportPdf({
+        projectId: backendProjectId,
+        category: activeFilters.category,
+        sourceType: activeFilters.sourceType,
+        trade: activeFilters.trade,
+        issueType: activeFilters.issueType,
+        system: activeFilters.system,
+      });
+
+      // Open PDF in new tab (web) or share (native)
+      if (typeof window !== 'undefined') {
+        window.open(pdfUrl, '_blank');
+      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error: any) {
+      console.error('Failed to export PDF:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [backendProjectId, activeFilters]);
 
   const isLoading = statsQuery.isLoading || insightsQuery.isLoading;
   const hasError = statsQuery.isError || insightsQuery.isError;
@@ -664,18 +753,19 @@ export default function InsightsScreen() {
                 />
               </View>
 
-              {/* Category Breakdown */}
+              {/* Category Breakdown - Clickable */}
               {stats.byCategory.length > 0 && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3">
                   <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    By Category
+                    By Category (tap to filter)
                   </Text>
                   <View className="flex-row flex-wrap">
                     {stats.byCategory.map((item) => {
                       const config = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.issue;
                       return (
-                        <View
+                        <Pressable
                           key={item.category}
+                          onPress={() => handleSetFilter('category', item.category)}
                           className="flex-row items-center px-3 py-1.5 rounded-full mr-2 mb-2"
                           style={{ backgroundColor: config.color + '20' }}
                         >
@@ -685,40 +775,42 @@ export default function InsightsScreen() {
                           >
                             {config.label}: {item.count}
                           </Text>
-                        </View>
+                        </Pressable>
                       );
                     })}
                   </View>
                 </View>
               )}
 
-              {/* Source Type Breakdown */}
+              {/* Source Type Breakdown - Clickable */}
               {stats.bySourceType.length > 0 && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3">
                   <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    By Source
+                    By Source (tap to filter)
                   </Text>
                   <View className="flex-row flex-wrap">
                     {stats.bySourceType.map((item) => (
-                      <View
+                      <Pressable
                         key={item.sourceType}
+                        onPress={() => handleSetFilter('sourceType', item.sourceType)}
                         className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full mr-2 mb-2"
                       >
                         <Text className="text-xs font-medium text-gray-600 dark:text-gray-300">
                           {SOURCE_LABELS[item.sourceType] || item.sourceType}: {item.count}
                         </Text>
-                      </View>
+                      </Pressable>
                     ))}
                   </View>
                 </View>
               )}
 
-              {/* Top Lists */}
+              {/* Top Lists - Clickable */}
               <TopItemsList
                 title="Top Trades"
                 items={stats.topTrades}
                 icon={Wrench}
                 color="#3B82F6"
+                onItemPress={(name) => handleSetFilter('trade', name)}
               />
 
               <TopItemsList
@@ -726,6 +818,7 @@ export default function InsightsScreen() {
                 items={stats.topIssueTypes}
                 icon={AlertTriangle}
                 color="#F59E0B"
+                onItemPress={(name) => handleSetFilter('issueType', name)}
               />
 
               <TopItemsList
@@ -733,6 +826,7 @@ export default function InsightsScreen() {
                 items={stats.topSystems}
                 icon={Zap}
                 color="#8B5CF6"
+                onItemPress={(name) => handleSetFilter('system', name)}
               />
 
               {/* Empty State */}
@@ -754,16 +848,126 @@ export default function InsightsScreen() {
           {/* All Insights Tab */}
           {activeTab === 'all' && (
             <Animated.View entering={FadeIn} className="px-4 pt-4">
-              <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                All Insights ({allInsights.length})
-              </Text>
+              {/* Header with title and export button */}
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                  {hasActiveFilters ? 'Filtered' : 'All'} Insights ({allInsights.length})
+                </Text>
+                <Pressable
+                  onPress={handleExportPdf}
+                  disabled={isExporting || allInsights.length === 0}
+                  className={cn(
+                    'flex-row items-center px-3 py-1.5 rounded-full',
+                    isExporting || allInsights.length === 0
+                      ? 'bg-gray-200 dark:bg-gray-700'
+                      : 'bg-orange-500'
+                  )}
+                >
+                  {isExporting ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <>
+                      <Download size={14} color={allInsights.length === 0 ? '#9CA3AF' : 'white'} />
+                      <Text className={cn(
+                        'text-xs font-medium ml-1',
+                        allInsights.length === 0 ? 'text-gray-500' : 'text-white'
+                      )}>
+                        Export PDF
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
+
+              {/* Active Filters Bar */}
+              {hasActiveFilters && (
+                <View className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 mb-3">
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Text className="text-xs font-semibold text-orange-800 dark:text-orange-300">
+                      Active Filters
+                    </Text>
+                    <Pressable onPress={handleClearAllFilters}>
+                      <Text className="text-xs text-orange-600 dark:text-orange-400 underline">
+                        Clear all
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <View className="flex-row flex-wrap">
+                    {activeFilters.category && (
+                      <Pressable
+                        onPress={() => handleClearFilter('category')}
+                        className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
+                      >
+                        <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
+                          Category: {CATEGORY_CONFIG[activeFilters.category]?.label || activeFilters.category}
+                        </Text>
+                        <X size={12} color="#9CA3AF" />
+                      </Pressable>
+                    )}
+                    {activeFilters.sourceType && (
+                      <Pressable
+                        onPress={() => handleClearFilter('sourceType')}
+                        className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
+                      >
+                        <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
+                          Source: {SOURCE_LABELS[activeFilters.sourceType] || activeFilters.sourceType}
+                        </Text>
+                        <X size={12} color="#9CA3AF" />
+                      </Pressable>
+                    )}
+                    {activeFilters.trade && (
+                      <Pressable
+                        onPress={() => handleClearFilter('trade')}
+                        className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
+                      >
+                        <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
+                          Trade: {activeFilters.trade}
+                        </Text>
+                        <X size={12} color="#9CA3AF" />
+                      </Pressable>
+                    )}
+                    {activeFilters.issueType && (
+                      <Pressable
+                        onPress={() => handleClearFilter('issueType')}
+                        className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
+                      >
+                        <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
+                          Issue: {activeFilters.issueType}
+                        </Text>
+                        <X size={12} color="#9CA3AF" />
+                      </Pressable>
+                    )}
+                    {activeFilters.system && (
+                      <Pressable
+                        onPress={() => handleClearFilter('system')}
+                        className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
+                      >
+                        <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
+                          System: {activeFilters.system}
+                        </Text>
+                        <X size={12} color="#9CA3AF" />
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
+              )}
 
               {allInsights.length === 0 ? (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
                   <FileText size={32} color="#9CA3AF" />
                   <Text className="mt-3 text-gray-500 text-center">
-                    No insights indexed yet.{'\n'}Tap the database icon to index your data.
+                    {hasActiveFilters
+                      ? 'No insights match your filters.\nTry adjusting or clearing filters.'
+                      : 'No insights indexed yet.\nTap the database icon to index your data.'}
                   </Text>
+                  {hasActiveFilters && (
+                    <Pressable
+                      onPress={handleClearAllFilters}
+                      className="mt-3 bg-orange-500 py-2 px-4 rounded-lg"
+                    >
+                      <Text className="text-white font-medium text-sm">Clear Filters</Text>
+                    </Pressable>
+                  )}
                 </View>
               ) : (
                 allInsights.map((insight, index) => (
