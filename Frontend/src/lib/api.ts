@@ -1419,6 +1419,58 @@ export async function clearTestInsights(): Promise<{
 }
 
 /**
+ * Export insights as PDF with filters
+ * Returns a blob URL for download/share
+ */
+export async function fetchInsightsExportPdf(filters: {
+  projectId?: string;
+  category?: string;
+  sourceType?: string;
+  trade?: string;
+  issueType?: string;
+  system?: string;
+  severity?: string;
+  isResolved?: boolean;
+  needsFollowUp?: boolean;
+} = {}): Promise<string> {
+  const params = new URLSearchParams();
+  params.append('format', 'pdf');
+
+  if (filters.projectId) params.append('projectId', filters.projectId);
+  if (filters.category) params.append('category', filters.category);
+  if (filters.sourceType) params.append('sourceType', filters.sourceType);
+  if (filters.trade) params.append('trade', filters.trade);
+  if (filters.issueType) params.append('issueType', filters.issueType);
+  if (filters.system) params.append('system', filters.system);
+  if (filters.severity) params.append('severity', filters.severity);
+  if (filters.isResolved !== undefined) params.append('isResolved', String(filters.isResolved));
+  if (filters.needsFollowUp !== undefined) params.append('needsFollowUp', String(filters.needsFollowUp));
+
+  const url = `${API_BASE_URL}/api/insights/export?${params.toString()}`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || `Failed to export PDF: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+/**
  * Get a single event from backend by ID
  */
 export async function getEvent(id: string): Promise<IndexedEvent> {

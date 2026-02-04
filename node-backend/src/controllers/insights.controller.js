@@ -1,5 +1,6 @@
 const insightsService = require('../services/insights.service');
 const nlQueryService = require('../services/nl-query.service');
+const insightsPdfService = require('../services/insights-pdf.service');
 
 /**
  * Insights Controller
@@ -440,6 +441,88 @@ async function debug(req, res) {
   }
 }
 
+/**
+ * Export insights as PDF or JSON
+ * GET /api/insights/export
+ */
+async function exportInsights(req, res) {
+  try {
+    const {
+      format = 'pdf',
+      projectId,
+      category,
+      sourceType,
+      trade,
+      issueType,
+      system,
+      severity,
+      isResolved,
+      needsFollowUp,
+      isTest
+    } = req.query;
+
+    // Build filters for search
+    const filters = {
+      projectId,
+      category,
+      sourceType,
+      severity,
+      isResolved: isResolved === 'true' ? true : isResolved === 'false' ? false : undefined,
+      needsFollowUp: needsFollowUp === 'true' ? true : needsFollowUp === 'false' ? false : undefined,
+      isTest: isTest === 'true' ? true : isTest === 'false' ? false : undefined,
+      limit: 500 // Max items for export
+    };
+
+    // Text search for trade, issueType, or system
+    if (trade || issueType || system) {
+      filters.query = [trade, issueType, system].filter(Boolean).join(' ');
+    }
+
+    console.log('[insights/export] Filters:', JSON.stringify(filters));
+
+    // Fetch insights
+    const insights = await insightsService.search(filters);
+    console.log(`[insights/export] Found ${insights.length} insights`);
+
+    if (format === 'pdf') {
+      // Get project name if projectId provided
+      let projectName = null;
+      if (projectId) {
+        const prisma = require('../services/prisma');
+        const project = await prisma.project.findUnique({
+          where: { id: projectId },
+          select: { name: true }
+        });
+        projectName = project?.name;
+      }
+
+      // Generate PDF
+      const pdfDoc = insightsPdfService.generateInsightsChecklist(insights, {
+        filters: { category, sourceType, trade, issueType, system, severity },
+        projectName
+      });
+
+      // Set response headers for PDF download
+      const filename = `insights-export-${new Date().toISOString().split('T')[0]}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+      // Pipe PDF stream to response
+      pdfDoc.pipe(res);
+    } else {
+      // Return JSON
+      res.json({
+        count: insights.length,
+        filters: { category, sourceType, trade, issueType, system, severity },
+        insights
+      });
+    }
+  } catch (error) {
+    console.error('Error exporting insights:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   indexAll,
   backfillEmbeddings,
@@ -456,5 +539,6 @@ module.exports = {
   deleteInsight,
   clearTestData,
   nlQuery,
-  debug
+  debug,
+  exportInsights
 };

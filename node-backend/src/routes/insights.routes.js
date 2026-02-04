@@ -51,6 +51,10 @@ router.post('/from-inspection-note/:inspectionNoteId', requireRole('ADMIN', 'EDI
 // GET /api/insights
 router.get('/', insightsController.search);
 
+// Export insights as PDF or JSON
+// GET /api/insights/export?format=pdf&category=...&sourceType=...
+router.get('/export', insightsController.exportInsights);
+
 // Create manual insight
 // POST /api/insights
 router.post('/', requireRole('ADMIN', 'EDITOR'), insightsController.createManual);
