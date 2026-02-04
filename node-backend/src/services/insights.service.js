@@ -635,12 +635,14 @@ class InsightsService {
     if (projectId) baseWhere.projectId = projectId;
 
     // Handle comma-separated category values (e.g., "quality,rework")
+    // Using OR for enum compatibility
     if (category) {
       const categories = category.split(',').map(c => c.trim()).filter(Boolean);
       if (categories.length === 1) {
         baseWhere.category = categories[0];
       } else if (categories.length > 1) {
-        baseWhere.category = { in: categories };
+        // Use OR clause for multiple enum values
+        baseWhere.OR = categories.map(c => ({ category: c }));
       }
     }
 
@@ -652,7 +654,20 @@ class InsightsService {
       if (sourceTypes.length === 1) {
         baseWhere.sourceType = sourceTypes[0];
       } else if (sourceTypes.length > 1) {
-        baseWhere.sourceType = { in: sourceTypes };
+        // Combine with existing OR if present, otherwise create new OR
+        const sourceConditions = sourceTypes.map(s => ({ sourceType: s }));
+        if (baseWhere.OR) {
+          // If we already have category OR, we need to restructure
+          // Each category condition needs to be combined with each source condition
+          const categoryConditions = baseWhere.OR;
+          baseWhere.AND = [
+            { OR: categoryConditions },
+            { OR: sourceConditions }
+          ];
+          delete baseWhere.OR;
+        } else {
+          baseWhere.OR = sourceConditions;
+        }
       }
     }
 
@@ -665,14 +680,21 @@ class InsightsService {
     // If no text query, just return filtered results
     if (!query || query.trim().length === 0) {
       console.log('[insights/search] No query, returning all with filters');
-      const insights = await prisma.insight.findMany({
-        where: baseWhere,
-        include: { project: { select: { id: true, name: true } } },
-        orderBy: { createdAt: 'desc' },
-        take: limit
-      });
-      console.log(`[insights/search] Found ${insights.length} results`);
-      return insights;
+      console.log('[insights/search] baseWhere:', JSON.stringify(baseWhere, null, 2));
+      try {
+        const insights = await prisma.insight.findMany({
+          where: baseWhere,
+          include: { project: { select: { id: true, name: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: limit
+        });
+        console.log(`[insights/search] Found ${insights.length} results`);
+        return insights;
+      } catch (err) {
+        console.error('[insights/search] Prisma error:', err.message);
+        console.error('[insights/search] baseWhere was:', JSON.stringify(baseWhere));
+        throw err;
+      }
     }
 
     // Text search: Get all insights matching base filters, then search client-side
