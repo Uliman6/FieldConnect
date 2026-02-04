@@ -242,21 +242,65 @@ Return JSON only, no explanation.`
 
   /**
    * Execute the search based on filters
-   * Uses comprehensive text search that checks ALL fields
+   * Uses semantic search (OpenAI embeddings) for intelligent matching,
+   * falls back to keyword search if semantic search fails or returns no results
    */
   async executeSearch(filters, parsed, originalQuery) {
     console.log(`[nl-query] Executing search for: "${originalQuery}"`);
 
-    // The search function now handles everything:
-    // - Text search across title, description, rawText, keywordsSummary
-    // - JSON array search across trades, systems, materials, locations
-    // - Scoring and ranking by relevance
+    // STEP 1: Try semantic search first (understands meaning, not just keywords)
+    // This allows "material damage" to find "scratch in glazing"
+    if (originalQuery && originalQuery.length > 2) {
+      try {
+        console.log(`[nl-query] Attempting semantic search...`);
+        const semanticResults = await insightsService.findSimilarByText(originalQuery, {
+          limit: 50,
+          threshold: 0.5, // Lower threshold for broader matches
+          projectId: filters.projectId
+        });
+
+        if (semanticResults && semanticResults.length > 0) {
+          console.log(`[nl-query] Semantic search found ${semanticResults.length} results`);
+
+          // Apply additional filters (status, date) to semantic results
+          let filtered = semanticResults;
+
+          if (filters.isResolved !== undefined) {
+            filtered = filtered.filter(i => i.isResolved === filters.isResolved);
+          }
+          if (filters.needsFollowUp !== undefined) {
+            filtered = filtered.filter(i => i.needsFollowUp === filters.needsFollowUp);
+          }
+          if (filters.startDate) {
+            const start = new Date(filters.startDate);
+            filtered = filtered.filter(i => new Date(i.createdAt) >= start);
+          }
+          if (filters.endDate) {
+            const end = new Date(filters.endDate);
+            filtered = filtered.filter(i => new Date(i.createdAt) <= end);
+          }
+
+          if (filtered.length > 0) {
+            console.log(`[nl-query] Returning ${filtered.length} semantic results after filtering`);
+            return filtered;
+          }
+          console.log(`[nl-query] All semantic results filtered out, trying keyword search`);
+        } else {
+          console.log(`[nl-query] Semantic search returned no results, trying keyword search`);
+        }
+      } catch (err) {
+        console.error(`[nl-query] Semantic search failed: ${err.message}, falling back to keyword search`);
+      }
+    }
+
+    // STEP 2: Fall back to keyword search (comprehensive field matching)
+    console.log(`[nl-query] Using keyword search as fallback`);
     const results = await insightsService.search({
       ...filters,
       limit: 100
     });
 
-    console.log(`[nl-query] Search returned ${results.length} results`);
+    console.log(`[nl-query] Keyword search returned ${results.length} results`);
     return results;
   }
 
