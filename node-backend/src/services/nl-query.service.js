@@ -25,8 +25,8 @@ class NLQueryService {
     // Build filters from parsed intent
     const filters = this.buildFilters(parsed, { projectId, includeTest, originalQuery: query });
 
-    // Execute the search
-    const results = await this.executeSearch(filters, parsed);
+    // Execute the search (pass original query for semantic search)
+    const results = await this.executeSearch(filters, parsed, query);
 
     return {
       originalQuery: query,
@@ -264,15 +264,59 @@ Return JSON only, no explanation.`
 
   /**
    * Execute the search based on filters
+   * Uses semantic search (embeddings) for intelligent matching,
+   * falls back to keyword search if needed
    */
-  async executeSearch(filters, parsed) {
-    // Use insights service search
+  async executeSearch(filters, parsed, originalQuery) {
+    // Try semantic search first - this understands context
+    // e.g., "material damage" will find "scratch in glazing"
+    if (originalQuery && originalQuery.length > 2) {
+      try {
+        console.log(`[nl-query] Attempting semantic search for: "${originalQuery}"`);
+        const semanticResults = await insightsService.findSimilarByText(originalQuery, {
+          limit: 50,
+          threshold: 0.65, // Lower threshold for broader matches
+          projectId: filters.projectId,
+          includeTest: filters.isTest !== false
+        });
+
+        if (semanticResults && semanticResults.length > 0) {
+          console.log(`[nl-query] Semantic search found ${semanticResults.length} results`);
+
+          // Apply additional filters (category, status, date) if specified
+          let filtered = semanticResults;
+
+          if (filters.category && filters.category !== 'all') {
+            filtered = filtered.filter(i => i.category === filters.category);
+          }
+          if (filters.sourceType && filters.sourceType !== 'all') {
+            filtered = filtered.filter(i => i.sourceType === filters.sourceType);
+          }
+          if (filters.startDate) {
+            const start = new Date(filters.startDate);
+            filtered = filtered.filter(i => new Date(i.createdAt) >= start);
+          }
+          if (filters.endDate) {
+            const end = new Date(filters.endDate);
+            filtered = filtered.filter(i => new Date(i.createdAt) <= end);
+          }
+
+          return filtered;
+        }
+        console.log('[nl-query] Semantic search returned no results, falling back to keyword search');
+      } catch (err) {
+        console.log(`[nl-query] Semantic search failed: ${err.message}, falling back to keyword search`);
+      }
+    }
+
+    // Fall back to keyword-based search
+    console.log('[nl-query] Using keyword search');
     const insights = await insightsService.search({
       ...filters,
       limit: 100
     });
 
-    // Post-filter by trades/systems if specified
+    // Post-filter by trades/systems if specified (only for keyword search)
     let filtered = insights;
 
     if (parsed.trades && parsed.trades.length > 0) {
