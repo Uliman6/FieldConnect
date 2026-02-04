@@ -609,7 +609,7 @@ class InsightsService {
   }
 
   /**
-   * Search insights with filters
+   * Search insights with filters - comprehensive search across ALL fields
    * @param {Object} filters - Search filters
    * @returns {Array} Matching insights
    */
@@ -625,70 +625,117 @@ class InsightsService {
       isTest,
       startDate,
       endDate,
-      limit = 50
+      limit = 100
     } = filters;
 
-    const whereClause = {};
+    console.log('[insights/search] Starting search with:', { query, projectId, isTest, sourceType, category });
 
-    if (query) {
-      const orConditions = [
-        { title: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { keywordsSummary: { contains: query, mode: 'insensitive' } },
-        { rawText: { contains: query, mode: 'insensitive' } }
-      ];
+    // Build base where clause (non-text filters)
+    const baseWhere = {};
+    if (projectId) baseWhere.projectId = projectId;
+    if (category) baseWhere.category = category;
+    if (severity) baseWhere.severity = severity;
+    if (sourceType) baseWhere.sourceType = sourceType;
+    if (needsFollowUp !== undefined) baseWhere.needsFollowUp = needsFollowUp;
+    if (isResolved !== undefined) baseWhere.isResolved = isResolved;
+    if (isTest !== undefined) baseWhere.isTest = isTest;
+    if (startDate) baseWhere.createdAt = { gte: new Date(startDate) };
+    if (endDate) baseWhere.createdAt = { ...baseWhere.createdAt, lte: new Date(endDate) };
 
-      // Handle sourceType matching (it's an enum, can't use contains)
-      // Map common search terms to sourceType values
-      const lowerQuery = query.toLowerCase();
-      if (lowerQuery.includes('inspection')) {
-        orConditions.push({ sourceType: 'inspection_note' });
-      }
-      if (lowerQuery.includes('pending') || lowerQuery.includes('issue')) {
-        orConditions.push({ sourceType: 'pending_issue' });
-      }
-      if (lowerQuery.includes('event')) {
-        orConditions.push({ sourceType: 'event' });
-      }
-
-      whereClause.OR = orConditions;
+    // If no text query, just return filtered results
+    if (!query || query.trim().length === 0) {
+      console.log('[insights/search] No query, returning all with filters');
+      const insights = await prisma.insight.findMany({
+        where: baseWhere,
+        include: { project: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      });
+      console.log(`[insights/search] Found ${insights.length} results`);
+      return insights;
     }
 
-    if (projectId) whereClause.projectId = projectId;
-    if (category) whereClause.category = category;
-    if (severity) whereClause.severity = severity;
-    if (sourceType) whereClause.sourceType = sourceType;
-    if (needsFollowUp !== undefined) whereClause.needsFollowUp = needsFollowUp;
-    if (isResolved !== undefined) whereClause.isResolved = isResolved;
-    if (isTest !== undefined) whereClause.isTest = isTest;
-
-    if (startDate) {
-      whereClause.createdAt = { gte: new Date(startDate) };
-    }
-    if (endDate) {
-      whereClause.createdAt = { ...whereClause.createdAt, lte: new Date(endDate) };
-    }
-
-    // Log the search for debugging
-    console.log('[insights/search] Query:', query);
-    console.log('[insights/search] ProjectId filter:', projectId);
-    console.log('[insights/search] Full whereClause:', JSON.stringify(whereClause, null, 2));
-
-    const insights = await prisma.insight.findMany({
-      where: whereClause,
-      include: {
-        project: { select: { id: true, name: true } }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit
+    // Text search: Get all insights matching base filters, then search client-side
+    // This ensures we search ALL fields including JSON arrays (trades, systems, etc.)
+    console.log('[insights/search] Fetching candidates for text search');
+    const candidates = await prisma.insight.findMany({
+      where: baseWhere,
+      include: { project: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'desc' }
     });
 
-    // Log total insights in DB for debugging
-    const totalCount = await prisma.insight.count();
-    const projectCount = projectId ? await prisma.insight.count({ where: { projectId } }) : totalCount;
-    console.log(`[insights/search] Found ${insights.length} results (total insights: ${totalCount}, for project: ${projectCount})`);
+    console.log(`[insights/search] Got ${candidates.length} candidates, searching for: "${query}"`);
 
-    return insights;
+    // Search query terms (split into words for flexible matching)
+    const queryLower = query.toLowerCase().trim();
+    const queryWords = queryLower.split(/\s+/).filter(w => w.length > 1);
+
+    // Score each candidate by how many fields match
+    const scored = candidates.map(insight => {
+      let score = 0;
+      const matchedFields = [];
+
+      // Helper to check if text contains any query word
+      const textMatches = (text) => {
+        if (!text) return false;
+        const textLower = text.toLowerCase();
+        return queryWords.some(word => textLower.includes(word));
+      };
+
+      // Helper to check if JSON array contains any query word
+      const arrayMatches = (arr) => {
+        if (!arr || !Array.isArray(arr)) return false;
+        return arr.some(item => {
+          if (typeof item === 'string') {
+            return queryWords.some(word => item.toLowerCase().includes(word));
+          }
+          return false;
+        });
+      };
+
+      // Check all text fields
+      if (textMatches(insight.title)) { score += 10; matchedFields.push('title'); }
+      if (textMatches(insight.description)) { score += 5; matchedFields.push('description'); }
+      if (textMatches(insight.rawText)) { score += 3; matchedFields.push('rawText'); }
+      if (textMatches(insight.keywordsSummary)) { score += 2; matchedFields.push('keywordsSummary'); }
+      if (textMatches(insight.followUpReason)) { score += 2; matchedFields.push('followUpReason'); }
+
+      // Check JSON array fields
+      if (arrayMatches(insight.trades)) { score += 4; matchedFields.push('trades'); }
+      if (arrayMatches(insight.systems)) { score += 4; matchedFields.push('systems'); }
+      if (arrayMatches(insight.materials)) { score += 3; matchedFields.push('materials'); }
+      if (arrayMatches(insight.locations)) { score += 3; matchedFields.push('locations'); }
+      if (arrayMatches(insight.issueTypes)) { score += 3; matchedFields.push('issueTypes'); }
+      if (arrayMatches(insight.inspectors)) { score += 2; matchedFields.push('inspectors'); }
+
+      // Check sourceType (e.g., "inspection" should match "inspection_note")
+      if (insight.sourceType && queryWords.some(w => insight.sourceType.toLowerCase().includes(w))) {
+        score += 3;
+        matchedFields.push('sourceType');
+      }
+
+      // Check category
+      if (insight.category && queryWords.some(w => insight.category.toLowerCase().includes(w))) {
+        score += 3;
+        matchedFields.push('category');
+      }
+
+      return { ...insight, _score: score, _matchedFields: matchedFields };
+    });
+
+    // Filter to only matches and sort by score
+    const results = scored
+      .filter(r => r._score > 0)
+      .sort((a, b) => b._score - a._score)
+      .slice(0, limit)
+      .map(({ _score, _matchedFields, ...insight }) => insight);
+
+    console.log(`[insights/search] Found ${results.length} matching results`);
+    if (results.length > 0) {
+      console.log(`[insights/search] Top result: "${results[0].title}" (matched: ${scored.find(s => s.id === results[0].id)?._matchedFields?.join(', ')})`);
+    }
+
+    return results;
   }
 
   /**
@@ -944,23 +991,16 @@ class InsightsService {
    * @returns {Array} Similar insights
    */
   async findSimilarByText(queryText, options = {}) {
-    const { limit = 10, threshold = 0.7, projectId, includeTest = false } = options;
+    const { limit = 10, threshold = 0.7, projectId, includeTest = true } = options;
 
     // Generate embedding for query text
     const embResult = await embeddingService.generateEmbedding(queryText);
 
     if (!embResult.success) {
-      console.log('[insights] Could not generate query embedding, falling back to smart text search');
-      // Split query into words and search for each, removing common stop words
-      const stopWords = ['the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'also', 'now', 'related', 'items', 'issues', 'events', 'find', 'show', 'list', 'get'];
-      const queryWords = queryText.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
-
-      if (queryWords.length === 0) {
-        return this.search({ query: queryText, limit, isTest: includeTest ? undefined : false, projectId });
-      }
-
-      // Search for the first significant word
-      return this.search({ query: queryWords[0], limit, isTest: includeTest ? undefined : false, projectId });
+      console.log('[insights] Could not generate query embedding, falling back to comprehensive text search');
+      // Use the improved search which checks ALL fields including JSON arrays
+      // Don't filter by isTest - show all results
+      return this.search({ query: queryText, limit, projectId });
     }
 
     // Build where clause
@@ -998,8 +1038,8 @@ class InsightsService {
     });
 
     if (candidates.length === 0) {
-      console.log('[insights] No insights with embeddings found');
-      return [];
+      console.log('[insights] No insights with embeddings found, falling back to text search');
+      return this.search({ query: queryText, limit, projectId });
     }
 
     // Calculate similarity scores
