@@ -631,14 +631,27 @@ class InsightsService {
     const whereClause = {};
 
     if (query) {
-      whereClause.OR = [
+      const orConditions = [
         { title: { contains: query, mode: 'insensitive' } },
         { description: { contains: query, mode: 'insensitive' } },
         { keywordsSummary: { contains: query, mode: 'insensitive' } },
-        { rawText: { contains: query, mode: 'insensitive' } },
-        { sourceType: { contains: query, mode: 'insensitive' } },
-        { category: { contains: query, mode: 'insensitive' } }
+        { rawText: { contains: query, mode: 'insensitive' } }
       ];
+
+      // Handle sourceType matching (it's an enum, can't use contains)
+      // Map common search terms to sourceType values
+      const lowerQuery = query.toLowerCase();
+      if (lowerQuery.includes('inspection')) {
+        orConditions.push({ sourceType: 'inspection_note' });
+      }
+      if (lowerQuery.includes('pending') || lowerQuery.includes('issue')) {
+        orConditions.push({ sourceType: 'pending_issue' });
+      }
+      if (lowerQuery.includes('event')) {
+        orConditions.push({ sourceType: 'event' });
+      }
+
+      whereClause.OR = orConditions;
     }
 
     if (projectId) whereClause.projectId = projectId;
