@@ -232,15 +232,17 @@ Return JSON only, no explanation.`
     }
 
     // Keyword search (combines trades, systems, keywords)
-    const searchTerms = [
+    // Use Set to deduplicate terms (AI often returns same term in multiple arrays)
+    const searchTerms = [...new Set([
       ...(parsed.keywords || []),
       ...(parsed.trades || []),
       ...(parsed.systems || []),
       ...(parsed.locations || [])
-    ].filter(Boolean);
+    ].filter(Boolean).map(t => t.toLowerCase()))];
 
     if (searchTerms.length > 0) {
-      filters.query = searchTerms.join(' ');
+      // Use first term for contains search (multi-word queries don't work well with contains)
+      filters.query = searchTerms[0];
     }
 
     // If no specific search terms extracted, use the original query words as fallback
