@@ -170,22 +170,23 @@ Return JSON only, no explanation.`
 
   /**
    * Build database filters from parsed query
+   * NOTE: We intentionally do NOT filter by isTest - show all items and let UI handle filtering
    */
   buildFilters(parsed, context) {
     const filters = {};
-    const { projectId, includeTest, originalQuery } = context;
+    const { projectId, originalQuery } = context;
 
     if (projectId) filters.projectId = projectId;
-    if (!includeTest) filters.isTest = false;
+    // NOTE: Removed isTest filter - it was hiding results unnecessarily
 
     // Source type filter (for inspection_note, pending_issue, etc.)
-    if (parsed.sourceType && parsed.sourceType !== 'all') {
+    // Only apply if explicitly requested (not inferred from keywords)
+    if (parsed.sourceType && parsed.sourceType !== 'all' && parsed.sourceTypeExplicit) {
       filters.sourceType = parsed.sourceType;
     }
 
-    // Category filter
-    if (parsed.category && parsed.category !== 'all') {
-      // Map query categories to database categories
+    // Category filter - only if explicitly set
+    if (parsed.category && parsed.category !== 'all' && parsed.categoryExplicit) {
       const categoryMap = {
         safety: 'safety',
         quality: 'quality',
@@ -231,122 +232,32 @@ Return JSON only, no explanation.`
       filters.startDate = monthStart.toISOString();
     }
 
-    // Keyword search (combines trades, systems, keywords)
-    // Use Set to deduplicate terms (AI often returns same term in multiple arrays)
-    const searchTerms = [...new Set([
-      ...(parsed.keywords || []),
-      ...(parsed.trades || []),
-      ...(parsed.systems || []),
-      ...(parsed.locations || [])
-    ].filter(Boolean).map(t => t.toLowerCase()))];
+    // SIMPLIFIED: Always pass the original query for comprehensive text search
+    // The search function now handles searching ALL fields including JSON arrays
+    filters.query = originalQuery;
 
-    if (searchTerms.length > 0) {
-      // Use first term for contains search (multi-word queries don't work well with contains)
-      filters.query = searchTerms[0];
-    }
-
-    // If no specific search terms extracted, use the original query words as fallback
-    // This ensures text searches like "material" or "material damage" work
-    if (!filters.query) {
-      // Extract significant words from the original query (skip common words)
-      const stopWords = ['find', 'search', 'list', 'show', 'all', 'any', 'the', 'a', 'an', 'for', 'with', 'related', 'issues', 'items', 'events', 'pull', 'get', 'me'];
-      const queryWords = (originalQuery || '')
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(w => w.length > 2 && !stopWords.includes(w));
-      if (queryWords.length > 0) {
-        filters.query = queryWords.join(' ');
-      }
-    }
-
+    console.log('[nl-query] Built filters:', JSON.stringify(filters, null, 2));
     return filters;
   }
 
   /**
    * Execute the search based on filters
-   * Uses semantic search (embeddings) for intelligent matching,
-   * falls back to keyword search if needed
+   * Uses comprehensive text search that checks ALL fields
    */
   async executeSearch(filters, parsed, originalQuery) {
-    // Try semantic search first - this understands context
-    // e.g., "material damage" will find "scratch in glazing"
-    if (originalQuery && originalQuery.length > 2) {
-      try {
-        console.log(`[nl-query] Attempting semantic search for: "${originalQuery}"`);
-        const semanticResults = await insightsService.findSimilarByText(originalQuery, {
-          limit: 50,
-          threshold: 0.65, // Lower threshold for broader matches
-          projectId: filters.projectId,
-          includeTest: filters.isTest !== false
-        });
+    console.log(`[nl-query] Executing search for: "${originalQuery}"`);
 
-        if (semanticResults && semanticResults.length > 0) {
-          console.log(`[nl-query] Semantic search found ${semanticResults.length} results`);
-
-          // Apply additional filters (category, status, date) if specified
-          let filtered = semanticResults;
-
-          if (filters.category && filters.category !== 'all') {
-            filtered = filtered.filter(i => i.category === filters.category);
-          }
-          if (filters.sourceType && filters.sourceType !== 'all') {
-            filtered = filtered.filter(i => i.sourceType === filters.sourceType);
-          }
-          if (filters.startDate) {
-            const start = new Date(filters.startDate);
-            filtered = filtered.filter(i => new Date(i.createdAt) >= start);
-          }
-          if (filters.endDate) {
-            const end = new Date(filters.endDate);
-            filtered = filtered.filter(i => new Date(i.createdAt) <= end);
-          }
-
-          return filtered;
-        }
-        console.log('[nl-query] Semantic search returned no results, falling back to keyword search');
-      } catch (err) {
-        console.log(`[nl-query] Semantic search failed: ${err.message}, falling back to keyword search`);
-      }
-    }
-
-    // Fall back to keyword-based search
-    console.log('[nl-query] Using keyword search');
-    const insights = await insightsService.search({
+    // The search function now handles everything:
+    // - Text search across title, description, rawText, keywordsSummary
+    // - JSON array search across trades, systems, materials, locations
+    // - Scoring and ranking by relevance
+    const results = await insightsService.search({
       ...filters,
       limit: 100
     });
 
-    // Post-filter by trades/systems if specified (only for keyword search)
-    let filtered = insights;
-
-    if (parsed.trades && parsed.trades.length > 0) {
-      filtered = filtered.filter(insight => {
-        const insightTrades = (insight.trades || []).map(t => t.toLowerCase());
-        return parsed.trades.some(trade =>
-          insightTrades.some(it => it.includes(trade.toLowerCase()))
-        );
-      });
-    }
-
-    if (parsed.systems && parsed.systems.length > 0) {
-      filtered = filtered.filter(insight => {
-        const insightSystems = (insight.systems || []).map(s => s.toLowerCase());
-        return parsed.systems.some(system =>
-          insightSystems.some(is => is.includes(system.toLowerCase()))
-        );
-      });
-    }
-
-    if (parsed.locations && parsed.locations.length > 0) {
-      filtered = filtered.filter(insight => {
-        const insightLocations = (insight.locations || []).map(l => l.toLowerCase());
-        return parsed.locations.some(loc =>
-          insightLocations.some(il => il.includes(loc.toLowerCase()))
-        );
-      });
-    }
-
-    return filtered;
+    console.log(`[nl-query] Search returned ${results.length} results`);
+    return results;
   }
 
   /**
