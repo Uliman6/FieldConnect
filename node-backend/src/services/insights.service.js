@@ -405,10 +405,14 @@ class InsightsService {
       }
     }
 
-    // Index events
+    // Index events - include events with transcriptText, description, OR title
     const events = await prisma.event.findMany({
       where: {
-        transcriptText: { not: null },
+        OR: [
+          { transcriptText: { not: null } },
+          { description: { not: null } },
+          { title: { not: null } }
+        ],
         NOT: {
           id: {
             in: (await prisma.insight.findMany({
