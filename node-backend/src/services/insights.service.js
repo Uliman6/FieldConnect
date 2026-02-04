@@ -935,8 +935,17 @@ class InsightsService {
     const embResult = await embeddingService.generateEmbedding(queryText);
 
     if (!embResult.success) {
-      console.log('[insights] Could not generate query embedding, falling back to text search');
-      return this.search({ query: queryText, limit, isTest: includeTest ? undefined : false });
+      console.log('[insights] Could not generate query embedding, falling back to smart text search');
+      // Split query into words and search for each, removing common stop words
+      const stopWords = ['the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'also', 'now', 'related', 'items', 'issues', 'events', 'find', 'show', 'list', 'get'];
+      const queryWords = queryText.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
+
+      if (queryWords.length === 0) {
+        return this.search({ query: queryText, limit, isTest: includeTest ? undefined : false, projectId });
+      }
+
+      // Search for the first significant word
+      return this.search({ query: queryWords[0], limit, isTest: includeTest ? undefined : false, projectId });
     }
 
     // Build where clause

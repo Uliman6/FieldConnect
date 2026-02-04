@@ -29,7 +29,8 @@
       "Bash(tasklist:*)",
       "Bash(findstr:*)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdkMDNhNmRmLTQ2NmMtNDM1MS05ZWIxLTM0MTdmNTVjYjIwNyIsImVtYWlsIjoiYWRtaW5AZmllbGRjb25uZWN0LmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc2OTcxMDMxOCwiZXhwIjoxNzcwMzE1MTE4fQ.MB7gjsddDNU8ofAZBOpIWMJY-QbBgO4D884MiKXMaPs\")",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''https://fieldconnect.onrender.com/api/insights/query'' -Method Post -Headers @{''Authorization''=''Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdkMDNhNmRmLTQ2NmMtNDM1MS05ZWIxLTM0MTdmNTVjYjIwNyIsImVtYWlsIjoiYWRtaW5AZmllbGRjb25uZWN0LmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MDE3NTM1OSwiZXhwIjoxNzcwNzgwMTU5fQ.2LMjVAdk5NhPsNmRwK2EhDYMt4rztq3h0BWqHye76kM''; ''Content-Type''=''application/json''} -Body ''{\"\"query\"\":\"\"material damage\"\"}'' | ConvertTo-Json -Depth 5\")"
     ]
   }
 }
