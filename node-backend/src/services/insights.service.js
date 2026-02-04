@@ -16,14 +16,19 @@ class InsightsService {
    * @returns {Object} Created insight
    */
   async createFromEvent(eventId, isTest = null) {
+    console.log(`[insights] createFromEvent called for event: ${eventId}`);
+
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: { project: true }
     });
 
     if (!event) {
+      console.error(`[insights] Event not found: ${eventId}`);
       throw new Error(`Event not found: ${eventId}`);
     }
+
+    console.log(`[insights] Found event: title="${event.title}", projectId=${event.projectId}, hasDescription=${!!event.description}`);
 
     // Check if insight already exists for this event
     const existing = await prisma.insight.findFirst({
@@ -31,6 +36,7 @@ class InsightsService {
     });
 
     if (existing) {
+      console.log(`[insights] Insight already exists for event ${eventId}: ${existing.id}`);
       return existing;
     }
 
@@ -84,7 +90,8 @@ class InsightsService {
       }
     });
 
-    console.log(`[insights] Created insight from event: ${insight.id}`);
+    console.log(`[insights] Created insight from event: ${insight.id}, title="${insight.title}", projectId=${insight.projectId}`);
+    console.log(`[insights] Insight data: description="${(insight.description || '').substring(0, 100)}", trades=${JSON.stringify(insight.trades)}, isTest=${insight.isTest}`);
 
     // Generate embedding async (non-blocking)
     this.generateAndSaveEmbedding(insight.id).catch(err =>
@@ -647,6 +654,11 @@ class InsightsService {
       whereClause.createdAt = { ...whereClause.createdAt, lte: new Date(endDate) };
     }
 
+    // Log the search for debugging
+    console.log('[insights/search] Query:', query);
+    console.log('[insights/search] ProjectId filter:', projectId);
+    console.log('[insights/search] Full whereClause:', JSON.stringify(whereClause, null, 2));
+
     const insights = await prisma.insight.findMany({
       where: whereClause,
       include: {
@@ -655,6 +667,11 @@ class InsightsService {
       orderBy: { createdAt: 'desc' },
       take: limit
     });
+
+    // Log total insights in DB for debugging
+    const totalCount = await prisma.insight.count();
+    const projectCount = projectId ? await prisma.insight.count({ where: { projectId } }) : totalCount;
+    console.log(`[insights/search] Found ${insights.length} results (total insights: ${totalCount}, for project: ${projectCount})`);
 
     return insights;
   }
