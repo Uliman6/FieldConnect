@@ -392,6 +392,54 @@ async function nlQuery(req, res) {
   }
 }
 
+/**
+ * Debug endpoint - shows database state
+ * GET /api/insights/debug
+ */
+async function debug(req, res) {
+  try {
+    const prisma = require('../services/prisma');
+
+    const [
+      totalEvents,
+      eventsWithTranscript,
+      eventsWithDescription,
+      eventsWithTitle,
+      totalInsights,
+      insightsBySourceType,
+      sampleInsights,
+      sampleEvents
+    ] = await Promise.all([
+      prisma.event.count(),
+      prisma.event.count({ where: { transcriptText: { not: null } } }),
+      prisma.event.count({ where: { description: { not: null } } }),
+      prisma.event.count({ where: { title: { not: null } } }),
+      prisma.insight.count(),
+      prisma.insight.groupBy({ by: ['sourceType'], _count: true }),
+      prisma.insight.findMany({ take: 5, orderBy: { createdAt: 'desc' }, select: { id: true, title: true, sourceType: true, projectId: true, isTest: true } }),
+      prisma.event.findMany({ take: 5, orderBy: { createdAt: 'desc' }, select: { id: true, title: true, description: true, projectId: true } })
+    ]);
+
+    res.json({
+      events: {
+        total: totalEvents,
+        withTranscript: eventsWithTranscript,
+        withDescription: eventsWithDescription,
+        withTitle: eventsWithTitle,
+        sample: sampleEvents
+      },
+      insights: {
+        total: totalInsights,
+        bySourceType: insightsBySourceType,
+        sample: sampleInsights
+      }
+    });
+  } catch (error) {
+    console.error('Error in debug endpoint:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   indexAll,
   backfillEmbeddings,
@@ -407,5 +455,6 @@ module.exports = {
   update,
   deleteInsight,
   clearTestData,
-  nlQuery
+  nlQuery,
+  debug
 };

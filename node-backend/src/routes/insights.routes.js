@@ -31,6 +31,10 @@ router.post('/find-similar-by-text', insightsController.findSimilarByText);
 // Example: "create a list of all items for next building inspection"
 router.post('/query', insightsController.nlQuery);
 
+// Debug endpoint - shows database state (events & insights counts)
+// GET /api/insights/debug
+router.get('/debug', insightsController.debug);
+
 // Create insight from event
 // POST /api/insights/from-event/:eventId
 router.post('/from-event/:eventId', requireRole('ADMIN', 'EDITOR'), insightsController.createFromEvent);
