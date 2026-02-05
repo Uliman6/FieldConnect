@@ -65,7 +65,12 @@
         {
           "photosPermission": "FieldConnect needs access to your photos to attach images to reports."
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-localization",
+      "expo-video",
+      "expo-web-browser",
+      "react-native-edge-to-edge"
     ],
     "experiments": {
       "typedRoutes": true
