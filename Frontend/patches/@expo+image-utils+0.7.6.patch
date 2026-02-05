@@ -1,0 +1,13 @@
+diff --git a/node_modules/@expo/image-utils/build/Cache.js b/node_modules/@expo/image-utils/build/Cache.js
+index 85adb45..1d7b268 100644
+--- a/node_modules/@expo/image-utils/build/Cache.js
++++ b/node_modules/@expo/image-utils/build/Cache.js
+@@ -12,7 +12,7 @@ exports.clearUnusedCachesAsync = clearUnusedCachesAsync;
+ const crypto_1 = __importDefault(require("crypto"));
+ const fs_1 = __importDefault(require("fs"));
+ const path_1 = require("path");
+-const CACHE_LOCATION = '.expo/web/cache/production/images';
++const CACHE_LOCATION = '.expo-image-cache';
+ const cacheKeys = {};
+ // Calculate SHA256 Checksum value of a file based on its contents
+ function calculateHash(filePath) {
