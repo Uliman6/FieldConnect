@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "node -e \"require('fs').mkdirSync('.expo/web/cache/production/images', {recursive:true, mode:0o777})\""
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
