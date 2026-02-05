@@ -29,7 +29,6 @@
     "production": {
       "autoIncrement": true,
       "node": "20.18.0",
-      "prebuildCommand": "mkdir -p .expo/web",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://fieldconnect.onrender.com"
       },
