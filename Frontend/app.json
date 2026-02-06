@@ -20,9 +20,6 @@
         "NSMicrophoneUsageDescription": "FieldConnect needs microphone access to record voice notes for daily logs and events.",
         "NSCameraUsageDescription": "FieldConnect needs camera access to take photos for punch lists and documentation.",
         "NSPhotoLibraryUsageDescription": "FieldConnect needs photo library access to attach existing photos to your reports.",
-        "NSCalendarsUsageDescription": "FieldConnect may access your calendar to schedule and track project deadlines.",
-        "NSContactsUsageDescription": "FieldConnect may access contacts to quickly add team members and stakeholders to your projects.",
-        "NSLocationWhenInUseUsageDescription": "FieldConnect may use your location to tag where daily logs and events occurred on the job site.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -38,8 +35,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.MODIFY_AUDIO_SETTINGS"
-      ],
-      "edgeToEdgeEnabled": true
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -72,9 +68,7 @@
       ],
       "expo-asset",
       "expo-localization",
-      "expo-video",
-      "expo-web-browser",
-      "react-native-edge-to-edge"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
