@@ -32,7 +32,7 @@
       "node": "20.18.0",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://fieldconnect.onrender.com",
-        "EXPO_PUBLIC_SENTRY_DSN": "YOUR_SENTRY_DSN_HERE",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://e6dc90e3ec14104ad216d42548dd6b57@o4510837320712192.ingest.us.sentry.io/4510837322285056",
         "NPM_CONFIG_UNSAFE_PERM": "true",
         "npm_config_unsafe_perm": "true"
       },
