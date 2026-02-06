@@ -2,12 +2,16 @@ const express = require('express');
 const router = express.Router();
 const dailyLogsController = require('../controllers/daily-logs.controller');
 const photosController = require('../controllers/photos.controller');
+const { authenticate, loadAccessibleProjects } = require('../middleware/auth.middleware');
+
+// All daily log routes require authentication
+router.use(authenticate);
 
 /**
  * GET /api/daily-logs
  * List daily logs (with optional filters)
  */
-router.get('/', (req, res, next) => {
+router.get('/', loadAccessibleProjects, (req, res, next) => {
   dailyLogsController.list(req, res, next);
 });
 
