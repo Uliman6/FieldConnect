@@ -11,6 +11,17 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useAuthStore } from '@/lib/auth-store';
 import { DataProvider, useDataProvider } from '@/lib/data-provider';
 import { LanguageProvider } from '@/i18n/LanguageProvider';
+import * as Sentry from '@sentry/react-native';
+
+// Initialize Sentry for crash reporting
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  // Capture 100% of transactions for performance monitoring in beta
+  tracesSampleRate: 1.0,
+  // Only enable in production builds
+  enabled: !__DEV__,
+  debug: false,
+});
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
