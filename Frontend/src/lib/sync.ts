@@ -818,6 +818,13 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
   try {
     console.log('[sync] Syncing project to backend:', project.name, 'ID:', project.id);
 
+    // Check connectivity first
+    const online = await isOnline();
+    if (!online) {
+      console.log('[sync] Device is offline, cannot sync project');
+      return null;
+    }
+
     // With local-first architecture, we send the client's UUID to the backend
     // Backend will either create with this ID or return existing (idempotent)
     const result = await createProjectApi({
@@ -827,10 +834,10 @@ export async function syncProjectToBackend(project: Project): Promise<string | n
       address: project.address || undefined,
     });
 
-    console.log('[sync] Project synced:', project.id);
+    console.log('[sync] Project synced successfully:', project.id);
     return result.id; // Should be same as project.id
   } catch (error) {
-    console.error('[sync] Failed to sync project:', error);
+    console.error('[sync] Failed to sync project:', error instanceof Error ? error.message : error);
     return null;
   }
 }
@@ -989,19 +996,35 @@ export async function syncDailyLogToBackend(dailyLog: DailyLog): Promise<string 
  */
 export async function syncEventToBackend(event: Event): Promise<string | null> {
   try {
-    console.log('[sync] Syncing event to backend:', event.id);
+    console.log('[sync] Syncing event to backend:', event.id, 'project:', event.project_id);
+
+    // Check connectivity first
+    const online = await isOnline();
+    if (!online) {
+      console.log('[sync] Device is offline, cannot sync event');
+      return null;
+    }
 
     // With local-first architecture, ensure project is synced first
     const store = useDailyLogStore.getState();
     const project = store.projects.find(p => p.id === event.project_id);
-    if (project) {
-      await syncProjectToBackend(project);
+
+    if (!project) {
+      console.error('[sync] Project not found locally:', event.project_id);
+      return null;
+    }
+
+    // Sync project first and verify it succeeded
+    const projectSyncResult = await syncProjectToBackend(project);
+    if (!projectSyncResult) {
+      console.error('[sync] Failed to sync project, cannot sync event');
+      return null;
     }
 
     // Use the project_id directly (it's already a UUID)
     const projectId = event.project_id;
 
-    console.log('[sync] Creating/updating event in backend');
+    console.log('[sync] Creating/updating event in backend, projectId:', projectId);
     const result = await createEventApi({
       id: event.id, // Send client-generated UUID
       projectId: projectId,
@@ -1016,10 +1039,18 @@ export async function syncEventToBackend(event: Event): Promise<string | null> {
       isResolved: event.is_resolved,
     });
 
-    console.log('[sync] Event synced:', event.id);
+    console.log('[sync] Event synced successfully:', event.id);
+
+    // Update local event with sync status
+    store.updateEvent(event.id, { sync_status: 'synced' });
+
     return result.id; // Should be same as event.id
   } catch (error) {
-    console.error('[sync] Failed to sync event:', error);
+    console.error('[sync] Failed to sync event:', error instanceof Error ? error.message : error);
+
+    // Update local event with error status
+    useDailyLogStore.getState().updateEvent(event.id, { sync_status: 'error' });
+
     return null;
   }
 }

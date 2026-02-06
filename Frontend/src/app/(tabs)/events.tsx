@@ -336,21 +336,39 @@ export default function EventsScreen() {
                 console.log('[events] Event synced to backend:', backendId);
                 // Refresh the events list to show the synced event
                 queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
+              } else {
+                console.warn('[events] Event sync returned null - sync may have failed');
               }
+            }).catch(syncErr => {
+              console.error('[events] Event sync error:', syncErr);
             });
           }
         } else {
           console.error('[events] Transcription failed:', result.error);
           // Still sync to backend even without transcription
           syncEventToBackend(newEvent).then(backendId => {
-            if (backendId) queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
+            if (backendId) {
+              console.log('[events] Event synced after transcription failure:', backendId);
+              queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
+            } else {
+              console.warn('[events] Event sync failed after transcription failure');
+            }
+          }).catch(syncErr => {
+            console.error('[events] Event sync error after transcription failure:', syncErr);
           });
         }
       } catch (err) {
         console.error('[events] Transcription error:', err);
         // Still sync to backend even on error
         syncEventToBackend(newEvent).then(backendId => {
-          if (backendId) queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
+          if (backendId) {
+            console.log('[events] Event synced after transcription error:', backendId);
+            queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
+          } else {
+            console.warn('[events] Event sync failed after transcription error');
+          }
+        }).catch(syncErr => {
+          console.error('[events] Event sync error after transcription error:', syncErr);
         });
       }
     } else if (!currentProjectId) {
