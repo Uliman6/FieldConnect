@@ -33,6 +33,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://fieldconnect.onrender.com",
         "EXPO_PUBLIC_SENTRY_DSN": "https://e6dc90e3ec14104ad216d42548dd6b57@o4510837320712192.ingest.us.sentry.io/4510837322285056",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "NPM_CONFIG_UNSAFE_PERM": "true",
         "npm_config_unsafe_perm": "true"
       },
