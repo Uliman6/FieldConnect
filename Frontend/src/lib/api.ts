@@ -1,6 +1,8 @@
 // API service for backend communication
 // Handles event indexing, search, and follow-up tracking
 
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 import NetInfo from '@react-native-community/netinfo';
 import { getAuthToken, useAuthStore } from './auth-store';
 import type { PdfTemplate, EventTemplateData, TemplateType, DocumentSchema, SchemaDocumentType, SchemaField, EventSchemaData, Photo } from './types';
@@ -520,7 +522,6 @@ export function getDailyLogPdfPreviewUrl(id: string): string {
  * This properly handles auth for PDF downloads across platforms
  */
 export async function fetchDailyLogPdf(id: string, preview: boolean = false): Promise<string> {
-  const { Platform } = require('react-native');
   const endpoint = preview
     ? `/api/reports/daily-log/${id}/preview`
     : `/api/reports/daily-log/${id}`;
@@ -551,7 +552,6 @@ export async function fetchDailyLogPdf(id: string, preview: boolean = false): Pr
     return URL.createObjectURL(blob);
   } else {
     // Native (iOS/Android): Download to file system
-    const FileSystem = require('expo-file-system');
     const filename = `daily-log-${id}${preview ? '-preview' : ''}.pdf`;
     const fileUri = `${FileSystem.cacheDirectory}${filename}`;
 
@@ -1477,20 +1477,41 @@ export async function fetchInsightsExportPdf(filters: {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, { headers });
+  if (Platform.OS === 'web') {
+    const response = await fetch(url, { headers });
 
-  if (response.status === 401) {
-    useAuthStore.getState().logout();
-    throw new Error('Session expired. Please login again.');
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(error.message || `Failed to export PDF: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } else {
+    // Native (iOS/Android): Download to file system
+    const filename = `insights-export-${Date.now()}.pdf`;
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+      headers,
+    });
+
+    if (downloadResult.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (downloadResult.status !== 200) {
+      throw new Error(`Failed to export PDF: ${downloadResult.status}`);
+    }
+
+    return downloadResult.uri;
   }
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || `Failed to export PDF: ${response.status}`);
-  }
-
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
 }
 
 /**
@@ -1686,7 +1707,6 @@ export function getFilledPdfUrl(eventId: string): string {
  * Download filled PDF with auth
  */
 export async function fetchFilledPdf(eventId: string): Promise<string> {
-  const { Platform } = require('react-native');
   const url = `${API_BASE_URL}/api/events/${eventId}/filled-pdf`;
   const token = getAuthToken();
 
@@ -1712,7 +1732,6 @@ export async function fetchFilledPdf(eventId: string): Promise<string> {
     return URL.createObjectURL(blob);
   } else {
     // Native (iOS/Android): Download to file system
-    const FileSystem = require('expo-file-system');
     const filename = `filled-${eventId}.pdf`;
     const fileUri = `${FileSystem.cacheDirectory}${filename}`;
 
@@ -1959,7 +1978,6 @@ export async function generateSchemaPdf(
  * Download generated PDF (returns blob URL on web, file path on native)
  */
 export async function downloadSchemaPdf(eventId: string): Promise<string> {
-  const { Platform } = require('react-native');
   const token = getAuthToken();
   const url = `${API_BASE_URL}/api/events/${eventId}/download-pdf`;
 
@@ -1979,7 +1997,6 @@ export async function downloadSchemaPdf(eventId: string): Promise<string> {
     return URL.createObjectURL(blob);
   } else {
     // Native (iOS/Android): Download to file system
-    const FileSystem = require('expo-file-system');
     const filename = `schema-${eventId}.pdf`;
     const fileUri = `${FileSystem.cacheDirectory}${filename}`;
 
