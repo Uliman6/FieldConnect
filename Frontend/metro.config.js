@@ -1,6 +1,5 @@
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
-const { withVibecodeMetro } = require("@vibecodeapp/sdk/metro");
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
@@ -33,8 +32,6 @@ config.resolver = {
     if (platform === "web") {
       const nativeOnlyModules = [
         "react-native-pager-view",
-        "reanimated-tab-view",
-        "@bottom-tabs/react-navigation",
       ];
 
       if (nativeOnlyModules.some((mod) => moduleName.includes(mod))) {
@@ -50,4 +47,4 @@ config.resolver = {
 };
 
 // Integrate NativeWind with the Metro configuration.
-module.exports = withNativeWind(withVibecodeMetro(config), { input: "./global.css" });
+module.exports = withNativeWind(config, { input: "./global.css" });
