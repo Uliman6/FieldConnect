@@ -284,70 +284,87 @@ export function DataProvider({ children }: DataProviderProps) {
     setState((s) => ({ ...s, isSyncing: true, error: null }));
 
     try {
-      const store = useDailyLogStore.getState();
-
       // ============================================
       // STEP 1: Fetch and sync PROJECTS
       // ============================================
       const backendProjects = await getProjects();
       console.log('[data] Fetched projects from backend:', backendProjects.length);
 
-      // Build a set of backend project IDs we've seen
+      // Build a map of backend projects by ID and by name for quick lookup
       const backendProjectIds = new Set(backendProjects.map((bp) => bp.id));
+      const backendProjectNames = new Set(backendProjects.map((bp) => bp.name.toLowerCase()));
 
-      // For each backend project, either update existing or add new
-      // With local-first UUID architecture, IDs match directly
-      for (const bp of backendProjects) {
-        // Check if we already have this project (by ID or by name)
-        const existingById = store.projects.find((p) => p.id === bp.id);
-        const existingByName = store.projects.find((p) => p.name === bp.name);
+      // Convert all backend projects to local format
+      const convertedBackendProjects = backendProjects.map(convertBackendProjectToLocal);
 
-        if (existingById) {
-          // Already have this project by ID, skip
-          continue;
-        } else if (existingByName) {
-          // Found by name with different ID - update the ID to match backend
-          // This handles migration from old custom IDs to new UUIDs
-          useDailyLogStore.setState((s) => ({
-            projects: s.projects.map((p) =>
-              p.id === existingByName.id ? { ...p, id: bp.id } : p
-            ),
-            // Also update references in daily logs and events
-            dailyLogs: s.dailyLogs.map((l) =>
-              l.project_id === existingByName.id ? { ...l, project_id: bp.id } : l
-            ),
-            events: s.events.map((e) =>
-              e.project_id === existingByName.id ? { ...e, project_id: bp.id } : e
-            ),
-          }));
-          console.log('[data] Updated project ID to match backend:', existingByName.name, '->', bp.id);
-        } else {
-          // New project from backend - add directly to store with backend ID
-          const converted = convertBackendProjectToLocal(bp);
-          useDailyLogStore.setState((s) => ({
-            projects: [...s.projects, converted],
-          }));
-          console.log('[data] Added project from backend:', bp.name);
+      // Single atomic update for projects to avoid race conditions
+      useDailyLogStore.setState((s) => {
+        // Start with backend projects as the source of truth
+        const finalProjects = [...convertedBackendProjects];
+
+        // Check for any local-only projects that need to be preserved
+        // (projects created offline that haven't synced yet)
+        for (const localProject of s.projects) {
+          const existsOnBackendById = backendProjectIds.has(localProject.id);
+          const existsOnBackendByName = backendProjectNames.has(localProject.name.toLowerCase());
+
+          // Only keep local project if it doesn't exist on backend at all
+          // This preserves offline-created projects
+          if (!existsOnBackendById && !existsOnBackendByName) {
+            // Check if this local project was recently created (within last hour)
+            // to avoid keeping stale orphaned projects
+            const createdAt = new Date(localProject.created_at).getTime();
+            const oneHourAgo = Date.now() - 60 * 60 * 1000;
+            if (createdAt > oneHourAgo) {
+              finalProjects.push(localProject);
+              console.log('[data] Preserving local-only project:', localProject.name);
+            } else {
+              console.log('[data] Removing stale local project:', localProject.name);
+            }
+          }
         }
-      }
 
-      // Remove local projects that don't exist on backend anymore
-      const currentStoreAfterSync = useDailyLogStore.getState();
-      const projectsToRemove = currentStoreAfterSync.projects.filter((localProject) => {
-        // With local-first architecture, local ID = backend ID
-        // Keep only if it exists on backend
-        return !backendProjectIds.has(localProject.id);
+        // Update project references in daily logs and events if IDs changed
+        let updatedDailyLogs = s.dailyLogs;
+        let updatedEvents = s.events;
+
+        // Create ID mapping for projects that exist by name but have different IDs
+        const idMigrations: Record<string, string> = {};
+        for (const localProject of s.projects) {
+          if (!backendProjectIds.has(localProject.id)) {
+            const matchingBackend = backendProjects.find(
+              (bp) => bp.name.toLowerCase() === localProject.name.toLowerCase()
+            );
+            if (matchingBackend) {
+              idMigrations[localProject.id] = matchingBackend.id;
+            }
+          }
+        }
+
+        // Apply ID migrations to daily logs and events
+        if (Object.keys(idMigrations).length > 0) {
+          console.log('[data] Migrating project IDs:', idMigrations);
+          updatedDailyLogs = s.dailyLogs.map((l) =>
+            idMigrations[l.project_id] ? { ...l, project_id: idMigrations[l.project_id] } : l
+          );
+          updatedEvents = s.events.map((e) =>
+            idMigrations[e.project_id] ? { ...e, project_id: idMigrations[e.project_id] } : e
+          );
+        }
+
+        // Remove daily logs and events for projects that no longer exist
+        const validProjectIds = new Set(finalProjects.map((p) => p.id));
+        updatedDailyLogs = updatedDailyLogs.filter((l) => validProjectIds.has(l.project_id));
+        updatedEvents = updatedEvents.filter((e) => validProjectIds.has(e.project_id));
+
+        console.log('[data] Synced projects:', finalProjects.length);
+
+        return {
+          projects: finalProjects,
+          dailyLogs: updatedDailyLogs,
+          events: updatedEvents,
+        };
       });
-
-      if (projectsToRemove.length > 0) {
-        console.log('[data] Removing deleted projects:', projectsToRemove.map((p) => p.name));
-        useDailyLogStore.setState((s) => ({
-          projects: s.projects.filter((p) => !projectsToRemove.some((r) => r.id === p.id)),
-          // Also remove related daily logs and events
-          dailyLogs: s.dailyLogs.filter((l) => !projectsToRemove.some((r) => r.id === l.project_id)),
-          events: s.events.filter((e) => !projectsToRemove.some((r) => r.id === e.project_id)),
-        }));
-      }
 
       // ============================================
       // STEP 2: Fetch and sync EVENTS
