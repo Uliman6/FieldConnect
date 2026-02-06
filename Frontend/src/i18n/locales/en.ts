@@ -147,6 +147,9 @@ export default {
       rfi: 'RFI',
       punch_list: 'Punch List',
       material: 'Material',
+      equipment: 'Equipment',
+      coordination: 'Coordination',
+      issue: 'Issue',
       other: 'Other',
     },
     // Severity levels

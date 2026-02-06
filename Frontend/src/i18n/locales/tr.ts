@@ -135,19 +135,22 @@ export default {
     viewAll: 'Tum {{count}} olayi gor',
     // Event types
     types: {
-      safety_incident: 'Guvenlik Olayi',
-      safety: 'Guvenlik',
+      safety_incident: 'Güvenlik Olayı',
+      safety: 'Güvenlik',
       quality_issue: 'Kalite Sorunu',
       quality: 'Kalite',
       delay: 'Gecikme',
-      change_order: 'Degisiklik Emri',
+      change_order: 'Değişiklik Emri',
       inspection: 'Denetim',
       delivery: 'Teslimat',
       weather_impact: 'Hava Etkisi',
       rfi: 'Bilgi Talebi',
       punch_list: 'Eksik Listesi',
       material: 'Malzeme',
-      other: 'Diger',
+      equipment: 'Ekipman',
+      coordination: 'Koordinasyon',
+      issue: 'Sorun',
+      other: 'Diğer',
     },
     // Severity levels
     severities: {
