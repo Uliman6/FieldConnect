@@ -1,5 +1,4 @@
-import { ScrollView, View } from 'react-native';
-import { Text } from '@/components/ui/text';
+import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LAST_UPDATED = 'February 5, 2026';
@@ -9,10 +8,10 @@ const WEBSITE_URL = 'https://field-connect-xi.vercel.app';
 
 export default function PrivacyPolicyScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1 px-6 py-8">
-        <Text className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</Text>
-        <Text className="text-sm text-gray-500 mb-8">Last Updated: {LAST_UPDATED}</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Privacy Policy</Text>
+        <Text style={styles.updated}>Last Updated: {LAST_UPDATED}</Text>
 
         <Section title="Introduction">
           <P>
@@ -166,14 +165,14 @@ export default function PrivacyPolicyScreen() {
             If you have questions or concerns about this Privacy Policy or our data practices,
             please contact us at:
           </P>
-          <View className="bg-gray-50 p-4 rounded-lg mt-2">
-            <Text className="font-semibold text-gray-900">{COMPANY_NAME}</Text>
-            <Text className="text-gray-600">Email: {CONTACT_EMAIL}</Text>
-            <Text className="text-gray-600">Website: {WEBSITE_URL}</Text>
+          <View style={styles.contactBox}>
+            <Text style={styles.contactName}>{COMPANY_NAME}</Text>
+            <Text style={styles.contactText}>Email: {CONTACT_EMAIL}</Text>
+            <Text style={styles.contactText}>Website: {WEBSITE_URL}</Text>
           </View>
         </Section>
 
-        <View className="h-12" />
+        <View style={{ height: 48 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -182,8 +181,8 @@ export default function PrivacyPolicyScreen() {
 // Helper Components
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="mb-8">
-      <Text className="text-xl font-semibold text-gray-900 mb-3">{title}</Text>
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
       {children}
     </View>
   );
@@ -191,26 +190,107 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="mb-4">
-      <Text className="text-base font-medium text-gray-800 mb-2">{title}</Text>
+    <View style={styles.subSection}>
+      <Text style={styles.subSectionTitle}>{title}</Text>
       {children}
     </View>
   );
 }
 
 function P({ children }: { children: React.ReactNode }) {
-  return <Text className="text-gray-700 mb-3 leading-6">{children}</Text>;
+  return <Text style={styles.paragraph}>{children}</Text>;
 }
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <View className="ml-4 mb-3">
+    <View style={styles.bulletList}>
       {items.map((item, index) => (
-        <View key={index} className="flex-row mb-2">
-          <Text className="text-gray-500 mr-2">{'\u2022'}</Text>
-          <Text className="text-gray-700 flex-1 leading-6">{item}</Text>
+        <View key={index} style={styles.bulletItem}>
+          <Text style={styles.bullet}>{'\u2022'}</Text>
+          <Text style={styles.bulletText}>{item}</Text>
         </View>
       ))}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#111',
+    marginBottom: 8,
+  },
+  updated: {
+    fontSize: 14,
+    color: '#888',
+    marginBottom: 32,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111',
+    marginBottom: 12,
+  },
+  subSection: {
+    marginBottom: 16,
+  },
+  subSectionTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 8,
+  },
+  paragraph: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  bulletList: {
+    marginLeft: 16,
+    marginBottom: 12,
+  },
+  bulletItem: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  bullet: {
+    color: '#888',
+    marginRight: 8,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#555',
+    lineHeight: 22,
+  },
+  contactBox: {
+    backgroundColor: '#f9f9f9',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  contactName: {
+    fontWeight: '600',
+    color: '#111',
+    marginBottom: 4,
+  },
+  contactText: {
+    color: '#555',
+  },
+});
