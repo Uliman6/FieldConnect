@@ -522,15 +522,12 @@ export function getDailyLogPdfPreviewUrl(id: string): string {
  * This properly handles auth for PDF downloads across platforms
  */
 export async function fetchDailyLogPdf(id: string, preview: boolean = false): Promise<string> {
-  console.log('[PDF] fetchDailyLogPdf called, Platform:', Platform.OS);
-
   const endpoint = preview
     ? `/api/reports/daily-log/${id}/preview`
     : `/api/reports/daily-log/${id}`;
 
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getAuthToken();
-  console.log('[PDF] URL:', url, 'Has token:', !!token);
 
   const headers: Record<string, string> = {};
   if (token) {
@@ -555,17 +552,12 @@ export async function fetchDailyLogPdf(id: string, preview: boolean = false): Pr
     return URL.createObjectURL(blob);
   } else {
     // Native (iOS/Android): Download to file system
-    console.log('[PDF] Using native download, FileSystem available:', !!FileSystem);
-    console.log('[PDF] cacheDirectory:', FileSystem.cacheDirectory);
-
     const filename = `daily-log-${id}${preview ? '-preview' : ''}.pdf`;
     const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-    console.log('[PDF] Downloading to:', fileUri);
 
     const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
       headers,
     });
-    console.log('[PDF] Download result:', JSON.stringify(downloadResult));
 
     if (downloadResult.status !== 200) {
       if (downloadResult.status === 401) {
@@ -575,7 +567,6 @@ export async function fetchDailyLogPdf(id: string, preview: boolean = false): Pr
       throw new Error(`Failed to fetch PDF: ${downloadResult.status}`);
     }
 
-    console.log('[PDF] Download successful, returning URI:', downloadResult.uri);
     return downloadResult.uri;
   }
 }
