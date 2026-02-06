@@ -3,6 +3,9 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, P
 import * as Sharing from 'expo-sharing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+
+// Debug: Log when this module loads to verify OTA update is applied
+console.log('[history.tsx] Module loaded - PDF fix version 2');
 import { useFocusEffect } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, isToday } from 'date-fns';
@@ -217,25 +220,34 @@ export default function LogsHistoryScreen() {
   }, [selectedCategory, statusFilter]);
 
   const handleViewPdf = useCallback(async (logId: string) => {
+    console.log('[handleViewPdf] Called with logId:', logId, 'Platform:', Platform.OS);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
+      console.log('[handleViewPdf] Fetching PDF...');
       const pdfUri = await fetchDailyLogPdf(logId, true);
+      console.log('[handleViewPdf] Got PDF URI:', pdfUri);
+
       if (Platform.OS === 'web') {
         window.open(pdfUri, '_blank');
       } else {
         // On native, share the PDF file
+        console.log('[handleViewPdf] Checking if sharing is available...');
         const canShare = await Sharing.isAvailableAsync();
+        console.log('[handleViewPdf] Can share:', canShare);
+
         if (canShare) {
+          console.log('[handleViewPdf] Opening share dialog...');
           await Sharing.shareAsync(pdfUri, {
             mimeType: 'application/pdf',
             dialogTitle: 'View Daily Log PDF',
           });
+          console.log('[handleViewPdf] Share completed');
         } else {
           Alert.alert('Error', 'Sharing is not available on this device');
         }
       }
     } catch (error) {
-      console.error('[pdf] Failed to fetch PDF:', error);
+      console.error('[handleViewPdf] Error:', error);
       Alert.alert('Error', 'Failed to load PDF. Please try again.');
     }
   }, []);
