@@ -222,6 +222,12 @@ export default function LogsHistoryScreen() {
   const handleViewPdf = useCallback(async (logId: string) => {
     console.log('[handleViewPdf] Called with logId:', logId, 'Platform:', Platform.OS);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Debug: Show alert to confirm this code is running
+    if (Platform.OS !== 'web') {
+      Alert.alert('Debug', `PDF fix v2 - Platform: ${Platform.OS}, LogId: ${logId}`);
+    }
+
     try {
       console.log('[handleViewPdf] Fetching PDF...');
       const pdfUri = await fetchDailyLogPdf(logId, true);
@@ -246,9 +252,9 @@ export default function LogsHistoryScreen() {
           Alert.alert('Error', 'Sharing is not available on this device');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[handleViewPdf] Error:', error);
-      Alert.alert('Error', 'Failed to load PDF. Please try again.');
+      Alert.alert('Error', `Failed to load PDF: ${error?.message || 'Unknown error'}`);
     }
   }, []);
 
