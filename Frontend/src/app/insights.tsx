@@ -7,7 +7,10 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Platform,
+  Alert,
 } from 'react-native';
+import * as Sharing from 'expo-sharing';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import {
@@ -734,7 +737,7 @@ export default function InsightsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const pdfUrl = await fetchInsightsExportPdf({
+      const pdfUri = await fetchInsightsExportPdf({
         projectId: backendProjectId,
         category: activeFilters.categories.length > 0 ? activeFilters.categories.join(',') : undefined,
         sourceType: activeFilters.sourceTypes.length > 0 ? activeFilters.sourceTypes.join(',') : undefined,
@@ -744,13 +747,25 @@ export default function InsightsScreen() {
       });
 
       // Open PDF in new tab (web) or share (native)
-      if (typeof window !== 'undefined') {
-        window.open(pdfUrl, '_blank');
+      if (Platform.OS === 'web') {
+        window.open(pdfUri, '_blank');
+      } else {
+        // On native, share the PDF file
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Export Insights PDF',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error: any) {
       console.error('Failed to export PDF:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to export PDF. Please try again.');
     } finally {
       setIsExporting(false);
     }
