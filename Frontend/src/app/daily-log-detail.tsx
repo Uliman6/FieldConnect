@@ -7,7 +7,6 @@ import {
   Pressable,
   ActivityIndicator,
   Platform,
-  Linking,
   Modal,
   KeyboardAvoidingView,
   Image,
@@ -19,6 +18,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
+import * as Sharing from 'expo-sharing';
 import {
   Sun,
   Cloud,
@@ -1129,14 +1129,24 @@ export default function DailyLogDetailScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsLoadingPdf(true);
     try {
-      const blobUrl = await fetchDailyLogPdf(backendDailyLogId, true);
+      const pdfUri = await fetchDailyLogPdf(backendDailyLogId, true);
       if (Platform.OS === 'web') {
-        window.open(blobUrl, '_blank');
+        window.open(pdfUri, '_blank');
       } else {
-        Linking.openURL(blobUrl);
+        // On native, share the PDF file
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'View Daily Log PDF',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
     } catch (err) {
       console.error('[pdf] Failed to fetch PDF:', err);
+      Alert.alert('Error', 'Failed to load PDF. Please try again.');
     } finally {
       setIsLoadingPdf(false);
     }
