@@ -4,12 +4,16 @@ const eventsController = require('../controllers/events.controller');
 const templatesController = require('../controllers/templates.controller');
 const schemaDataController = require('../controllers/schema-data.controller');
 const photosController = require('../controllers/photos.controller');
+const { authenticate, requireRole, loadAccessibleProjects } = require('../middleware/auth.middleware');
+
+// All event routes require authentication
+router.use(authenticate);
 
 /**
  * GET /api/events/search
  * Full-text search across events (must come before :id route)
  */
-router.get('/search', (req, res, next) => {
+router.get('/search', loadAccessibleProjects, (req, res, next) => {
   eventsController.search(req, res, next);
 });
 

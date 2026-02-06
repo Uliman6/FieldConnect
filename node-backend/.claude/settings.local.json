@@ -35,7 +35,8 @@
       "Bash(git -C \"C:/sitespeak/Backend\" commit -m \"$\\(cat <<''EOF''\nRe-enable semantic search with OpenAI embeddings\n\n- Semantic search now primary search method \\(understands meaning\\)\n- Keyword search as fallback if embeddings unavailable\n- Lower similarity threshold \\(0.5\\) for broader matches\n- \"material damage\" can now find \"scratch in glazing\"\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git -C \"C:/sitespeak/Backend\" commit -m \"$\\(cat <<''EOF''\nImprove search relevance - filter stop words, require min score\n\n- Raise semantic threshold from 0.5 to 0.68 for better precision\n- Filter out generic words like \"items\", \"things\", \"related\"\n- Require minimum score of 5 \\(at least one meaningful field match\\)\n- Better logging of matched words and fields\n- Prevents irrelevant results from flooding search\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(find:*)"
     ]
   }
 }

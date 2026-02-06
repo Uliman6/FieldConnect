@@ -13,13 +13,20 @@ datasource db {
 }
 
 // ============================================
-// AUTHENTICATION
+// AUTHENTICATION & MULTI-TENANCY
 // ============================================
 
 enum Role {
-  ADMIN
-  EDITOR
-  VIEWER
+  ADMIN       // System admin - can manage all companies
+  EDITOR      // Legacy - being replaced by ProjectRole
+  VIEWER      // Legacy - being replaced by ProjectRole
+}
+
+enum ProjectRole {
+  OWNER       // Full control, can delete project
+  ADMIN       // Can manage project settings and members
+  MEMBER      // Can create/edit content
+  VIEWER      // Read-only access
 }
 
 // Item status for punch lists and RFIs
@@ -29,19 +36,63 @@ enum ItemStatus {
   CLOSED
 }
 
+// Company/Organization for multi-tenant isolation
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique  // URL-friendly identifier
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users       User[]
+  projects    Project[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("companies")
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
   passwordHash String   @map("password_hash")
   name         String?
-  role         Role     @default(VIEWER)
+  role         Role     @default(VIEWER)  // System-wide role
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  // Company association - users belong to one company
+  companyId    String?  @map("company_id")
+  company      Company? @relation(fields: [companyId], references: [id])
+
+  // Project memberships - many-to-many through UserProject
+  projectMemberships UserProject[]
+
   @@index([email])
   @@index([role])
+  @@index([companyId])
   @@map("users")
+}
+
+// Junction table for User-Project many-to-many with role
+model UserProject {
+  id        String      @id @default(uuid())
+  userId    String      @map("user_id")
+  projectId String      @map("project_id")
+  role      ProjectRole @default(MEMBER)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+  @@index([role])
+  @@map("user_projects")
 }
 
 // ============================================
@@ -62,6 +113,13 @@ model Project {
   // Test project flag - insights from test projects are excluded from pattern analysis
   isTest    Boolean  @default(false) @map("is_test")
 
+  // Company association - projects belong to one company
+  companyId String?  @map("company_id")
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  // User memberships - many-to-many through UserProject
+  members   UserProject[]
+
   dailyLogs       DailyLog[]
   events          Event[]
   insights        Insight[]
@@ -71,6 +129,7 @@ model Project {
   @@index([name])
   @@index([number])
   @@index([isTest])
+  @@index([companyId])
   @@map("projects")
 }
 
