@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Linking, Platform, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Platform, Alert } from 'react-native';
+import * as Sharing from 'expo-sharing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -218,14 +219,24 @@ export default function LogsHistoryScreen() {
   const handleViewPdf = useCallback(async (logId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const blobUrl = await fetchDailyLogPdf(logId, true);
+      const pdfUri = await fetchDailyLogPdf(logId, true);
       if (Platform.OS === 'web') {
-        window.open(blobUrl, '_blank');
+        window.open(pdfUri, '_blank');
       } else {
-        Linking.openURL(blobUrl);
+        // On native, share the PDF file
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'View Daily Log PDF',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
     } catch (error) {
       console.error('[pdf] Failed to fetch PDF:', error);
+      Alert.alert('Error', 'Failed to load PDF. Please try again.');
     }
   }, []);
 
@@ -237,17 +248,26 @@ export default function LogsHistoryScreen() {
   const handleDownloadPdf = useCallback(async (logId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      const blobUrl = await fetchDailyLogPdf(logId, false);
+      const pdfUri = await fetchDailyLogPdf(logId, false);
       if (Platform.OS === 'web') {
         const a = document.createElement('a');
-        a.href = blobUrl;
+        a.href = pdfUri;
         a.download = `daily-log-${logId}.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
+        URL.revokeObjectURL(pdfUri);
       } else {
-        Linking.openURL(blobUrl);
+        // On native, share the PDF file for saving
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Save Daily Log PDF',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
     } catch (error) {
       console.error('[pdf] Failed to download PDF:', error);
@@ -308,25 +328,30 @@ export default function LogsHistoryScreen() {
   const handleDownloadSchemaPdf = useCallback(async (eventId: string, title: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      const blobUrl = await downloadSchemaPdf(eventId);
+      const pdfUri = await downloadSchemaPdf(eventId);
       if (Platform.OS === 'web') {
         const a = document.createElement('a');
-        a.href = blobUrl;
+        a.href = pdfUri;
         a.download = `${selectedCategory}-${title || eventId}.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
+        URL.revokeObjectURL(pdfUri);
       } else {
-        Linking.openURL(blobUrl);
+        // On native, share the PDF file
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Download PDF',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
     } catch (error) {
       console.error('[pdf] Failed to download schema PDF:', error);
-      if (Platform.OS === 'web') {
-        window.alert('No PDF generated yet. Open the event and click "Export PDF" first.');
-      } else {
-        Alert.alert('No PDF', 'No PDF generated yet. Open the event and click "Export PDF" first.');
-      }
+      Alert.alert('No PDF', 'No PDF generated yet. Open the event and click "Export PDF" first.');
     }
   }, [selectedCategory]);
 

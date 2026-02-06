@@ -516,10 +516,11 @@ export function getDailyLogPdfPreviewUrl(id: string): string {
 }
 
 /**
- * Fetch PDF with authentication and return blob URL
- * This properly handles auth for PDF downloads
+ * Fetch PDF with authentication and return blob URL (web) or file path (native)
+ * This properly handles auth for PDF downloads across platforms
  */
 export async function fetchDailyLogPdf(id: string, preview: boolean = false): Promise<string> {
+  const { Platform } = require('react-native');
   const endpoint = preview
     ? `/api/reports/daily-log/${id}/preview`
     : `/api/reports/daily-log/${id}`;
@@ -532,20 +533,42 @@ export async function fetchDailyLogPdf(id: string, preview: boolean = false): Pr
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, { headers });
+  if (Platform.OS === 'web') {
+    // Web: Use blob URL
+    const response = await fetch(url, { headers });
 
-  if (response.status === 401) {
-    useAuthStore.getState().logout();
-    throw new Error('Session expired. Please login again.');
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(error.message || `Failed to fetch PDF: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } else {
+    // Native (iOS/Android): Download to file system
+    const FileSystem = require('expo-file-system');
+    const filename = `daily-log-${id}${preview ? '-preview' : ''}.pdf`;
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+      headers,
+    });
+
+    if (downloadResult.status !== 200) {
+      if (downloadResult.status === 401) {
+        useAuthStore.getState().logout();
+        throw new Error('Session expired. Please login again.');
+      }
+      throw new Error(`Failed to fetch PDF: ${downloadResult.status}`);
+    }
+
+    return downloadResult.uri;
   }
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || `Failed to fetch PDF: ${response.status}`);
-  }
-
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
 }
 
 /**
@@ -1663,6 +1686,7 @@ export function getFilledPdfUrl(eventId: string): string {
  * Download filled PDF with auth
  */
 export async function fetchFilledPdf(eventId: string): Promise<string> {
+  const { Platform } = require('react-native');
   const url = `${API_BASE_URL}/api/events/${eventId}/filled-pdf`;
   const token = getAuthToken();
 
@@ -1671,20 +1695,42 @@ export async function fetchFilledPdf(eventId: string): Promise<string> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, { headers });
+  if (Platform.OS === 'web') {
+    const response = await fetch(url, { headers });
 
-  if (response.status === 401) {
-    useAuthStore.getState().logout();
-    throw new Error('Session expired. Please login again.');
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(error.message || `Failed to fetch PDF: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } else {
+    // Native (iOS/Android): Download to file system
+    const FileSystem = require('expo-file-system');
+    const filename = `filled-${eventId}.pdf`;
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+      headers,
+    });
+
+    if (downloadResult.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (downloadResult.status !== 200) {
+      throw new Error(`Failed to fetch PDF: ${downloadResult.status}`);
+    }
+
+    return downloadResult.uri;
   }
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || `Failed to fetch PDF: ${response.status}`);
-  }
-
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
 }
 
 // ============================================
@@ -1910,22 +1956,43 @@ export async function generateSchemaPdf(
 }
 
 /**
- * Download generated PDF
+ * Download generated PDF (returns blob URL on web, file path on native)
  */
 export async function downloadSchemaPdf(eventId: string): Promise<string> {
-  const token = await getAuthToken();
-  const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/download-pdf`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  const { Platform } = require('react-native');
+  const token = getAuthToken();
+  const url = `${API_BASE_URL}/api/events/${eventId}/download-pdf`;
 
-  if (!response.ok) {
-    throw new Error('Failed to download PDF');
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
+  if (Platform.OS === 'web') {
+    const response = await fetch(url, { headers });
+
+    if (!response.ok) {
+      throw new Error('Failed to download PDF');
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } else {
+    // Native (iOS/Android): Download to file system
+    const FileSystem = require('expo-file-system');
+    const filename = `schema-${eventId}.pdf`;
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+      headers,
+    });
+
+    if (downloadResult.status !== 200) {
+      throw new Error(`Failed to download PDF: ${downloadResult.status}`);
+    }
+
+    return downloadResult.uri;
+  }
 }
 
 // ============================================

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Switch,
 } from 'react-native';
+import * as Sharing from 'expo-sharing';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDailyLogStore } from '@/lib/store';
@@ -1156,22 +1157,34 @@ export default function EventDetailScreen() {
       await handleSaveTemplateData();
 
       // Then download the filled PDF
-      const blobUrl = await fetchFilledPdf(backendEventId);
+      const pdfUri = await fetchFilledPdf(backendEventId);
 
       if (Platform.OS === 'web') {
         const link = document.createElement('a');
-        link.href = blobUrl;
+        link.href = pdfUri;
         link.download = `${selectedTemplate?.name || 'filled'}-${event.id}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
+        URL.revokeObjectURL(pdfUri);
+      } else {
+        // On native, share the PDF file
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Export PDF',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Failed to download PDF:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to download PDF. Please try again.');
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -1243,27 +1256,34 @@ export default function EventDetailScreen() {
       await generateSchemaPdf(backendId);
 
       // Download the PDF
-      const blobUrl = await downloadSchemaPdf(backendId);
+      const pdfUri = await downloadSchemaPdf(backendId);
 
       if (Platform.OS === 'web') {
         const link = document.createElement('a');
-        link.href = blobUrl;
+        link.href = pdfUri;
         link.download = `${selectedSchema?.name || 'document'}-${event.id.substring(0, 8)}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
+        URL.revokeObjectURL(pdfUri);
+      } else {
+        // On native, share the PDF file
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Export PDF',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Failed to generate PDF:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      if (Platform.OS === 'web') {
-        alert('Failed to generate PDF. Please try again.');
-      } else {
-        Alert.alert('Error', 'Failed to generate PDF. Please try again.');
-      }
+      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
     } finally {
       setIsGeneratingPdf(false);
     }
