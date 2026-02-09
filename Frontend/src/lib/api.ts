@@ -571,6 +571,59 @@ export async function fetchDailyLogPdf(id: string, preview: boolean = false): Pr
   }
 }
 
+
+/**
+ * Bulk export documents as ZIP file
+ * Returns file path on native, blob URL on web
+ */
+export async function fetchBulkExport(
+  projectId: string,
+  type: 'daily_log' | 'punch_list' | 'rfi'
+): Promise<string> {
+  const url = `${API_BASE_URL}/api/reports/bulk-export/project/${projectId}?type=${type}`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  if (Platform.OS === 'web') {
+    const response = await fetch(url, { headers });
+
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(error.message || `Failed to export: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } else {
+    // Native: Download to file system
+    const filename = `${type}-export-${Date.now()}.zip`;
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+      headers,
+    });
+
+    if (downloadResult.status !== 200) {
+      if (downloadResult.status === 401) {
+        useAuthStore.getState().logout();
+        throw new Error('Session expired. Please login again.');
+      }
+      throw new Error(`Failed to export: ${downloadResult.status}`);
+    }
+
+    return downloadResult.uri;
+  }
+}
+
 /**
  * Get list of projects
  */
