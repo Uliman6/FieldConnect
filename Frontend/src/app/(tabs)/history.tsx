@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Platform, Alert } from 'react-native';
 import * as Sharing from 'expo-sharing';
+import { PDFViewerModal } from '@/components/PDFViewerModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
@@ -88,6 +89,9 @@ export default function LogsHistoryScreen() {
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [pdfViewerVisible, setPdfViewerVisible] = useState(false);
+  const [pdfViewerUri, setPdfViewerUri] = useState<string | null>(null);
+  const [pdfViewerTitle, setPdfViewerTitle] = useState<string>('PDF Preview');
 
   // Translatable category labels
   const getCategoryLabel = (key: DocumentCategory) => {
@@ -217,22 +221,17 @@ export default function LogsHistoryScreen() {
     }
   }, [selectedCategory, statusFilter]);
 
-  const handleViewPdf = useCallback(async (logId: string) => {
+  const handleViewPdf = useCallback(async (logId: string, logDate?: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       const pdfUri = await fetchDailyLogPdf(logId, true);
       if (Platform.OS === 'web') {
         window.open(pdfUri, '_blank');
       } else {
-        const canShare = await Sharing.isAvailableAsync();
-        if (canShare) {
-          await Sharing.shareAsync(pdfUri, {
-            mimeType: 'application/pdf',
-            dialogTitle: 'View Daily Log PDF',
-          });
-        } else {
-          Alert.alert('Error', 'Sharing is not available on this device');
-        }
+        // Open in-app PDF viewer
+        setPdfViewerUri(pdfUri);
+        setPdfViewerTitle(logDate ? `Daily Log - ${logDate}` : 'Daily Log PDF');
+        setPdfViewerVisible(true);
       }
     } catch (error: any) {
       console.error('[pdf] Failed to fetch PDF:', error);
@@ -483,7 +482,7 @@ export default function LogsHistoryScreen() {
                   <DailyLogCard
                     log={log}
                     showProject={!currentProjectId}
-                    onViewPdf={() => handleViewPdf(log.id)}
+                    onViewPdf={() => handleViewPdf(log.id, format(parseLocalDate(log.date), 'MMM d, yyyy'))}
                     onDownloadPdf={() => handleDownloadPdf(log.id)}
                     onEdit={() => handleEditLog(log.id)}
                     onDelete={() => handleDeleteLog(log)}
@@ -577,6 +576,17 @@ export default function LogsHistoryScreen() {
           </View>
         )}
       </ScrollView>
+      
+      {/* PDF Viewer Modal */}
+      <PDFViewerModal
+        visible={pdfViewerVisible}
+        pdfUri={pdfViewerUri}
+        title={pdfViewerTitle}
+        onClose={() => {
+          setPdfViewerVisible(false);
+          setPdfViewerUri(null);
+        }}
+      />
     </View>
   );
 }

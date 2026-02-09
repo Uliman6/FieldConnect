@@ -1,7 +1,7 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
-import { ClipboardList, Building2, History, Radio, Download, Lightbulb, Settings } from 'lucide-react-native';
+import { ClipboardList, Building2, History, Radio, Lightbulb, Settings } from 'lucide-react-native';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useClientOnlyValue } from '@/lib/useClientOnlyValue';
@@ -42,20 +42,12 @@ export default function TabLayout() {
           title: t('tabs.events'),
           tabBarIcon: ({ color, size }) => <Radio size={size} color={color} />,
           headerRight: () => (
-            <View className="flex-row items-center">
-              <Pressable
-                onPress={() => router.push('/insights')}
-                className="mr-2 p-2"
-              >
-                <Lightbulb size={22} color="#F97316" />
-              </Pressable>
-              <Pressable
-                onPress={() => router.push('/exports')}
-                className="mr-4 p-2"
-              >
-                <Download size={22} color="#F97316" />
-              </Pressable>
-            </View>
+            <Pressable
+              onPress={() => router.push('/insights')}
+              className="mr-4 p-2"
+            >
+              <Lightbulb size={22} color="#F97316" />
+            </Pressable>
           ),
         }}
       />
