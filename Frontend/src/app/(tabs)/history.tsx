@@ -30,6 +30,7 @@ import {
   CheckCircle,
   Clock4,
   CircleDot,
+  Archive,
 } from 'lucide-react-native';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
@@ -44,6 +45,7 @@ import {
   ProjectSummary,
   getEvents,
   downloadSchemaPdf,
+  fetchBulkExport,
   getChecklistItems,
   updateEventStatus,
   ChecklistFilters,
@@ -92,6 +94,7 @@ export default function LogsHistoryScreen() {
   const [pdfViewerVisible, setPdfViewerVisible] = useState(false);
   const [pdfViewerUri, setPdfViewerUri] = useState<string | null>(null);
   const [pdfViewerTitle, setPdfViewerTitle] = useState<string>('PDF Preview');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Translatable category labels
   const getCategoryLabel = (key: DocumentCategory) => {
@@ -373,6 +376,49 @@ export default function LogsHistoryScreen() {
     }
   }, [queryClient]);
 
+  const handleBulkExport = useCallback(async () => {
+    if (!backendProjectId) {
+      Alert.alert('No Project', 'Please select a project first');
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsExporting(true);
+
+    try {
+      const zipUri = await fetchBulkExport(backendProjectId, selectedCategory);
+      
+      if (Platform.OS === 'web') {
+        // Trigger download
+        const a = document.createElement('a');
+        a.href = zipUri;
+        a.download = `${selectedCategory}-export.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(zipUri);
+      } else {
+        // Share the ZIP file on native
+        const Sharing = require('expo-sharing');
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(zipUri, {
+            mimeType: 'application/zip',
+            dialogTitle: 'Export Documents',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
+      }
+    } catch (error: any) {
+      console.error('[bulk-export] Failed:', error);
+      Alert.alert('Export Failed', error?.message || 'Failed to export documents');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [backendProjectId, selectedCategory]);
+
+
   const isLoading = projectsQuery.isLoading ||
     (selectedCategory === 'daily_log' ? dailyLogsQuery.isLoading : checklistQuery.isLoading);
   const hasError = projectsQuery.isError ||
@@ -395,9 +441,27 @@ export default function LogsHistoryScreen() {
       >
         {/* Header */}
         <View className="px-4 pt-4 pb-2">
-          <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-            {t('history.documents')}
-          </Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+              {t('history.documents')}
+            </Text>
+            {backendProjectId && (
+              <Pressable
+                onPress={handleBulkExport}
+                disabled={isExporting}
+                className="flex-row items-center bg-orange-500 px-3 py-2 rounded-lg"
+              >
+                {isExporting ? (
+                  <ActivityIndicator size={16} color="#FFF" />
+                ) : (
+                  <Archive size={16} color="#FFF" />
+                )}
+                <Text className="text-white text-sm font-medium ml-2">
+                  {t('export.title')}
+                </Text>
+              </Pressable>
+            )}
+          </View>
           <View className="flex-row items-center mt-1">
             <Building2 size={14} color={currentProject ? '#F97316' : '#9CA3AF'} />
             <Text className={cn(
