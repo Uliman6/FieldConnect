@@ -53,7 +53,7 @@ export default function LoginScreen() {
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>FieldConnect</Text>
-            <Text style={styles.subtitle}>Construction Event Logger</Text>
+            <Text style={styles.subtitle}>Say it once. We'll take it from there.</Text>
           </View>
 
           <View style={styles.form}>

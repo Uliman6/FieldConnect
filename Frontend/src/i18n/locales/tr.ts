@@ -279,7 +279,7 @@ export default {
     registerError: 'Kayit basarisiz',
     passwordMismatch: 'Sifreler uyusmuyor',
     welcome: "FieldConnect'e Hosgeldiniz",
-    tagline: 'Insaat gunluk kayit yonetimi kolaylastirildi',
+    tagline: 'Bir kez soyle. Gerisini biz hallederiz.',
   },
 
   // Sync

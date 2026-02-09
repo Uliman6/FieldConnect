@@ -279,7 +279,7 @@ export default {
     registerError: 'Error en el registro',
     passwordMismatch: 'Las contrasenas no coinciden',
     welcome: 'Bienvenido a FieldConnect',
-    tagline: 'Registro diario de construccion simplificado',
+    tagline: 'Dilo una vez. Nosotros nos encargamos.',
   },
 
   // Sync

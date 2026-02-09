@@ -789,6 +789,7 @@ export default function EventDetailScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventType, setEventType] = useState<EventType>('Other');
+  const [customEventType, setCustomEventType] = useState('');
   const [severity, setSeverity] = useState<EventSeverity>('Medium');
   const [location, setLocation] = useState('');
   const [tradeVendor, setTradeVendor] = useState('');
@@ -1096,6 +1097,7 @@ export default function EventDetailScreen() {
         title: title || 'Untitled Event',
         description,
         event_type: eventType,
+        custom_event_type: eventType === 'Other' ? customEventType : undefined,
         severity,
         location,
         trade_vendor: tradeVendor,
@@ -1108,6 +1110,7 @@ export default function EventDetailScreen() {
         title: title || 'Untitled Event',
         description,
         eventType,
+        customEventType: eventType === 'Other' ? customEventType : undefined,
         severity,
         location,
         tradeVendor,
@@ -1608,6 +1611,22 @@ export default function EventDetailScreen() {
               </Pressable>
             ))}
           </View>
+          
+          {/* Custom type input when "Other" is selected */}
+          {eventType === 'Other' && (
+            <View className="mt-3">
+              <TextInput
+                value={customEventType}
+                onChangeText={(text) => {
+                  setCustomEventType(text);
+                  markChanged();
+                }}
+                placeholder="Enter custom event type..."
+                placeholderTextColor="#9CA3AF"
+                className="px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-900 dark:text-white"
+              />
+            </View>
+          )}
         </Animated.View>
 
         {/* Severity Selection */}
