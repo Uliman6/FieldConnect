@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import * as Sharing from 'expo-sharing';
+import { PDFViewerModal } from '@/components/PDFViewerModal';
 import {
   Sun,
   Cloud,
@@ -1003,6 +1004,8 @@ export default function DailyLogDetailScreen() {
   // UI State
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+  const [pdfViewerVisible, setPdfViewerVisible] = useState(false);
+  const [pdfViewerUri, setPdfViewerUri] = useState<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
 
   // Edit modals
@@ -1133,16 +1136,9 @@ export default function DailyLogDetailScreen() {
       if (Platform.OS === 'web') {
         window.open(pdfUri, '_blank');
       } else {
-        // On native, share the PDF file
-        const canShare = await Sharing.isAvailableAsync();
-        if (canShare) {
-          await Sharing.shareAsync(pdfUri, {
-            mimeType: 'application/pdf',
-            dialogTitle: 'View Daily Log PDF',
-          });
-        } else {
-          Alert.alert('Error', 'Sharing is not available on this device');
-        }
+        // Open in-app PDF viewer
+        setPdfViewerUri(pdfUri);
+        setPdfViewerVisible(true);
       }
     } catch (err) {
       console.error('[pdf] Failed to fetch PDF:', err);
@@ -1150,7 +1146,7 @@ export default function DailyLogDetailScreen() {
     } finally {
       setIsLoadingPdf(false);
     }
-  }, [id]);
+  }, [backendDailyLogId]);
 
   const handleCopySummary = useCallback(async () => {
     if (!log) return;
@@ -1683,6 +1679,17 @@ Hours: ${log.dailyTotalsHours || 0}`;
         }}
         initialData={editingInspection}
         isNew={editingInspection?.isNew}
+      />
+
+      {/* PDF Viewer Modal */}
+      <PDFViewerModal
+        visible={pdfViewerVisible}
+        pdfUri={pdfViewerUri}
+        title={log ? `Daily Log - ${format(parseLocalDate(log.date), 'MMM d, yyyy')}` : 'Daily Log PDF'}
+        onClose={() => {
+          setPdfViewerVisible(false);
+          setPdfViewerUri(null);
+        }}
       />
     </View>
   );
