@@ -48,6 +48,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-updates",
       "@sentry/react-native/expo",
       "expo-router",
       "expo-secure-store",
