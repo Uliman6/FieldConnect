@@ -73,6 +73,8 @@ class InsightsService {
         description: event.description || event.notes,
         rawText: event.transcriptText || event.description || event.notes,
         category,
+        eventType: event.eventType || null,
+        customType: event.eventType === 'Other' ? event.customEventType : null,
         severity: event.severity,
         inspectors: extracted.inspectors,
         trades: extracted.trades,

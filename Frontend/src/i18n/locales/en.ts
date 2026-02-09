@@ -279,7 +279,7 @@ export default {
     registerError: 'Registration failed',
     passwordMismatch: 'Passwords do not match',
     welcome: 'Welcome to FieldConnect',
-    tagline: 'Construction daily logging made simple',
+    tagline: 'Say it once. We'll take it from there.',
   },
 
   // Sync

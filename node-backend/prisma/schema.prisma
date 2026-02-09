@@ -295,6 +295,7 @@ model Event {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   transcriptText String?   @map("transcript_text") @db.Text
   eventType      String?   @map("event_type")
+  customEventType String?  @map("custom_event_type") // Custom type when eventType is "Other"
   severity       String?
   title          String?
   description    String?   @db.Text  // Clean, professional summary of the event
@@ -447,6 +448,8 @@ model Insight {
 
   // Classification
   category    InsightCategory @default(issue)
+  eventType   String?  @map("event_type") // Original event type (Delay, Quality, Safety, etc.)
+  customType  String?  @map("custom_type") // Custom type when eventType is "Other"
   severity    String?  // 'low', 'medium', 'high', 'critical'
 
   // Extracted entities (JSON arrays for flexible querying)
