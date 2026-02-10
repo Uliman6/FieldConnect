@@ -18,6 +18,27 @@ export async function isOnline(): Promise<boolean> {
   return netInfo.isConnected === true && netInfo.isInternetReachable === true;
 }
 
+/**
+ * Ping health endpoint to wake up server (Render cold starts)
+ * Returns true if server is responsive, false otherwise
+ */
+export async function pingHealth(): Promise<boolean> {
+  try {
+    console.log('[api] Pinging health endpoint to wake server...');
+    const startTime = Date.now();
+    const response = await fetch(`${API_BASE_URL}/health`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+    const elapsed = Date.now() - startTime;
+    console.log(`[api] Health ping response: ${response.status} in ${elapsed}ms`);
+    return response.ok;
+  } catch (error) {
+    console.warn('[api] Health ping failed:', error);
+    return false;
+  }
+}
+
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
@@ -1252,6 +1273,8 @@ export interface Insight {
   description: string | null;
   rawText: string | null;
   category: 'issue' | 'learning' | 'observation' | 'safety' | 'quality' | 'cost_impact' | 'delay' | 'rework';
+  eventType: string | null;
+  customType: string | null;
   severity: string | null;
   inspectors: string[] | null;
   trades: string[] | null;

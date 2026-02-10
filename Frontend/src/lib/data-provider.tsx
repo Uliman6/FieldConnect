@@ -18,6 +18,7 @@ import {
   createProject as createProjectApi,
   createDailyLog as createDailyLogApi,
   createEvent as createEventApi,
+  pingHealth,
 } from './api';
 import { DailyLog, createEmptyDailyLog } from './types';
 
@@ -284,6 +285,11 @@ export function DataProvider({ children }: DataProviderProps) {
     setState((s) => ({ ...s, isSyncing: true, error: null }));
 
     try {
+      // ============================================
+      // STEP 0: Wake up server (Render cold start protection)
+      // ============================================
+      await pingHealth();
+
       // ============================================
       // STEP 1: Fetch and sync PROJECTS
       // ============================================
