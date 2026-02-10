@@ -1256,6 +1256,68 @@ export async function parseEventWithAI(
   });
 }
 
+
+
+/**
+ * Bulk export specific documents by IDs
+ */
+export async function fetchBulkExportByIds(
+  type: 'daily_log' | 'punch_list' | 'rfi',
+  ids: string[]
+): Promise<string> {
+  const url = `${API_BASE_URL}/api/reports/bulk-export`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  if (Platform.OS === 'web') {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ type, ids }),
+    });
+
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(error.message || `Failed to export: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } else {
+    // Native: download to file system
+    const filename = `${type}-selected-export.zip`;
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+    
+    const response = await FileSystem.downloadAsync(url, fileUri, {
+      headers,
+      httpMethod: 'POST',
+      body: JSON.stringify({ type, ids }),
+    });
+
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to export: ${response.status}`);
+    }
+
+    return response.uri;
+  }
+}
+
 // ============================================
 // INSIGHTS API (Unified Learning/Issue Tracking)
 // ============================================
