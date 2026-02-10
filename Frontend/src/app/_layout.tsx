@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Text, Alert, Platform } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,6 +12,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { DataProvider, useDataProvider } from '@/lib/data-provider';
 import { LanguageProvider } from '@/i18n/LanguageProvider';
 import * as Sentry from '@sentry/react-native';
+import * as Updates from 'expo-updates';
 
 // Initialize Sentry for crash reporting
 Sentry.init({
@@ -31,6 +32,46 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+// Check for OTA updates
+function useOTAUpdates() {
+  useEffect(() => {
+    // Skip on web platform
+    if (Platform.OS === 'web') return;
+
+    async function checkForUpdates() {
+      try {
+        console.log('[updates] Checking for updates...');
+        const update = await Updates.checkForUpdateAsync();
+
+        if (update.isAvailable) {
+          console.log('[updates] Update available, downloading...');
+          await Updates.fetchUpdateAsync();
+
+          Alert.alert(
+            'Update Available',
+            'A new version has been downloaded. Restart to apply the update.',
+            [
+              { text: 'Later', style: 'cancel' },
+              {
+                text: 'Restart Now',
+                onPress: () => Updates.reloadAsync()
+              },
+            ]
+          );
+        } else {
+          console.log('[updates] App is up to date');
+        }
+      } catch (error) {
+        console.log('[updates] Error checking for updates:', error);
+      }
+    }
+
+    // Check for updates after a short delay to not block startup
+    const timer = setTimeout(checkForUpdates, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+}
 
 function useProtectedRoute() {
   const segments = useSegments();
@@ -121,6 +162,9 @@ function RootLayoutNav({ colorScheme }: { colorScheme: 'light' | 'dark' | null |
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { loadStoredAuth } = useAuthStore();
+
+  // Check for OTA updates on app start
+  useOTAUpdates();
 
   useEffect(() => {
     loadStoredAuth().finally(() => {
