@@ -48,8 +48,8 @@ class InsightsService {
     const text = `${event.transcriptText || ''} ${event.description || ''} ${event.title || ''} ${event.notes || ''}`;
     const extracted = eventIndexer.extractAllKeywords(text);
 
-    // Determine category based on extracted issue types
-    const category = this.determineCategory(extracted.issueTypes);
+    // Determine category based on event type and extracted issue types
+    const category = this.determineCategory(extracted.issueTypes, event.eventType);
 
     // Build keywords summary
     const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
@@ -593,9 +593,28 @@ class InsightsService {
   }
 
   /**
-   * Determine category based on issue types
+   * Determine category based on event type and extracted issue types
+   * @param {string[]} issueTypes - Extracted issue types from text
+   * @param {string} eventType - Event's eventType field (Safety, Quality, Delay, etc.)
    */
-  determineCategory(issueTypes) {
+  determineCategory(issueTypes, eventType = null) {
+    // If event has an explicit eventType, map it to a category
+    if (eventType) {
+      const eventTypeMap = {
+        'Safety': 'safety',
+        'Quality': 'quality',
+        'Delay': 'delay',
+        'Inspection': 'observation',
+        'Material': 'issue',
+        'Equipment': 'issue',
+        'Coordination': 'issue',
+        'Other': 'observation'
+      };
+      const mappedCategory = eventTypeMap[eventType];
+      if (mappedCategory) return mappedCategory;
+    }
+
+    // Fall back to extracted issue types
     if (!issueTypes || issueTypes.length === 0) {
       return 'observation';
     }

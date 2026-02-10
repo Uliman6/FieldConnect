@@ -268,11 +268,25 @@ function InsightCard({
   onToggleResolved: (isResolved: boolean) => void;
 }) {
   // Use eventType if available (from Event), otherwise fall back to category
-  const displayType = (insight as any).eventType || insight.category;
-  const displayLabel = (insight as any).customType || displayType;
-  const typeConfig = EVENT_TYPE_CONFIG[displayType] || CATEGORY_CONFIG[insight.category] || CATEGORY_CONFIG.issue;
-  const categoryConfig = typeConfig;
-  const CategoryIcon = categoryConfig.icon;
+  // eventType is PascalCase (Safety, Quality, etc), category is lowercase (safety, quality, etc)
+  const eventType = insight.eventType;
+  const customType = insight.customType;
+
+  // Get display config - prefer eventType config, then category config
+  let typeConfig = CATEGORY_CONFIG.issue; // default fallback
+  let displayLabel = insight.category;
+
+  if (eventType && EVENT_TYPE_CONFIG[eventType]) {
+    // Event has a typed eventType that matches our config
+    typeConfig = EVENT_TYPE_CONFIG[eventType];
+    displayLabel = customType || EVENT_TYPE_CONFIG[eventType].label;
+  } else if (insight.category && CATEGORY_CONFIG[insight.category]) {
+    // Fall back to category config
+    typeConfig = CATEGORY_CONFIG[insight.category];
+    displayLabel = CATEGORY_CONFIG[insight.category].label;
+  }
+
+  const CategoryIcon = typeConfig.icon;
 
   return (
     <Pressable
@@ -285,14 +299,14 @@ function InsightCard({
           <View className="flex-row items-center mb-2 flex-wrap">
             <View
               className="flex-row items-center px-2 py-0.5 rounded-full mr-2 mb-1"
-              style={{ backgroundColor: categoryConfig.color + '20' }}
+              style={{ backgroundColor: typeConfig.color + '20' }}
             >
-              <CategoryIcon size={12} color={categoryConfig.color} />
+              <CategoryIcon size={12} color={typeConfig.color} />
               <Text
                 className="text-xs font-medium ml-1"
-                style={{ color: categoryConfig.color }}
+                style={{ color: typeConfig.color }}
               >
-                {displayLabel || categoryConfig.label}
+                {displayLabel}
               </Text>
             </View>
             {insight.severity && (
