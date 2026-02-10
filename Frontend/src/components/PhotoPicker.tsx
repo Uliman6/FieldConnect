@@ -9,8 +9,16 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { Camera, Image as ImageIcon } from 'lucide-react-native';
 
+// Photo data structure that works on both web and native
+export interface PhotoData {
+  uri: string;
+  name: string;
+  type: string;
+  file?: File | Blob; // Only available on web
+}
+
 interface PhotoPickerProps {
-  onPhotoPicked: (file: File | Blob, uri: string) => Promise<void>;
+  onPhotoPicked: (photo: PhotoData) => Promise<void>;
   disabled?: boolean;
   children?: React.ReactNode;
 }
@@ -80,17 +88,17 @@ export function PhotoPicker({ onPhotoPicked, disabled, children }: PhotoPickerPr
   const handleImageResult = async (asset: ImagePicker.ImagePickerAsset) => {
     setIsLoading(true);
     try {
-      // For native, we need to fetch the file and create a blob
-      const response = await fetch(asset.uri);
-      const blob = await response.blob();
-
-      // Create a File object for consistency with web
       const fileName = asset.fileName || `photo_${Date.now()}.jpg`;
-      const file = new File([blob], fileName, {
-        type: asset.mimeType || 'image/jpeg'
-      });
+      const mimeType = asset.mimeType || 'image/jpeg';
 
-      await onPhotoPicked(file, asset.uri);
+      // For native, pass the URI directly - FormData will handle it
+      const photoData: PhotoData = {
+        uri: asset.uri,
+        name: fileName,
+        type: mimeType,
+      };
+
+      await onPhotoPicked(photoData);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Error processing image:', error);
@@ -115,7 +123,13 @@ export function PhotoPicker({ onPhotoPicked, disabled, children }: PhotoPickerPr
       setIsLoading(true);
       try {
         const uri = URL.createObjectURL(file);
-        await onPhotoPicked(file, uri);
+        const photoData: PhotoData = {
+          uri,
+          name: file.name,
+          type: file.type,
+          file, // Include the File object for web
+        };
+        await onPhotoPicked(photoData);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (error) {
         console.error('Error uploading photo:', error);
