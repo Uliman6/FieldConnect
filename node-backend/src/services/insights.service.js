@@ -945,6 +945,74 @@ class InsightsService {
   }
 
   /**
+   * Reindex all existing insights with updated extraction logic
+   * Updates trades, issueTypes, category, etc. for all insights
+   * @returns {Object} Summary of reindexed items
+   */
+  async reindexAll() {
+    const results = { updated: 0, errors: 0, total: 0 };
+
+    // Get all insights that came from events
+    const insights = await prisma.insight.findMany({
+      where: { sourceType: 'event' },
+      include: { project: true }
+    });
+
+    results.total = insights.length;
+    console.log(`[insights] Reindexing ${insights.length} event-based insights`);
+
+    for (const insight of insights) {
+      try {
+        // Get the original event
+        if (!insight.sourceId) continue;
+
+        const event = await prisma.event.findUnique({
+          where: { id: insight.sourceId },
+          include: { project: true }
+        });
+
+        if (!event) {
+          console.log(`[insights] Event not found for insight ${insight.id}, skipping`);
+          continue;
+        }
+
+        // Re-extract keywords
+        const text = `${event.transcriptText || ''} ${event.description || ''} ${event.title || ''} ${event.notes || ''}`;
+        const extracted = eventIndexer.extractAllKeywords(text);
+
+        // Re-determine category using eventType
+        const category = this.determineCategory(extracted.issueTypes, event.eventType);
+        const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
+
+        // Update the insight
+        await prisma.insight.update({
+          where: { id: insight.id },
+          data: {
+            category,
+            eventType: event.eventType || null,
+            customType: event.eventType === 'Other' ? event.customEventType : null,
+            trades: extracted.trades,
+            materials: extracted.materials,
+            issueTypes: extracted.issueTypes,
+            locations: extracted.locations,
+            systems: extracted.systems,
+            keywordsSummary
+          }
+        });
+
+        results.updated++;
+        console.log(`[insights] Reindexed insight ${insight.id}: category=${category}, trades=${extracted.trades.join(',')}`);
+      } catch (err) {
+        console.error(`[insights] Error reindexing insight ${insight.id}:`, err.message);
+        results.errors++;
+      }
+    }
+
+    console.log(`[insights] Reindex complete: ${results.updated}/${results.total} updated, ${results.errors} errors`);
+    return results;
+  }
+
+  /**
    * Clear all test data
    * @returns {Object} Deletion summary
    */
