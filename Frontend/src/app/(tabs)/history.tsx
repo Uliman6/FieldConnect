@@ -31,6 +31,8 @@ import {
   Clock4,
   CircleDot,
   Archive,
+  Square,
+  CheckSquare,
 } from 'lucide-react-native';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
@@ -241,6 +243,23 @@ export default function LogsHistoryScreen() {
     } catch (error: any) {
       console.error('[pdf] Failed to fetch PDF:', error);
       Alert.alert('Error', error?.message || 'Failed to load PDF. Please try again.');
+    }
+  }, []);
+
+  const handleViewSchemaPdf = useCallback(async (eventId: string, title: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const pdfUri = await downloadSchemaPdf(eventId);
+      if (Platform.OS === 'web') {
+        window.open(pdfUri, '_blank');
+      } else {
+        setPdfViewerUri(pdfUri);
+        setPdfViewerTitle(title || 'Document PDF');
+        setPdfViewerVisible(true);
+      }
+    } catch (error: any) {
+      console.error('[pdf] Failed to fetch schema PDF:', error);
+      Alert.alert('Error', error?.message || 'No PDF available. Try exporting from the event first.');
     }
   }, []);
 
