@@ -260,7 +260,7 @@ export default function LogsHistoryScreen() {
       }
     } catch (error: any) {
       console.error('[pdf] Failed to fetch schema PDF:', error);
-      Alert.alert('Error', error?.message || 'No PDF available. Try exporting from the event first.');
+      Alert.alert('No PDF', 'No PDF generated yet. Open the event and click "Export PDF" first.');
     }
   }, []);
 
