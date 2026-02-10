@@ -41,7 +41,16 @@ function useOTAUpdates() {
 
     async function checkForUpdates() {
       try {
+        // Check if updates are enabled
+        if (!Updates.isEnabled) {
+          console.log('[updates] Updates are disabled (dev build or not configured)');
+          return;
+        }
+
         console.log('[updates] Checking for updates...');
+        console.log('[updates] Channel:', Updates.channel);
+        console.log('[updates] Runtime version:', Updates.runtimeVersion);
+
         const update = await Updates.checkForUpdateAsync();
 
         if (update.isAvailable) {
@@ -62,8 +71,10 @@ function useOTAUpdates() {
         } else {
           console.log('[updates] App is up to date');
         }
-      } catch (error) {
-        console.log('[updates] Error checking for updates:', error);
+      } catch (error: any) {
+        console.log('[updates] Error checking for updates:', error?.message || error);
+        // In production, silently fail. In dev, you can uncomment to debug:
+        // Alert.alert('Update Check Failed', error?.message || 'Unknown error');
       }
     }
 
