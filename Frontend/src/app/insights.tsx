@@ -190,6 +190,18 @@ const CATEGORY_CONFIG: Record<string, { color: string; icon: React.ComponentType
   rework: { color: '#F97316', icon: RefreshCw, label: 'Rework' },
 };
 
+// Event type display config (matches EventType from types.ts)
+const EVENT_TYPE_CONFIG: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
+  Delay: { color: '#EF4444', icon: Clock, label: 'Delay' },
+  Quality: { color: '#F59E0B', icon: CheckCircle2, label: 'Quality' },
+  Safety: { color: '#DC2626', icon: Shield, label: 'Safety' },
+  Inspection: { color: '#8B5CF6', icon: Eye, label: 'Inspection' },
+  Material: { color: '#3B82F6', icon: AlertCircle, label: 'Material' },
+  Equipment: { color: '#6B7280', icon: Wrench, label: 'Equipment' },
+  Coordination: { color: '#10B981', icon: AlertCircle, label: 'Coordination' },
+  Other: { color: '#6B7280', icon: AlertCircle, label: 'Other' },
+};
+
 const SEVERITY_COLORS: Record<string, string> = {
   low: '#10B981',
   medium: '#F59E0B',
@@ -254,7 +266,11 @@ function InsightCard({
   onToggleFollowUp: (needsFollowUp: boolean) => void;
   onToggleResolved: (isResolved: boolean) => void;
 }) {
-  const categoryConfig = CATEGORY_CONFIG[insight.category] || CATEGORY_CONFIG.issue;
+  // Use eventType if available (from Event), otherwise fall back to category
+  const displayType = (insight as any).eventType || insight.category;
+  const displayLabel = (insight as any).customType || displayType;
+  const typeConfig = EVENT_TYPE_CONFIG[displayType] || CATEGORY_CONFIG[insight.category] || CATEGORY_CONFIG.issue;
+  const categoryConfig = typeConfig;
   const CategoryIcon = categoryConfig.icon;
 
   return (
@@ -275,7 +291,7 @@ function InsightCard({
                 className="text-xs font-medium ml-1"
                 style={{ color: categoryConfig.color }}
               >
-                {categoryConfig.label}
+                {displayLabel || categoryConfig.label}
               </Text>
             </View>
             {insight.severity && (
