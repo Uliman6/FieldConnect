@@ -1275,46 +1275,44 @@ export async function fetchBulkExportByIds(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Use fetch for both web and native since we need POST with body
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ type, ids }),
+  });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || `Failed to export: ${response.status}`);
+  }
+
   if (Platform.OS === 'web') {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ type, ids }),
-    });
-
-    if (response.status === 401) {
-      useAuthStore.getState().logout();
-      throw new Error('Session expired. Please login again.');
-    }
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(error.message || `Failed to export: ${response.status}`);
-    }
-
     const blob = await response.blob();
     return URL.createObjectURL(blob);
   } else {
-    // Native: download to file system
-    const filename = `${type}-selected-export.zip`;
+    // Native: convert response to base64 and write to file
+    const filename = `${type}-selected-export-${Date.now()}.zip`;
     const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-    
-    const response = await FileSystem.downloadAsync(url, fileUri, {
-      headers,
-      httpMethod: 'POST',
-      body: JSON.stringify({ type, ids }),
+
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+
+    await FileSystem.writeAsStringAsync(fileUri, base64, {
+      encoding: FileSystem.EncodingType.Base64,
     });
 
-    if (response.status === 401) {
-      useAuthStore.getState().logout();
-      throw new Error('Session expired. Please login again.');
-    }
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to export: ${response.status}`);
-    }
-
-    return response.uri;
+    return fileUri;
   }
 }
 
