@@ -51,26 +51,42 @@ class ReportsController {
   async bulkExport(req, res, next) {
     try {
       const { type, ids } = req.body;
+      console.log('[bulk-export] Request:', { type, ids: ids?.length });
       if (!type || !ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: 'Bad Request', message: 'type and ids array are required' });
       }
       const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.on('error', (err) => {
+        console.error('[bulk-export] Archive error:', err);
+        if (!res.headersSent) {
+          return res.status(500).json({ error: 'Archive Error', message: err.message });
+        }
+      });
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', 'attachment; filename="' + type + '-export-' + Date.now() + '.zip"');
       archive.pipe(res);
+      let addedCount = 0;
       if (type === 'daily_log') {
-        await this._addDailyLogsToArchive(archive, ids);
+        addedCount = await this._addDailyLogsToArchive(archive, ids);
       } else if (type === 'punch_list' || type === 'rfi') {
-        await this._addChecklistItemsToArchive(archive, ids, type);
+        addedCount = await this._addChecklistItemsToArchive(archive, ids, type);
+      }
+      console.log('[bulk-export] Added ' + addedCount + ' files to archive');
+      if (addedCount === 0) {
+        archive.append('No documents were available for export.', { name: 'README.txt' });
       }
       archive.finalize();
-    } catch (err) { next(err); }
+    } catch (err) {
+      console.error('[bulk-export] Error:', err);
+      next(err);
+    }
   }
 
   async bulkExportProject(req, res, next) {
     try {
       const { projectId } = req.params;
       const { type } = req.query;
+      console.log('[bulk-export-project] Request:', { projectId, type });
       if (!type) {
         return res.status(400).json({ error: 'Bad Request', message: 'type query parameter is required' });
       }
@@ -79,32 +95,50 @@ class ReportsController {
         return res.status(404).json({ error: 'Not Found', message: 'Project not found' });
       }
       const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.on('error', (err) => {
+        console.error('[bulk-export-project] Archive error:', err);
+        if (!res.headersSent) {
+          return res.status(500).json({ error: 'Archive Error', message: err.message });
+        }
+      });
       const safeName = project.name.replace(/[^a-zA-Z0-9]/g, '-');
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', 'attachment; filename="' + safeName + '-' + type + '-export.zip"');
       archive.pipe(res);
+      let addedCount = 0;
       if (type === 'daily_log') {
         const dailyLogs = await prisma.dailyLog.findMany({ where: { projectId }, select: { id: true }, orderBy: { date: 'desc' } });
-        if (dailyLogs.length > 0) await this._addDailyLogsToArchive(archive, dailyLogs.map(l => l.id));
+        console.log('[bulk-export-project] Found ' + dailyLogs.length + ' daily logs');
+        if (dailyLogs.length > 0) addedCount = await this._addDailyLogsToArchive(archive, dailyLogs.map(l => l.id));
       } else if (type === 'punch_list' || type === 'rfi') {
         const events = await prisma.event.findMany({
           where: { projectId, schemaData: { isNot: null } },
           include: { schemaData: { include: { schema: true } } },
           orderBy: { createdAt: 'desc' }
         });
+        console.log('[bulk-export-project] Found ' + events.length + ' events with schemaData');
         const filteredEvents = events.filter(e => {
           const docType = e.schemaData?.schema?.documentType;
           if (type === 'punch_list') return docType === 'PUNCH_LIST';
           if (type === 'rfi') return docType === 'RFI';
           return false;
         });
-        if (filteredEvents.length > 0) await this._addChecklistItemsToArchive(archive, filteredEvents.map(e => e.id), type);
+        console.log('[bulk-export-project] Filtered to ' + filteredEvents.length + ' ' + type + ' events');
+        if (filteredEvents.length > 0) addedCount = await this._addChecklistItemsToArchive(archive, filteredEvents.map(e => e.id), type);
+      }
+      console.log('[bulk-export-project] Added ' + addedCount + ' files to archive');
+      if (addedCount === 0) {
+        archive.append('No documents were available for export.', { name: 'README.txt' });
       }
       archive.finalize();
-    } catch (err) { next(err); }
+    } catch (err) {
+      console.error('[bulk-export-project] Error:', err);
+      next(err);
+    }
   }
 
   async _addDailyLogsToArchive(archive, ids) {
+    let addedCount = 0;
     for (const id of ids) {
       try {
         const dailyLog = await prisma.dailyLog.findUnique({
@@ -119,28 +153,52 @@ class ReportsController {
         doc.on('data', chunk => chunks.push(chunk));
         await new Promise((resolve, reject) => { doc.on('end', resolve); doc.on('error', reject); });
         archive.append(Buffer.concat(chunks), { name: filename });
+        addedCount++;
       } catch (err) { console.error('Failed to add daily log ' + id + ':', err); }
     }
+    return addedCount;
   }
 
   async _addChecklistItemsToArchive(archive, ids, type) {
     const fs = require('fs');
+    let addedCount = 0;
+    console.log('[bulk-export] Processing ' + ids.length + ' ' + type + ' items');
     for (const id of ids) {
       try {
-        const event = await prisma.event.findUnique({ where: { id }, include: { project: true, schemaData: true } });
-        if (!event?.schemaData) continue;
+        const event = await prisma.event.findUnique({
+          where: { id },
+          include: { project: true, schemaData: { include: { schema: true } } }
+        });
+        if (!event) {
+          console.log('[bulk-export] Event not found: ' + id);
+          continue;
+        }
+        if (!event.schemaData) {
+          console.log('[bulk-export] No schemaData for event: ' + id);
+          continue;
+        }
+        console.log('[bulk-export] Generating PDF for event: ' + id + ' (docType: ' + event.schemaData?.schema?.documentType + ')');
         try {
           const { filePath, fileName } = await schemaPdfService.generatePdf(id);
+          console.log('[bulk-export] PDF generated: ' + filePath);
           const title = event.schemaData?.fieldValues?.title || event.title || id;
           const safeTitle = title.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 50);
           const archiveFilename = type + '-' + safeTitle + '.pdf';
           if (fs.existsSync(filePath)) {
             archive.file(filePath, { name: archiveFilename });
+            addedCount++;
             console.log('[bulk-export] Added ' + type + ': ' + archiveFilename);
+          } else {
+            console.error('[bulk-export] PDF file not found at: ' + filePath);
           }
-        } catch (pdfErr) { console.error('[bulk-export] Failed to generate PDF for ' + type + ' ' + id + ':', pdfErr.message); }
-      } catch (err) { console.error('[bulk-export] Failed to add ' + type + ' ' + id + ':', err); }
+        } catch (pdfErr) {
+          console.error('[bulk-export] Failed to generate PDF for ' + type + ' ' + id + ':', pdfErr.message, pdfErr.stack);
+        }
+      } catch (err) {
+        console.error('[bulk-export] Failed to add ' + type + ' ' + id + ':', err.message, err.stack);
+      }
     }
+    return addedCount;
   }
 }
 
