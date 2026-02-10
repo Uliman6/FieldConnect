@@ -267,21 +267,45 @@ function InsightCard({
   onToggleFollowUp: (needsFollowUp: boolean) => void;
   onToggleResolved: (isResolved: boolean) => void;
 }) {
-  // Use eventType if available (from Event), otherwise fall back to category
-  // eventType is PascalCase (Safety, Quality, etc), category is lowercase (safety, quality, etc)
+  // Determine display type - priority: eventType > issueTypes[0] > category
+  // eventType is PascalCase (Safety, Quality, etc), category/issueTypes are lowercase
   const eventType = insight.eventType;
   const customType = insight.customType;
+  const issueTypes = insight.issueTypes || [];
 
-  // Get display config - prefer eventType config, then category config
-  let typeConfig = CATEGORY_CONFIG.issue; // default fallback
-  let displayLabel = insight.category;
+  // Map issueTypes to display labels
+  const ISSUE_TYPE_LABELS: Record<string, string> = {
+    'safety': 'Safety',
+    'quality': 'Quality',
+    'delay': 'Delay',
+    'rework': 'Rework',
+    'cost_impact': 'Cost Impact',
+    'code_violation': 'Code Violation',
+    'follow_up': 'Follow-up',
+  };
+
+  // Get display config - prefer eventType, then first issueType, then category
+  let typeConfig = CATEGORY_CONFIG.observation; // default fallback (better than "issue")
+  let displayLabel = 'Note';
 
   if (eventType && EVENT_TYPE_CONFIG[eventType]) {
     // Event has a typed eventType that matches our config
     typeConfig = EVENT_TYPE_CONFIG[eventType];
     displayLabel = customType || EVENT_TYPE_CONFIG[eventType].label;
-  } else if (insight.category && CATEGORY_CONFIG[insight.category]) {
-    // Fall back to category config
+  } else if (issueTypes.length > 0 && ISSUE_TYPE_LABELS[issueTypes[0]]) {
+    // Use first issue type for display
+    const firstIssueType = issueTypes[0];
+    displayLabel = ISSUE_TYPE_LABELS[firstIssueType];
+    // Use matching category config if available
+    if (CATEGORY_CONFIG[firstIssueType]) {
+      typeConfig = CATEGORY_CONFIG[firstIssueType];
+    } else if (firstIssueType === 'safety' && CATEGORY_CONFIG.safety) {
+      typeConfig = CATEGORY_CONFIG.safety;
+    } else if (firstIssueType === 'quality' && CATEGORY_CONFIG.quality) {
+      typeConfig = CATEGORY_CONFIG.quality;
+    }
+  } else if (insight.category && insight.category !== 'issue' && CATEGORY_CONFIG[insight.category]) {
+    // Fall back to category config (but not generic "issue")
     typeConfig = CATEGORY_CONFIG[insight.category];
     displayLabel = CATEGORY_CONFIG[insight.category].label;
   }
