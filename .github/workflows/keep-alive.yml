@@ -2,8 +2,8 @@ name: Keep Backend Alive
 
 on:
   schedule:
-    # Run every 14 minutes to prevent Render cold starts
-    - cron: '*/14 * * * *'
+    # Run every 5 minutes to prevent Render cold starts
+    - cron: '*/5 * * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
