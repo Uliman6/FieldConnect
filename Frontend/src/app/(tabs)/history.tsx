@@ -48,6 +48,7 @@ import {
   getEvents,
   downloadSchemaPdf,
   fetchBulkExport,
+  fetchBulkExportByIds,
   getChecklistItems,
   updateEventStatus,
   ChecklistFilters,
@@ -429,7 +430,14 @@ export default function LogsHistoryScreen() {
   }, []);
 
   const handleBulkExport = useCallback(async () => {
-    if (!backendProjectId) {
+    // If in selection mode, require selected items
+    if (selectionMode && selectedIds.size === 0) {
+      Alert.alert('No Selection', 'Please select items to export');
+      return;
+    }
+
+    // If not in selection mode, require project
+    if (!selectionMode && !backendProjectId) {
       Alert.alert('No Project', 'Please select a project first');
       return;
     }
@@ -438,7 +446,10 @@ export default function LogsHistoryScreen() {
     setIsExporting(true);
 
     try {
-      const zipUri = await fetchBulkExport(backendProjectId, selectedCategory);
+      // Use selected IDs if in selection mode, otherwise export entire project
+      const zipUri = selectionMode && selectedIds.size > 0
+        ? await fetchBulkExportByIds(selectedCategory, Array.from(selectedIds))
+        : await fetchBulkExport(backendProjectId!, selectedCategory);
       
       if (Platform.OS === 'web') {
         // Trigger download
@@ -467,8 +478,13 @@ export default function LogsHistoryScreen() {
       Alert.alert('Export Failed', error?.message || 'Failed to export documents');
     } finally {
       setIsExporting(false);
+      // Clear selection after export
+      if (selectionMode) {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+      }
     }
-  }, [backendProjectId, selectedCategory]);
+  }, [backendProjectId, selectedCategory, selectionMode, selectedIds]);
 
 
   const isLoading = projectsQuery.isLoading ||
@@ -497,22 +513,62 @@ export default function LogsHistoryScreen() {
             <Text className="text-2xl font-bold text-gray-900 dark:text-white">
               {t('history.documents')}
             </Text>
-            {backendProjectId && (
-              <Pressable
-                onPress={handleBulkExport}
-                disabled={isExporting}
-                className="flex-row items-center bg-orange-500 px-3 py-2 rounded-lg"
-              >
-                {isExporting ? (
-                  <ActivityIndicator size={16} color="#FFF" />
-                ) : (
-                  <Archive size={16} color="#FFF" />
-                )}
-                <Text className="text-white text-sm font-medium ml-2">
-                  {t('export.title')}
-                </Text>
-              </Pressable>
-            )}
+            <View className="flex-row items-center">
+              {selectionMode ? (
+                <>
+                  <Pressable
+                    onPress={clearSelection}
+                    className="bg-gray-200 dark:bg-gray-700 px-3 py-2 rounded-lg mr-2"
+                  >
+                    <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                      Cancel
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleBulkExport}
+                    disabled={isExporting || selectedIds.size === 0}
+                    className={cn(
+                      "flex-row items-center px-3 py-2 rounded-lg",
+                      selectedIds.size > 0 ? "bg-orange-500" : "bg-gray-300 dark:bg-gray-600"
+                    )}
+                  >
+                    {isExporting ? (
+                      <ActivityIndicator size={16} color="#FFF" />
+                    ) : (
+                      <Archive size={16} color="#FFF" />
+                    )}
+                    <Text className="text-white text-sm font-medium ml-2">
+                      Export ({selectedIds.size})
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Pressable
+                    onPress={() => setSelectionMode(true)}
+                    className="bg-gray-200 dark:bg-gray-700 p-2 rounded-lg mr-2"
+                  >
+                    <CheckSquare size={18} color="#6B7280" />
+                  </Pressable>
+                  {backendProjectId && (
+                    <Pressable
+                      onPress={handleBulkExport}
+                      disabled={isExporting}
+                      className="flex-row items-center bg-orange-500 px-3 py-2 rounded-lg"
+                    >
+                      {isExporting ? (
+                        <ActivityIndicator size={16} color="#FFF" />
+                      ) : (
+                        <Archive size={16} color="#FFF" />
+                      )}
+                      <Text className="text-white text-sm font-medium ml-2">
+                        {t('export.title')}
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
           </View>
           <View className="flex-row items-center mt-1">
             <Building2 size={14} color={currentProject ? '#F97316' : '#9CA3AF'} />
