@@ -27,6 +27,24 @@ async function indexAll(req, res) {
 }
 
 /**
+ * Reindex all existing insights with updated extraction logic
+ * POST /api/insights/reindex-all
+ */
+async function reindexAll(req, res) {
+  try {
+    const results = await insightsService.reindexAll();
+    res.json({
+      success: true,
+      message: 'Reindexing complete',
+      results
+    });
+  } catch (error) {
+    console.error('Error reindexing insights:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+/**
  * Create insight from event
  * POST /api/insights/from-event/:eventId
  */
@@ -525,6 +543,7 @@ async function exportInsights(req, res) {
 
 module.exports = {
   indexAll,
+  reindexAll,
   backfillEmbeddings,
   createFromEvent,
   createFromPendingIssue,
