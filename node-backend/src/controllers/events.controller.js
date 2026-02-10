@@ -207,6 +207,7 @@ class EventsController {
         project_id,
         transcript_text,
         event_type,
+        custom_event_type,
         severity,
         title,
         description,
@@ -254,6 +255,7 @@ class EventsController {
           projectId: project_id,
           transcriptText: transcript_text,
           eventType: event_type,
+          customEventType: custom_event_type,
           severity,
           title,
           description,
@@ -292,6 +294,7 @@ class EventsController {
       const {
         transcript_text,
         event_type,
+        custom_event_type,
         severity,
         title,
         description,
@@ -306,6 +309,7 @@ class EventsController {
         data: {
           ...(transcript_text !== undefined && { transcriptText: transcript_text }),
           ...(event_type !== undefined && { eventType: event_type }),
+          ...(custom_event_type !== undefined && { customEventType: custom_event_type }),
           ...(severity !== undefined && { severity }),
           ...(title !== undefined && { title }),
           ...(description !== undefined && { description }),
@@ -319,9 +323,9 @@ class EventsController {
         }
       });
 
-      // Auto-index to insights if text content was added/updated (async, non-blocking)
+      // Auto-index to insights if text content was added/updated or event type changed
       // Pass project.isTest so test project data is properly flagged
-      if (transcript_text || description || title) {
+      if (transcript_text || description || title || event_type || custom_event_type) {
         insightsService.createFromEvent(event.id, event.project?.isTest).catch(err =>
           console.error(`[events] Auto-index failed for event ${event.id}: ${err.message}`)
         );

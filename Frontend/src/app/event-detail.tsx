@@ -326,10 +326,10 @@ function PhotoSection({
     }
   }, [photos]);
 
-  const handlePhotoPicked = async (file: File | Blob) => {
+  const handlePhotoPicked = async (photoData: { uri: string; name: string; type: string; file?: File | Blob }) => {
     setIsUploading(true);
     try {
-      await uploadPhoto(file, { eventId: backendEventId });
+      await uploadPhoto(photoData, { eventId: backendEventId });
       onPhotoUploaded();
     } catch (error) {
       console.error('Failed to upload photo:', error);
@@ -934,6 +934,7 @@ export default function EventDetailScreen() {
       title?: string;
       description?: string;
       eventType?: string;
+      customEventType?: string;
       severity?: string;
       location?: string;
       tradeVendor?: string;
@@ -981,6 +982,7 @@ export default function EventDetailScreen() {
       setTitle(backendEvent.title || '');
       setDescription(backendEvent.description || '');
       setEventType((backendEvent.eventType as EventType) || 'Other');
+      setCustomEventType(backendEvent.customEventType || '');
       setSeverity((backendEvent.severity as EventSeverity) || 'Medium');
       setLocation(backendEvent.location || '');
       setTradeVendor(backendEvent.tradeVendor || '');

@@ -96,6 +96,7 @@ export interface IndexedEvent {
   title: string | null;
   transcriptText: string | null;
   eventType: string | null;
+  customEventType: string | null;
   severity: string | null;
   description: string | null;
   notes: string | null;
@@ -872,6 +873,7 @@ export async function updateEventApi(
     title?: string;
     transcriptText?: string;
     eventType?: string;
+    customEventType?: string;
     severity?: string;
     description?: string;
     notes?: string;
@@ -886,6 +888,7 @@ export async function updateEventApi(
       title: data.title,
       transcript_text: data.transcriptText,
       event_type: data.eventType,
+      custom_event_type: data.customEventType,
       severity: data.severity,
       description: data.description,
       notes: data.notes,
@@ -2153,10 +2156,20 @@ export async function downloadSchemaPdf(eventId: string): Promise<string> {
 // ============================================
 
 /**
+ * Photo data structure for uploads (works on both web and native)
+ */
+export interface PhotoUploadData {
+  uri: string;
+  name: string;
+  type: string;
+  file?: File | Blob; // Only available on web
+}
+
+/**
  * Upload a photo for an event or daily log
  */
 export async function uploadPhoto(
-  file: File | Blob,
+  photo: PhotoUploadData,
   data: {
     eventId?: string;
     dailyLogId?: string;
@@ -2168,7 +2181,20 @@ export async function uploadPhoto(
   }
 
   const formData = new FormData();
-  formData.append('photo', file);
+
+  // Handle photo differently for web vs native
+  if (Platform.OS === 'web' && photo.file) {
+    // Web: use the File object directly
+    formData.append('photo', photo.file);
+  } else {
+    // Native: use the object format that React Native's FormData expects
+    formData.append('photo', {
+      uri: photo.uri,
+      name: photo.name,
+      type: photo.type,
+    } as any);
+  }
+
   if (data.eventId) formData.append('event_id', data.eventId);
   if (data.dailyLogId) formData.append('daily_log_id', data.dailyLogId);
   if (data.caption) formData.append('caption', data.caption);
