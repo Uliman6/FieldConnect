@@ -7,6 +7,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDailyLogStore } from '@/lib/store';
 import { Event, EventType, EventSeverity } from '@/lib/types';
@@ -385,6 +386,14 @@ export default function EventsScreen() {
     await queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
     await refreshData(); // Also refresh the data provider
   }, [queryClient, refreshData]);
+
+  // Refresh events when tab gains focus (e.g., after creating daily log with pending issues)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[events] Tab focused, refreshing...');
+      queryClient.invalidateQueries({ queryKey: ['events', 'project', backendProjectId] });
+    }, [queryClient, backendProjectId])
+  );
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
