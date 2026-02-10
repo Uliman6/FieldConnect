@@ -15,7 +15,7 @@ class ReportsController {
           additionalWorkEntries: true, photos: true
         }
       });
-      if (\!dailyLog) {
+      if (!dailyLog) {
         return res.status(404).json({ error: 'Not Found', message: 'Daily log not found' });
       }
       const doc = await pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project, dailyLog.photos || []);
@@ -38,7 +38,7 @@ class ReportsController {
           additionalWorkEntries: true, photos: true
         }
       });
-      if (\!dailyLog) {
+      if (!dailyLog) {
         return res.status(404).json({ error: 'Not Found', message: 'Daily log not found' });
       }
       const doc = await pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project, dailyLog.photos || []);
@@ -51,7 +51,7 @@ class ReportsController {
   async bulkExport(req, res, next) {
     try {
       const { type, ids } = req.body;
-      if (\!type || \!ids || \!Array.isArray(ids) || ids.length === 0) {
+      if (!type || !ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: 'Bad Request', message: 'type and ids array are required' });
       }
       const archive = archiver('zip', { zlib: { level: 9 } });
@@ -71,11 +71,11 @@ class ReportsController {
     try {
       const { projectId } = req.params;
       const { type } = req.query;
-      if (\!type) {
+      if (!type) {
         return res.status(400).json({ error: 'Bad Request', message: 'type query parameter is required' });
       }
       const project = await prisma.project.findUnique({ where: { id: projectId } });
-      if (\!project) {
+      if (!project) {
         return res.status(404).json({ error: 'Not Found', message: 'Project not found' });
       }
       const archive = archiver('zip', { zlib: { level: 9 } });
@@ -111,7 +111,7 @@ class ReportsController {
           where: { id },
           include: { project: true, tasks: true, visitors: true, equipment: true, materials: true, pendingIssues: true, inspectionNotes: true, additionalWorkEntries: true, photos: true }
         });
-        if (\!dailyLog) continue;
+        if (!dailyLog) continue;
         const doc = await pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project, dailyLog.photos || []);
         const dateStr = new Date(dailyLog.date).toISOString().split('T')[0];
         const filename = 'daily-log-' + dateStr + '.pdf';
@@ -128,7 +128,7 @@ class ReportsController {
     for (const id of ids) {
       try {
         const event = await prisma.event.findUnique({ where: { id }, include: { project: true, schemaData: true } });
-        if (\!event?.schemaData) continue;
+        if (!event?.schemaData) continue;
         try {
           const { filePath, fileName } = await schemaPdfService.generatePdf(id);
           const title = event.schemaData?.fieldValues?.title || event.title || id;
