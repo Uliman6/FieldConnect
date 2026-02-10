@@ -95,6 +95,8 @@ export default function LogsHistoryScreen() {
   const [pdfViewerUri, setPdfViewerUri] = useState<string | null>(null);
   const [pdfViewerTitle, setPdfViewerTitle] = useState<string>('PDF Preview');
   const [isExporting, setIsExporting] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Translatable category labels
   const getCategoryLabel = (key: DocumentCategory) => {
@@ -376,6 +378,37 @@ export default function LogsHistoryScreen() {
     }
   }, [queryClient]);
 
+  // Selection mode handlers
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback((ids: string[]) => {
+    setSelectedIds(prev => {
+      const allSelected = ids.every(id => prev.has(id));
+      if (allSelected) {
+        // Deselect all
+        return new Set();
+      } else {
+        // Select all
+        return new Set(ids);
+      }
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
   const handleBulkExport = useCallback(async () => {
     if (!backendProjectId) {
       Alert.alert('No Project', 'Please select a project first');
@@ -541,19 +574,52 @@ export default function LogsHistoryScreen() {
             {dailyLogs.length === 0 ? (
               <EmptyState category="daily_log" />
             ) : (
-              dailyLogs.map((log, index) => (
+              <>
+                {selectionMode && dailyLogs.length > 0 && (
+                  <Pressable
+                    onPress={() => toggleSelectAll(dailyLogs.map(l => l.id))}
+                    className="flex-row items-center mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                  >
+                    {dailyLogs.every(l => selectedIds.has(l.id)) ? (
+                      <CheckSquare size={20} color="#F97316" />
+                    ) : (
+                      <Square size={20} color="#9CA3AF" />
+                    )}
+                    <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                      Select All ({dailyLogs.length})
+                    </Text>
+                  </Pressable>
+                )}
+                {dailyLogs.map((log, index) => (
                 <Animated.View key={log.id} entering={FadeInDown.delay(index * 30)}>
-                  <DailyLogCard
-                    log={log}
-                    showProject={!currentProjectId}
-                    onViewPdf={() => handleViewPdf(log.id, format(parseLocalDate(log.date), 'MMM d, yyyy'))}
-                    onDownloadPdf={() => handleDownloadPdf(log.id)}
-                    onEdit={() => handleEditLog(log.id)}
-                    onDelete={() => handleDeleteLog(log)}
-                    isDeleting={deletingLogId === log.id}
-                  />
+                  <View className="flex-row items-center">
+                    {selectionMode && (
+                      <Pressable
+                        onPress={() => toggleSelection(log.id)}
+                        className="mr-3 p-1"
+                      >
+                        {selectedIds.has(log.id) ? (
+                          <CheckSquare size={24} color="#F97316" />
+                        ) : (
+                          <Square size={24} color="#9CA3AF" />
+                        )}
+                      </Pressable>
+                    )}
+                    <View className="flex-1">
+                      <DailyLogCard
+                        log={log}
+                        showProject={!currentProjectId}
+                        onViewPdf={() => handleViewPdf(log.id, format(parseLocalDate(log.date), 'MMM d, yyyy'))}
+                        onDownloadPdf={() => handleDownloadPdf(log.id)}
+                        onEdit={() => handleEditLog(log.id)}
+                        onDelete={() => handleDeleteLog(log)}
+                        isDeleting={deletingLogId === log.id}
+                      />
+                    </View>
+                  </View>
                 </Animated.View>
-              ))
+              ))}
+              </>
             )}
           </View>
         )}
@@ -622,18 +688,52 @@ export default function LogsHistoryScreen() {
                 {checklistItems.length === 0 ? (
                   <EmptyState category={selectedCategory} />
                 ) : (
-                  checklistItems.map((event: IndexedEvent, index: number) => (
+                  <>
+                    {selectionMode && checklistItems.length > 0 && (
+                      <Pressable
+                        onPress={() => toggleSelectAll(checklistItems.map((e: IndexedEvent) => e.id))}
+                        className="flex-row items-center mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        {checklistItems.every((e: IndexedEvent) => selectedIds.has(e.id)) ? (
+                          <CheckSquare size={20} color="#F97316" />
+                        ) : (
+                          <Square size={20} color="#9CA3AF" />
+                        )}
+                        <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                          Select All ({checklistItems.length})
+                        </Text>
+                      </Pressable>
+                    )}
+                    {checklistItems.map((event: IndexedEvent, index: number) => (
                     <Animated.View key={event.id} entering={FadeInDown.delay(index * 30)}>
-                      <ChecklistItemCard
-                        event={event}
-                        category={selectedCategory}
-                        onView={() => handleViewEvent(event.id)}
-                        onDownloadPdf={() => handleDownloadSchemaPdf(event.id, event.schemaData?.fieldValues?.title || event.title || 'document')}
-                        onStatusChange={(newStatus) => handleStatusChange(event.id, newStatus)}
-                        isUpdating={updatingStatusId === event.id}
-                      />
+                      <View className="flex-row items-center">
+                        {selectionMode && (
+                          <Pressable
+                            onPress={() => toggleSelection(event.id)}
+                            className="mr-3 p-1"
+                          >
+                            {selectedIds.has(event.id) ? (
+                              <CheckSquare size={24} color="#F97316" />
+                            ) : (
+                              <Square size={24} color="#9CA3AF" />
+                            )}
+                          </Pressable>
+                        )}
+                        <View className="flex-1">
+                          <ChecklistItemCard
+                            event={event}
+                            category={selectedCategory}
+                            onView={() => handleViewEvent(event.id)}
+                            onViewPdf={() => handleViewSchemaPdf(event.id, event.schemaData?.fieldValues?.title || event.title || 'document')}
+                            onDownloadPdf={() => handleDownloadSchemaPdf(event.id, event.schemaData?.fieldValues?.title || event.title || 'document')}
+                            onStatusChange={(newStatus) => handleStatusChange(event.id, newStatus)}
+                            isUpdating={updatingStatusId === event.id}
+                          />
+                        </View>
+                      </View>
                     </Animated.View>
-                  ))
+                  ))}
+                  </>
                 )}
               </>
             )}
@@ -901,6 +1001,7 @@ function ChecklistItemCard({
   event,
   category,
   onView,
+  onViewPdf,
   onDownloadPdf,
   onStatusChange,
   isUpdating,
@@ -908,6 +1009,7 @@ function ChecklistItemCard({
   event: IndexedEvent;
   category: DocumentCategory;
   onView: () => void;
+  onViewPdf: () => void;
   onDownloadPdf: () => void;
   onStatusChange: (newStatus: 'OPEN' | 'IN_PROGRESS' | 'CLOSED') => void;
   isUpdating: boolean;
@@ -1041,15 +1143,26 @@ function ChecklistItemCard({
         {/* Action buttons */}
         <View className="flex-row items-center ml-2">
           {hasPdf && (
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                onDownloadPdf();
-              }}
-              className="bg-green-500 p-2 rounded-lg mr-2"
-            >
-              <Download size={18} color="#FFF" />
-            </Pressable>
+            <>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onViewPdf();
+                }}
+                className="bg-blue-500 p-2 rounded-lg mr-2"
+              >
+                <Eye size={18} color="#FFF" />
+              </Pressable>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onDownloadPdf();
+                }}
+                className="bg-green-500 p-2 rounded-lg mr-2"
+              >
+                <Download size={18} color="#FFF" />
+              </Pressable>
+            </>
           )}
           <ChevronRight size={20} color="#9CA3AF" />
         </View>

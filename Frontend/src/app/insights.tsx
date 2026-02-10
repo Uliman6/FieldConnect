@@ -43,6 +43,7 @@ import {
   Filter,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { PDFViewerModal } from '@/components/PDFViewerModal';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
@@ -591,6 +592,8 @@ export default function InsightsScreen() {
   const [nlError, setNlError] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
   const [isExporting, setIsExporting] = useState(false);
+  const [pdfViewerVisible, setPdfViewerVisible] = useState(false);
+  const [pdfViewerUri, setPdfViewerUri] = useState<string | null>(null);
 
   // Check if any filters are active
   const hasActiveFilters =
@@ -762,20 +765,13 @@ export default function InsightsScreen() {
         system: activeFilters.systems.length > 0 ? activeFilters.systems.join(',') : undefined,
       });
 
-      // Open PDF in new tab (web) or share (native)
+      // Open PDF in new tab (web) or in-app viewer (native)
       if (Platform.OS === 'web') {
         window.open(pdfUri, '_blank');
       } else {
-        // On native, share the PDF file
-        const canShare = await Sharing.isAvailableAsync();
-        if (canShare) {
-          await Sharing.shareAsync(pdfUri, {
-            mimeType: 'application/pdf',
-            dialogTitle: 'Export Insights PDF',
-          });
-        } else {
-          Alert.alert('Error', 'Sharing is not available on this device');
-        }
+        // On native, open in-app PDF viewer
+        setPdfViewerUri(pdfUri);
+        setPdfViewerVisible(true);
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error: any) {
@@ -1366,6 +1362,17 @@ export default function InsightsScreen() {
           )}
         </ScrollView>
       )}
+
+      {/* PDF Viewer Modal */}
+      <PDFViewerModal
+        visible={pdfViewerVisible}
+        pdfUri={pdfViewerUri}
+        title="Insights Export"
+        onClose={() => {
+          setPdfViewerVisible(false);
+          setPdfViewerUri(null);
+        }}
+      />
     </View>
   );
 }
