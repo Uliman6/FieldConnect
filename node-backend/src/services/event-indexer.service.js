@@ -492,39 +492,74 @@ class EventIndexerService {
 
   /**
    * Extract trade/vendor references
+   * NOTE: Only extracts actual trade types (Electrical, Plumbing, HVAC, etc.)
+   * Does NOT extract company names - those should be stored separately if needed
    */
   extractTrades(text) {
     const trades = new Set();
     const lowerText = text.toLowerCase();
 
-    // Check for trade keywords
+    // Normalize trade keywords to their base form
+    const TRADE_NORMALIZATIONS = {
+      'electrician': 'Electrical',
+      'electricians': 'Electrical',
+      'electrical': 'Electrical',
+      'plumber': 'Plumbing',
+      'plumbers': 'Plumbing',
+      'plumbing': 'Plumbing',
+      'hvac': 'HVAC',
+      'mechanical': 'Mechanical',
+      'concrete': 'Concrete',
+      'mason': 'Masonry',
+      'masonry': 'Masonry',
+      'steel': 'Steel/Iron',
+      'iron worker': 'Steel/Iron',
+      'ironworker': 'Steel/Iron',
+      'painter': 'Painting',
+      'painters': 'Painting',
+      'painting': 'Painting',
+      'landscaping': 'Landscaping',
+      'landscaper': 'Landscaping',
+      'roofer': 'Roofing',
+      'roofing': 'Roofing',
+      'drywall': 'Drywall',
+      'framing': 'Framing',
+      'framer': 'Framing',
+      'sprinkler': 'Fire Protection',
+      'fire protection': 'Fire Protection',
+      'flooring': 'Flooring',
+      'tile': 'Tile',
+      'carpet': 'Flooring',
+      'glazing': 'Glazing',
+      'glazier': 'Glazing',
+      'glass': 'Glazing',
+      'door': 'Doors/Hardware',
+      'hardware': 'Doors/Hardware',
+      'bms': 'Controls/BMS',
+      'controls': 'Controls/BMS',
+      'automation': 'Controls/BMS',
+      'smoke control': 'Fire Protection',
+      'elevator': 'Elevator',
+      'escalator': 'Elevator'
+    };
+
+    // Check for trade keywords and normalize to proper trade names
     for (const keyword of EventIndexerService.TRADE_KEYWORDS) {
       if (lowerText.includes(keyword)) {
-        trades.add(this.normalizeKeyword(keyword));
-      }
-    }
-
-    // Extract company names (must have trade suffix)
-    for (const pattern of EventIndexerService.COMPANY_PATTERNS) {
-      const matches = text.matchAll(new RegExp(pattern));
-      for (const match of matches) {
-        if (match[1] && this.isValidCompanyName(match[1])) {
-          trades.add(match[1].trim());
-        }
-      }
-    }
-
-    // Look for "we had X working" patterns - more strict matching
-    // Requires: "we had" or "had" followed by capitalized company name, then "working"
-    const workingPattern = /\b(?:we\s+(?:also\s+)?had|had)\s+([A-Z][A-Za-z&]{2,}(?:\s+[A-Z][A-Za-z&]+)?)\s+working/g;
-    const workingMatches = text.matchAll(workingPattern);
-    for (const match of workingMatches) {
-      if (match[1] && this.isValidCompanyName(match[1])) {
-        trades.add(match[1].trim());
+        const normalized = TRADE_NORMALIZATIONS[keyword] || this.capitalizeFirst(keyword);
+        trades.add(normalized);
       }
     }
 
     return Array.from(trades);
+  }
+
+  /**
+   * Capitalize first letter of a string
+   */
+  capitalizeFirst(str) {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
 
   /**
