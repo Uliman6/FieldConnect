@@ -200,6 +200,7 @@ const EVENT_TYPE_CONFIG: Record<string, { color: string; icon: React.ComponentTy
   Material: { color: '#3B82F6', icon: AlertCircle, label: 'Material' },
   Equipment: { color: '#6B7280', icon: Wrench, label: 'Equipment' },
   Coordination: { color: '#10B981', icon: AlertCircle, label: 'Coordination' },
+  'Trade Damage': { color: '#EA580C', icon: AlertCircle, label: 'Trade Damage' },
   Other: { color: '#6B7280', icon: AlertCircle, label: 'Other' },
 };
 
