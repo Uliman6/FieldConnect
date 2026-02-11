@@ -1100,33 +1100,32 @@ export default function EventDetailScreen() {
   };
 
   const handleSave = () => {
+    const saveData = {
+      title: title || 'Untitled Event',
+      description,
+      eventType,
+      customEventType: eventType === 'Other' ? customEventType : undefined,
+      severity,
+      location,
+      tradeVendor,
+    };
+
     if (isLocalEvent) {
-      // Save to local store
+      // Save to local store (for offline support)
       updateEvent(event.id, {
-        title: title || 'Untitled Event',
-        description,
-        event_type: eventType,
-        custom_event_type: eventType === 'Other' ? customEventType : undefined,
-        severity,
-        location,
-        trade_vendor: tradeVendor,
+        title: saveData.title,
+        description: saveData.description,
+        event_type: saveData.eventType,
+        custom_event_type: saveData.customEventType,
+        severity: saveData.severity,
+        location: saveData.location,
+        trade_vendor: saveData.tradeVendor,
       });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setHasChanges(false);
-    } else {
-      // Save to backend directly
-      const saveData = {
-        title: title || 'Untitled Event',
-        description,
-        eventType,
-        customEventType: eventType === 'Other' ? customEventType : undefined,
-        severity,
-        location,
-        tradeVendor,
-      };
-      console.log('[event-detail] Saving to backend:', JSON.stringify(saveData));
-      updateBackendEventMutation.mutate(saveData);
     }
+
+    // Always save to backend (local events use same UUID as backend)
+    console.log('[event-detail] Saving to backend:', JSON.stringify(saveData));
+    updateBackendEventMutation.mutate(saveData);
   };
 
   // Template handlers
