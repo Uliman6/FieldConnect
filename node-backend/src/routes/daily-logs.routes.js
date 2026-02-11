@@ -19,7 +19,7 @@ router.get('/', loadAccessibleProjects, (req, res, next) => {
  * POST /api/daily-logs
  * Create a new daily log
  */
-router.post('/', (req, res, next) => {
+router.post('/', loadAccessibleProjects, (req, res, next) => {
   dailyLogsController.create(req, res, next);
 });
 
@@ -36,7 +36,7 @@ router.post('/from-transcript', (req, res, next) => {
  * GET /api/daily-logs/:id
  * Get a single daily log with all nested data
  */
-router.get('/:id', (req, res, next) => {
+router.get('/:id', loadAccessibleProjects, (req, res, next) => {
   dailyLogsController.get(req, res, next);
 });
 

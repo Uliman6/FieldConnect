@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const insightsController = require('../controllers/insights.controller');
-const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const { authenticate, requireRole, loadAccessibleProjects } = require('../middleware/auth.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -20,7 +20,7 @@ router.post('/backfill-embeddings', requireRole('ADMIN'), insightsController.bac
 
 // Get insights statistics
 // GET /api/insights/stats
-router.get('/stats', insightsController.getStats);
+router.get('/stats', loadAccessibleProjects, insightsController.getStats);
 
 // Clear test data
 // DELETE /api/insights/test-data
@@ -53,11 +53,11 @@ router.post('/from-inspection-note/:inspectionNoteId', requireRole('ADMIN', 'EDI
 
 // Search insights
 // GET /api/insights
-router.get('/', insightsController.search);
+router.get('/', loadAccessibleProjects, insightsController.search);
 
 // Export insights as PDF or JSON
 // GET /api/insights/export?format=pdf&category=...&sourceType=...
-router.get('/export', insightsController.exportInsights);
+router.get('/export', loadAccessibleProjects, insightsController.exportInsights);
 
 // Create manual insight
 // POST /api/insights
@@ -65,18 +65,18 @@ router.post('/', requireRole('ADMIN', 'EDITOR'), insightsController.createManual
 
 // Get insight by ID
 // GET /api/insights/:id
-router.get('/:id', insightsController.getById);
+router.get('/:id', loadAccessibleProjects, insightsController.getById);
 
 // Find similar insights
 // GET /api/insights/:id/similar
-router.get('/:id/similar', insightsController.findSimilar);
+router.get('/:id/similar', loadAccessibleProjects, insightsController.findSimilar);
 
 // Update insight
 // PATCH /api/insights/:id
-router.patch('/:id', requireRole('ADMIN', 'EDITOR'), insightsController.update);
+router.patch('/:id', loadAccessibleProjects, requireRole('ADMIN', 'EDITOR'), insightsController.update);
 
 // Delete insight
 // DELETE /api/insights/:id
-router.delete('/:id', requireRole('ADMIN'), insightsController.deleteInsight);
+router.delete('/:id', loadAccessibleProjects, requireRole('ADMIN'), insightsController.deleteInsight);
 
 module.exports = router;
