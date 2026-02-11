@@ -776,6 +776,7 @@ export default function EventDetailScreen() {
     title: backendEvent.title || '',
     description: backendEvent.description || '',
     event_type: (backendEvent.eventType || 'Other') as EventType,
+    custom_event_type: backendEvent.customEventType || undefined,
     severity: (backendEvent.severity || 'Medium') as EventSeverity,
     location: backendEvent.location || '',
     trade_vendor: backendEvent.tradeVendor || '',
@@ -972,6 +973,7 @@ export default function EventDetailScreen() {
       setTitle(localEvent.title);
       setDescription(localEvent.description || '');
       setEventType(localEvent.event_type);
+      setCustomEventType(localEvent.custom_event_type || '');
       setSeverity(localEvent.severity);
       setLocation(localEvent.location || '');
       setTradeVendor(localEvent.trade_vendor || '');

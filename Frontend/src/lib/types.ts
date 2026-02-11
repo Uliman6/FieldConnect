@@ -35,6 +35,7 @@ export interface Event {
   transcript_text: string | null;
   status: EventStatus;
   event_type: EventType;
+  custom_event_type?: string; // Custom type when event_type is "Other"
   severity: EventSeverity;
   title: string;
   notes: string;
