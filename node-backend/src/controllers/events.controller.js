@@ -362,21 +362,34 @@ class EventsController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
+      // Accept both snake_case and camelCase for backwards compatibility
       const {
         transcript_text,
+        transcriptText,
         event_type,
+        eventType,
         custom_event_type,
+        customEventType,
         severity,
         title,
         description,
         notes,
         location,
         trade_vendor,
-        is_resolved
+        tradeVendor,
+        is_resolved,
+        isResolved
       } = req.body;
 
+      // Use camelCase if provided, fall back to snake_case
+      const finalEventType = eventType ?? event_type;
+      const finalCustomEventType = customEventType ?? custom_event_type;
+      const finalTranscriptText = transcriptText ?? transcript_text;
+      const finalTradeVendor = tradeVendor ?? trade_vendor;
+      const finalIsResolved = isResolved ?? is_resolved;
+
       console.log('[events.update] Received update for event:', id);
-      console.log('[events.update] event_type:', event_type, 'custom_event_type:', custom_event_type);
+      console.log('[events.update] eventType:', finalEventType, 'customEventType:', finalCustomEventType);
 
       // First check if event exists and user has access
       const existingEvent = await prisma.event.findUnique({
@@ -397,16 +410,16 @@ class EventsController {
       const event = await prisma.event.update({
         where: { id },
         data: {
-          ...(transcript_text !== undefined && { transcriptText: transcript_text }),
-          ...(event_type !== undefined && { eventType: event_type }),
-          ...(custom_event_type !== undefined && { customEventType: custom_event_type }),
+          ...(finalTranscriptText !== undefined && { transcriptText: finalTranscriptText }),
+          ...(finalEventType !== undefined && { eventType: finalEventType }),
+          ...(finalCustomEventType !== undefined && { customEventType: finalCustomEventType }),
           ...(severity !== undefined && { severity }),
           ...(title !== undefined && { title }),
           ...(description !== undefined && { description }),
           ...(notes !== undefined && { notes }),
           ...(location !== undefined && { location }),
-          ...(trade_vendor !== undefined && { tradeVendor: trade_vendor }),
-          ...(is_resolved !== undefined && { isResolved: is_resolved })
+          ...(finalTradeVendor !== undefined && { tradeVendor: finalTradeVendor }),
+          ...(finalIsResolved !== undefined && { isResolved: finalIsResolved })
         },
         include: {
           project: true
@@ -415,7 +428,7 @@ class EventsController {
 
       // Auto-index to insights if text content was added/updated or event type changed
       // Pass project.isTest so test project data is properly flagged
-      if (transcript_text || description || title || event_type || custom_event_type) {
+      if (finalTranscriptText || description || title || finalEventType || finalCustomEventType) {
         insightsService.createFromEvent(event.id, event.project?.isTest).catch(err =>
           console.error(`[events] Auto-index failed for event ${event.id}: ${err.message}`)
         );
