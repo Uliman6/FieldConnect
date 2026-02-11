@@ -639,6 +639,7 @@ class InsightsService {
         'Material': 'issue',
         'Equipment': 'issue',
         'Coordination': 'issue',
+        'Trade Damage': 'issue',
         'Other': 'observation'
       };
       const mappedCategory = eventTypeMap[eventType];
