@@ -338,6 +338,9 @@ class EventsController {
         is_resolved
       } = req.body;
 
+      console.log('[events.update] Received update for event:', id);
+      console.log('[events.update] event_type:', event_type, 'custom_event_type:', custom_event_type);
+
       // First check if event exists and user has access
       const existingEvent = await prisma.event.findUnique({
         where: { id },
