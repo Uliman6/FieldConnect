@@ -149,6 +149,7 @@ export default {
       material: 'Malzeme',
       equipment: 'Ekipman',
       coordination: 'Koordinasyon',
+      'trade damage': 'Diger Islerin Hasari',
       issue: 'Sorun',
       other: 'Diğer',
     },

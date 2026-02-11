@@ -149,6 +149,7 @@ export default {
       material: 'Material',
       equipment: 'Equipo',
       coordination: 'Coordinación',
+      'trade damage': 'Daño por Otros Oficios',
       issue: 'Problema',
       other: 'Otro',
     },
