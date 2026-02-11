@@ -41,6 +41,7 @@ export function VoiceRecorder({
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [capturedDuration, setCapturedDuration] = useState(0);
 
   const recordingRef = useRef<Audio.Recording | null>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -118,6 +119,7 @@ export function VoiceRecorder({
 
       setIsRecording(true);
       setRecordingDuration(0);
+      setCapturedDuration(0);
       setLastRecordingUri(null);
 
       timerRef.current = setInterval(() => {
@@ -144,6 +146,8 @@ export function VoiceRecorder({
       const recording = recordingRef.current;
       recordingRef.current = null;
 
+      // Save the final duration before resetting
+      setCapturedDuration(recordingDuration);
       setIsRecording(false);
       setIsProcessing(true);
 
@@ -258,6 +262,7 @@ export function VoiceRecorder({
     setIsProcessing(false);
     setLastRecordingUri(null);
     setRecordingDuration(0);
+    setCapturedDuration(0);
     setShowModal(false);
   };
 
@@ -350,16 +355,23 @@ export function VoiceRecorder({
                 </Animated.View>
 
                 <Text className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
-                  {isProcessing ? 'Saving...' : isRecording ? formatDuration(recordingDuration) : '0:00'}
+                  {isProcessing ? 'Saving...' : isRecording ? formatDuration(recordingDuration) : formatDuration(capturedDuration)}
                 </Text>
 
-                <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
                   {isRecording
                     ? 'Tap to stop recording'
                     : lastRecordingUri
-                      ? 'Recording saved'
+                      ? 'Audio captured successfully!'
                       : 'Tap to start recording'}
                 </Text>
+
+                {/* Success message when recording is captured */}
+                {lastRecordingUri && !isRecording && !isProcessing && (
+                  <Text className="mt-2 text-xs text-green-600 dark:text-green-400 text-center px-4">
+                    Tap Play to review, or Save to continue.{'\n'}Your recording will be transcribed automatically.
+                  </Text>
+                )}
 
                 {/* Playback Controls */}
                 {lastRecordingUri && !isRecording && (
@@ -483,16 +495,23 @@ export function VoiceRecorder({
               </Animated.View>
 
               <Text className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
-                {isProcessing ? 'Saving...' : isRecording ? formatDuration(recordingDuration) : '0:00'}
+                {isProcessing ? 'Saving...' : isRecording ? formatDuration(recordingDuration) : formatDuration(capturedDuration)}
               </Text>
 
-              <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
                 {isRecording
                   ? 'Tap to stop recording'
                   : lastRecordingUri
-                    ? 'Recording saved'
+                    ? 'Audio captured successfully!'
                     : 'Tap to start recording'}
               </Text>
+
+              {/* Success message when recording is captured */}
+              {lastRecordingUri && !isRecording && !isProcessing && (
+                <Text className="mt-2 text-xs text-green-600 dark:text-green-400 text-center px-4">
+                  Tap Play to review, or Save to continue.{'\n'}Your recording will be transcribed automatically.
+                </Text>
+              )}
 
               {/* Playback Controls */}
               {lastRecordingUri && !isRecording && (
