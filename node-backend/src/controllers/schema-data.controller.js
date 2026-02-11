@@ -6,6 +6,35 @@
 const schemaExtractionService = require('../services/schema-extraction.service');
 const schemaPdfService = require('../services/schema-pdf.service');
 const fs = require('fs');
+const prisma = require('../services/prisma');
+
+/**
+ * Helper: Check if user has access to a project
+ */
+const checkProjectAccess = (req, projectId) => {
+  // If accessibleProjectIds is null, user is admin with access to all
+  if (req.accessibleProjectIds === null) return true;
+  // Check if projectId is in user's accessible projects
+  return req.accessibleProjectIds.includes(projectId);
+};
+
+/**
+ * Helper: Get event and verify access
+ */
+const getEventWithAccessCheck = async (req, eventId) => {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { id: true, projectId: true }
+  });
+
+  if (!event) return { error: 'not_found', event: null };
+
+  if (!checkProjectAccess(req, event.projectId)) {
+    return { error: 'no_access', event: null };
+  }
+
+  return { error: null, event };
+};
 
 /**
  * Apply schema to event - AI extracts fields from transcript
@@ -15,6 +44,15 @@ const applySchema = async (req, res) => {
   try {
     const { eventId } = req.params;
     const { schemaId } = req.body;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
 
     if (!schemaId) {
       return res.status(400).json({ error: 'schemaId is required' });
@@ -62,6 +100,16 @@ const applySchema = async (req, res) => {
 const getSchemaData = async (req, res) => {
   try {
     const { eventId } = req.params;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
+
     const schemaData = await schemaExtractionService.getSchemaData(eventId);
 
     if (!schemaData) {
@@ -83,6 +131,15 @@ const updateSchemaData = async (req, res) => {
   try {
     const { eventId } = req.params;
     const { fieldValues } = req.body;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
 
     if (!fieldValues || typeof fieldValues !== 'object') {
       return res.status(400).json({ error: 'fieldValues object is required' });
@@ -112,6 +169,16 @@ const updateSchemaData = async (req, res) => {
 const removeSchemaData = async (req, res) => {
   try {
     const { eventId } = req.params;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
+
     await schemaExtractionService.removeSchemaData(eventId);
     res.json({ message: 'Schema data removed successfully' });
   } catch (error) {
@@ -132,6 +199,15 @@ const removeSchemaData = async (req, res) => {
 const reExtract = async (req, res) => {
   try {
     const { eventId } = req.params;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
 
     if (!schemaExtractionService.isAvailable()) {
       return res.status(503).json({
@@ -167,6 +243,15 @@ const generatePdf = async (req, res) => {
   try {
     const { eventId } = req.params;
 
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
+
     console.log('[schema-data] Generating PDF for event:', eventId);
 
     const result = await schemaPdfService.generatePdf(eventId);
@@ -199,6 +284,15 @@ const generatePdf = async (req, res) => {
 const downloadPdf = async (req, res) => {
   try {
     const { eventId } = req.params;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
 
     const result = await schemaPdfService.getPdf(eventId);
 

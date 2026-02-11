@@ -21,7 +21,7 @@ router.get('/search', loadAccessibleProjects, (req, res, next) => {
  * GET /api/events/types
  * Get list of unique event types
  */
-router.get('/types', (req, res, next) => {
+router.get('/types', loadAccessibleProjects, (req, res, next) => {
   eventsController.getEventTypes(req, res, next);
 });
 
@@ -29,7 +29,7 @@ router.get('/types', (req, res, next) => {
  * GET /api/events/severities
  * Get list of unique severities
  */
-router.get('/severities', (req, res, next) => {
+router.get('/severities', loadAccessibleProjects, (req, res, next) => {
   eventsController.getSeverities(req, res, next);
 });
 
@@ -37,7 +37,7 @@ router.get('/severities', (req, res, next) => {
  * POST /api/events/find-similar
  * Find similar events by event_id or text
  */
-router.post('/find-similar', (req, res, next) => {
+router.post('/find-similar', loadAccessibleProjects, (req, res, next) => {
   eventsController.findSimilar(req, res, next);
 });
 
@@ -99,7 +99,7 @@ router.get('/checklist', loadAccessibleProjects, (req, res, next) => {
  * Update item status (creates audit comment)
  * Body: { status: 'OPEN'|'IN_PROGRESS'|'CLOSED', comment?: string, changedBy?: string }
  */
-router.patch('/:id/status', (req, res, next) => {
+router.patch('/:id/status', loadAccessibleProjects, (req, res, next) => {
   eventsController.updateStatus(req, res, next);
 });
 
@@ -107,7 +107,7 @@ router.patch('/:id/status', (req, res, next) => {
  * GET /api/events/:id/comments
  * Get revision history/comments for an event
  */
-router.get('/:id/comments', (req, res, next) => {
+router.get('/:id/comments', loadAccessibleProjects, (req, res, next) => {
   eventsController.getComments(req, res, next);
 });
 
@@ -116,7 +116,7 @@ router.get('/:id/comments', (req, res, next) => {
  * Add a comment/follow-up to an event
  * Body: { text, authorName? }
  */
-router.post('/:id/comments', (req, res, next) => {
+router.post('/:id/comments', loadAccessibleProjects, (req, res, next) => {
   eventsController.addComment(req, res, next);
 });
 
@@ -124,7 +124,7 @@ router.post('/:id/comments', (req, res, next) => {
  * DELETE /api/events/:id/comments/:commentId
  * Delete a comment
  */
-router.delete('/:id/comments/:commentId', (req, res, next) => {
+router.delete('/:id/comments/:commentId', loadAccessibleProjects, (req, res, next) => {
   eventsController.deleteComment(req, res, next);
 });
 
@@ -148,7 +148,7 @@ router.get('/:id', loadAccessibleProjects, (req, res, next) => {
  * GET /api/events/:id/similar
  * Get similar events for a specific event
  */
-router.get('/:id/similar', (req, res, next) => {
+router.get('/:id/similar', loadAccessibleProjects, (req, res, next) => {
   eventsController.getSimilar(req, res, next);
 });
 
@@ -156,7 +156,7 @@ router.get('/:id/similar', (req, res, next) => {
  * GET /api/events/:id/index
  * Get the index for a specific event
  */
-router.get('/:id/index', (req, res, next) => {
+router.get('/:id/index', loadAccessibleProjects, (req, res, next) => {
   eventsController.getEventIndex(req, res, next);
 });
 
@@ -164,7 +164,7 @@ router.get('/:id/index', (req, res, next) => {
  * POST /api/events/:id/index
  * Index or re-index a single event
  */
-router.post('/:id/index', (req, res, next) => {
+router.post('/:id/index', loadAccessibleProjects, (req, res, next) => {
   eventsController.indexEvent(req, res, next);
 });
 
@@ -172,7 +172,7 @@ router.post('/:id/index', (req, res, next) => {
  * PATCH /api/events/:id/follow-up
  * Update follow-up status for an event
  */
-router.patch('/:id/follow-up', (req, res, next) => {
+router.patch('/:id/follow-up', loadAccessibleProjects, (req, res, next) => {
   eventsController.updateFollowUp(req, res, next);
 });
 
@@ -208,7 +208,7 @@ router.delete('/:id', loadAccessibleProjects, (req, res, next) => {
  * POST /api/events/:eventId/template
  * Attach a template to an event
  */
-router.post('/:eventId/template', (req, res, next) => {
+router.post('/:eventId/template', loadAccessibleProjects, (req, res, next) => {
   templatesController.attachTemplateToEvent(req, res, next);
 });
 
@@ -216,7 +216,7 @@ router.post('/:eventId/template', (req, res, next) => {
  * GET /api/events/:eventId/template-data
  * Get template data for an event
  */
-router.get('/:eventId/template-data', (req, res, next) => {
+router.get('/:eventId/template-data', loadAccessibleProjects, (req, res, next) => {
   templatesController.getEventTemplateData(req, res, next);
 });
 
@@ -224,7 +224,7 @@ router.get('/:eventId/template-data', (req, res, next) => {
  * PATCH /api/events/:eventId/template-data
  * Update template field values for an event
  */
-router.patch('/:eventId/template-data', (req, res, next) => {
+router.patch('/:eventId/template-data', loadAccessibleProjects, (req, res, next) => {
   templatesController.updateEventTemplateData(req, res, next);
 });
 
@@ -232,7 +232,7 @@ router.patch('/:eventId/template-data', (req, res, next) => {
  * GET /api/events/:eventId/filled-pdf
  * Download filled PDF for an event
  */
-router.get('/:eventId/filled-pdf', (req, res, next) => {
+router.get('/:eventId/filled-pdf', loadAccessibleProjects, (req, res, next) => {
   templatesController.getFilledPdf(req, res, next);
 });
 
@@ -244,7 +244,7 @@ router.get('/:eventId/filled-pdf', (req, res, next) => {
  * POST /api/events/:eventId/apply-schema
  * Apply a document schema to an event - AI extracts fields from transcript
  */
-router.post('/:eventId/apply-schema', (req, res, next) => {
+router.post('/:eventId/apply-schema', loadAccessibleProjects, (req, res, next) => {
   schemaDataController.applySchema(req, res, next);
 });
 
@@ -252,7 +252,7 @@ router.post('/:eventId/apply-schema', (req, res, next) => {
  * GET /api/events/:eventId/schema-data
  * Get schema data (extracted fields) for an event
  */
-router.get('/:eventId/schema-data', (req, res, next) => {
+router.get('/:eventId/schema-data', loadAccessibleProjects, (req, res, next) => {
   schemaDataController.getSchemaData(req, res, next);
 });
 
@@ -260,7 +260,7 @@ router.get('/:eventId/schema-data', (req, res, next) => {
  * PATCH /api/events/:eventId/schema-data
  * Update schema data field values (manual edit)
  */
-router.patch('/:eventId/schema-data', (req, res, next) => {
+router.patch('/:eventId/schema-data', loadAccessibleProjects, (req, res, next) => {
   schemaDataController.updateSchemaData(req, res, next);
 });
 
@@ -268,7 +268,7 @@ router.patch('/:eventId/schema-data', (req, res, next) => {
  * DELETE /api/events/:eventId/schema-data
  * Remove schema data from event
  */
-router.delete('/:eventId/schema-data', (req, res, next) => {
+router.delete('/:eventId/schema-data', loadAccessibleProjects, (req, res, next) => {
   schemaDataController.removeSchemaData(req, res, next);
 });
 
@@ -276,7 +276,7 @@ router.delete('/:eventId/schema-data', (req, res, next) => {
  * POST /api/events/:eventId/re-extract
  * Re-extract fields from transcript using same schema
  */
-router.post('/:eventId/re-extract', (req, res, next) => {
+router.post('/:eventId/re-extract', loadAccessibleProjects, (req, res, next) => {
   schemaDataController.reExtract(req, res, next);
 });
 
@@ -284,7 +284,7 @@ router.post('/:eventId/re-extract', (req, res, next) => {
  * POST /api/events/:eventId/generate-pdf
  * Generate PDF from schema data
  */
-router.post('/:eventId/generate-pdf', (req, res, next) => {
+router.post('/:eventId/generate-pdf', loadAccessibleProjects, (req, res, next) => {
   schemaDataController.generatePdf(req, res, next);
 });
 
@@ -292,7 +292,7 @@ router.post('/:eventId/generate-pdf', (req, res, next) => {
  * GET /api/events/:eventId/download-pdf
  * Download generated PDF
  */
-router.get('/:eventId/download-pdf', (req, res, next) => {
+router.get('/:eventId/download-pdf', loadAccessibleProjects, (req, res, next) => {
   schemaDataController.downloadPdf(req, res, next);
 });
 
@@ -304,7 +304,7 @@ router.get('/:eventId/download-pdf', (req, res, next) => {
  * GET /api/events/:eventId/photos
  * Get all photos for an event
  */
-router.get('/:eventId/photos', (req, res, next) => {
+router.get('/:eventId/photos', loadAccessibleProjects, (req, res, next) => {
   photosController.getEventPhotos(req, res, next);
 });
 

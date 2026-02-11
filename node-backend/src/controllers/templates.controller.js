@@ -1,4 +1,33 @@
 const pdfTemplateService = require('../services/pdf-template.service');
+const prisma = require('../services/prisma');
+
+/**
+ * Helper: Check if user has access to a project
+ */
+const checkProjectAccess = (req, projectId) => {
+  // If accessibleProjectIds is null, user is admin with access to all
+  if (req.accessibleProjectIds === null) return true;
+  // Check if projectId is in user's accessible projects
+  return req.accessibleProjectIds.includes(projectId);
+};
+
+/**
+ * Helper: Get event and verify access
+ */
+const getEventWithAccessCheck = async (req, eventId) => {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { id: true, projectId: true }
+  });
+
+  if (!event) return { error: 'not_found', event: null };
+
+  if (!checkProjectAccess(req, event.projectId)) {
+    return { error: 'no_access', event: null };
+  }
+
+  return { error: null, event };
+};
 
 /**
  * Upload a new PDF template
@@ -172,6 +201,15 @@ const attachTemplateToEvent = async (req, res) => {
     const { eventId } = req.params;
     const { templateId } = req.body;
 
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
+
     if (!templateId) {
       return res.status(400).json({ error: 'Template ID is required' });
     }
@@ -192,6 +230,15 @@ const updateEventTemplateData = async (req, res) => {
   try {
     const { eventId } = req.params;
     const { templateId, fieldValues } = req.body;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
 
     if (!templateId) {
       return res.status(400).json({ error: 'Template ID is required' });
@@ -216,6 +263,16 @@ const updateEventTemplateData = async (req, res) => {
 const getFilledPdf = async (req, res) => {
   try {
     const { eventId } = req.params;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
+
     const file = await pdfTemplateService.getFilledPdf(eventId);
 
     res.setHeader('Content-Type', file.contentType);
@@ -237,6 +294,16 @@ const getFilledPdf = async (req, res) => {
 const getEventTemplateData = async (req, res) => {
   try {
     const { eventId } = req.params;
+
+    // ACCESS CONTROL: Check if user has access to this event
+    const { error } = await getEventWithAccessCheck(req, eventId);
+    if (error === 'not_found') {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    if (error === 'no_access') {
+      return res.status(403).json({ error: 'You do not have access to this event' });
+    }
+
     const templateData = await pdfTemplateService.getEventTemplateData(eventId);
 
     if (!templateData) {
