@@ -36,8 +36,39 @@ class InsightsService {
     });
 
     if (existing) {
-      console.log(`[insights] Insight already exists for event ${eventId}: ${existing.id}`);
-      return existing;
+      console.log(`[insights] Insight already exists for event ${eventId}: ${existing.id}, updating...`);
+
+      // Update the existing insight with new event data
+      const text = `${event.transcriptText || ''} ${event.description || ''} ${event.title || ''} ${event.notes || ''}`;
+      const extracted = eventIndexer.extractAllKeywords(text);
+      const category = this.determineCategory(extracted.issueTypes, event.eventType);
+      const keywordsSummary = eventIndexer.buildKeywordsSummary(extracted);
+      const title = event.title && event.title !== 'Untitled Event'
+        ? event.title
+        : eventIndexer.generateSmartTitle(event.transcriptText);
+
+      const updatedInsight = await prisma.insight.update({
+        where: { id: existing.id },
+        data: {
+          title,
+          description: event.description || event.notes,
+          rawText: event.transcriptText || event.description || event.notes,
+          category,
+          eventType: event.eventType || null,
+          customType: event.eventType === 'Other' ? event.customEventType : null,
+          severity: event.severity,
+          trades: extracted.trades,
+          materials: extracted.materials,
+          issueTypes: extracted.issueTypes,
+          locations: extracted.locations,
+          systems: extracted.systems,
+          keywordsSummary,
+          isResolved: event.isResolved || false,
+        }
+      });
+
+      console.log(`[insights] Updated insight ${existing.id} with latest event data`);
+      return updatedInsight;
     }
 
     // Use project.isTest if isTest not explicitly provided
