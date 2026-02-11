@@ -41,7 +41,9 @@
       "Bash(eas build:list:*)",
       "Bash(Your recording will be transcribed automatically.\"\n- This gives users confidence their voice memo was recorded\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(eas update:*)",
-      "Bash(eas update:list:*)"
+      "Bash(eas update:list:*)",
+      "Bash(eas build:view:*)",
+      "Bash(eas submit:*)"
     ]
   }
 }
