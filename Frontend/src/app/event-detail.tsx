@@ -1108,7 +1108,7 @@ export default function EventDetailScreen() {
       setHasChanges(false);
     } else {
       // Save to backend directly
-      updateBackendEventMutation.mutate({
+      const saveData = {
         title: title || 'Untitled Event',
         description,
         eventType,
@@ -1116,7 +1116,9 @@ export default function EventDetailScreen() {
         severity,
         location,
         tradeVendor,
-      });
+      };
+      console.log('[event-detail] Saving to backend:', JSON.stringify(saveData));
+      updateBackendEventMutation.mutate(saveData);
     }
   };
 
