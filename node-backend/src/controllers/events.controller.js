@@ -26,7 +26,29 @@ class EventsController {
 
       const whereClause = {};
 
-      if (project_id) whereClause.projectId = project_id;
+      // ACCESS CONTROL: Filter by user's accessible projects
+      if (req.accessibleProjectIds !== null) {
+        // User has limited access - filter by their projects
+        if (req.accessibleProjectIds.length === 0) {
+          // User has no project access - return empty array
+          return res.json([]);
+        }
+
+        if (project_id) {
+          // Check if user has access to the requested project
+          if (!req.accessibleProjectIds.includes(project_id)) {
+            return res.status(403).json({ error: 'You do not have access to this project' });
+          }
+          whereClause.projectId = project_id;
+        } else {
+          // Filter by all accessible projects
+          whereClause.projectId = { in: req.accessibleProjectIds };
+        }
+      } else if (project_id) {
+        // Admin user with specific project filter
+        whereClause.projectId = project_id;
+      }
+
       if (event_type) whereClause.eventType = event_type;
       if (severity) whereClause.severity = severity;
       if (is_resolved !== undefined) whereClause.isResolved = is_resolved === 'true';
@@ -162,6 +184,12 @@ class EventsController {
         });
       }
 
+      // ACCESS CONTROL: Check if user has access to this project
+      if (req.accessibleProjectIds !== null &&
+          !req.accessibleProjectIds.includes(event.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
+
       res.json(event);
     } catch (err) {
       next(err);
@@ -249,6 +277,12 @@ class EventsController {
         });
       }
 
+      // ACCESS CONTROL: Check if user has access to this project
+      if (req.accessibleProjectIds !== null &&
+          !req.accessibleProjectIds.includes(project_id)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
+      }
+
       const event = await prisma.event.create({
         data: {
           ...(id && { id }), // Use client-provided ID if available
@@ -304,6 +338,22 @@ class EventsController {
         is_resolved
       } = req.body;
 
+      // First check if event exists and user has access
+      const existingEvent = await prisma.event.findUnique({
+        where: { id },
+        select: { projectId: true }
+      });
+
+      if (!existingEvent) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this project
+      if (req.accessibleProjectIds !== null &&
+          !req.accessibleProjectIds.includes(existingEvent.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
+
       const event = await prisma.event.update({
         where: { id },
         data: {
@@ -344,6 +394,22 @@ class EventsController {
   async delete(req, res, next) {
     try {
       const { id } = req.params;
+
+      // First check if event exists and user has access
+      const existingEvent = await prisma.event.findUnique({
+        where: { id },
+        select: { projectId: true }
+      });
+
+      if (!existingEvent) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this project
+      if (req.accessibleProjectIds !== null &&
+          !req.accessibleProjectIds.includes(existingEvent.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
 
       await prisma.event.delete({
         where: { id }

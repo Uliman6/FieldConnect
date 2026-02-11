@@ -638,6 +638,7 @@ class InsightsService {
     const {
       query,
       projectId,
+      accessibleProjectIds, // For access control filtering
       category,
       severity,
       sourceType,
@@ -649,11 +650,16 @@ class InsightsService {
       limit = 100
     } = filters;
 
-    console.log('[insights/search] Starting search with:', { query, projectId, isTest, sourceType, category });
+    console.log('[insights/search] Starting search with:', { query, projectId, accessibleProjectIds, isTest, sourceType, category });
 
     // Build base where clause (non-text filters)
     const baseWhere = {};
-    if (projectId) baseWhere.projectId = projectId;
+    if (projectId) {
+      baseWhere.projectId = projectId;
+    } else if (accessibleProjectIds && accessibleProjectIds.length > 0) {
+      // Filter by user's accessible projects
+      baseWhere.projectId = { in: accessibleProjectIds };
+    }
 
     // Handle comma-separated category values (e.g., "quality,rework")
     // Using OR for enum compatibility
@@ -856,10 +862,15 @@ class InsightsService {
    * @returns {Object} Statistics
    */
   async getStats(options = {}) {
-    const { projectId, isTest } = options;
+    const { projectId, accessibleProjectIds, isTest } = options;
 
     const whereClause = {};
-    if (projectId) whereClause.projectId = projectId;
+    if (projectId) {
+      whereClause.projectId = projectId;
+    } else if (accessibleProjectIds && accessibleProjectIds.length > 0) {
+      // Filter by user's accessible projects
+      whereClause.projectId = { in: accessibleProjectIds };
+    }
     if (isTest !== undefined) whereClause.isTest = isTest;
 
     const [

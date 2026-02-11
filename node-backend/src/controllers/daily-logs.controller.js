@@ -115,9 +115,29 @@ class DailyLogsController {
 
       const whereClause = {};
 
-      if (project_id) {
+      // ACCESS CONTROL: Filter by user's accessible projects
+      if (req.accessibleProjectIds !== null) {
+        // User has limited access - filter by their projects
+        if (req.accessibleProjectIds.length === 0) {
+          // User has no project access - return empty array
+          return res.json([]);
+        }
+
+        if (project_id) {
+          // Check if user has access to the requested project
+          if (!req.accessibleProjectIds.includes(project_id)) {
+            return res.status(403).json({ error: 'You do not have access to this project' });
+          }
+          whereClause.projectId = project_id;
+        } else {
+          // Filter by all accessible projects
+          whereClause.projectId = { in: req.accessibleProjectIds };
+        }
+      } else if (project_id) {
+        // Admin user with specific project filter
         whereClause.projectId = project_id;
       }
+
       if (status) {
         whereClause.status = status;
       }
@@ -178,6 +198,12 @@ class DailyLogsController {
           error: 'Not Found',
           message: 'Daily log not found'
         });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this project
+      if (req.accessibleProjectIds !== null &&
+          !req.accessibleProjectIds.includes(dailyLog.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
       }
 
       res.json(dailyLog);
@@ -258,6 +284,12 @@ class DailyLogsController {
           error: 'Not Found',
           message: 'Project not found'
         });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this project
+      if (req.accessibleProjectIds !== null &&
+          !req.accessibleProjectIds.includes(project_id)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
       }
 
       // If transcript is provided and we don't have meaningful structured data, use AI parsing

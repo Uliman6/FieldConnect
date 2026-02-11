@@ -132,7 +132,7 @@ router.delete('/:id/comments/:commentId', (req, res, next) => {
  * GET /api/events
  * List events with filters
  */
-router.get('/', (req, res, next) => {
+router.get('/', loadAccessibleProjects, (req, res, next) => {
   eventsController.list(req, res, next);
 });
 
@@ -140,7 +140,7 @@ router.get('/', (req, res, next) => {
  * GET /api/events/:id
  * Get a single event
  */
-router.get('/:id', (req, res, next) => {
+router.get('/:id', loadAccessibleProjects, (req, res, next) => {
   eventsController.get(req, res, next);
 });
 
@@ -180,7 +180,7 @@ router.patch('/:id/follow-up', (req, res, next) => {
  * POST /api/events
  * Create a new event
  */
-router.post('/', (req, res, next) => {
+router.post('/', loadAccessibleProjects, (req, res, next) => {
   eventsController.create(req, res, next);
 });
 
@@ -188,7 +188,7 @@ router.post('/', (req, res, next) => {
  * PATCH /api/events/:id
  * Update an event
  */
-router.patch('/:id', (req, res, next) => {
+router.patch('/:id', loadAccessibleProjects, (req, res, next) => {
   eventsController.update(req, res, next);
 });
 
@@ -196,7 +196,7 @@ router.patch('/:id', (req, res, next) => {
  * DELETE /api/events/:id
  * Delete an event
  */
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', loadAccessibleProjects, (req, res, next) => {
   eventsController.delete(req, res, next);
 });
 

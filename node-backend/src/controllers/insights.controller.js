@@ -141,9 +141,33 @@ async function search(req, res) {
       limit
     } = req.query;
 
+    // ACCESS CONTROL: Filter by user's accessible projects
+    let filteredProjectId = projectId;
+    let accessibleProjectIds = null;
+
+    if (req.accessibleProjectIds !== null) {
+      // User has limited access
+      if (req.accessibleProjectIds.length === 0) {
+        // User has no project access - return empty array
+        return res.json([]);
+      }
+
+      if (projectId) {
+        // Check if user has access to the requested project
+        if (!req.accessibleProjectIds.includes(projectId)) {
+          return res.status(403).json({ error: 'You do not have access to this project' });
+        }
+        filteredProjectId = projectId;
+      } else {
+        // Will filter by all accessible projects
+        accessibleProjectIds = req.accessibleProjectIds;
+      }
+    }
+
     const filters = {
       query,
-      projectId,
+      projectId: filteredProjectId,
+      accessibleProjectIds, // Pass accessible projects for filtering
       category,
       severity,
       sourceType,
@@ -188,6 +212,13 @@ async function getById(req, res) {
       return res.status(404).json({ error: 'Insight not found' });
     }
 
+    // ACCESS CONTROL: Check if user has access to this project
+    if (req.accessibleProjectIds !== null &&
+        insight.projectId &&
+        !req.accessibleProjectIds.includes(insight.projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this insight' });
+    }
+
     res.json(insight);
   } catch (error) {
     console.error('Error getting insight:', error);
@@ -224,8 +255,42 @@ async function getStats(req, res) {
   try {
     const { projectId, isTest } = req.query;
 
+    // ACCESS CONTROL: Filter by user's accessible projects
+    let filteredProjectId = projectId;
+    let accessibleProjectIds = null;
+
+    if (req.accessibleProjectIds !== null) {
+      // User has limited access
+      if (req.accessibleProjectIds.length === 0) {
+        // User has no project access - return empty stats
+        return res.json({
+          total: 0,
+          byCategory: [],
+          bySeverity: [],
+          bySourceType: [],
+          topTrades: [],
+          topIssueTypes: [],
+          topSystems: [],
+          needsFollowUp: 0,
+          resolved: 0
+        });
+      }
+
+      if (projectId) {
+        // Check if user has access to the requested project
+        if (!req.accessibleProjectIds.includes(projectId)) {
+          return res.status(403).json({ error: 'You do not have access to this project' });
+        }
+        filteredProjectId = projectId;
+      } else {
+        // Will filter by all accessible projects
+        accessibleProjectIds = req.accessibleProjectIds;
+      }
+    }
+
     const stats = await insightsService.getStats({
-      projectId,
+      projectId: filteredProjectId,
+      accessibleProjectIds,
       isTest: isTest === 'true' ? true : isTest === 'false' ? false : undefined
     });
 
@@ -246,6 +311,23 @@ async function update(req, res) {
     const { isResolved, needsFollowUp, followUpReason, followUpDueDate, severity, category } = req.body;
 
     const prisma = require('../services/prisma');
+
+    // First check if insight exists and user has access
+    const existingInsight = await prisma.insight.findUnique({
+      where: { id },
+      select: { projectId: true }
+    });
+
+    if (!existingInsight) {
+      return res.status(404).json({ error: 'Insight not found' });
+    }
+
+    // ACCESS CONTROL: Check if user has access to this project
+    if (req.accessibleProjectIds !== null &&
+        existingInsight.projectId &&
+        !req.accessibleProjectIds.includes(existingInsight.projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this insight' });
+    }
 
     const updateData = {};
     if (isResolved !== undefined) {
@@ -286,6 +368,23 @@ async function deleteInsight(req, res) {
   try {
     const { id } = req.params;
     const prisma = require('../services/prisma');
+
+    // First check if insight exists and user has access
+    const existingInsight = await prisma.insight.findUnique({
+      where: { id },
+      select: { projectId: true }
+    });
+
+    if (!existingInsight) {
+      return res.status(404).json({ error: 'Insight not found' });
+    }
+
+    // ACCESS CONTROL: Check if user has access to this project
+    if (req.accessibleProjectIds !== null &&
+        existingInsight.projectId &&
+        !req.accessibleProjectIds.includes(existingInsight.projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this insight' });
+    }
 
     await prisma.insight.delete({ where: { id } });
     res.json({ success: true, message: 'Insight deleted' });
@@ -479,9 +578,36 @@ async function exportInsights(req, res) {
       isTest
     } = req.query;
 
+    // ACCESS CONTROL: Filter by user's accessible projects
+    let filteredProjectId = projectId;
+    let accessibleProjectIds = null;
+
+    if (req.accessibleProjectIds !== null) {
+      // User has limited access
+      if (req.accessibleProjectIds.length === 0) {
+        // User has no project access - return empty PDF or JSON
+        if (format === 'pdf') {
+          return res.status(400).json({ error: 'No accessible projects for export' });
+        }
+        return res.json({ items: [] });
+      }
+
+      if (projectId) {
+        // Check if user has access to the requested project
+        if (!req.accessibleProjectIds.includes(projectId)) {
+          return res.status(403).json({ error: 'You do not have access to this project' });
+        }
+        filteredProjectId = projectId;
+      } else {
+        // Will filter by all accessible projects
+        accessibleProjectIds = req.accessibleProjectIds;
+      }
+    }
+
     // Build filters for search
     const filters = {
-      projectId,
+      projectId: filteredProjectId,
+      accessibleProjectIds,
       category,
       sourceType,
       severity,
