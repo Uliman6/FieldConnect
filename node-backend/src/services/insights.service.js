@@ -693,15 +693,15 @@ class InsightsService {
       baseWhere.projectId = { in: accessibleProjectIds };
     }
 
-    // Handle comma-separated category values (e.g., "quality,rework")
-    // Using OR for enum compatibility
+    // Handle comma-separated category values - now filters by eventType instead of category enum
+    // Frontend sends event types (e.g., "Safety,Quality,Trade Damage") as categories
     if (category) {
-      const categories = category.split(',').map(c => c.trim()).filter(Boolean);
-      if (categories.length === 1) {
-        baseWhere.category = categories[0];
-      } else if (categories.length > 1) {
-        // Use OR clause for multiple enum values
-        baseWhere.OR = categories.map(c => ({ category: c }));
+      const eventTypes = category.split(',').map(c => c.trim()).filter(Boolean);
+      if (eventTypes.length === 1) {
+        baseWhere.eventType = eventTypes[0];
+      } else if (eventTypes.length > 1) {
+        // Use OR clause for multiple event types
+        baseWhere.OR = eventTypes.map(t => ({ eventType: t }));
       }
     }
 
@@ -907,7 +907,7 @@ class InsightsService {
 
     const [
       total,
-      byCategory,
+      byEventType,
       bySeverity,
       bySourceType,
       needsFollowUp,
@@ -916,9 +916,10 @@ class InsightsService {
       insights
     ] = await Promise.all([
       prisma.insight.count({ where: whereClause }),
+      // Group by eventType instead of category - user wants event types as categories
       prisma.insight.groupBy({
-        by: ['category'],
-        where: whereClause,
+        by: ['eventType'],
+        where: { ...whereClause, eventType: { not: null } },
         _count: true
       }),
       prisma.insight.groupBy({
@@ -974,7 +975,8 @@ class InsightsService {
 
     return {
       total,
-      byCategory: byCategory.map(c => ({ category: c.category, count: c._count })),
+      // Return eventType as "category" for frontend compatibility - uses event types directly
+      byCategory: byEventType.map(c => ({ category: c.eventType, count: c._count })),
       bySeverity: bySeverity.map(s => ({ severity: s.severity, count: s._count })),
       bySourceType: bySourceType.map(s => ({ sourceType: s.sourceType, count: s._count })),
       needsFollowUp,
