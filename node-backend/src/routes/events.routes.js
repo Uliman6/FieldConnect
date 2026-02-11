@@ -51,7 +51,7 @@ router.post('/find-similar', (req, res, next) => {
  * Query params: inspector, trade, material, issue_type, location, ahj, system,
  *               needs_follow_up, has_cost_impact, min_cost, max_cost, project_id
  */
-router.get('/indexed/search', (req, res, next) => {
+router.get('/indexed/search', loadAccessibleProjects, (req, res, next) => {
   eventsController.searchByKeywords(req, res, next);
 });
 
@@ -60,7 +60,7 @@ router.get('/indexed/search', (req, res, next) => {
  * Get all events that need follow-up
  * Query params: project_id, include_resolved, limit
  */
-router.get('/indexed/follow-ups', (req, res, next) => {
+router.get('/indexed/follow-ups', loadAccessibleProjects, (req, res, next) => {
   eventsController.getFollowUps(req, res, next);
 });
 
@@ -69,7 +69,7 @@ router.get('/indexed/follow-ups', (req, res, next) => {
  * Get aggregated statistics from indexed events
  * Query params: project_id
  */
-router.get('/indexed/stats', (req, res, next) => {
+router.get('/indexed/stats', loadAccessibleProjects, (req, res, next) => {
   eventsController.getIndexStats(req, res, next);
 });
 
@@ -90,7 +90,7 @@ router.post('/indexed/reindex', (req, res, next) => {
  * List punch lists and RFIs with status filtering
  * Query params: category (PUNCH_LIST|RFI), project_id, status (OPEN|IN_PROGRESS|CLOSED), limit
  */
-router.get('/checklist', (req, res, next) => {
+router.get('/checklist', loadAccessibleProjects, (req, res, next) => {
   eventsController.listChecklist(req, res, next);
 });
 
