@@ -22,7 +22,7 @@ export type AdditionalWorkTag = 'owner_request' | 'design_ambiguity' | 'vendor_i
 export type SkyCondition = 'Clear' | 'Partly Cloudy' | 'Cloudy' | 'Overcast' | 'Rainy' | 'Stormy';
 
 // Event Capture Types
-export type EventType = 'Delay' | 'Quality' | 'Safety' | 'Inspection' | 'Material' | 'Equipment' | 'Coordination' | 'Other';
+export type EventType = 'Delay' | 'Quality' | 'Safety' | 'Inspection' | 'Material' | 'Equipment' | 'Coordination' | 'Trade Damage' | 'Other';
 export type EventStatus = 'recorded' | 'uploaded' | 'transcribed';
 export type EventSeverity = 'Low' | 'Medium' | 'High';
 

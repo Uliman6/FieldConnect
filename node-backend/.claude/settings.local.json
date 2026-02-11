@@ -36,7 +36,12 @@
       "Bash(git -C \"C:/sitespeak/Backend\" commit -m \"$\\(cat <<''EOF''\nImprove search relevance - filter stop words, require min score\n\n- Raise semantic threshold from 0.5 to 0.68 for better precision\n- Filter out generic words like \"items\", \"things\", \"related\"\n- Require minimum score of 5 \\(at least one meaningful field match\\)\n- Better logging of matched words and fields\n- Prevents irrelevant results from flooding search\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git -C \"C:/sitespeak/Backend\" commit -m \"Clean up debug code and configure OTA updates\n\n- Remove debug alerts and console.logs added for iOS PDF diagnosis\n- Change runtimeVersion from appVersion to fingerprint policy\n- Add update settings for automatic OTA check on app load\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\")",
+      "Bash(eas build:list:*)",
+      "Bash(Your recording will be transcribed automatically.\"\n- This gives users confidence their voice memo was recorded\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(eas update:*)",
+      "Bash(eas update:list:*)"
     ]
   }
 }

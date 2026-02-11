@@ -38,6 +38,7 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   Material: '#3B82F6',
   Equipment: '#6B7280',
   Coordination: '#10B981',
+  'Trade Damage': '#EA580C',
   Other: '#6B7280',
 };
 
