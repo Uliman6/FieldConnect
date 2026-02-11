@@ -180,16 +180,9 @@ function FilterDropdown({
   );
 }
 
-const CATEGORY_CONFIG: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
-  issue: { color: '#EF4444', icon: AlertCircle, label: 'Issue' },
-  learning: { color: '#8B5CF6', icon: Lightbulb, label: 'Learning' },
-  observation: { color: '#3B82F6', icon: Eye, label: 'Observation' },
-  safety: { color: '#DC2626', icon: Shield, label: 'Safety' },
-  quality: { color: '#F59E0B', icon: CheckCircle2, label: 'Quality' },
-  cost_impact: { color: '#EF4444', icon: DollarSign, label: 'Cost Impact' },
-  delay: { color: '#6366F1', icon: Clock, label: 'Delay' },
-  rework: { color: '#F97316', icon: RefreshCw, label: 'Rework' },
-};
+// Legacy category config - kept for reference but no longer used
+// Categories are now derived directly from event types
+// const CATEGORY_CONFIG = { ... };
 
 // Event type display config (matches EventType from types.ts)
 const EVENT_TYPE_CONFIG: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
@@ -285,30 +278,21 @@ function InsightCard({
     'follow_up': 'Follow-up',
   };
 
-  // Get display config - prefer eventType, then first issueType, then category
-  let typeConfig = CATEGORY_CONFIG.observation; // default fallback (better than "issue")
+  // Get display config - prefer eventType, then fall back to default
+  const DEFAULT_CONFIG = { color: '#6B7280', icon: AlertCircle, label: 'Note' };
+  let typeConfig = DEFAULT_CONFIG;
   let displayLabel = 'Note';
 
   if (eventType && EVENT_TYPE_CONFIG[eventType]) {
     // Event has a typed eventType that matches our config
     typeConfig = EVENT_TYPE_CONFIG[eventType];
     displayLabel = customType || EVENT_TYPE_CONFIG[eventType].label;
+  } else if (eventType) {
+    // Event type exists but not in config - use the type name directly
+    displayLabel = customType || eventType;
   } else if (issueTypes.length > 0 && ISSUE_TYPE_LABELS[issueTypes[0]]) {
-    // Use first issue type for display
-    const firstIssueType = issueTypes[0];
-    displayLabel = ISSUE_TYPE_LABELS[firstIssueType];
-    // Use matching category config if available
-    if (CATEGORY_CONFIG[firstIssueType]) {
-      typeConfig = CATEGORY_CONFIG[firstIssueType];
-    } else if (firstIssueType === 'safety' && CATEGORY_CONFIG.safety) {
-      typeConfig = CATEGORY_CONFIG.safety;
-    } else if (firstIssueType === 'quality' && CATEGORY_CONFIG.quality) {
-      typeConfig = CATEGORY_CONFIG.quality;
-    }
-  } else if (insight.category && insight.category !== 'issue' && CATEGORY_CONFIG[insight.category]) {
-    // Fall back to category config (but not generic "issue")
-    typeConfig = CATEGORY_CONFIG[insight.category];
-    displayLabel = CATEGORY_CONFIG[insight.category].label;
+    // Fall back to first issue type for non-event insights
+    displayLabel = ISSUE_TYPE_LABELS[issueTypes[0]];
   }
 
   const CategoryIcon = typeConfig.icon;
@@ -975,11 +959,11 @@ export default function InsightsScreen() {
               {stats.byCategory.length > 0 && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3">
                   <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    By Category (tap to filter)
+                    By Type (tap to filter)
                   </Text>
                   <View className="flex-row flex-wrap">
                     {stats.byCategory.map((item) => {
-                      const config = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.issue;
+                      const config = EVENT_TYPE_CONFIG[item.category] || { color: '#6B7280', label: item.category };
                       return (
                         <Pressable
                           key={item.category}
@@ -1104,12 +1088,12 @@ export default function InsightsScreen() {
               {stats && (
                 <View className="flex-row mb-3" style={{ zIndex: 100 }}>
                   <FilterDropdown
-                    label="Category"
+                    label="Type"
                     icon={AlertCircle}
                     color="#EF4444"
                     options={stats.byCategory.map(c => ({
                       value: c.category,
-                      label: `${CATEGORY_CONFIG[c.category]?.label || c.category} (${c.count})`,
+                      label: `${EVENT_TYPE_CONFIG[c.category]?.label || c.category} (${c.count})`,
                     }))}
                     selectedValues={activeFilters.categories}
                     onToggle={(value) => handleToggleFilter('categories', value)}
@@ -1176,7 +1160,7 @@ export default function InsightsScreen() {
                         className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
                       >
                         <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
-                          {CATEGORY_CONFIG[cat]?.label || cat}
+                          {EVENT_TYPE_CONFIG[cat]?.label || cat}
                         </Text>
                         <X size={12} color="#9CA3AF" />
                       </Pressable>
