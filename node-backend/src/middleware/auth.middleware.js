@@ -198,8 +198,11 @@ const loadAccessibleProjects = async (req, res, next) => {
     return res.status(401).json({ error: 'Authentication required' });
   }
 
+  console.log(`[loadAccessibleProjects] User: ${req.user.email}, role: ${req.user.role}`);
+
   // System admins can see all projects
   if (req.user.role === 'ADMIN') {
+    console.log(`[loadAccessibleProjects] User is system ADMIN, granting access to all projects`);
     req.accessibleProjectIds = null; // null means all projects
     return next();
   }
@@ -211,6 +214,7 @@ const loadAccessibleProjects = async (req, res, next) => {
   });
 
   req.accessibleProjectIds = memberships.map(m => m.projectId);
+  console.log(`[loadAccessibleProjects] User has access to ${req.accessibleProjectIds.length} projects:`, req.accessibleProjectIds);
 
   next();
 };
