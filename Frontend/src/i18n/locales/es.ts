@@ -150,6 +150,7 @@ export default {
       equipment: 'Equipo',
       coordination: 'Coordinación',
       'trade damage': 'Daño por Otros Oficios',
+      trade_damage: 'Daño por Otros Oficios',
       issue: 'Problema',
       other: 'Otro',
     },
