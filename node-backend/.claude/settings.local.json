@@ -44,7 +44,8 @@
       "Bash(eas update:list:*)",
       "Bash(eas build:view:*)",
       "Bash(eas submit:*)",
-      "Bash(powershell -command \"[console]::beep\\(800,300\\); [console]::beep\\(1000,300\\)\")"
+      "Bash(powershell -command \"[console]::beep\\(800,300\\); [console]::beep\\(1000,300\\)\")",
+      "Bash(eas build:*)"
     ]
   }
 }

@@ -1382,9 +1382,26 @@ export default function EventDetailScreen() {
     }
   };
 
-  const handleToggleResolved = () => {
+  const handleToggleResolved = async () => {
+    const newResolvedState = !event.is_resolved;
+
+    // Update local store first (for offline support)
     toggleEventResolved(event.id);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Also update backend
+    try {
+      await updateEventApi(event.id, { isResolved: newResolvedState });
+      // Invalidate queries to refresh lists
+      queryClient.invalidateQueries({ queryKey: queryKeys.event(event.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.events });
+      queryClient.invalidateQueries({ queryKey: ['events', 'project'] });
+    } catch (error) {
+      console.error('[event-detail] Failed to update resolved status on backend:', error);
+      // Revert local state on failure
+      toggleEventResolved(event.id);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
   };
 
   const markChanged = () => {
