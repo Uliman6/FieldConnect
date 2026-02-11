@@ -947,8 +947,13 @@ export default function EventDetailScreen() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setHasChanges(false);
+      // Invalidate all event-related queries to refresh lists
       queryClient.invalidateQueries({ queryKey: queryKeys.event(id || '') });
       queryClient.invalidateQueries({ queryKey: queryKeys.events });
+      // Invalidate project-specific events query used by Events tab
+      queryClient.invalidateQueries({ queryKey: ['events', 'project'] });
+      // Invalidate insights since event type changes affect insight categorization
+      queryClient.invalidateQueries({ queryKey: ['insights'] });
     },
     onError: (error) => {
       console.error('[event-detail] Failed to update backend event:', error);
