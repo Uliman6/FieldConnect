@@ -4,6 +4,16 @@ const schemaPdfService = require('../services/schema-pdf.service');
 const archiver = require('archiver');
 
 class ReportsController {
+  /**
+   * Check if user has access to a project
+   */
+  _checkProjectAccess(req, projectId) {
+    // If accessibleProjectIds is null, user is admin with access to all
+    if (req.accessibleProjectIds === null) return true;
+    // Check if projectId is in user's accessible projects
+    return req.accessibleProjectIds.includes(projectId);
+  }
+
   async generateDailyLogReport(req, res, next) {
     try {
       const { id } = req.params;
@@ -17,6 +27,10 @@ class ReportsController {
       });
       if (!dailyLog) {
         return res.status(404).json({ error: 'Not Found', message: 'Daily log not found' });
+      }
+      // ACCESS CONTROL: Check if user has access to this project
+      if (!this._checkProjectAccess(req, dailyLog.projectId)) {
+        return res.status(403).json({ error: 'Forbidden', message: 'You do not have access to this project' });
       }
       const doc = await pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project, dailyLog.photos || []);
       const projectNum = dailyLog.project.number || 'report';
@@ -40,6 +54,10 @@ class ReportsController {
       });
       if (!dailyLog) {
         return res.status(404).json({ error: 'Not Found', message: 'Daily log not found' });
+      }
+      // ACCESS CONTROL: Check if user has access to this project
+      if (!this._checkProjectAccess(req, dailyLog.projectId)) {
+        return res.status(403).json({ error: 'Forbidden', message: 'You do not have access to this project' });
       }
       const doc = await pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project, dailyLog.photos || []);
       res.setHeader('Content-Type', 'application/pdf');
@@ -67,9 +85,11 @@ class ReportsController {
       archive.pipe(res);
       let addedCount = 0;
       if (type === 'daily_log') {
-        addedCount = await this._addDailyLogsToArchive(archive, ids);
+        // ACCESS CONTROL: Pass accessible project IDs to filter
+        addedCount = await this._addDailyLogsToArchive(archive, ids, req.accessibleProjectIds);
       } else if (type === 'punch_list' || type === 'rfi') {
-        addedCount = await this._addChecklistItemsToArchive(archive, ids, type);
+        // ACCESS CONTROL: Pass accessible project IDs to filter
+        addedCount = await this._addChecklistItemsToArchive(archive, ids, type, req.accessibleProjectIds);
       }
       console.log('[bulk-export] Added ' + addedCount + ' files to archive');
       if (addedCount === 0) {
@@ -90,6 +110,10 @@ class ReportsController {
       if (!type) {
         return res.status(400).json({ error: 'Bad Request', message: 'type query parameter is required' });
       }
+      // ACCESS CONTROL: Check if user has access to this project
+      if (!this._checkProjectAccess(req, projectId)) {
+        return res.status(403).json({ error: 'Forbidden', message: 'You do not have access to this project' });
+      }
       const project = await prisma.project.findUnique({ where: { id: projectId } });
       if (!project) {
         return res.status(404).json({ error: 'Not Found', message: 'Project not found' });
@@ -109,7 +133,7 @@ class ReportsController {
       if (type === 'daily_log') {
         const dailyLogs = await prisma.dailyLog.findMany({ where: { projectId }, select: { id: true }, orderBy: { date: 'desc' } });
         console.log('[bulk-export-project] Found ' + dailyLogs.length + ' daily logs');
-        if (dailyLogs.length > 0) addedCount = await this._addDailyLogsToArchive(archive, dailyLogs.map(l => l.id));
+        if (dailyLogs.length > 0) addedCount = await this._addDailyLogsToArchive(archive, dailyLogs.map(l => l.id), null);
       } else if (type === 'punch_list' || type === 'rfi') {
         const events = await prisma.event.findMany({
           where: { projectId, schemaData: { isNot: null } },
@@ -124,7 +148,7 @@ class ReportsController {
           return false;
         });
         console.log('[bulk-export-project] Filtered to ' + filteredEvents.length + ' ' + type + ' events');
-        if (filteredEvents.length > 0) addedCount = await this._addChecklistItemsToArchive(archive, filteredEvents.map(e => e.id), type);
+        if (filteredEvents.length > 0) addedCount = await this._addChecklistItemsToArchive(archive, filteredEvents.map(e => e.id), type, null);
       }
       console.log('[bulk-export-project] Added ' + addedCount + ' files to archive');
       if (addedCount === 0) {
@@ -137,7 +161,7 @@ class ReportsController {
     }
   }
 
-  async _addDailyLogsToArchive(archive, ids) {
+  async _addDailyLogsToArchive(archive, ids, accessibleProjectIds) {
     let addedCount = 0;
     for (const id of ids) {
       try {
@@ -146,6 +170,11 @@ class ReportsController {
           include: { project: true, tasks: true, visitors: true, equipment: true, materials: true, pendingIssues: true, inspectionNotes: true, additionalWorkEntries: true, photos: true }
         });
         if (!dailyLog) continue;
+        // ACCESS CONTROL: Skip if user doesn't have access to this project
+        if (accessibleProjectIds !== null && !accessibleProjectIds.includes(dailyLog.projectId)) {
+          console.log('[bulk-export] Skipping daily log ' + id + ' - no access to project');
+          continue;
+        }
         const doc = await pdfGenerator.generateDailyLogReport(dailyLog, dailyLog.project, dailyLog.photos || []);
         const dateStr = new Date(dailyLog.date).toISOString().split('T')[0];
         const filename = 'daily-log-' + dateStr + '.pdf';
@@ -159,7 +188,7 @@ class ReportsController {
     return addedCount;
   }
 
-  async _addChecklistItemsToArchive(archive, ids, type) {
+  async _addChecklistItemsToArchive(archive, ids, type, accessibleProjectIds) {
     const fs = require('fs');
     let addedCount = 0;
     console.log('[bulk-export] Processing ' + ids.length + ' ' + type + ' items');
@@ -171,6 +200,11 @@ class ReportsController {
         });
         if (!event) {
           console.log('[bulk-export] Event not found: ' + id);
+          continue;
+        }
+        // ACCESS CONTROL: Skip if user doesn't have access to this project
+        if (accessibleProjectIds !== null && !accessibleProjectIds.includes(event.projectId)) {
+          console.log('[bulk-export] Skipping event ' + id + ' - no access to project');
           continue;
         }
         if (!event.schemaData) {

@@ -8,6 +8,34 @@ const insightsService = require('../services/insights.service');
  */
 class EventsController {
   /**
+   * Helper: Check if user has access to a project
+   */
+  _checkProjectAccess(req, projectId) {
+    // If accessibleProjectIds is null, user is admin with access to all
+    if (req.accessibleProjectIds === null) return true;
+    // Check if projectId is in user's accessible projects
+    return req.accessibleProjectIds.includes(projectId);
+  }
+
+  /**
+   * Helper: Get event and verify access, returns null if no access
+   */
+  async _getEventWithAccessCheck(req, eventId) {
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, projectId: true }
+    });
+
+    if (!event) return { error: 'not_found', event: null };
+
+    if (!this._checkProjectAccess(req, event.projectId)) {
+      return { error: 'no_access', event: null };
+    }
+
+    return { error: null, event };
+  }
+
+  /**
    * GET /api/events
    * List events with filters
    */
@@ -204,6 +232,15 @@ class EventsController {
     try {
       const { id } = req.params;
       const { limit = 5 } = req.query;
+
+      // ACCESS CONTROL: Check if user has access to this event
+      const { error } = await this._getEventWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
 
       const results = await similarityService.findSimilarByEventId(id, parseInt(limit));
 
@@ -632,6 +669,15 @@ class EventsController {
     try {
       const { id } = req.params;
 
+      // ACCESS CONTROL: Check if user has access to this event
+      const { error } = await this._getEventWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
+
       const index = await eventIndexerService.indexEvent(id);
 
       res.json({
@@ -672,6 +718,11 @@ class EventsController {
         });
       }
 
+      // ACCESS CONTROL: Check if user has access to this event's project
+      if (!this._checkProjectAccess(req, event.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
+
       res.json({
         eventId: event.id,
         title: event.title,
@@ -704,6 +755,11 @@ class EventsController {
           error: 'Not Found',
           message: 'Event not found'
         });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this event's project
+      if (!this._checkProjectAccess(req, event.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
       }
 
       // Create or update the index
@@ -908,6 +964,11 @@ class EventsController {
         });
       }
 
+      // ACCESS CONTROL: Check if user has access to this event's project
+      if (!this._checkProjectAccess(req, event.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
+
       const previousStatus = event.itemStatus;
 
       // Update event status
@@ -971,6 +1032,11 @@ class EventsController {
         });
       }
 
+      // ACCESS CONTROL: Check if user has access to this event's project
+      if (!this._checkProjectAccess(req, event.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
+
       const comments = await prisma.eventComment.findMany({
         where: { eventId: id },
         orderBy: { createdAt: 'desc' }
@@ -1010,6 +1076,11 @@ class EventsController {
         });
       }
 
+      // ACCESS CONTROL: Check if user has access to this event's project
+      if (!this._checkProjectAccess(req, event.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
+
       const comment = await prisma.eventComment.create({
         data: {
           eventId: id,
@@ -1032,6 +1103,15 @@ class EventsController {
   async deleteComment(req, res, next) {
     try {
       const { id, commentId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this event
+      const { error, event: eventCheck } = await this._getEventWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this event' });
+      }
 
       // Verify comment exists and belongs to event
       const comment = await prisma.eventComment.findFirst({

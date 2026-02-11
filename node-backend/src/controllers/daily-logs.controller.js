@@ -83,6 +83,34 @@ async function createEventFromIssue(issue, dailyLog, projectId) {
  */
 class DailyLogsController {
   /**
+   * Helper: Check if user has access to a project
+   */
+  _checkProjectAccess(req, projectId) {
+    // If accessibleProjectIds is null, user is admin with access to all
+    if (req.accessibleProjectIds === null) return true;
+    // Check if projectId is in user's accessible projects
+    return req.accessibleProjectIds.includes(projectId);
+  }
+
+  /**
+   * Helper: Get daily log and verify access, returns null if no access
+   */
+  async _getDailyLogWithAccessCheck(req, dailyLogId) {
+    const dailyLog = await prisma.dailyLog.findUnique({
+      where: { id: dailyLogId },
+      select: { id: true, projectId: true }
+    });
+
+    if (!dailyLog) return { error: 'not_found', dailyLog: null };
+
+    if (!this._checkProjectAccess(req, dailyLog.projectId)) {
+      return { error: 'no_access', dailyLog: null };
+    }
+
+    return { error: null, dailyLog };
+  }
+
+  /**
    * Helper: Recalculate and update daily totals from all tasks
    */
   async recalculateDailyTotals(dailyLogId) {
@@ -468,6 +496,16 @@ class DailyLogsController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const {
         date,
         prepared_by,
@@ -513,6 +551,15 @@ class DailyLogsController {
     try {
       const { id } = req.params;
 
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       // First, delete any events linked to this daily log
       const deletedEvents = await prisma.event.deleteMany({
         where: { linkedDailyLogId: id }
@@ -541,6 +588,16 @@ class DailyLogsController {
   async addTask(req, res, next) {
     try {
       const { id } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { company_name, workers, hours, task_description, notes } = req.body;
 
       const task = await prisma.task.create({
@@ -580,6 +637,11 @@ class DailyLogsController {
 
       if (!dailyLog) {
         return res.status(404).json({ error: 'Daily log not found' });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      if (!this._checkProjectAccess(req, dailyLog.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
       }
 
       const issue = await prisma.pendingIssue.create({
@@ -645,6 +707,11 @@ class DailyLogsController {
           error: 'Not Found',
           message: 'Project not found'
         });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this project
+      if (!this._checkProjectAccess(req, project_id)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
       }
 
       // If client provided an ID, check if it already exists
@@ -943,6 +1010,16 @@ class DailyLogsController {
   async updateTask(req, res, next) {
     try {
       const { id, taskId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { company_name, workers, hours, task_description, notes } = req.body;
 
       const task = await prisma.task.update({
@@ -974,6 +1051,16 @@ class DailyLogsController {
   async deleteTask(req, res, next) {
     try {
       const { id, taskId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       await prisma.task.delete({ where: { id: taskId } });
 
       // Recalculate daily totals after deletion
@@ -991,7 +1078,17 @@ class DailyLogsController {
    */
   async updatePendingIssue(req, res, next) {
     try {
-      const { issueId } = req.params;
+      const { id, issueId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { title, description, category, severity, assignee, due_date, external_entity, location } = req.body;
 
       const issue = await prisma.pendingIssue.update({
@@ -1020,7 +1117,17 @@ class DailyLogsController {
    */
   async deletePendingIssue(req, res, next) {
     try {
-      const { issueId } = req.params;
+      const { id, issueId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       await prisma.pendingIssue.delete({ where: { id: issueId } });
       res.status(204).send();
     } catch (err) {
@@ -1035,6 +1142,16 @@ class DailyLogsController {
   async addVisitor(req, res, next) {
     try {
       const { id } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { time, company_name, visitor_name, notes } = req.body;
 
       const visitor = await prisma.visitor.create({
@@ -1059,7 +1176,17 @@ class DailyLogsController {
    */
   async updateVisitor(req, res, next) {
     try {
-      const { visitorId } = req.params;
+      const { id, visitorId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { time, company_name, visitor_name, notes } = req.body;
 
       const visitor = await prisma.visitor.update({
@@ -1084,7 +1211,17 @@ class DailyLogsController {
    */
   async deleteVisitor(req, res, next) {
     try {
-      const { visitorId } = req.params;
+      const { id, visitorId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       await prisma.visitor.delete({ where: { id: visitorId } });
       res.status(204).send();
     } catch (err) {
@@ -1099,6 +1236,16 @@ class DailyLogsController {
   async addEquipment(req, res, next) {
     try {
       const { id } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { equipment_type, quantity, hours, notes } = req.body;
 
       const equipment = await prisma.equipment.create({
@@ -1123,7 +1270,17 @@ class DailyLogsController {
    */
   async updateEquipment(req, res, next) {
     try {
-      const { equipmentId } = req.params;
+      const { id, equipmentId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { equipment_type, quantity, hours, notes } = req.body;
 
       const equipment = await prisma.equipment.update({
@@ -1148,7 +1305,17 @@ class DailyLogsController {
    */
   async deleteEquipment(req, res, next) {
     try {
-      const { equipmentId } = req.params;
+      const { id, equipmentId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       await prisma.equipment.delete({ where: { id: equipmentId } });
       res.status(204).send();
     } catch (err) {
@@ -1163,6 +1330,16 @@ class DailyLogsController {
   async addMaterial(req, res, next) {
     try {
       const { id } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { material, quantity, unit, supplier, notes } = req.body;
 
       const mat = await prisma.material.create({
@@ -1188,7 +1365,17 @@ class DailyLogsController {
    */
   async updateMaterial(req, res, next) {
     try {
-      const { materialId } = req.params;
+      const { id, materialId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { material, quantity, unit, supplier, notes } = req.body;
 
       const mat = await prisma.material.update({
@@ -1214,7 +1401,17 @@ class DailyLogsController {
    */
   async deleteMaterial(req, res, next) {
     try {
-      const { materialId } = req.params;
+      const { id, materialId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       await prisma.material.delete({ where: { id: materialId } });
       res.status(204).send();
     } catch (err) {
@@ -1229,6 +1426,16 @@ class DailyLogsController {
   async addInspectionNote(req, res, next) {
     try {
       const { id } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { inspector_name, ahj, inspection_type, result, notes, follow_up_needed } = req.body;
 
       const note = await prisma.inspectionNote.create({
@@ -1260,7 +1467,17 @@ class DailyLogsController {
    */
   async updateInspectionNote(req, res, next) {
     try {
-      const { noteId } = req.params;
+      const { id, noteId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       const { inspector_name, ahj, inspection_type, result, notes, follow_up_needed } = req.body;
 
       const note = await prisma.inspectionNote.update({
@@ -1287,7 +1504,17 @@ class DailyLogsController {
    */
   async deleteInspectionNote(req, res, next) {
     try {
-      const { noteId } = req.params;
+      const { id, noteId } = req.params;
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      const { error } = await this._getDailyLogWithAccessCheck(req, id);
+      if (error === 'not_found') {
+        return res.status(404).json({ error: 'Daily log not found' });
+      }
+      if (error === 'no_access') {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
+      }
+
       await prisma.inspectionNote.delete({ where: { id: noteId } });
       res.status(204).send();
     } catch (err) {
@@ -1322,6 +1549,11 @@ class DailyLogsController {
           error: 'Not Found',
           message: 'Daily log not found'
         });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this daily log
+      if (!this._checkProjectAccess(req, existingLog.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this daily log' });
       }
 
       // Parse the transcript using AI
