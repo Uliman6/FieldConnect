@@ -1242,7 +1242,7 @@ Return a JSON object with the structure described. Only include categories that 
 OUTPUT FORMAT: Valid JSON with these fields:
 {
   "title": "Brief title using ONLY words from the transcript (max 50 chars)",
-  "event_type": "One of: Delay, Quality, Safety, Inspection, Material, Equipment, Coordination, Other",
+  "event_type": "One of: Delay, Quality, Safety, Inspection, Material, Equipment, Coordination, Trade Damage, Other",
   "severity": "One of: Low, Medium, High",
   "action_items": ["Array of tasks ONLY if explicitly stated in transcript"],
   "location": "Location ONLY if stated in transcript",
@@ -1288,9 +1288,21 @@ Example: "need DPR Division 7 to come back and use paint to cover this up"
 ❌ BAD: ["Document damage with photos", "File insurance claim"] (NOT stated)
 
 ═══════════════════════════════════════════════════════════════
+EVENT TYPE GUIDELINES:
+═══════════════════════════════════════════════════════════════
+- Trade Damage: Use when damage is caused BY another trade, accidental collision, someone hit/broke something, pipe fell on something, damage during installation by others
+- Quality: Use for workmanship defects, finish issues, NOT for damage caused by accidents
+- Safety: Use for safety hazards, injuries, near-misses
+- Delay: Use for schedule impacts, waiting on others
+- Material: Use for material defects, shortages, wrong materials delivered
+- Equipment: Use for equipment failures, breakdowns
+- Coordination: Use for communication issues, scheduling conflicts between trades
+- Inspection: Use for inspection-related events
+
+═══════════════════════════════════════════════════════════════
 SEVERITY GUIDELINES:
 ═══════════════════════════════════════════════════════════════
-- High: Safety issues, work stoppages, significant delays
+- High: Safety issues, work stoppages, significant delays, major damage
 - Medium: Schedule impacts, coordination issues, quality concerns
 - Low: Minor issues, cosmetic damage, FYI items`;
 
@@ -1381,8 +1393,12 @@ Return a JSON object with: title, event_type, severity, action_items, location, 
   }
 
   normalizeEventType(type) {
-    const valid = ['Delay', 'Quality', 'Safety', 'Inspection', 'Material', 'Equipment', 'Coordination', 'Other'];
+    const valid = ['Delay', 'Quality', 'Safety', 'Inspection', 'Material', 'Equipment', 'Coordination', 'Trade Damage', 'Other'];
     if (!type) return 'Other';
+    // Handle 'Trade Damage' specially since it has a space
+    if (type.toLowerCase().includes('trade') && type.toLowerCase().includes('damage')) {
+      return 'Trade Damage';
+    }
     const normalized = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
     return valid.includes(normalized) ? normalized : 'Other';
   }

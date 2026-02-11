@@ -158,6 +158,43 @@ main                    # Production-ready code, auto-deploys to Vercel/Render
 - [ ] Backend changes tested with local database
 - [ ] Code is clean (no debug console.logs left)
 
+## Feature Integration Touchpoints
+
+When adding or modifying features, always check ALL related touchpoints. Features are rarely isolated.
+
+### Event Types (e.g., adding "Trade Damage")
+When adding a new event type, update ALL of these:
+1. **Frontend Types**: `Frontend/src/lib/types.ts` - `EventType` union type
+2. **Frontend UI - Event Detail**: `Frontend/src/app/event-detail.tsx` - `EVENT_TYPES` array and `EVENT_TYPE_COLORS` object
+3. **Frontend UI - Events List**: `Frontend/src/app/(tabs)/events.tsx` - `EVENT_TYPE_COLORS` object
+4. **Backend AI Parser**: `node-backend/src/services/transcript-parser.service.js`:
+   - AI prompt `event_type` list (line ~1245)
+   - `normalizeEventType()` valid array (line ~1384)
+   - Event type detection guidelines in AI prompt
+5. **Backend Insights Service**: `node-backend/src/services/insights.service.js` - `eventTypeMap` in `determineCategory()` (line ~634)
+
+### Event Fields (adding new fields to events)
+1. **Prisma Schema**: `node-backend/prisma/schema.prisma` - Event model
+2. **Backend Controller**: `node-backend/src/controllers/events.controller.js` - `update()` method destructuring and Prisma update
+3. **Frontend API**: `Frontend/src/lib/api.ts` - `updateEventApi()` function parameters and body
+4. **Frontend Types**: `Frontend/src/lib/types.ts` - Event interface
+5. **Frontend UI**: `Frontend/src/app/event-detail.tsx` - state, UI controls, and save handler
+
+### Query Invalidation (ensuring UI refreshes after saves)
+After mutations, invalidate relevant queries in React Query:
+- Single item: `queryClient.invalidateQueries({ queryKey: queryKeys.event(id) })`
+- List views: `queryClient.invalidateQueries({ queryKey: ['events', 'project'] })`
+- Related data: `queryClient.invalidateQueries({ queryKey: ['insights'] })`
+
+### Field Naming Convention
+- **Frontend**: Uses camelCase (`eventType`, `customEventType`, `tradeVendor`)
+- **API Layer**: `Frontend/src/lib/api.ts` converts to snake_case for backend
+- **Backend**: Controllers should accept BOTH camelCase and snake_case for robustness:
+  ```javascript
+  const { event_type, eventType } = req.body;
+  const finalEventType = eventType ?? event_type;
+  ```
+
 ## Next Priority
 - Punch list feature with photo capability
 - Full offline queue testing
