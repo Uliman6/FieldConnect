@@ -150,6 +150,7 @@ export default {
       equipment: 'Ekipman',
       coordination: 'Koordinasyon',
       'trade damage': 'Diger Islerin Hasari',
+      trade_damage: 'Diger Islerin Hasari',
       issue: 'Sorun',
       other: 'Diğer',
     },

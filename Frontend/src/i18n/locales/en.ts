@@ -150,6 +150,7 @@ export default {
       equipment: 'Equipment',
       coordination: 'Coordination',
       'trade damage': 'Trade Damage',
+      trade_damage: 'Trade Damage',
       issue: 'Issue',
       other: 'Other',
     },
