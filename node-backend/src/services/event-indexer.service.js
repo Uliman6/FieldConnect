@@ -869,11 +869,19 @@ class EventIndexerService {
       minCost,
       maxCost,
       projectId,
+      accessibleProjectIds,
       limit = 50
     } = filters;
 
     const whereClause = {};
     const indexWhere = {};
+
+    // ACCESS CONTROL: Filter by project
+    if (projectId) {
+      whereClause.projectId = projectId;
+    } else if (accessibleProjectIds && accessibleProjectIds.length > 0) {
+      whereClause.projectId = { in: accessibleProjectIds };
+    }
 
     // Build index filters using JSON contains
     if (inspector) {
@@ -945,15 +953,19 @@ class EventIndexerService {
    * @returns {Array} Events needing follow-up
    */
   async getEventsNeedingFollowUp(options = {}) {
-    const { projectId, includeResolved = false, limit = 50 } = options;
+    const { projectId, accessibleProjectIds, includeResolved = false, limit = 50 } = options;
 
     const whereClause = {
       index: { needsFollowUp: true }
     };
 
+    // ACCESS CONTROL: Filter by project
     if (projectId) {
       whereClause.projectId = projectId;
+    } else if (accessibleProjectIds && accessibleProjectIds.length > 0) {
+      whereClause.projectId = { in: accessibleProjectIds };
     }
+
     if (!includeResolved) {
       whereClause.isResolved = false;
     }
@@ -984,10 +996,18 @@ class EventIndexerService {
   /**
    * Get aggregated statistics for indexed events
    * @param {string} projectId - Optional project filter
+   * @param {Array} accessibleProjectIds - Optional array of accessible project IDs for access control
    * @returns {Object} Aggregated stats
    */
-  async getIndexStats(projectId = null) {
-    const whereClause = projectId ? { event: { projectId } } : {};
+  async getIndexStats(projectId = null, accessibleProjectIds = null) {
+    let whereClause = {};
+
+    // ACCESS CONTROL: Filter by project
+    if (projectId) {
+      whereClause = { event: { projectId } };
+    } else if (accessibleProjectIds && accessibleProjectIds.length > 0) {
+      whereClause = { event: { projectId: { in: accessibleProjectIds } } };
+    }
 
     const [
       totalIndexed,

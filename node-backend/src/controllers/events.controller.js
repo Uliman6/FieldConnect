@@ -483,6 +483,24 @@ class EventsController {
         limit = 50
       } = req.query;
 
+      // ACCESS CONTROL: Filter by user's accessible projects
+      let filteredProjectId = project_id;
+      let accessibleProjectIds = null;
+
+      if (req.accessibleProjectIds !== null) {
+        if (req.accessibleProjectIds.length === 0) {
+          return res.json({ count: 0, filters: {}, results: [] });
+        }
+        if (project_id) {
+          if (!req.accessibleProjectIds.includes(project_id)) {
+            return res.status(403).json({ error: 'You do not have access to this project' });
+          }
+          filteredProjectId = project_id;
+        } else {
+          accessibleProjectIds = req.accessibleProjectIds;
+        }
+      }
+
       const results = await eventIndexerService.searchByKeywords({
         inspector,
         trade,
@@ -495,7 +513,8 @@ class EventsController {
         hasCostImpact: has_cost_impact === 'true',
         minCost: min_cost ? parseFloat(min_cost) : undefined,
         maxCost: max_cost ? parseFloat(max_cost) : undefined,
-        projectId: project_id,
+        projectId: filteredProjectId,
+        accessibleProjectIds,
         limit: parseInt(limit)
       });
 
@@ -517,8 +536,27 @@ class EventsController {
     try {
       const { project_id, include_resolved = 'false', limit = 50 } = req.query;
 
+      // ACCESS CONTROL: Filter by user's accessible projects
+      let filteredProjectId = project_id;
+      let accessibleProjectIds = null;
+
+      if (req.accessibleProjectIds !== null) {
+        if (req.accessibleProjectIds.length === 0) {
+          return res.json({ count: 0, results: [] });
+        }
+        if (project_id) {
+          if (!req.accessibleProjectIds.includes(project_id)) {
+            return res.status(403).json({ error: 'You do not have access to this project' });
+          }
+          filteredProjectId = project_id;
+        } else {
+          accessibleProjectIds = req.accessibleProjectIds;
+        }
+      }
+
       const results = await eventIndexerService.getEventsNeedingFollowUp({
-        projectId: project_id,
+        projectId: filteredProjectId,
+        accessibleProjectIds,
         includeResolved: include_resolved === 'true',
         limit: parseInt(limit)
       });
@@ -540,7 +578,25 @@ class EventsController {
     try {
       const { project_id } = req.query;
 
-      const stats = await eventIndexerService.getIndexStats(project_id);
+      // ACCESS CONTROL: Filter by user's accessible projects
+      let filteredProjectId = project_id;
+      let accessibleProjectIds = null;
+
+      if (req.accessibleProjectIds !== null) {
+        if (req.accessibleProjectIds.length === 0) {
+          return res.json({ total: 0, trades: [], issueTypes: [], systems: [] });
+        }
+        if (project_id) {
+          if (!req.accessibleProjectIds.includes(project_id)) {
+            return res.status(403).json({ error: 'You do not have access to this project' });
+          }
+          filteredProjectId = project_id;
+        } else {
+          accessibleProjectIds = req.accessibleProjectIds;
+        }
+      }
+
+      const stats = await eventIndexerService.getIndexStats(filteredProjectId, accessibleProjectIds);
 
       res.json(stats);
     } catch (err) {
@@ -720,7 +776,29 @@ class EventsController {
         }
       };
 
-      if (project_id) {
+      // ACCESS CONTROL: Filter by user's accessible projects
+      if (req.accessibleProjectIds !== null) {
+        // User has limited access - filter by their projects
+        if (req.accessibleProjectIds.length === 0) {
+          // User has no project access - return empty result
+          return res.json({
+            items: [],
+            counts: { total: 0, open: 0, inProgress: 0, closed: 0 }
+          });
+        }
+
+        if (project_id) {
+          // Check if user has access to the requested project
+          if (!req.accessibleProjectIds.includes(project_id)) {
+            return res.status(403).json({ error: 'You do not have access to this project' });
+          }
+          whereClause.projectId = project_id;
+        } else {
+          // Filter by all accessible projects
+          whereClause.projectId = { in: req.accessibleProjectIds };
+        }
+      } else if (project_id) {
+        // Admin user with specific project filter
         whereClause.projectId = project_id;
       }
 
@@ -754,7 +832,15 @@ class EventsController {
           }
         }
       };
-      if (project_id) {
+
+      // ACCESS CONTROL: Apply same project filter to counts
+      if (req.accessibleProjectIds !== null) {
+        if (project_id) {
+          countsWhere.projectId = project_id;
+        } else {
+          countsWhere.projectId = { in: req.accessibleProjectIds };
+        }
+      } else if (project_id) {
         countsWhere.projectId = project_id;
       }
 
