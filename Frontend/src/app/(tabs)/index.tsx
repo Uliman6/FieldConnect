@@ -217,19 +217,31 @@ export default function DailyLogScreen() {
     }
   }, [log, router]);
 
-  // Show placeholder if no log
+  // Show placeholder if no log or no project selected
   if (!log || !currentProjectId) {
+    const hasProjects = projects.length > 0;
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center p-8">
         <View className="w-20 h-20 rounded-full bg-orange-100 dark:bg-orange-900/30 items-center justify-center mb-4">
           <FileText size={40} color="#F97316" />
         </View>
         <Text className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-2">
-          {t('projects.projectRequired')}
+          {hasProjects ? t('projects.projectRequired') : t('projects.noProjects')}
         </Text>
-        <Text className="text-gray-500 dark:text-gray-400 text-center">
-          {t('projects.selectProject')}
+        <Text className="text-gray-500 dark:text-gray-400 text-center mb-6">
+          {hasProjects ? t('projects.selectToView') : t('projects.createFirst')}
         </Text>
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/(tabs)/projects');
+          }}
+          className="bg-orange-500 px-6 py-3 rounded-xl"
+        >
+          <Text className="text-white font-semibold">
+            {hasProjects ? t('projects.selectProject') : t('projects.createProject')}
+          </Text>
+        </Pressable>
       </View>
     );
   }
