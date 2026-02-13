@@ -2378,6 +2378,65 @@ export async function deleteEventComment(
   });
 }
 
+// ============================================
+// USER MANAGEMENT API (Admin only)
+// ============================================
+
+export interface UserInfo {
+  id: string;
+  email: string;
+  name: string | null;
+  role: 'ADMIN' | 'EDITOR' | 'VIEWER';
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Get all users (Admin only)
+ */
+export async function getUsers(): Promise<UserInfo[]> {
+  return apiFetch('/api/auth/users');
+}
+
+/**
+ * Create a new user (Admin only)
+ */
+export async function createUser(data: {
+  email: string;
+  password: string;
+  name?: string;
+  role?: 'ADMIN' | 'EDITOR' | 'VIEWER';
+}): Promise<UserInfo> {
+  return apiFetch('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update a user (Admin only)
+ */
+export async function updateUser(
+  id: string,
+  data: {
+    name?: string;
+    role?: 'ADMIN' | 'EDITOR' | 'VIEWER';
+    email?: string;
+  }
+): Promise<UserInfo> {
+  return apiFetch(`/api/auth/users/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a user (Admin only)
+ */
+export async function deleteUser(id: string): Promise<void> {
+  await apiFetch(`/api/auth/users/${id}`, { method: 'DELETE' });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -2407,4 +2466,6 @@ export const queryKeys = {
   // Checklist/Comments queries
   checklist: (filters?: ChecklistFilters) => ['checklist', filters] as const,
   eventComments: (eventId: string) => ['events', eventId, 'comments'] as const,
+  // User management
+  users: ['users'] as const,
 };
