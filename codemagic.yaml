@@ -29,11 +29,16 @@ workflows:
         script: |
           cd ios && pod install
 
+      - name: Create private key for certificate
+        script: |
+          openssl genrsa -out $HOME/cert_key.pem 2048
+
       - name: Fetch signing files
         script: |
           app-store-connect fetch-signing-files $BUNDLE_ID \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --certificate-key=@file:$HOME/cert_key.pem
 
       - name: Set up keychain
         script: |
