@@ -2395,7 +2395,8 @@ export interface UserInfo {
  * Get all users (Admin only)
  */
 export async function getUsers(): Promise<UserInfo[]> {
-  return apiFetch('/api/auth/users');
+  const response = await apiFetch<{ users: UserInfo[] }>('/api/auth/users');
+  return response.users;
 }
 
 /**
@@ -2407,10 +2408,11 @@ export async function createUser(data: {
   name?: string;
   role?: 'ADMIN' | 'EDITOR' | 'VIEWER';
 }): Promise<UserInfo> {
-  return apiFetch('/api/auth/register', {
+  const response = await apiFetch<{ user: UserInfo; token: string }>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  return response.user;
 }
 
 /**
@@ -2424,10 +2426,11 @@ export async function updateUser(
     email?: string;
   }
 ): Promise<UserInfo> {
-  return apiFetch(`/api/auth/users/${id}`, {
+  const response = await apiFetch<{ user: UserInfo }>(`/api/auth/users/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
+  return response.user;
 }
 
 /**
