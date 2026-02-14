@@ -6,7 +6,7 @@ workflows:
     working_directory: Frontend
 
     integrations:
-      app_store_connect: magic
+      app_store_connect: Magic
 
     environment:
       vars:
