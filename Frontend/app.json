@@ -86,9 +86,7 @@
       "router": {}
     },
     "owner": "ulis-organization",
-    "runtimeVersion": {
-      "policy": "fingerprint"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/8697f118-69e2-4cc2-a676-80d0a0591aa0",
       "checkAutomatically": "ON_LOAD",
