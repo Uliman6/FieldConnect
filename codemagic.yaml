@@ -5,6 +5,9 @@ workflows:
     instance_type: mac_mini_m2
     working_directory: Frontend
 
+    integrations:
+      app_store_connect: codemagic
+
     environment:
       ios_signing:
         distribution_type: app_store
