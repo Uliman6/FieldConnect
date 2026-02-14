@@ -50,14 +50,28 @@ workflows:
 
       - name: Set up code signing
         script: |
-          xcode-project use-profiles --project ios/fieldconnect.xcodeproj
+          xcode-project use-profiles --project ios/*.xcodeproj
+
+      - name: Debug - List iOS folder
+        script: |
+          ls -la ios/
+          ls -la ios/*.xcworkspace || true
+          ls -la ios/*.xcodeproj || true
+
+      - name: List schemes
+        script: |
+          xcodebuild -workspace ios/*.xcworkspace -list
+        ignore_failure: true
 
       - name: Build IPA
         script: |
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list | grep -A1 "Schemes:" | tail -1 | xargs)
+          echo "Building workspace: $WORKSPACE with scheme: $SCHEME"
           xcode-project build-ipa \
-            --workspace "ios/fieldconnect.xcworkspace" \
-            --scheme "fieldconnect" \
-            --config "Release"
+            --workspace "$WORKSPACE" \
+            --scheme "$SCHEME" \
+            --archive-flags="-allowProvisioningUpdates"
 
     artifacts:
       - Frontend/build/ios/ipa/*.ipa
