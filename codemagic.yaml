@@ -3,6 +3,7 @@ workflows:
     name: iOS Production Build
     max_build_duration: 60
     instance_type: mac_mini_m2
+    working_directory: Frontend
 
     environment:
       ios_signing:
@@ -13,14 +14,6 @@ workflows:
       node: 20
       xcode: latest
       cocoapods: default
-
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: 'main'
-          include: true
-      cancel_previous_builds: true
 
     scripts:
       - name: Install dependencies
@@ -39,12 +32,6 @@ workflows:
         script: |
           xcode-project use-profiles
 
-      - name: Increment build number
-        script: |
-          cd ios
-          LATEST_BUILD=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_CONNECT_ISSUER_ID" "$APP_STORE_CONNECT_KEY_IDENTIFIER" "$APP_STORE_CONNECT_PRIVATE_KEY" com.const.fieldconnect)
-          agvtool new-version -all $((LATEST_BUILD + 1))
-
       - name: Build IPA
         script: |
           xcode-project build-ipa \
@@ -53,12 +40,10 @@ workflows:
             --config "Release"
 
     artifacts:
-      - build/ios/ipa/*.ipa
+      - Frontend/build/ios/ipa/*.ipa
       - ~/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
     publishing:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        beta_groups:
-          - "External Testers"
