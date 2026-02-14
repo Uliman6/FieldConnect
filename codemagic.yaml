@@ -50,7 +50,7 @@ workflows:
 
       - name: Set up code signing
         script: |
-          xcode-project use-profiles
+          xcode-project use-profiles --project ios/fieldconnect.xcodeproj
 
       - name: Build IPA
         script: |
