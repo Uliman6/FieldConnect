@@ -9,9 +9,11 @@ workflows:
       app_store_connect: Magic
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.const.fieldconnect
       vars:
         EXPO_PUBLIC_API_URL: "https://fieldconnect.onrender.com"
-        BUNDLE_ID: "com.const.fieldconnect"
       node: 20
       xcode: latest
       cocoapods: default
@@ -29,17 +31,6 @@ workflows:
         script: |
           cd ios && pod install
 
-      - name: Create private key for certificate
-        script: |
-          openssl genrsa -out $HOME/cert_key.pem 2048
-
-      - name: Fetch signing files
-        script: |
-          app-store-connect fetch-signing-files $BUNDLE_ID \
-            --type IOS_APP_STORE \
-            --create \
-            --certificate-key=@file:$HOME/cert_key.pem
-
       - name: Set up keychain
         script: |
           keychain initialize
@@ -55,12 +46,6 @@ workflows:
       - name: Debug - List iOS folder
         script: |
           ls -la ios/
-          ls -la ios/*.xcworkspace || true
-          ls -la ios/*.xcodeproj || true
-
-      - name: List schemes
-        script: |
-          xcodebuild -workspace ios/*.xcworkspace -list
         ignore_failure: true
 
       - name: Build IPA
