@@ -43,23 +43,14 @@ workflows:
         script: |
           xcode-project use-profiles --project ios/*.xcodeproj
 
-      - name: Debug - List iOS folder
-        script: |
-          ls -la ios/
-        ignore_failure: true
-
       - name: Build IPA
         script: |
-          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list | grep -A1 "Schemes:" | tail -1 | xargs)
-          echo "Building workspace: $WORKSPACE with scheme: $SCHEME"
           xcode-project build-ipa \
-            --workspace "$WORKSPACE" \
-            --scheme "$SCHEME" \
-            --archive-flags="-allowProvisioningUpdates"
+            --workspace "ios/FieldConnect.xcworkspace" \
+            --scheme "FieldConnect"
 
     artifacts:
-      - Frontend/build/ios/ipa/*.ipa
+      - build/ios/ipa/*.ipa
       - ~/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
     publishing:
