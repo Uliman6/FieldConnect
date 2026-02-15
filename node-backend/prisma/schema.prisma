@@ -711,6 +711,124 @@ model EventSchemaData {
 }
 
 // ============================================
+// FORM TEMPLATES & INSTANCES
+// ============================================
+// Voice-first form system for Pre-Task Plans, Inspections, etc.
+
+enum FormFieldType {
+  YES_NO
+  YES_NO_NA
+  CHECKBOX
+  NUMBER
+  TEXT
+  DATE
+  TIME
+  SIGNATURE
+  MULTI_SELECT
+}
+
+enum FormStatus {
+  DRAFT
+  IN_PROGRESS
+  PENDING_SIGNATURES
+  COMPLETED
+}
+
+// Form Template - defines the structure of a form
+model FormTemplate {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Template metadata
+  name          String                    // "Pre-Task Plan", "Fire Pump Inspection"
+  description   String?   @db.Text
+  category      String?                   // "Safety", "Maintenance", "Inspection"
+  version       Int       @default(1)
+  isActive      Boolean   @default(true) @map("is_active")
+  isDefault     Boolean   @default(false) @map("is_default") // System-provided template
+
+  // Project association (null = global/company-wide template)
+  projectId     String?   @map("project_id")
+
+  // Original uploaded file (PDF/image)
+  originalFileName  String?   @map("original_file_name")
+  originalFilePath  String?   @map("original_file_path")
+
+  // Schema: JSON structure defining sections and fields
+  // Format: { sections: [{ name, fields: [{ id, label, shortLabel, type, required, unit, options, voiceHints }] }] }
+  schema        Json      @default("{\"sections\": []}")
+
+  // AI extraction metadata
+  extractedAt   DateTime? @map("extracted_at")
+  extractionConfidence Float? @map("extraction_confidence")
+
+  // Creator tracking
+  createdById   String?   @map("created_by_id")
+
+  // Relations
+  instances     FormInstance[]
+
+  @@index([projectId])
+  @@index([category])
+  @@index([isActive])
+  @@index([isDefault])
+  @@map("form_templates")
+}
+
+// Form Instance - a filled-out form
+model FormInstance {
+  id            String     @id @default(uuid())
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  // Template reference
+  templateId    String     @map("template_id")
+
+  // Project and location
+  projectId     String     @map("project_id")
+  location      String?                   // Specific work location
+
+  // Form status
+  status        FormStatus @default(DRAFT)
+  completedAt   DateTime?  @map("completed_at")
+
+  // Field values: JSON object keyed by field ID
+  // Format: { "field_id_1": "yes", "field_id_2": 145, ... }
+  data          Json       @default("{}")
+
+  // Voice input tracking
+  voiceTranscript   String?   @map("voice_transcript") @db.Text
+  voiceRecordingUri String?   @map("voice_recording_uri")
+
+  // Signatures: array of signature objects
+  // Format: [{ role, name, signature (base64/url), signedAt }]
+  signatures    Json       @default("[]")
+
+  // Sync status for offline support
+  syncStatus    String     @default("synced") @map("sync_status") // synced, pending, offline
+  lastSyncedAt  DateTime?  @map("last_synced_at")
+
+  // Generated PDF
+  generatedPdfPath String?  @map("generated_pdf_path")
+  pdfGeneratedAt   DateTime? @map("pdf_generated_at")
+
+  // Creator tracking
+  createdById   String?    @map("created_by_id")
+  createdByName String?    @map("created_by_name")
+
+  // Relations
+  template      FormTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([templateId])
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([syncStatus])
+  @@map("form_instances")
+}
+
+// ============================================
 // PHOTOS
 // ============================================
 // Photos can be attached to Events or Daily Logs

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
-import { ClipboardList, Building2, History, Radio, Lightbulb, Settings } from 'lucide-react-native';
+import { ClipboardList, Building2, History, Radio, Lightbulb, Settings, FileText } from 'lucide-react-native';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useClientOnlyValue } from '@/lib/useClientOnlyValue';
@@ -49,6 +49,13 @@ export default function TabLayout() {
               <Lightbulb size={22} color="#F97316" />
             </Pressable>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="forms"
+        options={{
+          title: t('tabs.forms'),
+          tabBarIcon: ({ color, size }) => <FileText size={size} color={color} />,
         }}
       />
       <Tabs.Screen

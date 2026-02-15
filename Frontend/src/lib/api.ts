@@ -2440,6 +2440,151 @@ export async function deleteUser(id: string): Promise<void> {
   await apiFetch(`/api/auth/users/${id}`, { method: 'DELETE' });
 }
 
+// ============================================
+// FORMS API
+// ============================================
+
+export type FormFieldType = 'YES_NO' | 'YES_NO_NA' | 'CHECKBOX' | 'NUMBER' | 'TEXT' | 'DATE' | 'TIME' | 'SIGNATURE' | 'MULTI_SELECT';
+export type FormStatus = 'DRAFT' | 'IN_PROGRESS' | 'PENDING_SIGNATURES' | 'COMPLETED';
+
+export interface FormField {
+  id: string;
+  label: string;
+  shortLabel: string;
+  type: FormFieldType;
+  required: boolean;
+  unit?: string;
+  options?: string[];
+  voiceHints?: string[];
+}
+
+export interface FormSection {
+  id: string;
+  name: string;
+  description?: string;
+  fields: FormField[];
+}
+
+export interface FormSchema {
+  sections: FormSection[];
+}
+
+export interface FormTemplate {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  version: number;
+  isActive: boolean;
+  isDefault: boolean;
+  projectId: string | null;
+  schema: FormSchema;
+}
+
+export interface FormSignature {
+  role: string;
+  name: string;
+  signature?: string;
+  signedAt?: string;
+}
+
+export interface FormInstance {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  templateId: string;
+  projectId: string;
+  location: string | null;
+  status: FormStatus;
+  completedAt: string | null;
+  data: Record<string, any>;
+  voiceTranscript: string | null;
+  signatures: FormSignature[];
+  syncStatus: string;
+  template?: FormTemplate;
+}
+
+/**
+ * Get all form templates
+ */
+export async function getFormTemplates(projectId?: string): Promise<FormTemplate[]> {
+  const params = projectId ? `?projectId=${projectId}` : '';
+  return apiFetch(`/api/forms/templates${params}`);
+}
+
+/**
+ * Get a single form template
+ */
+export async function getFormTemplate(id: string): Promise<FormTemplate> {
+  return apiFetch(`/api/forms/templates/${id}`);
+}
+
+/**
+ * Seed default templates (Pre-Task Plan)
+ */
+export async function seedFormTemplates(): Promise<{ message: string; template: FormTemplate }> {
+  return apiFetch('/api/forms/templates/seed', { method: 'POST' });
+}
+
+/**
+ * Get all form instances for a project
+ */
+export async function getFormInstances(options?: { projectId?: string; status?: FormStatus; limit?: number }): Promise<FormInstance[]> {
+  const params = new URLSearchParams();
+  if (options?.projectId) params.append('projectId', options.projectId);
+  if (options?.status) params.append('status', options.status);
+  if (options?.limit) params.append('limit', options.limit.toString());
+  const queryString = params.toString();
+  return apiFetch(`/api/forms${queryString ? `?${queryString}` : ''}`);
+}
+
+/**
+ * Get a single form instance
+ */
+export async function getFormInstance(id: string): Promise<FormInstance> {
+  return apiFetch(`/api/forms/${id}`);
+}
+
+/**
+ * Create a new form instance
+ */
+export async function createFormInstance(data: {
+  templateId: string;
+  projectId: string;
+  location?: string;
+  data?: Record<string, any>;
+}): Promise<FormInstance> {
+  return apiFetch('/api/forms', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update a form instance
+ */
+export async function updateFormInstance(id: string, data: {
+  data?: Record<string, any>;
+  status?: FormStatus;
+  location?: string;
+  signatures?: FormSignature[];
+  voiceTranscript?: string;
+}): Promise<FormInstance> {
+  return apiFetch(`/api/forms/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a form instance
+ */
+export async function deleteFormInstance(id: string): Promise<void> {
+  await apiFetch(`/api/forms/${id}`, { method: 'DELETE' });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -2471,4 +2616,9 @@ export const queryKeys = {
   eventComments: (eventId: string) => ['events', eventId, 'comments'] as const,
   // User management
   users: ['users'] as const,
+  // Forms
+  formTemplates: (projectId?: string) => ['form-templates', projectId] as const,
+  formTemplate: (id: string) => ['form-templates', id] as const,
+  formInstances: (options?: { projectId?: string; status?: FormStatus }) => ['form-instances', options] as const,
+  formInstance: (id: string) => ['form-instances', id] as const,
 };
