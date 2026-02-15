@@ -31,6 +31,7 @@ const insightsRoutes = require('./routes/insights.routes');
 const templatesRoutes = require('./routes/templates.routes');
 const documentSchemaRoutes = require('./routes/document-schema.routes');
 const photosRoutes = require('./routes/photos.routes');
+const formsRoutes = require('./routes/forms.routes');
 
 // Import middleware
 const errorHandler = require('./middleware/error-handler.middleware');
@@ -95,6 +96,7 @@ app.use('/api/insights', insightsRoutes); // Auth handled in route file
 app.use('/api/templates', templatesRoutes); // Auth handled in route file
 app.use('/api/document-schemas', documentSchemaRoutes); // Auth handled in route file
 app.use('/api/photos', authenticate, photosRoutes);
+app.use('/api/forms', formsRoutes); // Auth handled in route file
 
 // 404 handler
 app.use((req, res) => {
