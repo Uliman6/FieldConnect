@@ -31,6 +31,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 const EVENT_TYPE_COLORS: Record<EventType, string> = {
+  // Issues/Problems (warm/warning colors)
   Delay: '#EF4444',
   Quality: '#F59E0B',
   Safety: '#DC2626',
@@ -39,6 +40,12 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   Equipment: '#6B7280',
   Coordination: '#10B981',
   'Trade Damage': '#EA580C',
+  // Positive Observations (cool/success colors)
+  'Productivity Gain': '#22C55E',
+  'Milestone': '#0EA5E9',
+  'Progress': '#14B8A6',
+  'Recognition': '#8B5CF6',
+  // Generic
   Other: '#6B7280',
 };
 
@@ -224,7 +231,7 @@ export default function EventsScreen() {
       status: 'completed' as const,
       event_type: (be.eventType as EventType) || 'Other',
       severity: (be.severity as EventSeverity) || 'Medium',
-      title: be.title || 'Untitled Event',
+      title: be.title || 'Untitled Observation',
       description: be.description || '',
       notes: be.notes || '',
       location: be.location || '',

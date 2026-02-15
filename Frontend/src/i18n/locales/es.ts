@@ -34,7 +34,7 @@ export default {
   // Navigation / Tabs
   tabs: {
     dailyLog: 'Registro Diario',
-    events: 'Eventos',
+    events: 'Observaciones',
     history: 'Historial',
     projects: 'Proyectos',
     settings: 'Ajustes',
@@ -104,14 +104,14 @@ export default {
     infoText: 'Registra tus observaciones diarias, luego ve el informe en Historial para hacer ediciones o descargar el PDF.',
   },
 
-  // Events
+  // Observations (formerly Events)
   events: {
-    title: 'Eventos',
-    newEvent: 'Nuevo Evento',
-    recordEvent: 'Grabar Evento',
+    title: 'Observaciones',
+    newEvent: 'Nueva Observación',
+    recordEvent: 'Grabar Observación',
     recordingFor: 'Grabando para:',
-    noEvents: 'Aun no hay eventos',
-    createFirst: 'Registra tu primer evento',
+    noEvents: 'Aún no hay observaciones',
+    createFirst: 'Registra tu primera observación',
     type: 'Tipo',
     severity: 'Severidad',
     location: 'Ubicacion',
@@ -123,7 +123,7 @@ export default {
     unresolved: 'Sin Resolver',
     markResolved: 'Marcar como Resuelto',
     markUnresolved: 'Marcar como Sin Resolver',
-    deleteConfirm: 'Estas seguro de que deseas eliminar este evento?',
+    deleteConfirm: '¿Estás seguro de que deseas eliminar esta observación?',
     applyDocument: 'Aplicar a Documento',
     selectSchema: 'Seleccionar Tipo de Documento',
     generatePdf: 'Generar PDF',
@@ -132,9 +132,10 @@ export default {
     today: 'HOY',
     earlier: 'ANTERIOR',
     logged: 'Registrado',
-    viewAll: 'Ver todos los {{count}} eventos',
-    // Event types
+    viewAll: 'Ver todas las {{count}} observaciones',
+    // Observation types
     types: {
+      // Issues/Problems
       safety_incident: 'Incidente de Seguridad',
       safety: 'Seguridad',
       quality_issue: 'Problema de Calidad',
@@ -152,6 +153,13 @@ export default {
       'trade damage': 'Daño por Otros Oficios',
       trade_damage: 'Daño por Otros Oficios',
       issue: 'Problema',
+      // Positive Observations
+      'productivity gain': 'Ganancia de Productividad',
+      productivity_gain: 'Ganancia de Productividad',
+      milestone: 'Hito',
+      progress: 'Progreso',
+      recognition: 'Reconocimiento',
+      // Generic
       other: 'Otro',
     },
     // Severity levels

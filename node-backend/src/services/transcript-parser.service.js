@@ -1242,7 +1242,7 @@ Return a JSON object with the structure described. Only include categories that 
 OUTPUT FORMAT: Valid JSON with these fields:
 {
   "title": "Brief title using ONLY words from the transcript (max 50 chars)",
-  "event_type": "One of: Delay, Quality, Safety, Inspection, Material, Equipment, Coordination, Trade Damage, Other",
+  "event_type": "One of: Delay, Quality, Safety, Inspection, Material, Equipment, Coordination, Trade Damage, Productivity Gain, Milestone, Progress, Recognition, Other",
   "severity": "One of: Low, Medium, High",
   "action_items": ["Array of tasks ONLY if explicitly stated in transcript"],
   "location": "Location ONLY if stated in transcript",
@@ -1288,8 +1288,9 @@ Example: "need DPR Division 7 to come back and use paint to cover this up"
 ❌ BAD: ["Document damage with photos", "File insurance claim"] (NOT stated)
 
 ═══════════════════════════════════════════════════════════════
-EVENT TYPE GUIDELINES:
+OBSERVATION TYPE GUIDELINES:
 ═══════════════════════════════════════════════════════════════
+ISSUES/PROBLEMS:
 - Trade Damage: Use when damage is caused BY another trade, accidental collision, someone hit/broke something, pipe fell on something, damage during installation by others
 - Quality: Use for workmanship defects, finish issues, NOT for damage caused by accidents
 - Safety: Use for safety hazards, injuries, near-misses
@@ -1298,6 +1299,12 @@ EVENT TYPE GUIDELINES:
 - Equipment: Use for equipment failures, breakdowns
 - Coordination: Use for communication issues, scheduling conflicts between trades
 - Inspection: Use for inspection-related events
+
+POSITIVE OBSERVATIONS:
+- Productivity Gain: Use for efficiency improvements, ahead of schedule work, faster than expected completion, productivity wins
+- Milestone: Use for achievements, project milestones reached, significant completions
+- Progress: Use for general progress updates, work completed, areas finished
+- Recognition: Use for good work recognition, best practices observed, commendations, quality work by trades
 
 ═══════════════════════════════════════════════════════════════
 SEVERITY GUIDELINES:
@@ -1393,12 +1400,27 @@ Return a JSON object with: title, event_type, severity, action_items, location, 
   }
 
   normalizeEventType(type) {
-    const valid = ['Delay', 'Quality', 'Safety', 'Inspection', 'Material', 'Equipment', 'Coordination', 'Trade Damage', 'Other'];
+    const valid = [
+      // Issues/Problems
+      'Delay', 'Quality', 'Safety', 'Inspection', 'Material', 'Equipment', 'Coordination', 'Trade Damage',
+      // Positive Observations
+      'Productivity Gain', 'Milestone', 'Progress', 'Recognition',
+      // Generic
+      'Other'
+    ];
     if (!type) return 'Other';
-    // Handle 'Trade Damage' specially since it has a space
-    if (type.toLowerCase().includes('trade') && type.toLowerCase().includes('damage')) {
+    // Handle multi-word types specially
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('trade') && lowerType.includes('damage')) {
       return 'Trade Damage';
     }
+    if (lowerType.includes('productivity') && lowerType.includes('gain')) {
+      return 'Productivity Gain';
+    }
+    // Check for exact match (case-insensitive)
+    const exactMatch = valid.find(v => v.toLowerCase() === lowerType);
+    if (exactMatch) return exactMatch;
+    // Try title case normalization for single words
     const normalized = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
     return valid.includes(normalized) ? normalized : 'Other';
   }

@@ -632,6 +632,7 @@ class InsightsService {
     // If event has an explicit eventType, map it to a category
     if (eventType) {
       const eventTypeMap = {
+        // Issues/Problems
         'Safety': 'safety',
         'Quality': 'quality',
         'Delay': 'delay',
@@ -640,6 +641,12 @@ class InsightsService {
         'Equipment': 'issue',
         'Coordination': 'issue',
         'Trade Damage': 'issue',
+        // Positive Observations
+        'Productivity Gain': 'observation',
+        'Milestone': 'observation',
+        'Progress': 'observation',
+        'Recognition': 'observation',
+        // Generic
         'Other': 'observation'
       };
       const mappedCategory = eventTypeMap[eventType];

@@ -21,8 +21,14 @@ export type InspectionResult = 'Pass' | 'Fail' | 'Partial';
 export type AdditionalWorkTag = 'owner_request' | 'design_ambiguity' | 'vendor_issue' | 'field_condition' | 'other';
 export type SkyCondition = 'Clear' | 'Partly Cloudy' | 'Cloudy' | 'Overcast' | 'Rainy' | 'Stormy';
 
-// Event Capture Types
-export type EventType = 'Delay' | 'Quality' | 'Safety' | 'Inspection' | 'Material' | 'Equipment' | 'Coordination' | 'Trade Damage' | 'Other';
+// Observation Capture Types (formerly Events)
+export type EventType =
+  // Issues/Problems
+  | 'Delay' | 'Quality' | 'Safety' | 'Inspection' | 'Material' | 'Equipment' | 'Coordination' | 'Trade Damage'
+  // Positive Observations
+  | 'Productivity Gain' | 'Milestone' | 'Progress' | 'Recognition'
+  // Generic
+  | 'Other';
 export type EventStatus = 'recorded' | 'uploaded' | 'transcribed';
 export type EventSeverity = 'Low' | 'Medium' | 'High';
 
@@ -404,9 +410,10 @@ export function createEmptyEvent(projectId: string, audioUri: string): Event {
   };
 }
 
-// Map event type to issue category for daily log bridging
+// Map observation type to issue category for daily log bridging
 export function mapEventTypeToIssueCategory(eventType: EventType): IssueCategory {
   const mapping: Record<EventType, IssueCategory> = {
+    // Issues/Problems
     'Delay': 'Schedule',
     'Quality': 'QAQC',
     'Safety': 'Safety',
@@ -414,6 +421,13 @@ export function mapEventTypeToIssueCategory(eventType: EventType): IssueCategory
     'Material': 'Procurement',
     'Equipment': 'Other',
     'Coordination': 'Coordination',
+    'Trade Damage': 'QAQC',
+    // Positive Observations
+    'Productivity Gain': 'Schedule',
+    'Milestone': 'Other',
+    'Progress': 'Other',
+    'Recognition': 'Other',
+    // Generic
     'Other': 'Other',
   };
   return mapping[eventType];
