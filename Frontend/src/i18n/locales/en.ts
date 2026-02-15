@@ -34,7 +34,7 @@ export default {
   // Navigation / Tabs
   tabs: {
     dailyLog: 'Daily Log',
-    events: 'Events',
+    events: 'Observations',
     history: 'History',
     projects: 'Projects',
     settings: 'Settings',
@@ -104,14 +104,14 @@ export default {
     infoText: 'Record your daily observations, then view the report in History to make edits or download the PDF.',
   },
 
-  // Events
+  // Observations (formerly Events)
   events: {
-    title: 'Events',
-    newEvent: 'New Event',
-    recordEvent: 'Record Event',
+    title: 'Observations',
+    newEvent: 'New Observation',
+    recordEvent: 'Record Observation',
     recordingFor: 'Recording for:',
-    noEvents: 'No events yet',
-    createFirst: 'Record your first event',
+    noEvents: 'No observations yet',
+    createFirst: 'Record your first observation',
     type: 'Type',
     severity: 'Severity',
     location: 'Location',
@@ -123,7 +123,7 @@ export default {
     unresolved: 'Unresolved',
     markResolved: 'Mark as Resolved',
     markUnresolved: 'Mark as Unresolved',
-    deleteConfirm: 'Are you sure you want to delete this event?',
+    deleteConfirm: 'Are you sure you want to delete this observation?',
     applyDocument: 'Apply to Document',
     selectSchema: 'Select Document Type',
     generatePdf: 'Generate PDF',
@@ -132,9 +132,10 @@ export default {
     today: 'TODAY',
     earlier: 'EARLIER',
     logged: 'Logged',
-    viewAll: 'View all {{count}} events',
-    // Event types
+    viewAll: 'View all {{count}} observations',
+    // Observation types
     types: {
+      // Issues/Problems
       safety_incident: 'Safety Incident',
       safety: 'Safety',
       quality_issue: 'Quality Issue',
@@ -152,6 +153,13 @@ export default {
       'trade damage': 'Trade Damage',
       trade_damage: 'Trade Damage',
       issue: 'Issue',
+      // Positive Observations
+      'productivity gain': 'Productivity Gain',
+      productivity_gain: 'Productivity Gain',
+      milestone: 'Milestone',
+      progress: 'Progress',
+      recognition: 'Recognition',
+      // Generic
       other: 'Other',
     },
     // Severity levels

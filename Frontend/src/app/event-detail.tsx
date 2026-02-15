@@ -84,6 +84,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { format } from 'date-fns';
 
 const EVENT_TYPES: EventType[] = [
+  // Issues/Problems
   'Delay',
   'Quality',
   'Safety',
@@ -92,12 +93,19 @@ const EVENT_TYPES: EventType[] = [
   'Equipment',
   'Coordination',
   'Trade Damage',
+  // Positive Observations
+  'Productivity Gain',
+  'Milestone',
+  'Progress',
+  'Recognition',
+  // Generic
   'Other',
 ];
 
 const SEVERITIES: EventSeverity[] = ['Low', 'Medium', 'High'];
 
 const EVENT_TYPE_COLORS: Record<EventType, string> = {
+  // Issues/Problems (warm/warning colors)
   Delay: '#EF4444',
   Quality: '#F59E0B',
   Safety: '#DC2626',
@@ -106,6 +114,12 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   Equipment: '#6B7280',
   Coordination: '#10B981',
   'Trade Damage': '#EA580C',
+  // Positive Observations (cool/success colors)
+  'Productivity Gain': '#22C55E',
+  'Milestone': '#0EA5E9',
+  'Progress': '#14B8A6',
+  'Recognition': '#8B5CF6',
+  // Generic
   Other: '#6B7280',
 };
 
@@ -1036,7 +1050,7 @@ export default function EventDetailScreen() {
     return (
       <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
         <ActivityIndicator size="large" color="#F97316" />
-        <Text className="mt-3 text-gray-500">Loading event...</Text>
+        <Text className="mt-3 text-gray-500">Loading observation...</Text>
       </SafeAreaView>
     );
   }
@@ -1047,10 +1061,10 @@ export default function EventDetailScreen() {
       <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
         <AlertTriangle size={48} color="#EF4444" />
         <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
-          Event Not Found
+          Observation Not Found
         </Text>
         <Text className="mt-2 text-sm text-gray-500 text-center px-6">
-          This event may have been deleted or doesn't exist.
+          This observation may have been deleted or doesn't exist.
         </Text>
         <Pressable
           onPress={() => router.back()}
@@ -1340,9 +1354,9 @@ export default function EventDetailScreen() {
     if (result.success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (Platform.OS === 'web') {
-        alert('Event added to today\'s Daily Log!');
+        alert('Observation added to today\'s Daily Log!');
       } else {
-        Alert.alert('Success', 'Event added to today\'s Daily Log as a Pending Issue.', [
+        Alert.alert('Success', 'Observation added to today\'s Daily Log as a Pending Issue.', [
           { text: 'OK' },
         ]);
       }
@@ -1373,11 +1387,11 @@ export default function EventDetailScreen() {
     };
 
     if (Platform.OS === 'web') {
-      if (confirm('Are you sure you want to delete this event?')) {
+      if (confirm('Are you sure you want to delete this observation?')) {
         doDelete();
       }
     } else {
-      Alert.alert('Delete Event', 'Are you sure you want to delete this event?', [
+      Alert.alert('Delete Observation', 'Are you sure you want to delete this observation?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: doDelete },
       ]);
@@ -1417,7 +1431,7 @@ export default function EventDetailScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: 'Event Details',
+          headerTitle: 'Observation Details',
           headerStyle: { backgroundColor: isDark ? '#111' : '#FFF' },
           headerTintColor: isDark ? '#FFF' : '#111',
           headerLeft: () => (
@@ -1604,7 +1618,7 @@ export default function EventDetailScreen() {
           className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
         >
           <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">
-            Event Type
+            Observation Type
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {EVENT_TYPES.map((type) => (
@@ -1650,7 +1664,7 @@ export default function EventDetailScreen() {
                   setCustomEventType(text);
                   markChanged();
                 }}
-                placeholder="Enter custom event type..."
+                placeholder="Enter custom observation type..."
                 placeholderTextColor="#9CA3AF"
                 className="px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-900 dark:text-white"
               />
@@ -2159,7 +2173,7 @@ export default function EventDetailScreen() {
           >
             <Trash2 size={18} color="#EF4444" />
             <Text className="ml-2 text-base font-medium text-red-500">
-              Delete Event
+              Delete Observation
             </Text>
           </Pressable>
         </Animated.View>

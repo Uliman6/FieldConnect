@@ -34,7 +34,7 @@ export default {
   // Navigation / Tabs
   tabs: {
     dailyLog: 'Gunluk Kayit',
-    events: 'Olaylar',
+    events: 'Gözlemler',
     history: 'Gecmis',
     projects: 'Projeler',
     settings: 'Ayarlar',
@@ -104,14 +104,14 @@ export default {
     infoText: 'Gunluk gozlemlerinizi kaydedin, ardindan duzenlemeler yapmak veya PDF indirmek icin Gecmis bolumundeki raporu goruntuleyin.',
   },
 
-  // Events
+  // Observations (formerly Events)
   events: {
-    title: 'Olaylar',
-    newEvent: 'Yeni Olay',
-    recordEvent: 'Olay Kaydet',
+    title: 'Gözlemler',
+    newEvent: 'Yeni Gözlem',
+    recordEvent: 'Gözlem Kaydet',
     recordingFor: 'Kayit yapiliyor:',
-    noEvents: 'Henuz olay yok',
-    createFirst: 'Ilk olayini kaydet',
+    noEvents: 'Henüz gözlem yok',
+    createFirst: 'İlk gözlemini kaydet',
     type: 'Tur',
     severity: 'Onem Derecesi',
     location: 'Konum',
@@ -123,7 +123,7 @@ export default {
     unresolved: 'Cozulmedi',
     markResolved: 'Cozuldu Olarak Isaretle',
     markUnresolved: 'Cozulmedi Olarak Isaretle',
-    deleteConfirm: 'Bu olayi silmek istediginizden emin misiniz?',
+    deleteConfirm: 'Bu gözlemi silmek istediğinizden emin misiniz?',
     applyDocument: 'Belgeye Uygula',
     selectSchema: 'Belge Turu Sec',
     generatePdf: 'PDF Olustur',
@@ -132,9 +132,10 @@ export default {
     today: 'BUGUN',
     earlier: 'ONCEKI',
     logged: 'Kaydedildi',
-    viewAll: 'Tum {{count}} olayi gor',
-    // Event types
+    viewAll: 'Tüm {{count}} gözlemi gör',
+    // Observation types
     types: {
+      // Issues/Problems
       safety_incident: 'Güvenlik Olayı',
       safety: 'Güvenlik',
       quality_issue: 'Kalite Sorunu',
@@ -149,9 +150,16 @@ export default {
       material: 'Malzeme',
       equipment: 'Ekipman',
       coordination: 'Koordinasyon',
-      'trade damage': 'Diger Islerin Hasari',
-      trade_damage: 'Diger Islerin Hasari',
+      'trade damage': 'Diğer İşlerin Hasarı',
+      trade_damage: 'Diğer İşlerin Hasarı',
       issue: 'Sorun',
+      // Positive Observations
+      'productivity gain': 'Verimlilik Artışı',
+      productivity_gain: 'Verimlilik Artışı',
+      milestone: 'Kilometre Taşı',
+      progress: 'İlerleme',
+      recognition: 'Takdir',
+      // Generic
       other: 'Diğer',
     },
     // Severity levels
