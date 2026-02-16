@@ -2444,7 +2444,7 @@ export async function deleteUser(id: string): Promise<void> {
 // FORMS API
 // ============================================
 
-export type FormFieldType = 'YES_NO' | 'YES_NO_NA' | 'CHECKBOX' | 'NUMBER' | 'TEXT' | 'DATE' | 'TIME' | 'SIGNATURE' | 'MULTI_SELECT';
+export type FormFieldType = 'YES_NO' | 'YES_NO_NA' | 'CHECKBOX' | 'NUMBER' | 'TEXT' | 'DATE' | 'TIME' | 'SIGNATURE' | 'MULTI_SELECT' | 'TABLE' | 'CREW_SIGNATURES';
 export type FormStatus = 'DRAFT' | 'IN_PROGRESS' | 'PENDING_SIGNATURES' | 'COMPLETED';
 
 export interface FormField {
@@ -2456,6 +2456,9 @@ export interface FormField {
   unit?: string;
   options?: string[];
   voiceHints?: string[];
+  tableColumns?: string[];
+  maxRows?: number;
+  maxSignatures?: number;
 }
 
 export interface FormSection {
@@ -2463,6 +2466,7 @@ export interface FormSection {
   name: string;
   description?: string;
   fields: FormField[];
+  voiceEnabled?: boolean;
 }
 
 export interface FormSchema {
@@ -2583,6 +2587,30 @@ export async function updateFormInstance(id: string, data: {
  */
 export async function deleteFormInstance(id: string): Promise<void> {
   await apiFetch(`/api/forms/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Download PDF for a form instance
+ */
+export async function downloadFormPdf(id: string): Promise<Blob> {
+  const token = await getAuthToken();
+  const headers: Record<string, string> = {
+    'Accept': 'application/pdf',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/forms/${id}/pdf`, {
+    method: 'GET',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download PDF: ${response.statusText}`);
+  }
+
+  return response.blob();
 }
 
 export const queryKeys = {

@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getFormInstance,
   updateFormInstance,
+  downloadFormPdf,
   queryKeys,
   FormInstance,
   FormField,
@@ -34,7 +35,12 @@ import {
   CheckSquare,
   Square,
   AlertCircle,
+  Download,
+  Plus,
+  Trash2,
+  Users,
 } from 'lucide-react-native';
+import * as Sharing from 'expo-sharing';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useLanguage } from '@/i18n/LanguageProvider';
@@ -294,6 +300,179 @@ function SignatureField({
   );
 }
 
+// Table Field Component (for work steps, hand at risk, etc.)
+function TableField({
+  field,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: string[][] | undefined;
+  onChange: (value: string[][]) => void;
+  disabled?: boolean;
+}) {
+  const columns = field.tableColumns || ['Column 1', 'Column 2', 'Column 3'];
+  const maxRows = field.maxRows || 5;
+  const rows = value || [['', '', '', ''].slice(0, columns.length)];
+
+  const addRow = () => {
+    if (rows.length < maxRows) {
+      const newRow = new Array(columns.length).fill('');
+      onChange([...rows, newRow]);
+    }
+  };
+
+  const updateCell = (rowIndex: number, colIndex: number, text: string) => {
+    const newRows = rows.map((row, rIdx) =>
+      rIdx === rowIndex
+        ? row.map((cell, cIdx) => (cIdx === colIndex ? text : cell))
+        : row
+    );
+    onChange(newRows);
+  };
+
+  const removeRow = (rowIndex: number) => {
+    if (rows.length > 1) {
+      onChange(rows.filter((_, idx) => idx !== rowIndex));
+    }
+  };
+
+  return (
+    <View className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      {/* Header */}
+      <View className="flex-row bg-orange-100 dark:bg-orange-900/30">
+        {columns.map((col, idx) => (
+          <View
+            key={idx}
+            className="flex-1 p-2 border-r border-gray-200 dark:border-gray-700"
+            style={idx === columns.length - 1 ? { borderRightWidth: 0 } : {}}
+          >
+            <Text className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {col}
+            </Text>
+          </View>
+        ))}
+        <View className="w-10" />
+      </View>
+
+      {/* Rows */}
+      {rows.map((row, rowIdx) => (
+        <View key={rowIdx} className="flex-row border-t border-gray-200 dark:border-gray-700">
+          {columns.map((_, colIdx) => (
+            <View
+              key={colIdx}
+              className="flex-1 border-r border-gray-200 dark:border-gray-700"
+              style={colIdx === columns.length - 1 ? { borderRightWidth: 0 } : {}}
+            >
+              <TextInput
+                value={row[colIdx] || ''}
+                onChangeText={(text) => updateCell(rowIdx, colIdx, text)}
+                editable={!disabled}
+                placeholder="..."
+                placeholderTextColor="#9CA3AF"
+                multiline
+                className="p-2 text-sm text-gray-900 dark:text-white min-h-[50px]"
+                style={{ textAlignVertical: 'top' }}
+              />
+            </View>
+          ))}
+          <Pressable
+            onPress={() => removeRow(rowIdx)}
+            disabled={disabled || rows.length <= 1}
+            className="w-10 items-center justify-center"
+          >
+            <Trash2 size={16} color={rows.length <= 1 ? '#D1D5DB' : '#EF4444'} />
+          </Pressable>
+        </View>
+      ))}
+
+      {/* Add Row Button */}
+      {!disabled && rows.length < maxRows && (
+        <Pressable
+          onPress={addRow}
+          className="flex-row items-center justify-center p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+        >
+          <Plus size={16} color="#F97316" />
+          <Text className="ml-2 text-sm text-orange-500 font-medium">Add Row</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// Crew Signatures Field Component
+function CrewSignaturesField({
+  field,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: Array<{ name: string; signed: boolean; signedAt?: string }> | undefined;
+  onChange: (value: Array<{ name: string; signed: boolean; signedAt?: string }>) => void;
+  disabled?: boolean;
+}) {
+  const maxSignatures = field.maxSignatures || 12;
+  const signatures = value || [];
+
+  const addCrewMember = () => {
+    if (signatures.length < maxSignatures) {
+      const name = Platform.OS === 'web'
+        ? window.prompt('Enter crew member name:')
+        : null; // TODO: Modal for native
+
+      if (name && name.trim()) {
+        onChange([
+          ...signatures,
+          { name: name.trim(), signed: true, signedAt: new Date().toISOString() }
+        ]);
+      }
+    }
+  };
+
+  const removeCrewMember = (index: number) => {
+    onChange(signatures.filter((_, idx) => idx !== index));
+  };
+
+  return (
+    <View>
+      {/* Existing Signatures */}
+      <View className="flex-row flex-wrap gap-2 mb-3">
+        {signatures.map((sig, idx) => (
+          <View
+            key={idx}
+            className="flex-row items-center bg-green-100 dark:bg-green-900/30 rounded-full px-3 py-1"
+          >
+            <Users size={14} color="#10B981" />
+            <Text className="ml-2 text-sm text-green-700 dark:text-green-300">
+              {sig.name}
+            </Text>
+            {!disabled && (
+              <Pressable onPress={() => removeCrewMember(idx)} className="ml-2">
+                <X size={14} color="#10B981" />
+              </Pressable>
+            )}
+          </View>
+        ))}
+      </View>
+
+      {/* Add Button */}
+      {!disabled && signatures.length < maxSignatures && (
+        <Pressable
+          onPress={addCrewMember}
+          className="flex-row items-center justify-center p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg"
+        >
+          <Plus size={20} color="#9CA3AF" />
+          <Text className="ml-2 text-gray-500 dark:text-gray-400">
+            Add Crew Member ({signatures.length}/{maxSignatures})
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
 // Section Component
 function FormSectionComponent({
   section,
@@ -421,6 +600,22 @@ function FormSectionComponent({
                   disabled={disabled}
                 />
               )}
+              {field.type === 'TABLE' && (
+                <TableField
+                  field={field}
+                  value={formData[field.id]}
+                  onChange={(val) => onFieldChange(field.id, val)}
+                  disabled={disabled}
+                />
+              )}
+              {field.type === 'CREW_SIGNATURES' && (
+                <CrewSignaturesField
+                  field={field}
+                  value={formData[field.id]}
+                  onChange={(val) => onFieldChange(field.id, val)}
+                  disabled={disabled}
+                />
+              )}
             </Animated.View>
           ))}
         </View>
@@ -440,6 +635,7 @@ export default function FormFillScreen() {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Fetch form instance
   const formQuery = useQuery({
@@ -577,6 +773,46 @@ export default function FormFillScreen() {
     }
   };
 
+  // Handle PDF download
+  const handleDownloadPdf = async () => {
+    if (!formId) return;
+
+    setIsDownloading(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      const blob = await downloadFormPdf(formId);
+
+      if (Platform.OS === 'web') {
+        // Web: Create download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Pre-Task-Plan_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        // Native: Use sharing
+        // TODO: Save to file system and share
+        console.log('[form-fill] Native PDF download not yet implemented');
+      }
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('[form-fill] PDF download error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to download PDF. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to download PDF. Please try again.');
+      }
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   // Loading state
   if (formQuery.isLoading) {
     return (
@@ -701,16 +937,33 @@ export default function FormFillScreen() {
 
         {/* Completed Banner */}
         {isCompleted && (
-          <View className="mt-4 bg-green-50 dark:bg-green-900/30 rounded-lg p-3 flex-row items-center">
-            <Check size={20} color="#10B981" />
-            <Text className="ml-2 text-green-700 dark:text-green-300 font-medium">
-              Form Completed
-            </Text>
-            {form.completedAt && (
-              <Text className="ml-auto text-xs text-green-600 dark:text-green-400">
-                {new Date(form.completedAt).toLocaleDateString()}
+          <View className="mt-4 bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
+            <View className="flex-row items-center">
+              <Check size={20} color="#10B981" />
+              <Text className="ml-2 text-green-700 dark:text-green-300 font-medium">
+                Form Completed
               </Text>
-            )}
+              {form.completedAt && (
+                <Text className="ml-auto text-xs text-green-600 dark:text-green-400">
+                  {new Date(form.completedAt).toLocaleDateString()}
+                </Text>
+              )}
+            </View>
+            {/* Download PDF Button */}
+            <Pressable
+              onPress={handleDownloadPdf}
+              disabled={isDownloading}
+              className="mt-3 flex-row items-center justify-center py-2 bg-green-500 rounded-lg"
+            >
+              {isDownloading ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Download size={18} color="white" />
+                  <Text className="ml-2 text-white font-medium">Download PDF</Text>
+                </>
+              )}
+            </Pressable>
           </View>
         )}
       </View>

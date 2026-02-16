@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { generatePreTaskPlanPdf } = require('../services/form-pdf.service');
 
 // Pre-Task Plan template (DPR Construction style)
 const PRE_TASK_PLAN_TEMPLATE = {
@@ -288,6 +289,43 @@ const PRE_TASK_PLAN_TEMPLATE = {
         }
       ]
     },
+    // PAGE 2 SECTIONS
+    {
+      id: 'work_steps',
+      name: 'Work Steps & Hazard Analysis',
+      description: 'Describe work steps, tools, hazards, and mitigation measures. Use voice to describe your work plan.',
+      voiceEnabled: true,
+      fields: [
+        {
+          id: 'work_steps_table',
+          label: 'Work Steps Table',
+          shortLabel: 'Work steps',
+          type: 'TABLE',
+          required: false,
+          tableColumns: ['Steps for Work', 'Tools', 'Hazards', 'Steps Taken to Address Hazards'],
+          maxRows: 10,
+          voiceHints: ['first step', 'next step', 'then we', 'using', 'tools', 'hazard', 'risk', 'mitigation', 'address']
+        }
+      ]
+    },
+    {
+      id: 'hand_at_risk',
+      name: 'Hand At Risk Tasks',
+      description: 'Identify tasks that put hands at risk and corrective measures',
+      voiceEnabled: true,
+      fields: [
+        {
+          id: 'hand_risk_table',
+          label: 'Hand At Risk Table',
+          shortLabel: 'Hand risks',
+          type: 'TABLE',
+          required: false,
+          tableColumns: ['Hand At Risk Tasks', 'Specific Tools', 'Corrective Measure Other Than PPE'],
+          maxRows: 6,
+          voiceHints: ['hand', 'risk', 'cutting', 'pinch', 'tool', 'corrective', 'measure']
+        }
+      ]
+    },
     {
       id: 'signatures',
       name: 'Signatures',
@@ -313,6 +351,21 @@ const PRE_TASK_PLAN_TEMPLATE = {
           shortLabel: 'EHS signature',
           type: 'SIGNATURE',
           required: false
+        }
+      ]
+    },
+    {
+      id: 'crew_signatures',
+      name: 'Crew Members',
+      description: 'Additional crew members sign below',
+      fields: [
+        {
+          id: 'crew_members',
+          label: 'Crew Member Signatures',
+          shortLabel: 'Crew signatures',
+          type: 'CREW_SIGNATURES',
+          required: false,
+          maxSignatures: 12
         }
       ]
     }
@@ -593,6 +646,55 @@ async function deleteForm(req, res) {
   }
 }
 
+/**
+ * Generate PDF for a completed form
+ */
+async function generateFormPdf(req, res) {
+  try {
+    const { id } = req.params;
+
+    // Fetch form with template
+    const form = await prisma.formInstance.findUnique({
+      where: { id },
+      include: {
+        template: true
+      }
+    });
+
+    if (!form) {
+      return res.status(404).json({ error: 'Form not found' });
+    }
+
+    // Fetch project info
+    let project = null;
+    if (form.projectId) {
+      project = await prisma.project.findUnique({
+        where: { id: form.projectId }
+      });
+    }
+
+    // Generate PDF based on template type
+    let pdfBuffer;
+    if (form.template?.name === 'Pre-Task Plan') {
+      pdfBuffer = await generatePreTaskPlanPdf(form, project);
+    } else {
+      // Generic PDF generation for other templates
+      pdfBuffer = await generatePreTaskPlanPdf(form, project); // Use same for now
+    }
+
+    // Set response headers for PDF download
+    const filename = `${form.template?.name || 'Form'}_${new Date(form.createdAt).toISOString().split('T')[0]}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('[forms] Error generating PDF:', error);
+    res.status(500).json({ error: 'Failed to generate PDF' });
+  }
+}
+
 module.exports = {
   getTemplates,
   getTemplate,
@@ -603,5 +705,6 @@ module.exports = {
   createForm,
   updateForm,
   deleteForm,
+  generateFormPdf,
   PRE_TASK_PLAN_TEMPLATE
 };
