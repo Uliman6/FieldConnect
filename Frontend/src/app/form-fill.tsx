@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -37,6 +38,45 @@ import {
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useLanguage } from '@/i18n/LanguageProvider';
+
+// Cross-platform confirm dialog
+function showConfirm(title: string, message: string, onConfirm: () => void, onCancel?: () => void) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    } else {
+      onCancel?.();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel', onPress: onCancel },
+      { text: 'OK', onPress: onConfirm },
+    ]);
+  }
+}
+
+// Cross-platform 3-option dialog (for unsaved changes)
+function showThreeOptionDialog(
+  title: string,
+  message: string,
+  options: { text: string; onPress: () => void; style?: 'cancel' | 'destructive' | 'default' }[]
+) {
+  if (Platform.OS === 'web') {
+    // On web, use simpler confirm for the most important action
+    const result = window.confirm(`${title}\n\n${message}\n\nClick OK to save, Cancel to discard.`);
+    if (result) {
+      // Find the "Save" option
+      const saveOption = options.find(o => o.text.toLowerCase().includes('save'));
+      saveOption?.onPress();
+    } else {
+      // Find the "Discard" option
+      const discardOption = options.find(o => o.style === 'destructive');
+      discardOption?.onPress();
+    }
+  } else {
+    Alert.alert(title, message, options);
+  }
+}
 
 // Debounce hook for auto-save
 function useDebounce<T>(value: T, delay: number): T {
@@ -207,6 +247,24 @@ function SignatureField({
 }) {
   const hasSigned = value?.signed === true;
 
+  const handleSign = () => {
+    if (disabled) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    showConfirm(
+      'Sign Form',
+      `Confirm your signature as ${field.label}?`,
+      () => {
+        onChange({
+          signed: true,
+          name: 'Current User', // TODO: Get actual user name
+          signedAt: new Date().toISOString(),
+        });
+      }
+    );
+  };
+
   return (
     <View className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 items-center">
       {hasSigned ? (
@@ -221,30 +279,7 @@ function SignatureField({
         </View>
       ) : (
         <Pressable
-          onPress={() => {
-            if (!disabled) {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              // TODO: Implement signature capture
-              // For now, just mark as signed with placeholder
-              Alert.alert(
-                'Sign Form',
-                `Confirm your signature as ${field.label}?`,
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Sign',
-                    onPress: () => {
-                      onChange({
-                        signed: true,
-                        name: 'Current User', // TODO: Get actual user name
-                        signedAt: new Date().toISOString(),
-                      });
-                    },
-                  },
-                ]
-              );
-            }
-          }}
+          onPress={handleSign}
           className="items-center py-4"
         >
           <Text className="text-gray-500 dark:text-gray-400 text-sm mb-2">
@@ -425,9 +460,12 @@ export default function FormFillScreen() {
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: (data: { data?: Record<string, any>; status?: FormStatus }) =>
-      updateFormInstance(formId!, data),
-    onSuccess: () => {
+    mutationFn: (data: { data?: Record<string, any>; status?: FormStatus }) => {
+      console.log('[form-fill] Mutation called with:', data);
+      return updateFormInstance(formId!, data);
+    },
+    onSuccess: (result) => {
+      console.log('[form-fill] Save successful:', result);
       queryClient.invalidateQueries({ queryKey: queryKeys.formInstance(formId!) });
       queryClient.invalidateQueries({ queryKey: ['formInstances'] });
       setHasChanges(false);
@@ -436,7 +474,11 @@ export default function FormFillScreen() {
     onError: (error) => {
       console.error('[form-fill] Save error:', error);
       setIsSaving(false);
-      Alert.alert('Error', 'Failed to save form. Please try again.');
+      if (Platform.OS === 'web') {
+        window.alert('Failed to save form. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to save form. Please try again.');
+      }
     },
   });
 
@@ -499,39 +541,38 @@ export default function FormFillScreen() {
   const handleSubmit = () => {
     if (!canSubmit) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      Alert.alert('Incomplete Form', 'Please fill in all required fields before submitting.');
+      if (Platform.OS === 'web') {
+        window.alert('Please fill in all required fields before submitting.');
+      } else {
+        Alert.alert('Incomplete Form', 'Please fill in all required fields before submitting.');
+      }
       return;
     }
 
-    Alert.alert(
+    showConfirm(
       'Submit Form',
       'Are you sure you want to submit this form? You will not be able to edit it after submission.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Submit',
-          style: 'default',
-          onPress: () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            updateMutation.mutate(
-              { data: formData, status: 'COMPLETED' },
-              {
-                onSuccess: () => {
-                  router.back();
-                },
-              }
-            );
-          },
-        },
-      ]
+      () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        updateMutation.mutate(
+          { data: formData, status: 'COMPLETED' },
+          {
+            onSuccess: () => {
+              router.back();
+            },
+          }
+        );
+      }
     );
   };
 
   // Handle manual save
   const handleSave = () => {
-    if (hasChanges) {
+    console.log('[form-fill] handleSave called, hasChanges:', hasChanges, 'formData:', formData);
+    if (hasChanges && formId) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setIsSaving(true);
+      console.log('[form-fill] Saving form...', { formId, data: formData });
       updateMutation.mutate({ data: formData, status: 'IN_PROGRESS' });
     }
   };
@@ -584,12 +625,12 @@ export default function FormFillScreen() {
           <Pressable
             onPress={() => {
               if (hasChanges) {
-                Alert.alert(
+                showThreeOptionDialog(
                   'Unsaved Changes',
                   'You have unsaved changes. Save before leaving?',
                   [
                     { text: 'Discard', style: 'destructive', onPress: () => router.back() },
-                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Cancel', style: 'cancel', onPress: () => {} },
                     {
                       text: 'Save',
                       onPress: () => {
