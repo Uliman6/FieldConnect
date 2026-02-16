@@ -16,4 +16,7 @@ router.post('/', authenticate, formsController.createForm);
 router.put('/:id', authenticate, formsController.updateForm);
 router.delete('/:id', authenticate, formsController.deleteForm);
 
+// PDF generation
+router.get('/:id/pdf', optionalAuth, formsController.generateFormPdf);
+
 module.exports = router;
