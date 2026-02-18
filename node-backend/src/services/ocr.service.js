@@ -1,12 +1,10 @@
 /**
  * OCR Service - Extract text from images using GPT-4 Vision
+ * Uses direct API calls to OpenAI (same approach as other services)
  */
 
-const OpenAI = require('openai');
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_VISION_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 /**
  * Extract equipment data from a nameplate photo using GPT-4 Vision
@@ -16,6 +14,11 @@ const openai = new OpenAI({
  * @returns {Object} Extracted data with field values
  */
 async function extractNameplateData(imageBase64, fieldsToExtract = [], equipmentType = 'equipment') {
+  if (!OPENAI_API_KEY) {
+    console.error('[ocr] OpenAI API key not configured');
+    return { success: false, error: 'OpenAI API key not configured', data: {} };
+  }
+
   try {
     // Ensure proper base64 format
     let imageData = imageBase64;
@@ -51,31 +54,45 @@ Return a JSON object with the extracted values. Example format:
   "bhp": "100"
 }`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: prompt,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageData,
-                detail: 'high',
+    const response = await fetch(OPENAI_VISION_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: prompt,
               },
-            },
-          ],
-        },
-      ],
-      max_tokens: 1000,
-      temperature: 0.1,
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageData,
+                  detail: 'high',
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.1,
+      }),
     });
 
-    const content = response.choices[0]?.message?.content || '{}';
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[ocr] OpenAI API error:', response.status, errorText);
+      return { success: false, error: `OpenAI API error: ${response.status}`, data: {} };
+    }
+
+    const result = await response.json();
+    const content = result.choices?.[0]?.message?.content || '{}';
 
     // Parse the JSON response
     let extractedData;
