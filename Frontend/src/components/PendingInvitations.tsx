@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import {
@@ -17,28 +17,48 @@ import {
   queryKeys,
   ProjectInvitation,
 } from '@/lib/api';
+import { useDataProvider } from '@/lib/data-provider';
 
 function InvitationItem({
   invitation,
   onAccepted,
+  onRefreshData,
 }: {
   invitation: ProjectInvitation;
   onAccepted?: () => void;
+  onRefreshData: () => Promise<void>;
 }) {
   const queryClient = useQueryClient();
 
   const acceptMutation = useMutation({
     mutationFn: () => acceptInvitation(invitation.id),
-    onSuccess: (data) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    onSuccess: async (data) => {
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.myInvitations });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+
+      // Refresh from backend to sync the new project to local store
+      await onRefreshData();
+
       onAccepted?.();
-      Alert.alert('Welcome!', data.message);
+
+      if (Platform.OS === 'web') {
+        window.alert(data.message || 'You have joined the project!');
+      } else {
+        Alert.alert('Welcome!', data.message);
+      }
     },
     onError: (error: any) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', error.message || 'Failed to accept invitation');
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      if (Platform.OS === 'web') {
+        window.alert(error.message || 'Failed to accept invitation');
+      } else {
+        Alert.alert('Error', error.message || 'Failed to accept invitation');
+      }
     },
   });
 
@@ -131,6 +151,8 @@ function InvitationItem({
 }
 
 export function PendingInvitations({ onAccepted }: { onAccepted?: () => void }) {
+  const { refresh } = useDataProvider();
+
   const invitationsQuery = useQuery({
     queryKey: queryKeys.myInvitations,
     queryFn: getMyInvitations,
@@ -162,6 +184,7 @@ export function PendingInvitations({ onAccepted }: { onAccepted?: () => void }) 
             key={invitation.id}
             invitation={invitation}
             onAccepted={onAccepted}
+            onRefreshData={refresh}
           />
         ))}
       </View>
