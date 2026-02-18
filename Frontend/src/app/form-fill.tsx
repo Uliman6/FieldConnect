@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getFormInstance,
   updateFormInstance,
+  deleteFormInstance,
   downloadFormPdf,
   queryKeys,
   FormInstance,
@@ -1322,6 +1323,34 @@ export default function FormFillScreen() {
     },
   });
 
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteFormInstance(formId!),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ['formInstances'] });
+      router.back();
+    },
+    onError: (error) => {
+      console.error('[form-fill] Delete error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to delete form. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to delete form. Please try again.');
+      }
+    },
+  });
+
+  // Handle delete
+  const handleDelete = useCallback(() => {
+    showConfirm(
+      'Delete Form',
+      'Are you sure you want to delete this form? This action cannot be undone.',
+      () => deleteMutation.mutate()
+    );
+  }, [deleteMutation]);
+
   // Auto-save effect
   useEffect(() => {
     if (hasChanges && formId && Object.keys(debouncedFormData).length > 0) {
@@ -1628,21 +1657,34 @@ export default function FormFillScreen() {
                 </Text>
               )}
             </View>
-            {/* Download PDF Button */}
-            <Pressable
-              onPress={handleDownloadPdf}
-              disabled={isDownloading}
-              className="mt-3 flex-row items-center justify-center py-2 bg-green-500 rounded-lg"
-            >
-              {isDownloading ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <>
-                  <Download size={18} color="white" />
-                  <Text className="ml-2 text-white font-medium">Download PDF</Text>
-                </>
-              )}
-            </Pressable>
+            {/* Action Buttons for Completed Form */}
+            <View className="flex-row gap-2 mt-3">
+              <Pressable
+                onPress={handleDownloadPdf}
+                disabled={isDownloading}
+                className="flex-1 flex-row items-center justify-center py-2 bg-green-500 rounded-lg"
+              >
+                {isDownloading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <Download size={18} color="white" />
+                    <Text className="ml-2 text-white font-medium">Download PDF</Text>
+                  </>
+                )}
+              </Pressable>
+              <Pressable
+                onPress={handleDelete}
+                disabled={deleteMutation.isPending}
+                className="flex-row items-center justify-center py-2 px-4 bg-red-500 rounded-lg"
+              >
+                {deleteMutation.isPending ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Trash2 size={18} color="white" />
+                )}
+              </Pressable>
+            </View>
           </View>
         )}
       </View>
@@ -1676,27 +1718,43 @@ export default function FormFillScreen() {
         )}
       </ScrollView>
 
-      {/* Submit Button */}
+      {/* Action Buttons */}
       {!isCompleted && (
         <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-          <Pressable
-            onPress={handleSubmit}
-            disabled={!canSubmit || updateMutation.isPending}
-            className={`flex-row items-center justify-center py-4 rounded-xl ${
-              canSubmit ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-            }`}
-          >
-            {updateMutation.isPending ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Send size={20} color="white" />
-                <Text className="ml-2 text-white font-semibold text-base">
-                  Submit Form
-                </Text>
-              </>
-            )}
-          </Pressable>
+          <View className="flex-row gap-3">
+            {/* Delete Button */}
+            <Pressable
+              onPress={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="flex-row items-center justify-center py-4 px-4 rounded-xl bg-red-500"
+            >
+              {deleteMutation.isPending ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Trash2 size={20} color="white" />
+              )}
+            </Pressable>
+
+            {/* Submit Button */}
+            <Pressable
+              onPress={handleSubmit}
+              disabled={!canSubmit || updateMutation.isPending}
+              className={`flex-1 flex-row items-center justify-center py-4 rounded-xl ${
+                canSubmit ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
+            >
+              {updateMutation.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Send size={20} color="white" />
+                  <Text className="ml-2 text-white font-semibold text-base">
+                    Submit Form
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
           {!canSubmit && (
             <Text className="text-center text-xs text-gray-400 mt-2">
               Complete all required fields to submit
