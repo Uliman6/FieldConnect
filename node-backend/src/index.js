@@ -1,4 +1,4 @@
-// FieldConnect Backend
+// FieldConnect Backend - v1.5.0 (OCR + Project Sharing)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
