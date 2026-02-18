@@ -147,6 +147,24 @@ class AuthService {
   }
 
   async deleteUser(id) {
+    // Delete in order to handle foreign key constraints:
+    // 1. Delete project invitations sent by this user
+    await prisma.projectInvitation.deleteMany({
+      where: { invitedById: id },
+    });
+
+    // 2. Clear acceptedById references (set to null instead of delete)
+    await prisma.projectInvitation.updateMany({
+      where: { acceptedById: id },
+      data: { acceptedById: null },
+    });
+
+    // 3. Delete user's project memberships (handled by cascade, but be explicit)
+    await prisma.userProject.deleteMany({
+      where: { userId: id },
+    });
+
+    // 4. Now delete the user
     return prisma.user.delete({
       where: { id },
     });

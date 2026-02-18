@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const projectsController = require('../controllers/projects.controller');
+const invitationsController = require('../controllers/project-invitations.controller');
 const { authenticate, requireRole, loadAccessibleProjects, requireProjectAdmin, requireProjectOwner } = require('../middleware/auth.middleware');
 
 // All project routes require authentication
@@ -84,6 +85,28 @@ router.patch('/:id/members/:userId', loadAccessibleProjects, (req, res, next) =>
  */
 router.get('/:id/members', loadAccessibleProjects, (req, res, next) => {
   projectsController.listMembers(req, res, next);
+});
+
+// ============================================
+// PROJECT INVITATIONS
+// ============================================
+
+/**
+ * POST /api/projects/:id/invitations
+ * Send an invitation to join a project
+ */
+router.post('/:id/invitations', loadAccessibleProjects, (req, res, next) => {
+  req.params.projectId = req.params.id; // Map id to projectId for controller
+  invitationsController.sendInvitation(req, res, next);
+});
+
+/**
+ * GET /api/projects/:id/invitations
+ * Get all invitations for a project
+ */
+router.get('/:id/invitations', loadAccessibleProjects, (req, res, next) => {
+  req.params.projectId = req.params.id;
+  invitationsController.getProjectInvitations(req, res, next);
 });
 
 module.exports = router;
