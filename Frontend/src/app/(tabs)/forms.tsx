@@ -191,10 +191,13 @@ export default function FormsScreen() {
     ? (getBackendId('projects', currentProjectId) || currentProjectId)
     : undefined;
 
-  // Fetch templates
+  // Get current language from i18n
+  const { language: currentLanguage } = useLanguage();
+
+  // Fetch templates (filtered by language)
   const templatesQuery = useQuery({
-    queryKey: queryKeys.formTemplates(backendProjectId),
-    queryFn: () => getFormTemplates(backendProjectId),
+    queryKey: [...queryKeys.formTemplates(backendProjectId), currentLanguage],
+    queryFn: () => getFormTemplates(backendProjectId, currentLanguage),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

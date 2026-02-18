@@ -70,6 +70,10 @@ model User {
   // Project memberships - many-to-many through UserProject
   projectMemberships UserProject[]
 
+  // Project invitations
+  invitationsSent     ProjectInvitation[] @relation("InvitationsSent")
+  invitationsAccepted ProjectInvitation[] @relation("InvitationsAccepted")
+
   @@index([email])
   @@index([role])
   @@index([companyId])
@@ -95,6 +99,46 @@ model UserProject {
   @@map("user_projects")
 }
 
+// Project Invitations - pending invites to join a project
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model ProjectInvitation {
+  id          String           @id @default(uuid())
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  expiresAt   DateTime         @map("expires_at")
+
+  // Invitation details
+  email       String                              // Invitee email
+  role        ProjectRole      @default(MEMBER)   // Role they'll have when they accept
+  status      InvitationStatus @default(PENDING)
+  message     String?          @db.Text           // Optional message from inviter
+
+  // Project being invited to
+  projectId   String           @map("project_id")
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Who sent the invite
+  invitedById String           @map("invited_by_id")
+  invitedBy   User             @relation("InvitationsSent", fields: [invitedById], references: [id])
+
+  // If accepted, link to the user who accepted
+  acceptedById String?         @map("accepted_by_id")
+  acceptedBy   User?           @relation("InvitationsAccepted", fields: [acceptedById], references: [id])
+  acceptedAt   DateTime?       @map("accepted_at")
+
+  @@index([email])
+  @@index([projectId])
+  @@index([status])
+  @@index([invitedById])
+  @@map("project_invitations")
+}
+
 // ============================================
 // CORE ENTITIES
 // ============================================
@@ -118,7 +162,8 @@ model Project {
   company   Company? @relation(fields: [companyId], references: [id])
 
   // User memberships - many-to-many through UserProject
-  members   UserProject[]
+  members     UserProject[]
+  invitations ProjectInvitation[]
 
   dailyLogs       DailyLog[]
   events          Event[]
@@ -744,6 +789,7 @@ model FormTemplate {
   name          String                    // "Pre-Task Plan", "Fire Pump Inspection"
   description   String?   @db.Text
   category      String?                   // "Safety", "Maintenance", "Inspection"
+  language      String    @default("en")  // "en", "tr", etc.
   version       Int       @default(1)
   isActive      Boolean   @default(true) @map("is_active")
   isDefault     Boolean   @default(false) @map("is_default") // System-provided template
@@ -771,6 +817,7 @@ model FormTemplate {
 
   @@index([projectId])
   @@index([category])
+  @@index([language])
   @@index([isActive])
   @@index([isDefault])
   @@map("form_templates")
