@@ -24,7 +24,7 @@ import { Button, InputField } from '@/components/ui';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { cn } from '@/lib/cn';
 import { Project } from '@/lib/types';
-import { saveCurrentProjectName, getBackendId, setBackendId } from '@/lib/data-provider';
+import { saveCurrentProjectName, getBackendId } from '@/lib/data-provider';
 import { deleteProjectApi, getProjects, queryKeys, createProject as createProjectApi } from '@/lib/api';
 import { PendingInvitations } from '@/components/PendingInvitations';
 
@@ -55,14 +55,14 @@ export default function ProjectsScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const project = addProject(newProjectName.trim(), newProjectNumber.trim(), newProjectAddress.trim());
 
-    // Sync to backend immediately
+    // Sync to backend immediately with same ID for local-first sync
     try {
       const backendProject = await createProjectApi({
+        id: project.id, // Use local ID as backend ID for consistency
         name: newProjectName.trim(),
         number: newProjectNumber.trim() || undefined,
         address: newProjectAddress.trim() || undefined,
       });
-      setBackendId('projects', project.id, backendProject.id);
       console.log('[projects] Synced new project to backend:', backendProject.id);
 
       // Invalidate React Query cache
