@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const photosController = require('../controllers/photos.controller');
+const { loadAccessibleProjects } = require('../middleware/auth.middleware');
 
 // Use memory storage since we upload to Cloudinary (not local disk)
 const storage = multer.memoryStorage();
@@ -23,11 +24,11 @@ const upload = multer({
   }
 });
 
-// Photo routes
-router.post('/upload', upload.single('photo'), photosController.upload);
-router.get('/:id', photosController.get);
-router.get('/:id/file', photosController.getFile);
-router.patch('/:id', photosController.update);
-router.delete('/:id', photosController.delete);
+// Photo routes - all require authentication (applied in index.js) and project access
+router.post('/upload', loadAccessibleProjects, upload.single('photo'), photosController.upload);
+router.get('/:id', loadAccessibleProjects, photosController.get);
+router.get('/:id/file', loadAccessibleProjects, photosController.getFile);
+router.patch('/:id', loadAccessibleProjects, photosController.update);
+router.delete('/:id', loadAccessibleProjects, photosController.delete);
 
 module.exports = router;

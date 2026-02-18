@@ -2,6 +2,15 @@ const prisma = require('../services/prisma');
 const cloudinaryService = require('../services/cloudinary.service');
 
 /**
+ * Helper: Check if user has access to a project
+ */
+function checkProjectAccess(req, projectId) {
+  // If accessibleProjectIds is null, user is admin with access to all
+  if (req.accessibleProjectIds === null) return true;
+  return req.accessibleProjectIds.includes(projectId);
+}
+
+/**
  * Photos Controller - Upload, retrieve, and manage photos via Cloudinary
  */
 class PhotosController {
@@ -28,25 +37,43 @@ class PhotosController {
         });
       }
 
-      // Verify the associated entity exists
+      // Verify the associated entity exists and check access
+      let projectId = null;
+
       if (event_id) {
-        const event = await prisma.event.findUnique({ where: { id: event_id } });
+        const event = await prisma.event.findUnique({
+          where: { id: event_id },
+          select: { id: true, projectId: true }
+        });
         if (!event) {
           return res.status(404).json({
             error: 'Not Found',
             message: 'Event not found'
           });
         }
+        projectId = event.projectId;
       }
 
       if (daily_log_id) {
-        const dailyLog = await prisma.dailyLog.findUnique({ where: { id: daily_log_id } });
+        const dailyLog = await prisma.dailyLog.findUnique({
+          where: { id: daily_log_id },
+          select: { id: true, projectId: true }
+        });
         if (!dailyLog) {
           return res.status(404).json({
             error: 'Not Found',
             message: 'Daily log not found'
           });
         }
+        projectId = dailyLog.projectId;
+      }
+
+      // ACCESS CONTROL: Check if user has access to this project
+      if (!checkProjectAccess(req, projectId)) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have access to this project'
+        });
       }
 
       // Upload to Cloudinary
@@ -92,8 +119,8 @@ class PhotosController {
       const photo = await prisma.photo.findUnique({
         where: { id },
         include: {
-          event: { select: { id: true, title: true } },
-          dailyLog: { select: { id: true, date: true } }
+          event: { select: { id: true, title: true, projectId: true } },
+          dailyLog: { select: { id: true, date: true, projectId: true } }
         }
       });
 
@@ -101,6 +128,15 @@ class PhotosController {
         return res.status(404).json({
           error: 'Not Found',
           message: 'Photo not found'
+        });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this photo's project
+      const projectId = photo.event?.projectId || photo.dailyLog?.projectId;
+      if (projectId && !checkProjectAccess(req, projectId)) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have access to this photo'
         });
       }
 
@@ -119,13 +155,26 @@ class PhotosController {
       const { id } = req.params;
 
       const photo = await prisma.photo.findUnique({
-        where: { id }
+        where: { id },
+        include: {
+          event: { select: { projectId: true } },
+          dailyLog: { select: { projectId: true } }
+        }
       });
 
       if (!photo) {
         return res.status(404).json({
           error: 'Not Found',
           message: 'Photo not found'
+        });
+      }
+
+      // ACCESS CONTROL: Check if user has access to this photo's project
+      const projectId = photo.event?.projectId || photo.dailyLog?.projectId;
+      if (projectId && !checkProjectAccess(req, projectId)) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have access to this photo'
         });
       }
 
@@ -143,6 +192,27 @@ class PhotosController {
   async getEventPhotos(req, res, next) {
     try {
       const { eventId } = req.params;
+
+      // Check event exists and user has access
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { projectId: true }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Event not found'
+        });
+      }
+
+      // ACCESS CONTROL
+      if (!checkProjectAccess(req, event.projectId)) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have access to this event'
+        });
+      }
 
       const photos = await prisma.photo.findMany({
         where: { eventId },
@@ -162,6 +232,27 @@ class PhotosController {
   async getDailyLogPhotos(req, res, next) {
     try {
       const { dailyLogId } = req.params;
+
+      // Check daily log exists and user has access
+      const dailyLog = await prisma.dailyLog.findUnique({
+        where: { id: dailyLogId },
+        select: { projectId: true }
+      });
+
+      if (!dailyLog) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Daily log not found'
+        });
+      }
+
+      // ACCESS CONTROL
+      if (!checkProjectAccess(req, dailyLog.projectId)) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have access to this daily log'
+        });
+      }
 
       const photos = await prisma.photo.findMany({
         where: { dailyLogId },
@@ -183,6 +274,31 @@ class PhotosController {
       const { id } = req.params;
       const { caption } = req.body;
 
+      // First check if photo exists and user has access
+      const existingPhoto = await prisma.photo.findUnique({
+        where: { id },
+        include: {
+          event: { select: { projectId: true } },
+          dailyLog: { select: { projectId: true } }
+        }
+      });
+
+      if (!existingPhoto) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Photo not found'
+        });
+      }
+
+      // ACCESS CONTROL
+      const projectId = existingPhoto.event?.projectId || existingPhoto.dailyLog?.projectId;
+      if (projectId && !checkProjectAccess(req, projectId)) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have access to this photo'
+        });
+      }
+
       const photo = await prisma.photo.update({
         where: { id },
         data: {
@@ -192,12 +308,6 @@ class PhotosController {
 
       res.json(photo);
     } catch (err) {
-      if (err.code === 'P2025') {
-        return res.status(404).json({
-          error: 'Not Found',
-          message: 'Photo not found'
-        });
-      }
       next(err);
     }
   }
@@ -211,13 +321,26 @@ class PhotosController {
       const { id } = req.params;
 
       const photo = await prisma.photo.findUnique({
-        where: { id }
+        where: { id },
+        include: {
+          event: { select: { projectId: true } },
+          dailyLog: { select: { projectId: true } }
+        }
       });
 
       if (!photo) {
         return res.status(404).json({
           error: 'Not Found',
           message: 'Photo not found'
+        });
+      }
+
+      // ACCESS CONTROL
+      const projectId = photo.event?.projectId || photo.dailyLog?.projectId;
+      if (projectId && !checkProjectAccess(req, projectId)) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have access to this photo'
         });
       }
 
