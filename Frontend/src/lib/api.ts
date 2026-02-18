@@ -2620,6 +2620,32 @@ export async function downloadFormPdf(id: string): Promise<Blob> {
   return response.blob();
 }
 
+/**
+ * OCR response type
+ */
+export interface OcrResponse {
+  success: boolean;
+  extractedData: Record<string, string | null>;
+  formFields: Record<string, string>;
+  rawResponse?: string;
+}
+
+/**
+ * Extract text from nameplate photo using OCR
+ */
+export async function extractNameplateOcr(data: {
+  imageBase64: string;
+  equipmentType?: string;
+  fieldsToExtract?: string[];
+  sectionId?: string;
+  instanceIndex?: number;
+}): Promise<OcrResponse> {
+  return apiFetch('/api/forms/ocr/nameplate', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
