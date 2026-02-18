@@ -1419,21 +1419,73 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
  */
 async function getTemplates(req, res) {
   try {
-    const { projectId } = req.query;
+    const { projectId, language } = req.query;
+
+    // Build where clause
+    const where = {
+      isActive: true,
+      OR: [
+        { projectId: null }, // Global templates
+        { projectId: projectId || undefined }
+      ]
+    };
+
+    // Filter by language if provided
+    // Show templates matching the language, or "en" templates for all languages as fallback
+    if (language && language !== 'en') {
+      where.OR = [
+        { language: language },
+        { language: 'en' } // Always show English templates as fallback
+      ];
+    }
 
     const templates = await prisma.formTemplate.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { projectId: null }, // Global templates
-          { projectId: projectId || undefined }
-        ]
-      },
+      where,
       orderBy: [
         { isDefault: 'desc' },
+        { language: language === 'tr' ? 'desc' : 'asc' }, // Prioritize user's language
         { name: 'asc' }
       ]
     });
+
+    // If language is specified, filter to show only the user's language version of each template category
+    // e.g., if user is Turkish, show Turkish pump template instead of English
+    if (language && language !== 'en') {
+      const templatesByCategory = {};
+      templates.forEach(t => {
+        const key = t.category;
+        if (!templatesByCategory[key]) {
+          templatesByCategory[key] = [];
+        }
+        templatesByCategory[key].push(t);
+      });
+
+      // For each category, prefer the user's language
+      const filteredTemplates = [];
+      Object.values(templatesByCategory).forEach(categoryTemplates => {
+        // Group by similar names (ignoring language differences)
+        const groups = {};
+        categoryTemplates.forEach(t => {
+          // Create a normalized name key for matching
+          const normalizedName = t.name.toLowerCase()
+            .replace(/dizel yangın pompası bakım raporu/i, 'diesel fire pump')
+            .replace(/diesel fire pump maintenance report/i, 'diesel fire pump');
+          if (!groups[normalizedName]) {
+            groups[normalizedName] = [];
+          }
+          groups[normalizedName].push(t);
+        });
+
+        // For each group, pick the user's language version if available
+        Object.values(groups).forEach(group => {
+          const userLangVersion = group.find(t => t.language === language);
+          const fallback = group.find(t => t.language === 'en');
+          filteredTemplates.push(userLangVersion || fallback || group[0]);
+        });
+      });
+
+      return res.json(filteredTemplates);
+    }
 
     res.json(templates);
   } catch (error) {
@@ -1508,6 +1560,7 @@ async function seedDefaultTemplates(req, res) {
           name: 'Pre-Task Plan',
           description: 'Daily safety and quality planning form (DPR Construction style)',
           category: 'Safety',
+          language: 'en',
           schema: PRE_TASK_PLAN_TEMPLATE,
           isDefault: true,
           isActive: true
@@ -1527,6 +1580,7 @@ async function seedDefaultTemplates(req, res) {
           name: 'Diesel Fire Pump Maintenance Report',
           description: 'NFPA 25 compliant diesel fire pump maintenance and inspection report',
           category: 'Inspection',
+          language: 'en',
           schema: DIESEL_FIRE_PUMP_TEMPLATE_EN,
           isDefault: true,
           isActive: true
@@ -1546,6 +1600,7 @@ async function seedDefaultTemplates(req, res) {
           name: 'Dizel Yangın Pompası Bakım Raporu',
           description: 'NFPA 25 uyumlu dizel yangın pompası bakım ve denetim raporu',
           category: 'Denetim',
+          language: 'tr',
           schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
           isDefault: true,
           isActive: true

@@ -2520,9 +2520,12 @@ export interface FormInstance {
 /**
  * Get all form templates
  */
-export async function getFormTemplates(projectId?: string): Promise<FormTemplate[]> {
-  const params = projectId ? `?projectId=${projectId}` : '';
-  return apiFetch(`/api/forms/templates${params}`);
+export async function getFormTemplates(projectId?: string, language?: string): Promise<FormTemplate[]> {
+  const params = new URLSearchParams();
+  if (projectId) params.append('projectId', projectId);
+  if (language) params.append('language', language);
+  const queryString = params.toString();
+  return apiFetch(`/api/forms/templates${queryString ? `?${queryString}` : ''}`);
 }
 
 /**
