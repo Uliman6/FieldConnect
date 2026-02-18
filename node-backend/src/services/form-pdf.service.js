@@ -44,8 +44,8 @@ function generatePreTaskPlanPdf(form, project) {
       doc.font('Helvetica-Bold').text('Project Number:', 45, infoY + 22);
       doc.font('Helvetica').text(project?.projectNumber || '', 130, infoY + 22);
 
-      doc.font('Helvetica-Bold').text('Company:', 350, infoY + 22);
-      doc.font('Helvetica').text(project?.client || '', 410, infoY + 22);
+      doc.font('Helvetica-Bold').text('Prepared By:', 350, infoY + 22);
+      doc.font('Helvetica').text(form.createdByName || '', 420, infoY + 22);
 
       doc.font('Helvetica-Bold').text('Specific Location of Work:', 45, infoY + 40);
       doc.font('Helvetica').text(form.location || '', 180, infoY + 40);

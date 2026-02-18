@@ -1589,6 +1589,11 @@ export default function FormFillScreen() {
             {form.location}
           </Text>
         )}
+        {form.createdByName && (
+          <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Prepared by: {form.createdByName}
+          </Text>
+        )}
 
         {/* Progress Bar */}
         <View className="mt-4">
