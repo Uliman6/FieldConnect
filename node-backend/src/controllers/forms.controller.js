@@ -1422,7 +1422,9 @@ async function getTemplates(req, res) {
     const { projectId, language } = req.query;
     const userLang = language || 'en';
 
-    // First, fetch all active templates
+    console.log('[forms] getTemplates called with language:', userLang);
+
+    // Fetch all active templates
     const allTemplates = await prisma.formTemplate.findMany({
       where: {
         isActive: true,
@@ -1437,61 +1439,72 @@ async function getTemplates(req, res) {
       ]
     });
 
-    // Group templates by a normalized identifier to handle language variants
-    // e.g., "Diesel Fire Pump..." and "Dizel Yangın Pompası..." are the same template in different languages
-    const templateGroups = {};
+    console.log('[forms] Found', allTemplates.length, 'total templates');
+
+    // Simple language filtering:
+    // - English users: Only show templates where language is 'en' or null/undefined
+    // - Other languages: Show templates matching their language, with English fallback
+    //   for templates that don't have a version in their language
+
+    if (userLang === 'en') {
+      // English users only see English templates
+      const englishTemplates = allTemplates.filter(t =>
+        !t.language || t.language === 'en'
+      );
+      console.log('[forms] Returning', englishTemplates.length, 'English templates');
+      return res.json(englishTemplates);
+    }
+
+    // Non-English user (e.g., Turkish)
+    // Build a map of template "families" by looking at common identifiers
+    const templateFamilies = new Map();
+
+    // Known template family mappings (you can extend this)
+    const familyMap = {
+      'diesel fire pump maintenance report': 'diesel-pump',
+      'dizel yangın pompası bakım raporu': 'diesel-pump',
+      'pre-task plan': 'pre-task-plan',
+    };
+
     allTemplates.forEach(t => {
-      // Create a normalized key based on category and a simplified name
-      const normalizedName = t.name.toLowerCase()
-        .replace(/dizel yangın pompası bakım raporu/i, 'diesel-fire-pump')
-        .replace(/diesel fire pump maintenance report/i, 'diesel-fire-pump')
-        .replace(/pre-task plan/i, 'pre-task-plan')
-        .replace(/[^a-z0-9-]/g, '-');
+      const nameLower = t.name.toLowerCase();
+      let familyKey = familyMap[nameLower];
 
-      const groupKey = `${t.category || 'general'}-${normalizedName}`;
-
-      if (!templateGroups[groupKey]) {
-        templateGroups[groupKey] = [];
+      // If no known family, use the template name as its own family
+      if (!familyKey) {
+        familyKey = nameLower;
       }
-      templateGroups[groupKey].push(t);
+
+      if (!templateFamilies.has(familyKey)) {
+        templateFamilies.set(familyKey, []);
+      }
+      templateFamilies.get(familyKey).push(t);
     });
 
-    // For each group, select the appropriate language version
-    const filteredTemplates = [];
-    Object.values(templateGroups).forEach(group => {
-      // Find template matching user's language
-      const userLangVersion = group.find(t => t.language === userLang);
-      // Find English fallback
-      const englishVersion = group.find(t => t.language === 'en');
+    // For each family, pick the user's language version or English fallback
+    const result = [];
+    templateFamilies.forEach((templates, familyKey) => {
+      const userLangVersion = templates.find(t => t.language === userLang);
+      const englishVersion = templates.find(t => t.language === 'en' || !t.language);
 
-      if (userLang === 'en') {
-        // English users: Only show English templates, never Turkish
-        if (englishVersion) {
-          filteredTemplates.push(englishVersion);
-        }
-      } else {
-        // Non-English users (e.g., Turkish):
-        // Show their language version if available, otherwise English fallback
-        if (userLangVersion) {
-          filteredTemplates.push(userLangVersion);
-        } else if (englishVersion) {
-          filteredTemplates.push(englishVersion);
-        } else if (group.length > 0) {
-          filteredTemplates.push(group[0]);
-        }
+      if (userLangVersion) {
+        result.push(userLangVersion);
+      } else if (englishVersion) {
+        result.push(englishVersion);
+      } else if (templates.length > 0) {
+        result.push(templates[0]);
       }
     });
 
-    // Sort final result
-    filteredTemplates.sort((a, b) => {
-      // Default templates first
+    // Sort: default templates first, then by name
+    result.sort((a, b) => {
       if (a.isDefault && !b.isDefault) return -1;
       if (!a.isDefault && b.isDefault) return 1;
-      // Then by name
       return a.name.localeCompare(b.name);
     });
 
-    res.json(filteredTemplates);
+    console.log('[forms] Returning', result.length, 'templates for language:', userLang);
+    res.json(result);
   } catch (error) {
     console.error('[forms] Error fetching templates:', error);
     res.status(500).json({ error: 'Failed to fetch templates' });
@@ -1547,18 +1560,28 @@ async function createTemplate(req, res) {
 }
 
 /**
- * Seed default templates
+ * Seed default templates (creates new ones or updates existing with latest schema)
  */
 async function seedDefaultTemplates(req, res) {
   try {
-    const createdTemplates = [];
+    const results = [];
 
     // 1. Pre-Task Plan (English)
     const existingPreTask = await prisma.formTemplate.findFirst({
       where: { name: 'Pre-Task Plan', isDefault: true }
     });
 
-    if (!existingPreTask) {
+    if (existingPreTask) {
+      // Update existing template with latest schema
+      await prisma.formTemplate.update({
+        where: { id: existingPreTask.id },
+        data: {
+          schema: PRE_TASK_PLAN_TEMPLATE,
+          updatedAt: new Date()
+        }
+      });
+      results.push({ name: 'Pre-Task Plan', action: 'updated', sections: PRE_TASK_PLAN_TEMPLATE.sections.length });
+    } else {
       const preTask = await prisma.formTemplate.create({
         data: {
           name: 'Pre-Task Plan',
@@ -1570,7 +1593,7 @@ async function seedDefaultTemplates(req, res) {
           isActive: true
         }
       });
-      createdTemplates.push(preTask);
+      results.push({ name: preTask.name, action: 'created', sections: PRE_TASK_PLAN_TEMPLATE.sections.length });
     }
 
     // 2. Diesel Fire Pump Maintenance (English)
@@ -1578,7 +1601,16 @@ async function seedDefaultTemplates(req, res) {
       where: { name: 'Diesel Fire Pump Maintenance Report', isDefault: true }
     });
 
-    if (!existingPumpEN) {
+    if (existingPumpEN) {
+      await prisma.formTemplate.update({
+        where: { id: existingPumpEN.id },
+        data: {
+          schema: DIESEL_FIRE_PUMP_TEMPLATE_EN,
+          updatedAt: new Date()
+        }
+      });
+      results.push({ name: 'Diesel Fire Pump Maintenance Report', action: 'updated', sections: DIESEL_FIRE_PUMP_TEMPLATE_EN.sections.length });
+    } else {
       const pumpEN = await prisma.formTemplate.create({
         data: {
           name: 'Diesel Fire Pump Maintenance Report',
@@ -1590,7 +1622,7 @@ async function seedDefaultTemplates(req, res) {
           isActive: true
         }
       });
-      createdTemplates.push(pumpEN);
+      results.push({ name: pumpEN.name, action: 'created', sections: DIESEL_FIRE_PUMP_TEMPLATE_EN.sections.length });
     }
 
     // 3. Diesel Fire Pump Maintenance (Turkish)
@@ -1598,7 +1630,16 @@ async function seedDefaultTemplates(req, res) {
       where: { name: 'Dizel Yangın Pompası Bakım Raporu', isDefault: true }
     });
 
-    if (!existingPumpTR) {
+    if (existingPumpTR) {
+      await prisma.formTemplate.update({
+        where: { id: existingPumpTR.id },
+        data: {
+          schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
+          updatedAt: new Date()
+        }
+      });
+      results.push({ name: 'Dizel Yangın Pompası Bakım Raporu', action: 'updated', sections: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
+    } else {
       const pumpTR = await prisma.formTemplate.create({
         data: {
           name: 'Dizel Yangın Pompası Bakım Raporu',
@@ -1610,16 +1651,12 @@ async function seedDefaultTemplates(req, res) {
           isActive: true
         }
       });
-      createdTemplates.push(pumpTR);
+      results.push({ name: pumpTR.name, action: 'created', sections: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
     }
 
-    if (createdTemplates.length === 0) {
-      return res.json({ message: 'Default templates already exist', count: 0 });
-    }
-
-    res.status(201).json({
-      message: `Created ${createdTemplates.length} default template(s)`,
-      templates: createdTemplates
+    res.status(200).json({
+      message: `Processed ${results.length} template(s)`,
+      templates: results
     });
   } catch (error) {
     console.error('[forms] Error seeding templates:', error);
