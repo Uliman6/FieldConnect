@@ -2444,7 +2444,7 @@ export async function deleteUser(id: string): Promise<void> {
 // FORMS API
 // ============================================
 
-export type FormFieldType = 'YES_NO' | 'YES_NO_NA' | 'CHECKBOX' | 'NUMBER' | 'TEXT' | 'DATE' | 'TIME' | 'SIGNATURE' | 'MULTI_SELECT' | 'TABLE' | 'CREW_SIGNATURES';
+export type FormFieldType = 'YES_NO' | 'YES_NO_NA' | 'CHECKBOX' | 'NUMBER' | 'TEXT' | 'DATE' | 'TIME' | 'SIGNATURE' | 'MULTI_SELECT' | 'TABLE' | 'CREW_SIGNATURES' | 'PHOTO' | 'PHOTO_GALLERY';
 export type FormStatus = 'DRAFT' | 'IN_PROGRESS' | 'PENDING_SIGNATURES' | 'COMPLETED';
 
 export interface FormField {
@@ -2457,8 +2457,12 @@ export interface FormField {
   options?: string[];
   voiceHints?: string[];
   tableColumns?: string[];
+  defaultRows?: string[][];
   maxRows?: number;
   maxSignatures?: number;
+  maxPhotos?: number;
+  ocrEnabled?: boolean;
+  ocrFields?: string[];
 }
 
 export interface FormSection {
@@ -2467,6 +2471,9 @@ export interface FormSection {
   description?: string;
   fields: FormField[];
   voiceEnabled?: boolean;
+  repeatable?: boolean;
+  repeatLabel?: string;
+  maxRepeats?: number;
 }
 
 export interface FormSchema {
