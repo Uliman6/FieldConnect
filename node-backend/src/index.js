@@ -1,4 +1,4 @@
-// FieldConnect Backend - v1.7.0 (Collaboration + Optimistic Locking)
+// FieldConnect Backend - v1.8.0 (Security: Data Privacy Enforcement)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');

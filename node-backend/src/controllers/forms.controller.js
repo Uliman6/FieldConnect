@@ -1631,7 +1631,29 @@ async function getForms(req, res) {
     const { projectId, status, limit = 50 } = req.query;
 
     const where = {};
-    if (projectId) where.projectId = projectId;
+
+    // ACCESS CONTROL: Filter by user's accessible projects
+    if (req.accessibleProjectIds !== null) {
+      // User has limited access
+      if (req.accessibleProjectIds.length === 0) {
+        return res.json([]); // No project access
+      }
+
+      if (projectId) {
+        // Check if user has access to the requested project
+        if (!req.accessibleProjectIds.includes(projectId)) {
+          return res.status(403).json({ error: 'You do not have access to this project' });
+        }
+        where.projectId = projectId;
+      } else {
+        // Filter by all accessible projects
+        where.projectId = { in: req.accessibleProjectIds };
+      }
+    } else if (projectId) {
+      // Admin user with specific project filter
+      where.projectId = projectId;
+    }
+
     if (status) where.status = status;
 
     const forms = await prisma.formInstance.findMany({
@@ -1674,6 +1696,12 @@ async function getForm(req, res) {
       return res.status(404).json({ error: 'Form not found' });
     }
 
+    // ACCESS CONTROL: Check if user has access to this form's project
+    if (req.accessibleProjectIds !== null &&
+        !req.accessibleProjectIds.includes(form.projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this form' });
+    }
+
     res.json(form);
   } catch (error) {
     console.error('[forms] Error fetching form:', error);
@@ -1687,6 +1715,16 @@ async function getForm(req, res) {
 async function createForm(req, res) {
   try {
     const { templateId, projectId, location, data } = req.body;
+
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    // ACCESS CONTROL: Check if user has access to this project
+    if (req.accessibleProjectIds !== null &&
+        !req.accessibleProjectIds.includes(projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this project' });
+    }
 
     // Verify template exists
     const template = await prisma.formTemplate.findUnique({
@@ -1734,6 +1772,22 @@ async function updateForm(req, res) {
     const { id } = req.params;
     const { data, status, location, signatures, voiceTranscript } = req.body;
 
+    // First, check if form exists and user has access
+    const existingForm = await prisma.formInstance.findUnique({
+      where: { id },
+      select: { projectId: true }
+    });
+
+    if (!existingForm) {
+      return res.status(404).json({ error: 'Form not found' });
+    }
+
+    // ACCESS CONTROL: Check if user has access to this form's project
+    if (req.accessibleProjectIds !== null &&
+        !req.accessibleProjectIds.includes(existingForm.projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this form' });
+    }
+
     const updateData = {};
     if (data !== undefined) updateData.data = data;
     if (status !== undefined) updateData.status = status;
@@ -1775,6 +1829,22 @@ async function deleteForm(req, res) {
   try {
     const { id } = req.params;
 
+    // First, check if form exists and user has access
+    const existingForm = await prisma.formInstance.findUnique({
+      where: { id },
+      select: { projectId: true }
+    });
+
+    if (!existingForm) {
+      return res.status(404).json({ error: 'Form not found' });
+    }
+
+    // ACCESS CONTROL: Check if user has access to this form's project
+    if (req.accessibleProjectIds !== null &&
+        !req.accessibleProjectIds.includes(existingForm.projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this form' });
+    }
+
     await prisma.formInstance.delete({
       where: { id }
     });
@@ -1803,6 +1873,12 @@ async function generateFormPdf(req, res) {
 
     if (!form) {
       return res.status(404).json({ error: 'Form not found' });
+    }
+
+    // ACCESS CONTROL: Check if user has access to this form's project
+    if (req.accessibleProjectIds !== null &&
+        !req.accessibleProjectIds.includes(form.projectId)) {
+      return res.status(403).json({ error: 'You do not have access to this form' });
     }
 
     // Fetch project info
