@@ -2649,6 +2649,131 @@ export async function extractNameplateOcr(data: {
   });
 }
 
+// ============================================
+// PROJECT INVITATIONS
+// ============================================
+
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+export type ProjectRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+
+export interface ProjectInvitation {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
+  email: string;
+  role: ProjectRole;
+  status: InvitationStatus;
+  message?: string;
+  projectId: string;
+  project?: {
+    id: string;
+    name: string;
+    number?: string;
+    address?: string;
+  };
+  invitedBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  acceptedBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  acceptedAt?: string;
+}
+
+export interface ProjectMember {
+  userId: string;
+  projectId: string;
+  role: ProjectRole;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+/**
+ * Send an invitation to join a project
+ */
+export async function sendProjectInvitation(
+  projectId: string,
+  data: { email: string; role?: ProjectRole; message?: string }
+): Promise<ProjectInvitation> {
+  return apiFetch(`/api/projects/${projectId}/invitations`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Get all invitations for a project
+ */
+export async function getProjectInvitations(projectId: string): Promise<ProjectInvitation[]> {
+  return apiFetch(`/api/projects/${projectId}/invitations`);
+}
+
+/**
+ * Get my pending invitations
+ */
+export async function getMyInvitations(): Promise<ProjectInvitation[]> {
+  return apiFetch('/api/invitations/me');
+}
+
+/**
+ * Accept an invitation
+ */
+export async function acceptInvitation(invitationId: string): Promise<{
+  message: string;
+  membership: ProjectMember;
+  invitation: ProjectInvitation;
+}> {
+  return apiFetch(`/api/invitations/${invitationId}/accept`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Decline an invitation
+ */
+export async function declineInvitation(invitationId: string): Promise<{
+  message: string;
+  invitation: ProjectInvitation;
+}> {
+  return apiFetch(`/api/invitations/${invitationId}/decline`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Cancel an invitation (by project admin)
+ */
+export async function cancelInvitation(invitationId: string): Promise<{ message: string }> {
+  return apiFetch(`/api/invitations/${invitationId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Get all members of a project
+ */
+export async function getProjectMembers(projectId: string): Promise<ProjectMember[]> {
+  return apiFetch(`/api/projects/${projectId}/members`);
+}
+
+/**
+ * Remove a member from a project
+ */
+export async function removeProjectMember(projectId: string, memberId: string): Promise<{ message: string }> {
+  return apiFetch(`/api/projects/${projectId}/members/${memberId}`, {
+    method: 'DELETE',
+  });
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -2685,4 +2810,8 @@ export const queryKeys = {
   formTemplate: (id: string) => ['form-templates', id] as const,
   formInstances: (options?: { projectId?: string; status?: FormStatus }) => ['form-instances', options] as const,
   formInstance: (id: string) => ['form-instances', id] as const,
+  // Project invitations and members
+  projectInvitations: (projectId: string) => ['project-invitations', projectId] as const,
+  myInvitations: ['my-invitations'] as const,
+  projectMembers: (projectId: string) => ['project-members', projectId] as const,
 };
