@@ -1,6 +1,7 @@
 /**
  * Project Invitations Routes
- * Routes for inviting users to projects and managing memberships
+ * User-facing routes for accepting/declining invitations
+ * Note: Project-scoped invitation routes are in projects.routes.js
  */
 
 const express = require('express');
@@ -10,12 +11,6 @@ const invitationsController = require('../controllers/project-invitations.contro
 
 // All routes require authentication
 router.use(authenticate);
-
-// Project-scoped routes
-router.post('/projects/:projectId/invitations', invitationsController.sendInvitation);
-router.get('/projects/:projectId/invitations', invitationsController.getProjectInvitations);
-router.get('/projects/:projectId/members', invitationsController.getProjectMembers);
-router.delete('/projects/:projectId/members/:memberId', invitationsController.removeMember);
 
 // User invitation routes (for the current user)
 router.get('/invitations/me', invitationsController.getMyInvitations);
