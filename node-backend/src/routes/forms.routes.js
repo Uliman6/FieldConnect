@@ -8,6 +8,7 @@ router.get('/templates', optionalAuth, formsController.getTemplates);
 router.get('/templates/:id', optionalAuth, formsController.getTemplate);
 router.post('/templates', authenticate, formsController.createTemplate);
 router.post('/templates/seed', formsController.seedDefaultTemplates); // No auth for initial setup
+router.post('/templates/update', authenticate, formsController.updateDefaultTemplates); // Update existing templates
 
 // OCR for nameplate photos (must be before /:id routes)
 router.post('/ocr/nameplate', authenticate, formsController.extractNameplateOcr);
