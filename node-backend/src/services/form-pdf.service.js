@@ -53,11 +53,13 @@ function generatePreTaskPlanPdf(form, project) {
       doc.y = infoY + 70;
 
       // Safety Questions Section
-      doc.rect(40, doc.y, 532, 18).fill(headerBg).stroke(borderColor);
+      const safetyHeaderY = doc.y;
+      doc.rect(40, safetyHeaderY, 532, 18).fill(headerBg).stroke(borderColor);
       doc.fillColor('black').fontSize(9).font('Helvetica-Bold');
-      doc.text('Answer the following when evaluating your work:', 45, doc.y - 14);
-      doc.text('Check YES, NO or N/A', 450, doc.y - 14);
-      doc.moveDown(0.3);
+      doc.text('Answer the following when evaluating your work:', 45, safetyHeaderY + 4);
+      doc.text('Check YES, NO or N/A', 450, safetyHeaderY + 4);
+      doc.y = safetyHeaderY + 18;
+      doc.moveDown(0.1);
 
       // Safety Questions
       const safetyQuestions = [
@@ -86,10 +88,12 @@ function generatePreTaskPlanPdf(form, project) {
 
       // Quality Section
       doc.moveDown(0.3);
-      doc.rect(40, doc.y, 532, 16).fill(headerBg).stroke(borderColor);
+      const qualityHeaderY = doc.y;
+      doc.rect(40, qualityHeaderY, 532, 16).fill(headerBg).stroke(borderColor);
       doc.fillColor('black').fontSize(9).font('Helvetica-Bold');
-      doc.text('Quality:', 45, doc.y - 12, { align: 'center' });
-      doc.moveDown(0.2);
+      doc.text('Quality:', 260, qualityHeaderY + 3);
+      doc.y = qualityHeaderY + 16;
+      doc.moveDown(0.1);
 
       drawYesNoNaRow(doc, 'Identify the drawing you are working from today, is it the current version?', data.current_drawing);
       drawYesNoNaRow(doc, 'Have you reviewed all construction details associated with our work?', data.reviewed_details);
@@ -108,9 +112,9 @@ function generatePreTaskPlanPdf(form, project) {
 
       // PPE Box
       doc.rect(40, ppeY, 260, 120).stroke();
-      doc.rect(40, ppeY, 260, 16).fill(headerBg).stroke();
+      doc.rect(40, ppeY, 260, 16).fill(headerBg).stroke(borderColor);
       doc.fillColor('black').fontSize(9).font('Helvetica-Bold');
-      doc.text('Are any of the following PPE required?', 45, ppeY + 3);
+      doc.text('Are any of the following PPE required?', 45, ppeY + 4);
 
       const ppeItems = [
         { id: 'ppe_helmet', label: 'Helmet/Safety Glasses, Gloves' },
@@ -130,9 +134,9 @@ function generatePreTaskPlanPdf(form, project) {
 
       // Locate and Identify Box
       doc.rect(312, ppeY, 260, 120).stroke();
-      doc.rect(312, ppeY, 260, 16).fill(headerBg).stroke();
+      doc.rect(312, ppeY, 260, 16).fill(headerBg).stroke(borderColor);
       doc.fillColor('black').fontSize(9).font('Helvetica-Bold');
-      doc.text('Locate and identify:', 317, ppeY + 3);
+      doc.text('Locate and identify:', 317, ppeY + 4);
 
       const locateItems = [
         { id: 'loc_emergency_phone', label: 'Emergency Telephones' },
@@ -170,11 +174,11 @@ function generatePreTaskPlanPdf(form, project) {
       const tableHeaders = ['Steps for Work', 'Tools', 'Hazards', 'Steps Taken to Address Hazards'];
 
       // Header row
-      doc.rect(40, tableY, 532, 18).fill(headerBg).stroke();
+      doc.rect(40, tableY, 532, 18).fill(headerBg).stroke(borderColor);
       doc.fillColor('black').fontSize(8).font('Helvetica-Bold');
       let headerX = 40;
       tableHeaders.forEach((header, i) => {
-        doc.text(header, headerX + 3, tableY + 4, { width: colWidths[i] - 6 });
+        doc.text(header, headerX + 3, tableY + 5, { width: colWidths[i] - 6 });
         headerX += colWidths[i];
       });
 
@@ -206,11 +210,11 @@ function generatePreTaskPlanPdf(form, project) {
       const handHeaders = ['"Hand At Risk" Tasks', 'Specific Tools', 'Corrective Measure Other Than PPE'];
 
       // Header row
-      doc.rect(40, handTableY, 532, 18).fill(headerBg).stroke();
+      doc.rect(40, handTableY, 532, 18).fill(headerBg).stroke(borderColor);
       doc.fillColor('black').fontSize(8).font('Helvetica-Bold');
       let handHeaderX = 40;
       handHeaders.forEach((header, i) => {
-        doc.text(header, handHeaderX + 3, handTableY + 4, { width: handColWidths[i] - 6 });
+        doc.text(header, handHeaderX + 3, handTableY + 5, { width: handColWidths[i] - 6 });
         handHeaderX += handColWidths[i];
       });
 

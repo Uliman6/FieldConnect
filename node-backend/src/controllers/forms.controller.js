@@ -330,14 +330,14 @@ const PRE_TASK_PLAN_TEMPLATE = {
     {
       id: 'signatures',
       name: 'Signatures',
-      description: 'Required signatures for form completion',
+      description: 'Signatures for form completion',
       fields: [
         {
           id: 'sig_work_planner',
           label: 'Work Planner',
           shortLabel: 'Work Planner signature',
           type: 'SIGNATURE',
-          required: true
+          required: false
         },
         {
           id: 'sig_supervisor',
@@ -1420,74 +1420,78 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
 async function getTemplates(req, res) {
   try {
     const { projectId, language } = req.query;
+    const userLang = language || 'en';
 
-    // Build where clause
-    const where = {
-      isActive: true,
-      OR: [
-        { projectId: null }, // Global templates
-        { projectId: projectId || undefined }
-      ]
-    };
-
-    // Filter by language if provided
-    // Show templates matching the language, or "en" templates for all languages as fallback
-    if (language && language !== 'en') {
-      where.OR = [
-        { language: language },
-        { language: 'en' } // Always show English templates as fallback
-      ];
-    }
-
-    const templates = await prisma.formTemplate.findMany({
-      where,
+    // First, fetch all active templates
+    const allTemplates = await prisma.formTemplate.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { projectId: null }, // Global templates
+          { projectId: projectId || undefined }
+        ]
+      },
       orderBy: [
         { isDefault: 'desc' },
-        { language: language === 'tr' ? 'desc' : 'asc' }, // Prioritize user's language
         { name: 'asc' }
       ]
     });
 
-    // If language is specified, filter to show only the user's language version of each template category
-    // e.g., if user is Turkish, show Turkish pump template instead of English
-    if (language && language !== 'en') {
-      const templatesByCategory = {};
-      templates.forEach(t => {
-        const key = t.category;
-        if (!templatesByCategory[key]) {
-          templatesByCategory[key] = [];
+    // Group templates by a normalized identifier to handle language variants
+    // e.g., "Diesel Fire Pump..." and "Dizel Yangın Pompası..." are the same template in different languages
+    const templateGroups = {};
+    allTemplates.forEach(t => {
+      // Create a normalized key based on category and a simplified name
+      const normalizedName = t.name.toLowerCase()
+        .replace(/dizel yangın pompası bakım raporu/i, 'diesel-fire-pump')
+        .replace(/diesel fire pump maintenance report/i, 'diesel-fire-pump')
+        .replace(/pre-task plan/i, 'pre-task-plan')
+        .replace(/[^a-z0-9-]/g, '-');
+
+      const groupKey = `${t.category || 'general'}-${normalizedName}`;
+
+      if (!templateGroups[groupKey]) {
+        templateGroups[groupKey] = [];
+      }
+      templateGroups[groupKey].push(t);
+    });
+
+    // For each group, select the appropriate language version
+    const filteredTemplates = [];
+    Object.values(templateGroups).forEach(group => {
+      // Find template matching user's language
+      const userLangVersion = group.find(t => t.language === userLang);
+      // Find English fallback
+      const englishVersion = group.find(t => t.language === 'en');
+
+      if (userLang === 'en') {
+        // English users: Only show English templates, never Turkish
+        if (englishVersion) {
+          filteredTemplates.push(englishVersion);
         }
-        templatesByCategory[key].push(t);
-      });
+      } else {
+        // Non-English users (e.g., Turkish):
+        // Show their language version if available, otherwise English fallback
+        if (userLangVersion) {
+          filteredTemplates.push(userLangVersion);
+        } else if (englishVersion) {
+          filteredTemplates.push(englishVersion);
+        } else if (group.length > 0) {
+          filteredTemplates.push(group[0]);
+        }
+      }
+    });
 
-      // For each category, prefer the user's language
-      const filteredTemplates = [];
-      Object.values(templatesByCategory).forEach(categoryTemplates => {
-        // Group by similar names (ignoring language differences)
-        const groups = {};
-        categoryTemplates.forEach(t => {
-          // Create a normalized name key for matching
-          const normalizedName = t.name.toLowerCase()
-            .replace(/dizel yangın pompası bakım raporu/i, 'diesel fire pump')
-            .replace(/diesel fire pump maintenance report/i, 'diesel fire pump');
-          if (!groups[normalizedName]) {
-            groups[normalizedName] = [];
-          }
-          groups[normalizedName].push(t);
-        });
+    // Sort final result
+    filteredTemplates.sort((a, b) => {
+      // Default templates first
+      if (a.isDefault && !b.isDefault) return -1;
+      if (!a.isDefault && b.isDefault) return 1;
+      // Then by name
+      return a.name.localeCompare(b.name);
+    });
 
-        // For each group, pick the user's language version if available
-        Object.values(groups).forEach(group => {
-          const userLangVersion = group.find(t => t.language === language);
-          const fallback = group.find(t => t.language === 'en');
-          filteredTemplates.push(userLangVersion || fallback || group[0]);
-        });
-      });
-
-      return res.json(filteredTemplates);
-    }
-
-    res.json(templates);
+    res.json(filteredTemplates);
   } catch (error) {
     console.error('[forms] Error fetching templates:', error);
     res.status(500).json({ error: 'Failed to fetch templates' });
@@ -1620,6 +1624,76 @@ async function seedDefaultTemplates(req, res) {
   } catch (error) {
     console.error('[forms] Error seeding templates:', error);
     res.status(500).json({ error: 'Failed to seed templates' });
+  }
+}
+
+/**
+ * Update existing default templates with latest schema
+ * This ensures all sections (including page 2) are present
+ */
+async function updateDefaultTemplates(req, res) {
+  try {
+    const updatedTemplates = [];
+
+    // 1. Update Pre-Task Plan
+    const preTask = await prisma.formTemplate.findFirst({
+      where: { name: 'Pre-Task Plan', isDefault: true }
+    });
+
+    if (preTask) {
+      const updated = await prisma.formTemplate.update({
+        where: { id: preTask.id },
+        data: {
+          schema: PRE_TASK_PLAN_TEMPLATE,
+          updatedAt: new Date()
+        }
+      });
+      updatedTemplates.push({ name: updated.name, sectionsCount: PRE_TASK_PLAN_TEMPLATE.sections.length });
+    }
+
+    // 2. Update English Diesel Fire Pump
+    const pumpEN = await prisma.formTemplate.findFirst({
+      where: { name: 'Diesel Fire Pump Maintenance Report', isDefault: true }
+    });
+
+    if (pumpEN) {
+      const updated = await prisma.formTemplate.update({
+        where: { id: pumpEN.id },
+        data: {
+          schema: DIESEL_FIRE_PUMP_TEMPLATE_EN,
+          updatedAt: new Date()
+        }
+      });
+      updatedTemplates.push({ name: updated.name, sectionsCount: DIESEL_FIRE_PUMP_TEMPLATE_EN.sections.length });
+    }
+
+    // 3. Update Turkish Diesel Fire Pump
+    const pumpTR = await prisma.formTemplate.findFirst({
+      where: { name: 'Dizel Yangın Pompası Bakım Raporu', isDefault: true }
+    });
+
+    if (pumpTR) {
+      const updated = await prisma.formTemplate.update({
+        where: { id: pumpTR.id },
+        data: {
+          schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
+          updatedAt: new Date()
+        }
+      });
+      updatedTemplates.push({ name: updated.name, sectionsCount: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
+    }
+
+    if (updatedTemplates.length === 0) {
+      return res.json({ message: 'No default templates found to update', count: 0 });
+    }
+
+    res.json({
+      message: `Updated ${updatedTemplates.length} template(s) with latest schema`,
+      templates: updatedTemplates
+    });
+  } catch (error) {
+    console.error('[forms] Error updating templates:', error);
+    res.status(500).json({ error: 'Failed to update templates' });
   }
 }
 
@@ -1954,6 +2028,7 @@ module.exports = {
   getTemplate,
   createTemplate,
   seedDefaultTemplates,
+  updateDefaultTemplates,
   getForms,
   getForm,
   createForm,

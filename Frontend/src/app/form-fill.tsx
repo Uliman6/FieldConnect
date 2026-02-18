@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -44,11 +44,14 @@ import {
   Image as ImageIcon,
   Calendar,
   Copy,
+  Mic,
+  Square as StopIcon,
 } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useLanguage } from '@/i18n/LanguageProvider';
+import { transcribeAudio } from '@/lib/transcription';
 
 // Cross-platform confirm dialog
 function showConfirm(title: string, message: string, onConfirm: () => void, onCancel?: () => void) {
@@ -211,6 +214,140 @@ function TextFieldInput({
       className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-gray-900 dark:text-white min-h-[80px]"
       style={{ textAlignVertical: 'top' }}
     />
+  );
+}
+
+// Voice-enabled Text Input Component
+function VoiceTextInput({
+  field,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: string | undefined;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  const startRecording = useCallback(async () => {
+    if (disabled || isRecording) return;
+
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      chunksRef.current = [];
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true }
+      });
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : 'audio/mp4';
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const audioUrl = URL.createObjectURL(blob);
+        stream.getTracks().forEach(track => track.stop());
+
+        // Transcribe the audio
+        setIsTranscribing(true);
+        try {
+          const result = await transcribeAudio(audioUrl);
+          if (result.success && result.text) {
+            // Append transcribed text to existing value
+            const newValue = value ? `${value}\n${result.text}` : result.text;
+            onChange(newValue);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } else {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            if (Platform.OS === 'web') {
+              window.alert('Transcription failed: ' + (result.error || 'Unknown error'));
+            }
+          }
+        } catch (error) {
+          console.error('[VoiceTextInput] Transcription error:', error);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        } finally {
+          setIsTranscribing(false);
+          URL.revokeObjectURL(audioUrl);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('[VoiceTextInput] Recording error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        window.alert('Could not access microphone. Please check permissions.');
+      }
+    }
+  }, [disabled, isRecording, value, onChange]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, [isRecording]);
+
+  return (
+    <View>
+      <View className="flex-row items-start">
+        <TextInput
+          value={value || ''}
+          onChangeText={onChange}
+          editable={!disabled && !isRecording && !isTranscribing}
+          placeholder={`Enter ${field.shortLabel || field.label} or use voice`}
+          placeholderTextColor="#9CA3AF"
+          multiline
+          className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-gray-900 dark:text-white min-h-[80px]"
+          style={{ textAlignVertical: 'top' }}
+        />
+        <Pressable
+          onPress={isRecording ? stopRecording : startRecording}
+          disabled={disabled || isTranscribing}
+          className={`ml-2 p-3 rounded-full ${
+            isRecording
+              ? 'bg-red-500'
+              : isTranscribing
+              ? 'bg-gray-400'
+              : 'bg-orange-500'
+          }`}
+        >
+          {isTranscribing ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : isRecording ? (
+            <StopIcon size={20} color="white" fill="white" />
+          ) : (
+            <Mic size={20} color="white" />
+          )}
+        </Pressable>
+      </View>
+      {isRecording && (
+        <Text className="text-xs text-red-500 mt-1">Recording... tap stop when done</Text>
+      )}
+      {isTranscribing && (
+        <Text className="text-xs text-orange-500 mt-1">Transcribing...</Text>
+      )}
+    </View>
   );
 }
 
@@ -1041,12 +1178,21 @@ function FormSectionComponent({
                 />
               )}
               {field.type === 'TEXT' && (
-                <TextFieldInput
-                  field={field}
-                  value={formData[getFieldKey(field.id)]}
-                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
-                  disabled={disabled}
-                />
+                section.voiceEnabled ? (
+                  <VoiceTextInput
+                    field={field}
+                    value={formData[getFieldKey(field.id)]}
+                    onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
+                    disabled={disabled}
+                  />
+                ) : (
+                  <TextFieldInput
+                    field={field}
+                    value={formData[getFieldKey(field.id)]}
+                    onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
+                    disabled={disabled}
+                  />
+                )
               )}
               {field.type === 'NUMBER' && (
                 <NumberFieldInput
