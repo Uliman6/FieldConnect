@@ -373,7 +373,945 @@ const PRE_TASK_PLAN_TEMPLATE = {
   ]
 };
 
-// Diesel Fire Pump Maintenance Report Template (English - NFPA Compliant)
+// Diesel Fire Pump Maintenance Report Template - BILINGUAL (Turkish/English)
+// Based on ARI Yangın Koruma form template - NFPA 20/25 compliant
+const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
+  sections: [
+    {
+      id: 'header_info',
+      name: 'Firma Bilgileri / Company Info',
+      description: 'Genel rapor ve firma bilgileri / General report and company details',
+      fields: [
+        {
+          id: 'company_name',
+          label: 'Firma Adı / Company Name',
+          shortLabel: 'Firma/Company',
+          type: 'TEXT',
+          required: true
+        },
+        {
+          id: 'company_address',
+          label: 'Periyodik Kontrol Adresi / Service Address',
+          shortLabel: 'Adres/Address',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'phone',
+          label: 'Telefon Numarası / Phone',
+          shortLabel: 'Telefon/Phone',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'email',
+          label: 'E-posta / E-Mail',
+          shortLabel: 'E-posta/Email',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'maintenance_start_date',
+          label: 'Periyodik Kontrol Başlangıç Tarihi ve Saati / Periodic Maintenance Start Date',
+          shortLabel: 'Başlangıç/Start',
+          type: 'DATE',
+          required: true
+        },
+        {
+          id: 'maintenance_end_date',
+          label: 'Periyodik Kontrol Bitiş Tarihi ve Saati / Periodic Maintenance End Date',
+          shortLabel: 'Bitiş/End',
+          type: 'DATE',
+          required: false
+        },
+        {
+          id: 'next_maintenance_date',
+          label: 'Bir Sonraki Periyodik Kontrol Tarihi / Next Maintenance Date',
+          shortLabel: 'Sonraki/Next',
+          type: 'DATE',
+          required: false
+        },
+        {
+          id: 'report_date',
+          label: 'Rapor Tarihi / Report Date',
+          shortLabel: 'Rapor/Report',
+          type: 'DATE',
+          required: true
+        }
+      ]
+    },
+    {
+      id: 'pump_label_info',
+      name: 'Yangın Pompası Etiket Bilgileri / Fire Pump Label Information',
+      description: 'Pompa etiketinden bilgileri girin veya fotoğraf çekin / Enter details from pump nameplate or take a photo',
+      fields: [
+        {
+          id: 'pump_photo',
+          label: 'Pompa Etiketi Fotoğrafı / Pump Nameplate Photo',
+          shortLabel: 'Fotoğraf/Photo',
+          type: 'PHOTO',
+          required: false,
+          ocrEnabled: true
+        },
+        {
+          id: 'pump_brand',
+          label: 'Markası / Brand',
+          shortLabel: 'Marka/Brand',
+          type: 'TEXT',
+          required: true
+        },
+        {
+          id: 'pump_model',
+          label: 'Model/Tipi / Model/Type',
+          shortLabel: 'Model/Type',
+          type: 'TEXT',
+          required: true
+        },
+        {
+          id: 'pump_serial',
+          label: 'Seri / Üretim No / Serial Number',
+          shortLabel: 'Seri/Serial',
+          type: 'TEXT',
+          required: true
+        },
+        {
+          id: 'pump_year',
+          label: 'İmalat Yılı / Year of Manufacture',
+          shortLabel: 'Yıl/Year',
+          type: 'NUMBER',
+          required: false
+        },
+        {
+          id: 'pump_capacity',
+          label: 'Kapasite / Capacity (GPM)',
+          shortLabel: 'Kapasite/Cap',
+          type: 'NUMBER',
+          required: true,
+          unit: 'GPM'
+        },
+        {
+          id: 'pump_pressure',
+          label: 'Basınç / Pressure (PSI)',
+          shortLabel: 'Basınç/Press',
+          type: 'NUMBER',
+          required: true,
+          unit: 'PSI'
+        },
+        {
+          id: 'pump_rpm',
+          label: 'RPM',
+          shortLabel: 'RPM',
+          type: 'NUMBER',
+          required: false
+        },
+        {
+          id: 'label_pressure_0',
+          label: 'Etiket Basıncı %0 / Label Pressure 0%',
+          shortLabel: '%0 PSI',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'label_pressure_100',
+          label: 'Etiket Basıncı %100 / Label Pressure 100%',
+          shortLabel: '%100 PSI',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'label_pressure_150',
+          label: 'Etiket Basıncı %150 / Label Pressure 150%',
+          shortLabel: '%150 PSI',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        }
+      ]
+    },
+    {
+      id: 'controller_label_info',
+      name: 'Kontrol Paneli Etiket Bilgileri / Controller Label Information',
+      description: 'Kontrol paneli bilgileri / Controller panel information',
+      fields: [
+        {
+          id: 'controller_photo',
+          label: 'Kontrol Paneli Fotoğrafı / Controller Photo',
+          shortLabel: 'Panel Fotoğraf',
+          type: 'PHOTO',
+          required: false
+        },
+        {
+          id: 'controller_brand',
+          label: 'Markası / Brand',
+          shortLabel: 'Marka/Brand',
+          type: 'TEXT',
+          required: true
+        },
+        {
+          id: 'controller_model',
+          label: 'Model/Tipi / Model/Type',
+          shortLabel: 'Model/Type',
+          type: 'TEXT',
+          required: true
+        },
+        {
+          id: 'controller_serial',
+          label: 'Seri / Üretim No / Serial Number',
+          shortLabel: 'Seri/Serial',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_year',
+          label: 'İmalat Yılı / Year',
+          shortLabel: 'Yıl/Year',
+          type: 'NUMBER',
+          required: false
+        },
+        {
+          id: 'driver_cc',
+          label: 'Driver g(cc)',
+          shortLabel: 'Driver cc',
+          type: 'TEXT',
+          required: false
+        }
+      ]
+    },
+    {
+      id: 'measuring_instruments',
+      name: 'Ölçüm Aletleri Bilgileri / Measuring Instruments Information',
+      description: 'Kalibrasyon ve ölçüm aleti bilgileri / Calibration and measuring instrument details',
+      fields: [
+        {
+          id: 'instrument_name',
+          label: 'Ölçüm Aleti Adı / Instrument Name',
+          shortLabel: 'Alet/Instrument',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'instrument_serial',
+          label: 'Ölçüm Aleti Seri No / Instrument Serial No',
+          shortLabel: 'Seri/Serial',
+          type: 'TEXT',
+          required: false
+        }
+      ]
+    },
+    {
+      id: 'pump_performance',
+      name: 'Pompa Performans Ölçümü / Pump Performance Test',
+      description: 'Farklı akış hızlarında basınç okumaları / Pressure readings at different flow rates',
+      fields: [
+        {
+          id: 'flow_0_suction',
+          label: '0% Akış - Emiş Basıncı / No Flow - Suction Pressure',
+          shortLabel: '0% Emiş/Suction',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'flow_0_discharge',
+          label: '0% Akış - Deşarj Basıncı / No Flow - Discharge Pressure',
+          shortLabel: '0% Deşarj/Disch',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'flow_100_suction',
+          label: '100% Akış - Emiş Basıncı / Rated Flow - Suction Pressure',
+          shortLabel: '100% Emiş/Suction',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'flow_100_discharge',
+          label: '100% Akış - Deşarj Basıncı / Rated Flow - Discharge Pressure',
+          shortLabel: '100% Deşarj/Disch',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'flow_100_rpm',
+          label: '100% Devir / 100% RPM',
+          shortLabel: '100% RPM',
+          type: 'NUMBER',
+          required: false
+        },
+        {
+          id: 'flow_150_suction',
+          label: '150% Akış - Emiş Basıncı / Peak Flow - Suction Pressure',
+          shortLabel: '150% Emiş/Suction',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'flow_150_discharge',
+          label: '150% Akış - Deşarj Basıncı / Peak Flow - Discharge Pressure',
+          shortLabel: '150% Deşarj/Disch',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'flow_150_rpm',
+          label: '150% Devir / 150% RPM',
+          shortLabel: '150% RPM',
+          type: 'NUMBER',
+          required: false
+        },
+        {
+          id: 'coolant_pressure_0',
+          label: 'Soğutma Suyu Basıncı %0 / Coolant Pressure 0%',
+          shortLabel: 'Soğutma 0%',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'coolant_pressure_100',
+          label: 'Soğutma Suyu Basıncı %100 / Coolant Pressure 100%',
+          shortLabel: 'Soğutma 100%',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'coolant_pressure_150',
+          label: 'Soğutma Suyu Basıncı %150 / Coolant Pressure 150%',
+          shortLabel: 'Soğutma 150%',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        }
+      ]
+    },
+    {
+      id: 'diesel_pump_checklist',
+      name: 'Dizel Pompa / Diesel Pump',
+      description: 'NFPA 25 / TS EN 12845 uyumlu kontrol listesi / Compliance checklist',
+      fields: [
+        {
+          id: 'controller_auto',
+          label: 'Yangın pompası otomatik konumda mı? / Is the fire pump controller in automatic position?',
+          shortLabel: 'Otomatik/Auto',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'controller_doors_closed',
+          label: 'Son bakımdan itibaren kontrol panelleri açık mıydı? / Were controller doors open since last maintenance?',
+          shortLabel: 'Kapılar/Doors',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'room_temp_adequate',
+          label: 'Pompa odasındaki ısı 40°F/5°C veya daha yüksek mi? / Is pump room temperature above 40°F (5°C)?',
+          shortLabel: 'Sıcaklık/Temp',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'air_intake_adequate',
+          label: 'Pompa odasından hava girişi yeterli/çalışır durumda görünüyor mu? / Is there adequate air intake for operation?',
+          shortLabel: 'Hava/Air',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'valves_open',
+          label: 'Pompa emiş, basma ve bypass vanaları açık mı? / Are pump suction, discharge, and bypass valves open?',
+          shortLabel: 'Vanalar/Valves',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'suction_reservoir_full',
+          label: 'Su deposu dolu mu? / Is suction reservoir full?',
+          shortLabel: 'Depo/Tank',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'no_leaks',
+          label: 'Boru veya hortum sızıntısı yok mu? / No piping or hose leaks?',
+          shortLabel: 'Sızıntı/Leaks',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'weekly_run',
+          label: 'Pompalar ayda yüksüz elektrikli pompa 10 dakika, dizel 30 dakika çalışıyor mu? / Does pump run weekly per NFPA?',
+          shortLabel: 'Haftalık/Weekly',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pressures_acceptable',
+          label: 'Yukarıdaki basınç ve değerler kabul edilir mi? / Are the above pressures and values acceptable?',
+          shortLabel: 'Basınç/Press',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'controller_on_position',
+          label: 'Kontrol Panel "on" pozisyonda mı? / Controller is in "on" position?',
+          shortLabel: 'Panel On',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'waterflow_valves_closed',
+          label: 'Su akış test vanaları kapalı konumda mı? / Waterflow test valves are in closed position?',
+          shortLabel: 'Test Vanaları',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pilot_light_on',
+          label: 'Kontrol paneli pilot ışığı (güç açık) yanıyor mu? / Controller pilot light (power on) is illuminated?',
+          shortLabel: 'Pilot Işık',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'bearings_lubricated',
+          label: 'Pompa yatakları yağlanmış mı? / Are the pump bearings lubricated?',
+          shortLabel: 'Yağlama/Lube',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'no_vibration',
+          label: 'Pompa çalışırken vibrasyon yok mu? / There is no vibration when the pump is running?',
+          shortLabel: 'Titreşim/Vibr',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pump_accessible',
+          label: 'Pompanın çalışma süresine ulaşılabiliyor mu? / Is the pump run time accessible?',
+          shortLabel: 'Erişim/Access',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pressure_calibration_done',
+          label: 'Pompa basınç kalibrasyonları yapıldı mı? / Have pump pressure calibrations been done?',
+          shortLabel: 'Kalibrasyon',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pump_start_pressure',
+          label: 'Pompa start basıncı / Pump start pressure',
+          shortLabel: 'Start PSI',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'pump_stop_pressure',
+          label: 'Pompa stop basıncı / Pump stop pressure',
+          shortLabel: 'Stop PSI',
+          type: 'NUMBER',
+          required: false,
+          unit: 'PSI'
+        },
+        {
+          id: 'manual_stop',
+          label: 'Pompa Manual stop ayarlı mı? / Is the pump set to Manual stop?',
+          shortLabel: 'Manual Stop',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'auto_stop_ejector',
+          label: 'Pompa otomatik stop ejector mu? / Does the pump stop automatically?',
+          shortLabel: 'Oto Stop',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pump_painted',
+          label: 'Pompa hissettiren hafitten start verildi mi? / Has the pump been started manually?',
+          shortLabel: 'Manuel Start',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'lightness_checked',
+          label: 'Kaidelerin sıkılığı kontrol edildi mi? / Check the lightness of the connections?',
+          shortLabel: 'Sıkılık/Tight',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pump_marked',
+          label: 'Pompalar manuel start verildi mi? / Have the pumps been started manually?',
+          shortLabel: 'Manuel/Manual',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'alarm_light_check',
+          label: "Tüm alarm ışıkları 'kapalı' mı? All alarm pilot lights are 'off'?",
+          shortLabel: 'Alarm Işık',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'sound_alarm_off',
+          label: 'Dizel motor çıkış ısısı uygun mu? / Is the sound of the pump okay?',
+          shortLabel: 'Motor Ses',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'no_corrosion',
+          label: 'Herhangi bir devir kartında korozyon yok mu? / No corrosion on circuit boards?',
+          shortLabel: 'Korozyon/Corr',
+          type: 'YES_NO_NA',
+          required: true
+        }
+      ]
+    },
+    {
+      id: 'diesel_engine_checklist',
+      name: 'Dizel Pompa Devamı / Diesel Pump Continuation',
+      description: 'Dizel motor kontrolleri / Diesel engine checks',
+      fields: [
+        {
+          id: 'packing_glands_adjusted',
+          label: 'Salmastra sıkma aparatları düzgün ayarlanmış görünüyor mu? / Packing glands appear properly adjusted?',
+          shortLabel: 'Salmastra',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pump_manual_start',
+          label: 'Pompaya basılmadan manuel start verildi mi? / Has the pump been manually started from the controller?',
+          shortLabel: 'Manuel Start',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'fire_pump_couplings',
+          label: 'Yangın pompası şaft kaplın düzgün şekilde hizalandı görünüyor mu? / Fire pump couplings appear properly aligned?',
+          shortLabel: 'Kaplin/Coupling',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'drains_normal',
+          label: 'Salmastradan damlama normal mi? / Is it normal for the packings to drip?',
+          shortLabel: 'Damlama/Drip',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pump_start_normal',
+          label: 'Pompanın start alması, çekiş olarak normal mi? / Pump start is normal?',
+          shortLabel: 'Start Normal',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'solenoid_operating',
+          label: 'Solenoid valf düzgün çalışıyor mu? / Is the solenoid valve operating correctly?',
+          shortLabel: 'Solenoid',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'operating_time_normal',
+          label: 'Pompa çalışma süresi normal mi? / Is the operating time of the pump normal?',
+          shortLabel: 'Çalışma Süresi',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'maintenance_hours',
+          label: 'Son Bakımdan bu yana pompaları haftalık çalıştırıldı mı? / Since the last maintenance, the pumps have been weekly?',
+          shortLabel: 'Haftalık/Weekly',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'starts_since_last',
+          label: 'Son bakımdan bu yana pompa start alma sayısı? / Number of starts of the pump since last maintenance?',
+          shortLabel: 'Start Sayısı',
+          type: 'NUMBER',
+          required: false
+        },
+        {
+          id: 'motor_time_observe',
+          label: 'Motorun fani hızı gelen süreyi gözlemleyin / Observe time for motor to crank',
+          shortLabel: 'Süre/Time',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'solenoid_coolant_valve',
+          label: 'Soğutma suyu solenoid valf tutucu mu? / Is the coolant solenoid valve holding?',
+          shortLabel: 'Soğutma Valf',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pilot_lights_batteries',
+          label: 'Güne pil ışıkları yanıyor veya pil arızası pilotı yakar mı? / Pilot lights for batteries are on or fail lights are off?',
+          shortLabel: 'Pil Işıkları',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'crankcase_oil_normal',
+          label: 'Karter yağ seviyesi uygun mu? / Crankcase oil level is normal?',
+          shortLabel: 'Yağ/Oil',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'cooling_water_normal',
+          label: 'Antifrizi seviyesi uygun mu? / Cooling water level is normal?',
+          shortLabel: 'Antifriz',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'electrolyte_normal',
+          label: 'Akü su seviyesi uygun mu? / Electrolyte level in batteries is normal?',
+          shortLabel: 'Akü Su',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'battery_terminals_clean',
+          label: 'Akü kutup başlarında korozyon yok mu? / Battery terminals are free of corrosion?',
+          shortLabel: 'Kutup Başları',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'water_jacket_heater',
+          label: 'Isıtıcı yeter durumda mı? / Water-jacket heater is operational?',
+          shortLabel: 'Isıtıcı/Heater',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'exhaust_no_leak',
+          label: 'Egzost hattında gaz sızıntısı yok mu? / There is no gas leak in the exhaust line?',
+          shortLabel: 'Egzost/Exhaust',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'aftercooler_drain',
+          label: 'Aftercooler da yoğuşan su varsa boşaltın / Drain condensate if any in aftercooler',
+          shortLabel: 'Aftercooler',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'diesel_fuel_tank',
+          label: 'Dizel yakıt deposunda su olup olmadığını kontrol edin / Check for water in diesel fuel tank',
+          shortLabel: 'Yakıt/Fuel',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'strainer_clean',
+          label: 'Dizel yangın pompası için soğutma sistemini temiz su süzgecini temizleyin mi? / Clean water strainer in cooling system for diesel fire pump?',
+          shortLabel: 'Süzgeç/Strainer',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'filters_changed',
+          label: 'Yağ, yağ filtresi, yakıt filtresi, and/or ve hava filtresi yenisi ile değiştir mi? / Has the engine oil, oil filter, fuel filter, and/or air filter been changed?',
+          shortLabel: 'Filtreler',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'coolant_pressure_check',
+          label: 'Soğutma kayışından geçen su basıncı oluştu not edin / Note the water pressure through the coolant',
+          shortLabel: 'Soğutma Basınç',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'electrical_wiring',
+          label: 'Hareketli maruzi kablo yöntemini aksatılmış sürünme olup olmadığını kontrol edin / Check electrical wiring for movement',
+          shortLabel: 'Kablolama',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'filters_oils_changed_50hrs',
+          label: 'Tüm Filtreler ve yağlar her 50 saatte bir yoksa yılda bir mi değiştirildi? / Have all filters and oils been changed every 50 hours or yearly?',
+          shortLabel: '50 Saat Bakım',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'diesel_crank_time',
+          label: 'Dizel motorun maks basma süresini kaydedın / Record time for diesel engine to crank',
+          shortLabel: 'Crank Süresi',
+          type: 'NUMBER',
+          required: false,
+          unit: 'sn/sec'
+        },
+        {
+          id: 'pump_rpm_running',
+          label: 'Pompa hızını/rpm çalışırken kaydedin / Record the pump speed in rpm when pump is running',
+          shortLabel: 'Çalışma RPM',
+          type: 'NUMBER',
+          required: false
+        },
+        {
+          id: 'prv_not_operating',
+          label: 'Ağa test yapılırsa pompa RV nin çalışmadığını doğrulayın / Verify that the pump RV is not operating during the flow test',
+          shortLabel: 'RV Kontrolü',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'alarm_conditions_activate',
+          label: 'Alarm sensörü konumlarındaki alarm devrelerin (aynı zamanda uzak alarmlar) etkinleştirecek pompa ve pompa performans eğrisi çekek ve önceki iki yıla test verileriyle karşılaştırın / Simulate pump and driver alarm conditions by activating alarm circuits at alarm sensor locations',
+          shortLabel: 'Alarm Test',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'performance_curve_compare',
+          label: "Pompa'nın orijinal unadjusted alan kabul test eğrisine ve önceki yıllardan test verileriyle ile göndere ve pompanın original performansı işli göndece ile ön eki iki yılın / Draw pump performance curve shall be drawn and compared to pumps original field acceptance test curve",
+          shortLabel: 'Performans Eğrisi',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'ecm_primary_backup',
+          label: 'Dizel motorsun üzerinde birincil ve yedek elektronik kontrol modüllerini (ECM) test edin / Test primary and backup electronic control modules (ECM) on diesel fuel injected engines',
+          shortLabel: 'ECM Test',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'pressure_relief_valves',
+          label: 'Basınç tahliye ve vakum kontrol vanalarını test edin / Yük Kontrol Test Pressure-relieving and suction-control valves',
+          shortLabel: 'Tahliye Vanaları',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'circulation_relief_valve',
+          label: 'Sirkülasyon tahliye vanasını (varsa) suyu boşaltmak için çalışır çalışmadığını kontrol edin / Inspect the circulation relief valve (where equipped) for operation to discharge water',
+          shortLabel: 'Sirkülasyon Valf',
+          type: 'YES_NO_NA',
+          required: true
+        }
+      ]
+    },
+    {
+      id: 'jockey_pump_checklist',
+      name: 'Jockey Pompa / Jockey Pump',
+      description: 'Jockey pompa kontrolleri / Jockey pump operational checks',
+      fields: [
+        {
+          id: 'jockey_switch_auto',
+          label: 'Jokey pompa şalteri açık mı? / Is the jockey pump switch on?',
+          shortLabel: 'Şalter/Switch',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'jockey_manual_check',
+          label: 'Jokey pompa manuel çalışıyor mu? / Does the jockey pump start manually?',
+          shortLabel: 'Manuel/Manual',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'jockey_start_pressure',
+          label: 'Jokey pompa start basıncı / Jockey pump start pressure',
+          shortLabel: 'Start PSI',
+          type: 'NUMBER',
+          required: true,
+          unit: 'PSI'
+        },
+        {
+          id: 'jockey_stop_pressure',
+          label: 'Jokey pompa stop basıncı / Jockey pump stop pressure',
+          shortLabel: 'Stop PSI',
+          type: 'NUMBER',
+          required: true,
+          unit: 'PSI'
+        },
+        {
+          id: 'jockey_calibration',
+          label: 'Jokey pompa basınç kalibrasyonu yapıldı mı? / Jockey pump pressure calibration done?',
+          shortLabel: 'Kalibrasyon',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'jockey_controller_auto',
+          label: 'Jokey pompası kontrolörü "otomatik" olarak ayarlandı mı? / Jockey pump controller is set to "auto"?',
+          shortLabel: 'Otomatik/Auto',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'jockey_rotation',
+          label: 'Jokey pompa dönüş yönü doğru mu? / Is the jockey pump rotation direction correct?',
+          shortLabel: 'Dönüş/Rotation',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'jockey_energy',
+          label: 'Jokey pompası enerjili mi? / Does the jockey pump have energy?',
+          shortLabel: 'Enerji/Energy',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'jockey_panel_ul',
+          label: 'Jokey pompa Panel UL listeli mi? / Is the jockey pump panel UL listed?',
+          shortLabel: 'UL Listeli',
+          type: 'YES_NO_NA',
+          required: true
+        },
+        {
+          id: 'jockey_pressures_acceptable',
+          label: 'Yukarıdaki basınç ve değerler kabul edilir mi? / Are the above pressures and values acceptable?',
+          shortLabel: 'Değerler OK',
+          type: 'YES_NO_NA',
+          required: true
+        }
+      ]
+    },
+    {
+      id: 'turbine_pump_checklist',
+      name: 'Turbin Tip Pompa / Turbine Type Pump',
+      description: 'Turbin pompa kontrolleri (varsa) / Turbine pump checks (if applicable)',
+      fields: [
+        {
+          id: 'turbine_oil_level',
+          label: 'Türbin yağ seviyesi uygun mu? / Turbine oil level is appropriate?',
+          shortLabel: 'Yağ/Oil',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'turbine_vent_valve',
+          label: 'Hava alma ventili uygun çalışıyor mu? / Air vent valve is working properly?',
+          shortLabel: 'Vent Valf',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'turbine_pump_fittings',
+          label: 'Türbin pompa sabitlemelerı uygun mu? / Suitable for pump fixings to the turbine?',
+          shortLabel: 'Sabitlemeler',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'turbine_reducer_dripping',
+          label: 'Türbin redüktör ovalandırımlı uygun sıkılık mı? / Turbine reducer packing dripping every minute?',
+          shortLabel: 'Redüktör',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'turbine_reducer_locknut',
+          label: 'Redüktör kiliteme somunu ölçümü / Measure the reducer locking nut size with a caliper',
+          shortLabel: 'Kilit Somunu',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'turbine_driver_type',
+          label: 'Pompalar, driver/UL FM VDS Listeli mi? / Pumps, driver are UL FM VDS Listed?',
+          shortLabel: 'UL/FM Listeli',
+          type: 'YES_NO_NA',
+          required: false
+        }
+      ]
+    },
+    {
+      id: 'notes_section',
+      name: 'Notlar / Notes',
+      description: 'Ek notlar ve gözlemler / Additional notes and observations',
+      fields: [
+        {
+          id: 'notes',
+          label: 'Notlar / Notes',
+          shortLabel: 'Notlar/Notes',
+          type: 'TEXTAREA',
+          required: false
+        },
+        {
+          id: 'issues_photos',
+          label: 'Sorun Fotoğrafları / Issue Photos',
+          shortLabel: 'Fotoğraflar',
+          type: 'PHOTO_GALLERY',
+          required: false,
+          maxPhotos: 10
+        }
+      ]
+    },
+    {
+      id: 'signatures',
+      name: 'İmzalar / Signatures',
+      description: 'Rapor onay imzaları / Report approval signatures',
+      fields: [
+        {
+          id: 'inspector_name',
+          label: 'Denetçi Adı / Inspector Name',
+          shortLabel: 'Denetçi/Inspector',
+          type: 'TEXT',
+          required: true
+        },
+        {
+          id: 'sig_inspector',
+          label: 'Denetçi İmzası / Inspector Signature',
+          shortLabel: 'İmza/Signature',
+          type: 'SIGNATURE',
+          required: true
+        },
+        {
+          id: 'company_rep_name',
+          label: 'Firma Temsilcisi Adı / Company Representative Name',
+          shortLabel: 'Temsilci/Rep',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'sig_company_rep',
+          label: 'Firma Temsilcisi İmzası / Company Rep Signature',
+          shortLabel: 'Firma İmza',
+          type: 'SIGNATURE',
+          required: false
+        }
+      ]
+    }
+  ]
+};
+
+// Keep old English template for reference (deprecated)
 const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
   sections: [
     {
@@ -1441,29 +2379,21 @@ async function getTemplates(req, res) {
 
     console.log('[forms] Found', allTemplates.length, 'total templates');
 
-    // Simple language filtering:
-    // - English users: Only show templates where language is 'en' or null/undefined
-    // - Other languages: Show templates matching their language, with English fallback
-    //   for templates that don't have a version in their language
+    // Language filtering with bilingual support:
+    // - Bilingual templates (language='bilingual') are shown to ALL users
+    // - English users: Show templates where language is 'en', null/undefined, or 'bilingual'
+    // - Other languages: Show templates matching their language, bilingual, or English fallback
 
-    if (userLang === 'en') {
-      // English users only see English templates
-      const englishTemplates = allTemplates.filter(t =>
-        !t.language || t.language === 'en'
-      );
-      console.log('[forms] Returning', englishTemplates.length, 'English templates');
-      return res.json(englishTemplates);
-    }
-
-    // Non-English user (e.g., Turkish)
-    // Build a map of template "families" by looking at common identifiers
+    // Build a map of template "families" for deduplication
     const templateFamilies = new Map();
 
-    // Known template family mappings (you can extend this)
+    // Known template family mappings
     const familyMap = {
       'diesel fire pump maintenance report': 'diesel-pump',
       'dizel yangın pompası bakım raporu': 'diesel-pump',
+      'dizel yangın pompası bakım raporu / diesel fire pump maintenance report': 'diesel-pump',
       'pre-task plan': 'pre-task-plan',
+      'ön görev planı': 'pre-task-plan',
     };
 
     allTemplates.forEach(t => {
@@ -1481,13 +2411,18 @@ async function getTemplates(req, res) {
       templateFamilies.get(familyKey).push(t);
     });
 
-    // For each family, pick the user's language version or English fallback
+    // For each family, pick the best template based on user's language
     const result = [];
     templateFamilies.forEach((templates, familyKey) => {
+      // Priority: bilingual > user's language > English > first available
+      const bilingualVersion = templates.find(t => t.language === 'bilingual');
       const userLangVersion = templates.find(t => t.language === userLang);
       const englishVersion = templates.find(t => t.language === 'en' || !t.language);
 
-      if (userLangVersion) {
+      if (bilingualVersion) {
+        // Bilingual templates are preferred for universal use
+        result.push(bilingualVersion);
+      } else if (userLangVersion) {
         result.push(userLangVersion);
       } else if (englishVersion) {
         result.push(englishVersion);
@@ -1596,65 +2531,57 @@ async function seedDefaultTemplates(req, res) {
       results.push({ name: preTask.name, action: 'created', sections: PRE_TASK_PLAN_TEMPLATE.sections.length });
     }
 
-    // 2. Diesel Fire Pump Maintenance (English)
-    const existingPumpEN = await prisma.formTemplate.findFirst({
-      where: { name: 'Diesel Fire Pump Maintenance Report', isDefault: true }
+    // 2. Diesel Fire Pump Maintenance - BILINGUAL (Turkish/English)
+    // This template uses both languages on all labels for international use
+    const existingPumpBilingual = await prisma.formTemplate.findFirst({
+      where: {
+        OR: [
+          { name: 'Dizel Yangın Pompası Bakım Raporu / Diesel Fire Pump Maintenance Report' },
+          { name: 'Diesel Fire Pump Maintenance Report' },
+          { name: 'Dizel Yangın Pompası Bakım Raporu' }
+        ],
+        isDefault: true
+      }
     });
 
-    if (existingPumpEN) {
+    if (existingPumpBilingual) {
       await prisma.formTemplate.update({
-        where: { id: existingPumpEN.id },
+        where: { id: existingPumpBilingual.id },
         data: {
-          schema: DIESEL_FIRE_PUMP_TEMPLATE_EN,
+          name: 'Dizel Yangın Pompası Bakım Raporu / Diesel Fire Pump Maintenance Report',
+          description: 'NFPA 25 / TS EN 12845 uyumlu dizel yangın pompası bakım raporu (Türkçe/İngilizce) - Bilingual fire pump maintenance report',
+          schema: DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL,
+          language: 'bilingual',
+          category: 'Inspection / Denetim',
           updatedAt: new Date()
         }
       });
-      results.push({ name: 'Diesel Fire Pump Maintenance Report', action: 'updated', sections: DIESEL_FIRE_PUMP_TEMPLATE_EN.sections.length });
+      results.push({ name: 'Dizel Yangın Pompası Bakım Raporu / Diesel Fire Pump Maintenance Report', action: 'updated', sections: DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL.sections.length });
     } else {
-      const pumpEN = await prisma.formTemplate.create({
+      const pumpBilingual = await prisma.formTemplate.create({
         data: {
-          name: 'Diesel Fire Pump Maintenance Report',
-          description: 'NFPA 25 compliant diesel fire pump maintenance and inspection report',
-          category: 'Inspection',
-          language: 'en',
-          schema: DIESEL_FIRE_PUMP_TEMPLATE_EN,
+          name: 'Dizel Yangın Pompası Bakım Raporu / Diesel Fire Pump Maintenance Report',
+          description: 'NFPA 25 / TS EN 12845 uyumlu dizel yangın pompası bakım raporu (Türkçe/İngilizce) - Bilingual fire pump maintenance report',
+          category: 'Inspection / Denetim',
+          language: 'bilingual',
+          schema: DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL,
           isDefault: true,
           isActive: true
         }
       });
-      results.push({ name: pumpEN.name, action: 'created', sections: DIESEL_FIRE_PUMP_TEMPLATE_EN.sections.length });
+      results.push({ name: pumpBilingual.name, action: 'created', sections: DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL.sections.length });
     }
 
-    // 3. Diesel Fire Pump Maintenance (Turkish)
-    const existingPumpTR = await prisma.formTemplate.findFirst({
-      where: { name: 'Dizel Yangın Pompası Bakım Raporu', isDefault: true }
+    // Delete old separate EN/TR templates if they exist (consolidate to bilingual)
+    await prisma.formTemplate.deleteMany({
+      where: {
+        OR: [
+          { name: 'Diesel Fire Pump Maintenance Report', isDefault: true },
+          { name: 'Dizel Yangın Pompası Bakım Raporu', isDefault: true }
+        ],
+        NOT: { name: 'Dizel Yangın Pompası Bakım Raporu / Diesel Fire Pump Maintenance Report' }
+      }
     });
-
-    if (existingPumpTR) {
-      await prisma.formTemplate.update({
-        where: { id: existingPumpTR.id },
-        data: {
-          schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
-          language: 'tr', // Fix: ensure Turkish template has correct language
-          category: 'Denetim',
-          updatedAt: new Date()
-        }
-      });
-      results.push({ name: 'Dizel Yangın Pompası Bakım Raporu', action: 'updated', language: 'tr', sections: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
-    } else {
-      const pumpTR = await prisma.formTemplate.create({
-        data: {
-          name: 'Dizel Yangın Pompası Bakım Raporu',
-          description: 'NFPA 25 uyumlu dizel yangın pompası bakım ve denetim raporu',
-          category: 'Denetim',
-          language: 'tr',
-          schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
-          isDefault: true,
-          isActive: true
-        }
-      });
-      results.push({ name: pumpTR.name, action: 'created', sections: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
-    }
 
     res.status(200).json({
       message: `Processed ${results.length} template(s)`,
@@ -1690,38 +2617,42 @@ async function updateDefaultTemplates(req, res) {
       updatedTemplates.push({ name: updated.name, sectionsCount: PRE_TASK_PLAN_TEMPLATE.sections.length });
     }
 
-    // 2. Update English Diesel Fire Pump
-    const pumpEN = await prisma.formTemplate.findFirst({
-      where: { name: 'Diesel Fire Pump Maintenance Report', isDefault: true }
+    // 2. Update Diesel Fire Pump - now BILINGUAL (consolidate EN/TR into single template)
+    const existingPump = await prisma.formTemplate.findFirst({
+      where: {
+        OR: [
+          { name: 'Dizel Yangın Pompası Bakım Raporu / Diesel Fire Pump Maintenance Report' },
+          { name: 'Diesel Fire Pump Maintenance Report' },
+          { name: 'Dizel Yangın Pompası Bakım Raporu' }
+        ],
+        isDefault: true
+      }
     });
 
-    if (pumpEN) {
+    if (existingPump) {
       const updated = await prisma.formTemplate.update({
-        where: { id: pumpEN.id },
+        where: { id: existingPump.id },
         data: {
-          schema: DIESEL_FIRE_PUMP_TEMPLATE_EN,
+          name: 'Dizel Yangın Pompası Bakım Raporu / Diesel Fire Pump Maintenance Report',
+          description: 'NFPA 25 / TS EN 12845 uyumlu dizel yangın pompası bakım raporu (Türkçe/İngilizce) - Bilingual fire pump maintenance report',
+          schema: DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL,
+          language: 'bilingual',
+          category: 'Inspection / Denetim',
           updatedAt: new Date()
         }
       });
-      updatedTemplates.push({ name: updated.name, sectionsCount: DIESEL_FIRE_PUMP_TEMPLATE_EN.sections.length });
-    }
+      updatedTemplates.push({ name: updated.name, language: 'bilingual', sectionsCount: DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL.sections.length });
 
-    // 3. Update Turkish Diesel Fire Pump
-    const pumpTR = await prisma.formTemplate.findFirst({
-      where: { name: 'Dizel Yangın Pompası Bakım Raporu', isDefault: true }
-    });
-
-    if (pumpTR) {
-      const updated = await prisma.formTemplate.update({
-        where: { id: pumpTR.id },
-        data: {
-          schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
-          language: 'tr', // Fix: ensure correct language
-          category: 'Denetim',
-          updatedAt: new Date()
+      // Delete any other old pump templates
+      await prisma.formTemplate.deleteMany({
+        where: {
+          OR: [
+            { name: 'Diesel Fire Pump Maintenance Report', isDefault: true },
+            { name: 'Dizel Yangın Pompası Bakım Raporu', isDefault: true }
+          ],
+          NOT: { id: existingPump.id }
         }
       });
-      updatedTemplates.push({ name: updated.name, language: 'tr', sectionsCount: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
     }
 
     if (updatedTemplates.length === 0) {
