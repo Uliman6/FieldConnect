@@ -45,7 +45,9 @@
       "Bash(eas build:view:*)",
       "Bash(eas submit:*)",
       "Bash(powershell -command \"[console]::beep\\(800,300\\); [console]::beep\\(1000,300\\)\")",
-      "Bash(eas build:*)"
+      "Bash(eas build:*)",
+      "Bash(del /f \"C:\\\\sitespeak\\\\Backend\\\\Frontend\\\\sentry.properties\")",
+      "Bash(git -C \"C:/sitespeak/Backend\" commit -m \"$\\(cat <<''EOF''\nRename Events to Observations and add positive observation types\n\n- Renamed \"Events\" to \"Observations\" throughout the app UI\n- Added new positive observation types: Productivity Gain, Milestone, Progress, Recognition\n- Updated translations for English, Spanish, and Turkish\n- Updated backend AI parser to recognize and classify positive observations\n- Added green/blue color scheme for positive observation types\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

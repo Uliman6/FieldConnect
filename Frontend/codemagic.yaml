@@ -1,0 +1,40 @@
+workflows:
+  ios-production:
+    name: iOS Production Build
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.const.fieldconnect
+      vars:
+        EXPO_PUBLIC_API_URL: "https://fieldconnect.onrender.com"
+        SENTRY_DISABLE_AUTO_UPLOAD: "true"
+        SENTRY_ALLOW_FAILURE: "true"
+      node: 20.18.0
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install --legacy-peer-deps
+      - name: Run Expo prebuild
+        script: |
+          export SENTRY_DISABLE_AUTO_UPLOAD=true
+          export SENTRY_ALLOW_FAILURE=true
+          npx expo prebuild --platform ios --clean
+      - name: Install CocoaPods
+        script: |
+          cd ios && pod install
+      - name: Build IPA
+        script: |
+          # Disable Sentry uploads during build
+          export SENTRY_DISABLE_AUTO_UPLOAD=true
+          export SENTRY_ALLOW_FAILURE=true
+          xcode-project build-ipa \
+            --workspace ios/FieldConnect.xcworkspace \
+            --scheme FieldConnect
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
