@@ -6,6 +6,8 @@ import {
   Pressable,
   RefreshControl,
   ActivityIndicator,
+  Alert,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -14,6 +16,7 @@ import {
   getFormTemplates,
   getFormInstances,
   createFormInstance,
+  deleteFormInstance,
   seedFormTemplates,
   queryKeys,
   FormTemplate,
@@ -31,6 +34,7 @@ import {
   Building2,
   Upload,
   ClipboardList,
+  Trash2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -50,7 +54,17 @@ const STATUS_LABELS = {
   COMPLETED: 'Completed',
 };
 
-function FormCard({ form, onPress }: { form: FormInstance; onPress: () => void }) {
+function FormCard({
+  form,
+  onPress,
+  onDelete,
+  isDeleting
+}: {
+  form: FormInstance;
+  onPress: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) {
   const statusColor = STATUS_COLORS[form.status] || STATUS_COLORS.DRAFT;
   const statusLabel = STATUS_LABELS[form.status] || 'Draft';
 
@@ -86,12 +100,9 @@ function FormCard({ form, onPress }: { form: FormInstance; onPress: () => void }
   }, [form]);
 
   return (
-    <Pressable
-      onPress={onPress}
-      className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700"
-    >
+    <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
       <View className="flex-row items-start justify-between">
-        <View className="flex-1 mr-3">
+        <Pressable onPress={onPress} className="flex-1 mr-3">
           <View className="flex-row items-center mb-2">
             <View
               className="px-2 py-0.5 rounded-full mr-2"
@@ -120,17 +131,36 @@ function FormCard({ form, onPress }: { form: FormInstance; onPress: () => void }
             <Clock size={12} color="#9CA3AF" />
             <Text className="text-xs text-gray-400 ml-1">{timeAgo}</Text>
           </View>
-        </View>
+        </Pressable>
 
-        <View className="items-end justify-center">
-          {form.status === 'COMPLETED' ? (
-            <CheckCircle2 size={24} color="#10B981" />
-          ) : (
-            <ChevronRight size={24} color="#9CA3AF" />
-          )}
+        <View className="flex-row items-center gap-2">
+          {/* Delete Button */}
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onDelete();
+            }}
+            disabled={isDeleting}
+            className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30"
+          >
+            {isDeleting ? (
+              <ActivityIndicator size={20} color="#EF4444" />
+            ) : (
+              <Trash2 size={20} color="#EF4444" />
+            )}
+          </Pressable>
+
+          {/* Status Icon */}
+          <Pressable onPress={onPress}>
+            {form.status === 'COMPLETED' ? (
+              <CheckCircle2 size={24} color="#10B981" />
+            ) : (
+              <ChevronRight size={24} color="#9CA3AF" />
+            )}
+          </Pressable>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -181,6 +211,7 @@ export default function FormsScreen() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [startingTemplate, setStartingTemplate] = useState<string | null>(null);
+  const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
 
   const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
   const projects = useDailyLogStore((s) => s.projects);
@@ -258,6 +289,48 @@ export default function FormsScreen() {
     ]);
   }, [queryClient, backendProjectId]);
 
+  // Delete form handler
+  const handleDeleteForm = useCallback(async (formId: string) => {
+    const confirmDelete = (): Promise<boolean> => {
+      return new Promise((resolve) => {
+        if (Platform.OS === 'web') {
+          resolve(window.confirm('Are you sure you want to delete this form? This action cannot be undone.'));
+        } else {
+          Alert.alert(
+            'Delete Form',
+            'Are you sure you want to delete this form? This action cannot be undone.',
+            [
+              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          );
+        }
+      });
+    };
+
+    const confirmed = await confirmDelete();
+    if (!confirmed) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setDeletingFormId(formId);
+
+    try {
+      await deleteFormInstance(formId);
+      queryClient.invalidateQueries({ queryKey: queryKeys.formInstances({ projectId: backendProjectId }) });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('[forms] Failed to delete form:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to delete form. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to delete form. Please try again.');
+      }
+    } finally {
+      setDeletingFormId(null);
+    }
+  }, [queryClient, backendProjectId]);
+
   // Separate forms by status
   const inProgressForms = React.useMemo(() => {
     if (!formsQuery.data) return [];
@@ -322,6 +395,8 @@ export default function FormsScreen() {
                 <FormCard
                   form={form}
                   onPress={() => router.push(`/form-fill?id=${form.id}`)}
+                  onDelete={() => handleDeleteForm(form.id)}
+                  isDeleting={deletingFormId === form.id}
                 />
               </Animated.View>
             ))}
@@ -387,6 +462,8 @@ export default function FormsScreen() {
                 <FormCard
                   form={form}
                   onPress={() => router.push(`/form-fill?id=${form.id}`)}
+                  onDelete={() => handleDeleteForm(form.id)}
+                  isDeleting={deletingFormId === form.id}
                 />
               </Animated.View>
             ))}
