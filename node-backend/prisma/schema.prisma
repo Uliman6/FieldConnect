@@ -366,6 +366,11 @@ model Event {
   statusChangedAt DateTime?  @map("status_changed_at")
   statusChangedBy String?    @map("status_changed_by")
 
+  // Collaboration tracking
+  version         Int        @default(1)  // For optimistic locking
+  lastModifiedById String?   @map("last_modified_by_id")
+  createdById     String?    @map("created_by_id")
+
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   template PdfTemplate? @relation(fields: [templateId], references: [id])
   templateData EventTemplateData?

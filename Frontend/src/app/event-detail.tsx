@@ -29,6 +29,7 @@ import {
   fetchFilledPdf,
   deleteEventApi,
   updateEventApi,
+  isConflictError,
   getDocumentSchemas,
   applySchemaToEvent,
   updateEventSchemaData,
@@ -974,7 +975,28 @@ export default function EventDetailScreen() {
     },
     onError: (error) => {
       console.error('[event-detail] Failed to update backend event:', error);
-      Alert.alert('Error', 'Failed to save changes. Please try again.');
+
+      // Check for conflict (optimistic locking failure)
+      if (isConflictError(error)) {
+        const modifier = error.lastModifiedBy;
+        const modifierName = modifier?.name || modifier?.email || 'another user';
+        Alert.alert(
+          'Conflict Detected',
+          `This event was modified by ${modifierName} while you were editing. Please refresh and try again.`,
+          [
+            {
+              text: 'Refresh',
+              onPress: () => {
+                // Invalidate and refetch the event
+                queryClient.invalidateQueries({ queryKey: queryKeys.event(id || '') });
+              },
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to save changes. Please try again.');
+      }
     },
   });
 
@@ -1124,6 +1146,8 @@ export default function EventDetailScreen() {
       severity,
       location,
       tradeVendor,
+      // Include version for optimistic locking (if available from backend event)
+      version: backendEvent?.version,
     };
 
     if (isLocalEvent) {

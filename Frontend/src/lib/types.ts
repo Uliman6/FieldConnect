@@ -61,6 +61,10 @@ export interface Event {
   status_changed_by?: string | null;
   // Comments (when fetched with include)
   comments?: EventComment[];
+  // Collaboration tracking
+  version?: number;
+  created_by_id?: string | null;
+  last_modified_by_id?: string | null;
   // Sync placeholders (nullable for now)
   server_id: string | null;
   last_synced_at: string | null;

@@ -126,6 +126,10 @@ export interface IndexedEvent {
   } | null;
   // Comments (when fetched with include)
   comments?: EventCommentData[];
+  // Collaboration tracking
+  version?: number;
+  createdById?: string | null;
+  lastModifiedById?: string | null;
 }
 
 export interface IndexStats {
@@ -864,8 +868,32 @@ export async function createEvent(data: {
   });
 }
 
+// Conflict error for optimistic locking
+export interface ConflictError {
+  error: 'Conflict';
+  message: string;
+  currentVersion: number;
+  yourVersion: number;
+  lastModifiedBy: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+}
+
+export function isConflictError(error: unknown): error is ConflictError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'error' in error &&
+    (error as any).error === 'Conflict'
+  );
+}
+
 /**
  * Update an event
+ * @param version - Optional version for optimistic locking. If provided and doesn't match,
+ *                  returns a 409 Conflict error with info about who modified the event.
  */
 export async function updateEventApi(
   id: string,
@@ -880,6 +908,7 @@ export async function updateEventApi(
     location?: string;
     tradeVendor?: string;
     isResolved?: boolean;
+    version?: number;
   }
 ): Promise<IndexedEvent> {
   return apiFetch(`/api/events/${id}`, {
@@ -895,6 +924,7 @@ export async function updateEventApi(
       location: data.location,
       trade_vendor: data.tradeVendor,
       is_resolved: data.isResolved,
+      version: data.version,
     }),
   });
 }
