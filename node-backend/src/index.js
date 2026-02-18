@@ -1,4 +1,4 @@
-// FieldConnect Backend - v1.6.0 (Project Invitations)
+// FieldConnect Backend - v1.7.0 (Collaboration + Optimistic Locking)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');

@@ -320,6 +320,9 @@ class EventsController {
         return res.status(403).json({ error: 'You do not have access to this project' });
       }
 
+      // Get user ID for tracking who created the event
+      const userId = req.user?.id;
+
       const event = await prisma.event.create({
         data: {
           ...(id && { id }), // Use client-provided ID if available
@@ -334,7 +337,10 @@ class EventsController {
           location,
           tradeVendor: trade_vendor,
           isResolved: is_resolved || false,
-          audioFileId: audio_file_id
+          audioFileId: audio_file_id,
+          createdById: userId,
+          lastModifiedById: userId,
+          version: 1
         },
         include: {
           project: true
@@ -378,7 +384,8 @@ class EventsController {
         trade_vendor,
         tradeVendor,
         is_resolved,
-        isResolved
+        isResolved,
+        version: expectedVersion // For optimistic locking
       } = req.body;
 
       // Use camelCase if provided, fall back to snake_case
@@ -394,7 +401,7 @@ class EventsController {
       // First check if event exists and user has access
       const existingEvent = await prisma.event.findUnique({
         where: { id },
-        select: { projectId: true }
+        select: { projectId: true, version: true, lastModifiedById: true }
       });
 
       if (!existingEvent) {
@@ -406,6 +413,31 @@ class EventsController {
           !req.accessibleProjectIds.includes(existingEvent.projectId)) {
         return res.status(403).json({ error: 'You do not have access to this event' });
       }
+
+      // OPTIMISTIC LOCKING: Check version if provided
+      // If client sends a version, verify it matches the current version
+      if (expectedVersion !== undefined && existingEvent.version !== expectedVersion) {
+        // Fetch last modifier's info for the conflict response
+        let lastModifier = null;
+        if (existingEvent.lastModifiedById) {
+          lastModifier = await prisma.user.findUnique({
+            where: { id: existingEvent.lastModifiedById },
+            select: { id: true, name: true, email: true }
+          });
+        }
+
+        return res.status(409).json({
+          error: 'Conflict',
+          message: 'This event has been modified by another user since you loaded it',
+          currentVersion: existingEvent.version,
+          yourVersion: expectedVersion,
+          lastModifiedBy: lastModifier
+        });
+      }
+
+      // Get user ID for tracking
+      const userId = req.user?.id;
+      const newVersion = (existingEvent.version || 1) + 1;
 
       const event = await prisma.event.update({
         where: { id },
@@ -419,7 +451,9 @@ class EventsController {
           ...(notes !== undefined && { notes }),
           ...(location !== undefined && { location }),
           ...(finalTradeVendor !== undefined && { tradeVendor: finalTradeVendor }),
-          ...(finalIsResolved !== undefined && { isResolved: finalIsResolved })
+          ...(finalIsResolved !== undefined && { isResolved: finalIsResolved }),
+          lastModifiedById: userId,
+          version: newVersion
         },
         include: {
           project: true
