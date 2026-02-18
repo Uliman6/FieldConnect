@@ -2544,6 +2544,8 @@ export interface FormInstance {
   voiceTranscript: string | null;
   signatures: FormSignature[];
   syncStatus: string;
+  createdById?: string;
+  createdByName?: string;
   template?: FormTemplate;
 }
 
