@@ -1635,10 +1635,12 @@ async function seedDefaultTemplates(req, res) {
         where: { id: existingPumpTR.id },
         data: {
           schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
+          language: 'tr', // Fix: ensure Turkish template has correct language
+          category: 'Denetim',
           updatedAt: new Date()
         }
       });
-      results.push({ name: 'Dizel Yangın Pompası Bakım Raporu', action: 'updated', sections: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
+      results.push({ name: 'Dizel Yangın Pompası Bakım Raporu', action: 'updated', language: 'tr', sections: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
     } else {
       const pumpTR = await prisma.formTemplate.create({
         data: {
@@ -1714,10 +1716,12 @@ async function updateDefaultTemplates(req, res) {
         where: { id: pumpTR.id },
         data: {
           schema: DIESEL_FIRE_PUMP_TEMPLATE_TR,
+          language: 'tr', // Fix: ensure correct language
+          category: 'Denetim',
           updatedAt: new Date()
         }
       });
-      updatedTemplates.push({ name: updated.name, sectionsCount: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
+      updatedTemplates.push({ name: updated.name, language: 'tr', sectionsCount: DIESEL_FIRE_PUMP_TEMPLATE_TR.sections.length });
     }
 
     if (updatedTemplates.length === 0) {
