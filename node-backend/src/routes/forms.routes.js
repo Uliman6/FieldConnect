@@ -19,4 +19,7 @@ router.delete('/:id', authenticate, formsController.deleteForm);
 // PDF generation
 router.get('/:id/pdf', optionalAuth, formsController.generateFormPdf);
 
+// OCR for nameplate photos
+router.post('/ocr/nameplate', authenticate, formsController.extractNameplateOcr);
+
 module.exports = router;

@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { generatePreTaskPlanPdf } = require('../services/form-pdf.service');
+const { extractNameplateData, mapOcrFieldsToFormFields } = require('../services/ocr.service');
 
 // Pre-Task Plan template (DPR Construction style)
 const PRE_TASK_PLAN_TEMPLATE = {
@@ -1779,6 +1780,44 @@ async function generateFormPdf(req, res) {
   }
 }
 
+/**
+ * Extract text from nameplate photo using OCR (GPT-4 Vision)
+ */
+async function extractNameplateOcr(req, res) {
+  try {
+    const { imageBase64, equipmentType, fieldsToExtract, sectionId, instanceIndex } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ error: 'Image data is required' });
+    }
+
+    console.log('[forms] OCR request for:', equipmentType, 'section:', sectionId, 'fields:', fieldsToExtract);
+
+    // Extract data from the image
+    const result = await extractNameplateData(imageBase64, fieldsToExtract || [], equipmentType || 'equipment');
+
+    if (!result.success) {
+      return res.status(500).json({ error: result.error || 'Failed to extract data from image' });
+    }
+
+    // Map OCR fields to form field IDs if section provided
+    let formFields = {};
+    if (sectionId && result.data) {
+      formFields = mapOcrFieldsToFormFields(result.data, sectionId, instanceIndex);
+    }
+
+    res.json({
+      success: true,
+      extractedData: result.data,
+      formFields: formFields,
+      rawResponse: result.rawResponse,
+    });
+  } catch (error) {
+    console.error('[forms] OCR error:', error);
+    res.status(500).json({ error: 'Failed to process OCR request' });
+  }
+}
+
 module.exports = {
   getTemplates,
   getTemplate,
@@ -1790,5 +1829,6 @@ module.exports = {
   updateForm,
   deleteForm,
   generateFormPdf,
+  extractNameplateOcr,
   PRE_TASK_PLAN_TEMPLATE
 };

@@ -551,13 +551,69 @@ function PhotoField({
   value,
   onChange,
   disabled,
+  sectionId,
+  instanceIndex,
+  onOcrComplete,
 }: {
   field: FormField;
   value: { uri: string; ocrData?: Record<string, string> } | undefined;
   onChange: (value: any) => void;
   disabled?: boolean;
+  sectionId?: string;
+  instanceIndex?: number;
+  onOcrComplete?: (formFields: Record<string, string>) => void;
 }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [ocrStatus, setOcrStatus] = useState<'idle' | 'processing' | 'done' | 'error'>('idle');
+
+  const runOcr = async (imageBase64: string) => {
+    if (!field.ocrEnabled) return null;
+
+    try {
+      setOcrStatus('processing');
+
+      // Dynamically import to avoid issues
+      const { extractNameplateOcr } = await import('@/lib/api');
+
+      // Determine equipment type from field/section
+      let equipmentType = 'equipment';
+      if (field.id.includes('pump') || sectionId?.includes('pump')) {
+        equipmentType = 'fire pump';
+      } else if (field.id.includes('engine') || sectionId?.includes('engine')) {
+        equipmentType = 'diesel engine';
+      } else if (field.id.includes('controller') || sectionId?.includes('controller')) {
+        equipmentType = 'fire pump controller';
+      } else if (field.id.includes('gauge')) {
+        equipmentType = 'pressure gauge';
+      }
+
+      const result = await extractNameplateOcr({
+        imageBase64,
+        equipmentType,
+        fieldsToExtract: field.ocrFields || [],
+        sectionId,
+        instanceIndex,
+      });
+
+      if (result.success && result.extractedData) {
+        setOcrStatus('done');
+
+        // Call callback to auto-fill related form fields
+        if (onOcrComplete && result.formFields) {
+          onOcrComplete(result.formFields);
+        }
+
+        return result.extractedData;
+      } else {
+        setOcrStatus('error');
+        return null;
+      }
+    } catch (error) {
+      console.error('[PhotoField] OCR error:', error);
+      setOcrStatus('error');
+      return null;
+    }
+  };
 
   const handleTakePhoto = async () => {
     if (disabled) return;
@@ -576,9 +632,19 @@ function PhotoField({
           const reader = new FileReader();
           reader.onload = async (event) => {
             const uri = event.target?.result as string;
+
+            // Save photo immediately
             onChange({ uri, ocrData: null });
+
+            // Run OCR if enabled
+            if (field.ocrEnabled) {
+              const ocrData = await runOcr(uri);
+              if (ocrData) {
+                onChange({ uri, ocrData });
+              }
+            }
+
             setIsLoading(false);
-            // TODO: If ocrEnabled, send to OCR endpoint
           };
           reader.readAsDataURL(file);
         }
@@ -605,11 +671,25 @@ function PhotoField({
             source={{ uri: value.uri }}
             style={{ width: '100%', height: 200, resizeMode: 'cover' }}
           />
-          {/* OCR Indicator */}
+          {/* OCR Status Indicator */}
           {field.ocrEnabled && (
-            <View className="absolute top-2 right-2 bg-orange-500 px-2 py-1 rounded-full flex-row items-center">
-              <Copy size={12} color="white" />
-              <Text className="ml-1 text-white text-xs">OCR</Text>
+            <View className={`absolute top-2 right-2 px-2 py-1 rounded-full flex-row items-center ${
+              ocrStatus === 'processing' ? 'bg-blue-500' :
+              ocrStatus === 'done' ? 'bg-green-500' :
+              ocrStatus === 'error' ? 'bg-red-500' :
+              'bg-orange-500'
+            }`}>
+              {ocrStatus === 'processing' ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Copy size={12} color="white" />
+              )}
+              <Text className="ml-1 text-white text-xs">
+                {ocrStatus === 'processing' ? 'Reading...' :
+                 ocrStatus === 'done' ? 'Done' :
+                 ocrStatus === 'error' ? 'Error' :
+                 'OCR'}
+              </Text>
             </View>
           )}
           {/* OCR Data Display */}
@@ -1014,6 +1094,16 @@ function FormSectionComponent({
                   value={formData[getFieldKey(field.id)]}
                   onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
+                  sectionId={section.id}
+                  instanceIndex={instanceIndex}
+                  onOcrComplete={(ocrFields) => {
+                    // Auto-fill related form fields with OCR data
+                    Object.entries(ocrFields).forEach(([fieldId, value]) => {
+                      if (value) {
+                        onFieldChange(fieldId, value);
+                      }
+                    });
+                  }}
                 />
               )}
               {field.type === 'PHOTO_GALLERY' && (
