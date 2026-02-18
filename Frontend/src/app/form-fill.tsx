@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,6 +40,10 @@ import {
   Plus,
   Trash2,
   Users,
+  Camera,
+  Image as ImageIcon,
+  Calendar,
+  Copy,
 } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 import * as Haptics from 'expo-haptics';
@@ -314,7 +319,16 @@ function TableField({
 }) {
   const columns = field.tableColumns || ['Column 1', 'Column 2', 'Column 3'];
   const maxRows = field.maxRows || 5;
-  const rows = value || [['', '', '', ''].slice(0, columns.length)];
+
+  // Use defaultRows if provided and no value exists
+  const getInitialRows = () => {
+    if (value) return value;
+    if (field.defaultRows && field.defaultRows.length > 0) {
+      return field.defaultRows;
+    }
+    return [new Array(columns.length).fill('')];
+  };
+  const rows = getInitialRows();
 
   const addRow = () => {
     if (rows.length < maxRows) {
@@ -473,8 +487,266 @@ function CrewSignaturesField({
   );
 }
 
-// Section Component
-function FormSectionComponent({
+// Date Field Component
+function DateField({
+  field,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: string | undefined;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  // Format date for display
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString();
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const handleDatePicker = () => {
+    if (disabled) return;
+
+    if (Platform.OS === 'web') {
+      // On web, create a temporary date input
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.value = value || new Date().toISOString().split('T')[0];
+      input.onchange = (e) => {
+        const target = e.target as HTMLInputElement;
+        if (target.value) {
+          onChange(target.value);
+        }
+      };
+      input.click();
+    } else {
+      // TODO: Use native date picker for mobile
+      const today = new Date().toISOString().split('T')[0];
+      onChange(today);
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={handleDatePicker}
+      disabled={disabled}
+      className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3"
+    >
+      <Calendar size={20} color="#9CA3AF" />
+      <Text className={`ml-3 flex-1 ${value ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+        {value ? formatDate(value) : 'Select date...'}
+      </Text>
+    </Pressable>
+  );
+}
+
+// Photo Field Component
+function PhotoField({
+  field,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: { uri: string; ocrData?: Record<string, string> } | undefined;
+  onChange: (value: any) => void;
+  disabled?: boolean;
+}) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTakePhoto = async () => {
+    if (disabled) return;
+
+    if (Platform.OS === 'web') {
+      // Web: Use file input for camera/gallery
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment'; // Use rear camera
+      input.onchange = async (e) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+          setIsLoading(true);
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            const uri = event.target?.result as string;
+            onChange({ uri, ocrData: null });
+            setIsLoading(false);
+            // TODO: If ocrEnabled, send to OCR endpoint
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    } else {
+      // TODO: Use expo-image-picker for native
+      console.log('[PhotoField] Native camera not yet implemented');
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    if (disabled) return;
+    showConfirm('Remove Photo', 'Are you sure you want to remove this photo?', () => {
+      onChange(undefined);
+    });
+  };
+
+  return (
+    <View className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+      {value?.uri ? (
+        <View>
+          <Image
+            source={{ uri: value.uri }}
+            style={{ width: '100%', height: 200, resizeMode: 'cover' }}
+          />
+          {/* OCR Indicator */}
+          {field.ocrEnabled && (
+            <View className="absolute top-2 right-2 bg-orange-500 px-2 py-1 rounded-full flex-row items-center">
+              <Copy size={12} color="white" />
+              <Text className="ml-1 text-white text-xs">OCR</Text>
+            </View>
+          )}
+          {/* OCR Data Display */}
+          {value.ocrData && Object.keys(value.ocrData).length > 0 && (
+            <View className="p-2 bg-green-50 dark:bg-green-900/30">
+              <Text className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">
+                Extracted Data:
+              </Text>
+              {Object.entries(value.ocrData).map(([key, val]) => (
+                <Text key={key} className="text-xs text-gray-600 dark:text-gray-400">
+                  {key}: {val}
+                </Text>
+              ))}
+            </View>
+          )}
+          {!disabled && (
+            <Pressable
+              onPress={handleRemovePhoto}
+              className="absolute top-2 left-2 bg-red-500 p-2 rounded-full"
+            >
+              <Trash2 size={16} color="white" />
+            </Pressable>
+          )}
+        </View>
+      ) : (
+        <Pressable
+          onPress={handleTakePhoto}
+          disabled={disabled || isLoading}
+          className="items-center justify-center py-8"
+        >
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#F97316" />
+          ) : (
+            <>
+              <Camera size={40} color="#9CA3AF" />
+              <Text className="mt-2 text-gray-500 dark:text-gray-400">
+                Tap to take photo
+              </Text>
+              {field.ocrEnabled && (
+                <Text className="mt-1 text-xs text-orange-500">
+                  OCR enabled - will extract text
+                </Text>
+              )}
+            </>
+          )}
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// Photo Gallery Field Component
+function PhotoGalleryField({
+  field,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: Array<{ uri: string }> | undefined;
+  onChange: (value: Array<{ uri: string }>) => void;
+  disabled?: boolean;
+}) {
+  const photos = value || [];
+  const maxPhotos = field.maxPhotos || 10;
+
+  const handleAddPhoto = async () => {
+    if (disabled || photos.length >= maxPhotos) return;
+
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.onchange = (e) => {
+        const target = e.target as HTMLInputElement;
+        const files = target.files;
+        if (files) {
+          Array.from(files).slice(0, maxPhotos - photos.length).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const uri = event.target?.result as string;
+              onChange([...photos, { uri }]);
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+      };
+      input.click();
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    if (disabled) return;
+    onChange(photos.filter((_, i) => i !== index));
+  };
+
+  return (
+    <View>
+      {/* Photo Grid */}
+      <View className="flex-row flex-wrap gap-2 mb-3">
+        {photos.map((photo, idx) => (
+          <View key={idx} className="relative">
+            <Image
+              source={{ uri: photo.uri }}
+              style={{ width: 80, height: 80, borderRadius: 8 }}
+            />
+            {!disabled && (
+              <Pressable
+                onPress={() => handleRemovePhoto(idx)}
+                className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
+              >
+                <X size={12} color="white" />
+              </Pressable>
+            )}
+          </View>
+        ))}
+      </View>
+
+      {/* Add Button */}
+      {!disabled && photos.length < maxPhotos && (
+        <Pressable
+          onPress={handleAddPhoto}
+          className="flex-row items-center justify-center p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg"
+        >
+          <ImageIcon size={20} color="#9CA3AF" />
+          <Text className="ml-2 text-gray-500 dark:text-gray-400">
+            Add Photo ({photos.length}/{maxPhotos})
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// Repeatable Section Wrapper Component
+function RepeatableSectionWrapper({
   section,
   formData,
   onFieldChange,
@@ -487,7 +759,119 @@ function FormSectionComponent({
   disabled?: boolean;
   defaultExpanded?: boolean;
 }) {
+  const maxRepeats = section.maxRepeats || 10;
+  const repeatLabel = section.repeatLabel || 'Item';
+  const countKey = `__${section.id}_count`;
+
+  // Get count from formData, default to 1
+  const instanceCount = formData[countKey] || 1;
+
+  const addInstance = () => {
+    if (instanceCount < maxRepeats && !disabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      onFieldChange(countKey, instanceCount + 1);
+    }
+  };
+
+  const removeInstance = (index: number) => {
+    if (instanceCount > 1 && !disabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Shift all data from higher indices down
+      const newFormData: Record<string, any> = {};
+      for (let i = index + 1; i < instanceCount; i++) {
+        section.fields.forEach(field => {
+          const oldKey = `${section.id}_${i}_${field.id}`;
+          const newKey = `${section.id}_${i - 1}_${field.id}`;
+          if (formData[oldKey] !== undefined) {
+            newFormData[newKey] = formData[oldKey];
+          }
+        });
+      }
+
+      // Clear the last instance data
+      section.fields.forEach(field => {
+        const lastKey = `${section.id}_${instanceCount - 1}_${field.id}`;
+        onFieldChange(lastKey, undefined);
+      });
+
+      // Apply shifted data
+      Object.entries(newFormData).forEach(([key, value]) => {
+        onFieldChange(key, value);
+      });
+
+      // Update count
+      onFieldChange(countKey, instanceCount - 1);
+    }
+  };
+
+  return (
+    <View className="mb-4">
+      {/* Render each instance */}
+      {Array.from({ length: instanceCount }, (_, index) => (
+        <View key={`${section.id}_instance_${index}`} className="relative">
+          <FormSectionComponent
+            section={{
+              ...section,
+              name: `${section.name} - ${repeatLabel} ${index + 1}`,
+            }}
+            formData={formData}
+            onFieldChange={onFieldChange}
+            disabled={disabled}
+            defaultExpanded={defaultExpanded && index === 0}
+            instanceIndex={index}
+            instancePrefix={`${section.id}_${index}_`}
+          />
+          {/* Remove button for non-first instances */}
+          {instanceCount > 1 && !disabled && (
+            <Pressable
+              onPress={() => removeInstance(index)}
+              className="absolute top-4 right-12 bg-red-100 dark:bg-red-900/30 p-2 rounded-lg"
+            >
+              <Trash2 size={16} color="#EF4444" />
+            </Pressable>
+          )}
+        </View>
+      ))}
+
+      {/* Add button */}
+      {!disabled && instanceCount < maxRepeats && (
+        <Pressable
+          onPress={addInstance}
+          className="flex-row items-center justify-center py-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border-2 border-dashed border-orange-300 dark:border-orange-700"
+        >
+          <Plus size={20} color="#F97316" />
+          <Text className="ml-2 text-orange-500 font-medium">
+            Add {repeatLabel} ({instanceCount}/{maxRepeats})
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// Section Component
+function FormSectionComponent({
+  section,
+  formData,
+  onFieldChange,
+  disabled,
+  defaultExpanded = true,
+  instanceIndex,
+  instancePrefix = '',
+}: {
+  section: FormSection;
+  formData: Record<string, any>;
+  onFieldChange: (fieldId: string, value: any) => void;
+  disabled?: boolean;
+  defaultExpanded?: boolean;
+  instanceIndex?: number;
+  instancePrefix?: string;
+}) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  // Helper to get the full field ID (with prefix for repeatable sections)
+  const getFieldKey = (fieldId: string) => instancePrefix + fieldId;
 
   // Calculate section completion
   const completionInfo = useMemo(() => {
@@ -496,14 +880,14 @@ function FormSectionComponent({
     section.fields.forEach(field => {
       if (field.type !== 'SIGNATURE') {
         total++;
-        const val = formData[field.id];
+        const val = formData[getFieldKey(field.id)];
         if (val !== undefined && val !== null && val !== '') {
           filled++;
         }
       }
     });
     return { total, filled, percent: total > 0 ? Math.round((filled / total) * 100) : 0 };
-  }, [section.fields, formData]);
+  }, [section.fields, formData, instancePrefix]);
 
   return (
     <View className="bg-white dark:bg-gray-800 rounded-2xl mb-4 overflow-hidden border border-gray-100 dark:border-gray-700">
@@ -563,56 +947,80 @@ function FormSectionComponent({
               {(field.type === 'YES_NO' || field.type === 'YES_NO_NA') && (
                 <YesNoNaField
                   field={field}
-                  value={formData[field.id]}
-                  onChange={(val) => onFieldChange(field.id, val)}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
               )}
               {field.type === 'CHECKBOX' && (
                 <CheckboxField
                   field={field}
-                  value={formData[field.id]}
-                  onChange={(val) => onFieldChange(field.id, val)}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
               )}
               {field.type === 'TEXT' && (
                 <TextFieldInput
                   field={field}
-                  value={formData[field.id]}
-                  onChange={(val) => onFieldChange(field.id, val)}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
               )}
               {field.type === 'NUMBER' && (
                 <NumberFieldInput
                   field={field}
-                  value={formData[field.id]}
-                  onChange={(val) => onFieldChange(field.id, val)}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
               )}
               {field.type === 'SIGNATURE' && (
                 <SignatureField
                   field={field}
-                  value={formData[field.id]}
-                  onChange={(val) => onFieldChange(field.id, val)}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
               )}
               {field.type === 'TABLE' && (
                 <TableField
                   field={field}
-                  value={formData[field.id]}
-                  onChange={(val) => onFieldChange(field.id, val)}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
               )}
               {field.type === 'CREW_SIGNATURES' && (
                 <CrewSignaturesField
                   field={field}
-                  value={formData[field.id]}
-                  onChange={(val) => onFieldChange(field.id, val)}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
+                  disabled={disabled}
+                />
+              )}
+              {field.type === 'DATE' && (
+                <DateField
+                  field={field}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
+                  disabled={disabled}
+                />
+              )}
+              {field.type === 'PHOTO' && (
+                <PhotoField
+                  field={field}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
+                  disabled={disabled}
+                />
+              )}
+              {field.type === 'PHOTO_GALLERY' && (
+                <PhotoGalleryField
+                  field={field}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
               )}
@@ -692,40 +1100,75 @@ export default function FormFillScreen() {
     setHasChanges(true);
   }, []);
 
-  // Calculate overall completion
+  // Calculate overall completion (including repeatable sections)
   const completionInfo = useMemo(() => {
     if (!formQuery.data?.template?.schema?.sections) return { total: 0, filled: 0, percent: 0 };
 
     let total = 0;
     let filled = 0;
     formQuery.data.template.schema.sections.forEach(section => {
-      section.fields.forEach(field => {
-        if (field.type !== 'SIGNATURE') {
-          total++;
-          const val = formData[field.id];
-          if (val !== undefined && val !== null && val !== '') {
-            filled++;
-          }
+      if (section.repeatable) {
+        // For repeatable sections, count all instances
+        const countKey = `__${section.id}_count`;
+        const instanceCount = formData[countKey] || 1;
+        for (let i = 0; i < instanceCount; i++) {
+          section.fields.forEach(field => {
+            if (field.type !== 'SIGNATURE') {
+              total++;
+              const val = formData[`${section.id}_${i}_${field.id}`];
+              if (val !== undefined && val !== null && val !== '') {
+                filled++;
+              }
+            }
+          });
         }
-      });
+      } else {
+        section.fields.forEach(field => {
+          if (field.type !== 'SIGNATURE') {
+            total++;
+            const val = formData[field.id];
+            if (val !== undefined && val !== null && val !== '') {
+              filled++;
+            }
+          }
+        });
+      }
     });
     return { total, filled, percent: total > 0 ? Math.round((filled / total) * 100) : 0 };
   }, [formQuery.data?.template?.schema?.sections, formData]);
 
-  // Check if all required fields are filled
+  // Check if all required fields are filled (including repeatable sections)
   const canSubmit = useMemo(() => {
     if (!formQuery.data?.template?.schema?.sections) return false;
 
     for (const section of formQuery.data.template.schema.sections) {
-      for (const field of section.fields) {
-        if (field.required) {
-          const val = formData[field.id];
-          if (val === undefined || val === null || val === '') {
-            return false;
+      if (section.repeatable) {
+        // For repeatable sections, check all instances
+        const countKey = `__${section.id}_count`;
+        const instanceCount = formData[countKey] || 1;
+        for (let i = 0; i < instanceCount; i++) {
+          for (const field of section.fields) {
+            if (field.required) {
+              const val = formData[`${section.id}_${i}_${field.id}`];
+              if (val === undefined || val === null || val === '') {
+                return false;
+              }
+              if (field.type === 'SIGNATURE' && !val?.signed) {
+                return false;
+              }
+            }
           }
-          // For signatures, check if signed
-          if (field.type === 'SIGNATURE' && !val?.signed) {
-            return false;
+        }
+      } else {
+        for (const field of section.fields) {
+          if (field.required) {
+            const val = formData[field.id];
+            if (val === undefined || val === null || val === '') {
+              return false;
+            }
+            if (field.type === 'SIGNATURE' && !val?.signed) {
+              return false;
+            }
           }
         }
       }
@@ -974,16 +1417,27 @@ export default function FormFillScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         keyboardShouldPersistTaps="handled"
       >
-        {sections.map((section, index) => (
-          <FormSectionComponent
-            key={section.id}
-            section={section}
-            formData={formData}
-            onFieldChange={handleFieldChange}
-            disabled={isCompleted}
-            defaultExpanded={index === 0}
-          />
-        ))}
+        {sections.map((section, index) =>
+          section.repeatable ? (
+            <RepeatableSectionWrapper
+              key={section.id}
+              section={section}
+              formData={formData}
+              onFieldChange={handleFieldChange}
+              disabled={isCompleted}
+              defaultExpanded={index === 0}
+            />
+          ) : (
+            <FormSectionComponent
+              key={section.id}
+              section={section}
+              formData={formData}
+              onFieldChange={handleFieldChange}
+              disabled={isCompleted}
+              defaultExpanded={index === 0}
+            />
+          )
+        )}
       </ScrollView>
 
       {/* Submit Button */}
