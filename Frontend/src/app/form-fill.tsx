@@ -31,7 +31,6 @@ import {
   X,
   Minus,
   Save,
-  Send,
   ChevronDown,
   ChevronUp,
   CheckSquare,
@@ -1441,35 +1440,6 @@ export default function FormFillScreen() {
     return true;
   }, [formQuery.data?.template?.schema?.sections, formData]);
 
-  // Handle submit
-  const handleSubmit = () => {
-    if (!canSubmit) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      if (Platform.OS === 'web') {
-        window.alert('Please fill in all required fields before submitting.');
-      } else {
-        Alert.alert('Incomplete Form', 'Please fill in all required fields before submitting.');
-      }
-      return;
-    }
-
-    showConfirm(
-      'Submit Form',
-      'Are you sure you want to submit this form? You will not be able to edit it after submission.',
-      () => {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        updateMutation.mutate(
-          { data: formData, status: 'COMPLETED' },
-          {
-            onSuccess: () => {
-              router.back();
-            },
-          }
-        );
-      }
-    );
-  };
-
   // Handle manual save
   const handleSave = () => {
     console.log('[form-fill] handleSave called, hasChanges:', hasChanges, 'formData:', formData);
@@ -1554,7 +1524,6 @@ export default function FormFillScreen() {
   const form = formQuery.data;
   const template = form.template;
   const sections = template?.schema?.sections || [];
-  const isCompleted = form.status === 'COMPLETED';
 
   return (
     <KeyboardAvoidingView
@@ -1602,15 +1571,13 @@ export default function FormFillScreen() {
                 <Text className="ml-1 text-xs text-gray-400">Saving...</Text>
               </View>
             )}
-            {!isCompleted && (
-              <Pressable
-                onPress={handleSave}
-                disabled={!hasChanges || isSaving}
-                className={`p-2 ${hasChanges ? 'opacity-100' : 'opacity-50'}`}
-              >
-                <Save size={22} color={hasChanges ? '#F97316' : '#9CA3AF'} />
-              </Pressable>
-            )}
+            <Pressable
+              onPress={handleSave}
+              disabled={!hasChanges || isSaving}
+              className={`p-2 ${hasChanges ? 'opacity-100' : 'opacity-50'}`}
+            >
+              <Save size={22} color={hasChanges ? '#F97316' : '#9CA3AF'} />
+            </Pressable>
           </View>
         </View>
 
@@ -1624,69 +1591,22 @@ export default function FormFillScreen() {
         )}
 
         {/* Progress Bar */}
-        {!isCompleted && (
-          <View className="mt-4">
-            <View className="flex-row justify-between mb-1">
-              <Text className="text-xs text-gray-500 dark:text-gray-400">
-                Progress
-              </Text>
-              <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                {completionInfo.percent}%
-              </Text>
-            </View>
-            <View className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <View
-                className="h-full bg-orange-500 rounded-full"
-                style={{ width: `${completionInfo.percent}%` }}
-              />
-            </View>
+        <View className="mt-4">
+          <View className="flex-row justify-between mb-1">
+            <Text className="text-xs text-gray-500 dark:text-gray-400">
+              Progress
+            </Text>
+            <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              {completionInfo.percent}%
+            </Text>
           </View>
-        )}
-
-        {/* Completed Banner */}
-        {isCompleted && (
-          <View className="mt-4 bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
-            <View className="flex-row items-center">
-              <Check size={20} color="#10B981" />
-              <Text className="ml-2 text-green-700 dark:text-green-300 font-medium">
-                Form Completed
-              </Text>
-              {form.completedAt && (
-                <Text className="ml-auto text-xs text-green-600 dark:text-green-400">
-                  {new Date(form.completedAt).toLocaleDateString()}
-                </Text>
-              )}
-            </View>
-            {/* Action Buttons for Completed Form */}
-            <View className="flex-row gap-2 mt-3">
-              <Pressable
-                onPress={handleDownloadPdf}
-                disabled={isDownloading}
-                className="flex-1 flex-row items-center justify-center py-2 bg-green-500 rounded-lg"
-              >
-                {isDownloading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <>
-                    <Download size={18} color="white" />
-                    <Text className="ml-2 text-white font-medium">Download PDF</Text>
-                  </>
-                )}
-              </Pressable>
-              <Pressable
-                onPress={handleDelete}
-                disabled={deleteMutation.isPending}
-                className="flex-row items-center justify-center py-2 px-4 bg-red-500 rounded-lg"
-              >
-                {deleteMutation.isPending ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Trash2 size={18} color="white" />
-                )}
-              </Pressable>
-            </View>
+          <View className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <View
+              className="h-full bg-orange-500 rounded-full"
+              style={{ width: `${completionInfo.percent}%` }}
+            />
           </View>
-        )}
+        </View>
       </View>
 
       {/* Form Content */}
@@ -1702,7 +1622,7 @@ export default function FormFillScreen() {
               section={section}
               formData={formData}
               onFieldChange={handleFieldChange}
-              disabled={isCompleted}
+              disabled={false}
               defaultExpanded={index === 0}
             />
           ) : (
@@ -1711,7 +1631,7 @@ export default function FormFillScreen() {
               section={section}
               formData={formData}
               onFieldChange={handleFieldChange}
-              disabled={isCompleted}
+              disabled={false}
               defaultExpanded={index === 0}
             />
           )
@@ -1719,49 +1639,47 @@ export default function FormFillScreen() {
       </ScrollView>
 
       {/* Action Buttons */}
-      {!isCompleted && (
-        <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-          <View className="flex-row gap-3">
-            {/* Delete Button */}
-            <Pressable
-              onPress={handleDelete}
-              disabled={deleteMutation.isPending}
-              className="flex-row items-center justify-center py-4 px-4 rounded-xl bg-red-500"
-            >
-              {deleteMutation.isPending ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Trash2 size={20} color="white" />
-              )}
-            </Pressable>
+      <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+        <View className="flex-row gap-3">
+          {/* Delete Button */}
+          <Pressable
+            onPress={handleDelete}
+            disabled={deleteMutation.isPending}
+            className="flex-row items-center justify-center py-4 px-4 rounded-xl bg-red-500"
+          >
+            {deleteMutation.isPending ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : (
+              <Trash2 size={20} color="white" />
+            )}
+          </Pressable>
 
-            {/* Submit Button */}
-            <Pressable
-              onPress={handleSubmit}
-              disabled={!canSubmit || updateMutation.isPending}
-              className={`flex-1 flex-row items-center justify-center py-4 rounded-xl ${
-                canSubmit ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-            >
-              {updateMutation.isPending ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <>
-                  <Send size={20} color="white" />
-                  <Text className="ml-2 text-white font-semibold text-base">
-                    Submit Form
-                  </Text>
-                </>
-              )}
-            </Pressable>
-          </View>
-          {!canSubmit && (
-            <Text className="text-center text-xs text-gray-400 mt-2">
-              Complete all required fields to submit
-            </Text>
-          )}
+          {/* Export PDF Button */}
+          <Pressable
+            onPress={handleDownloadPdf}
+            disabled={!canSubmit || isDownloading}
+            className={`flex-1 flex-row items-center justify-center py-4 rounded-xl ${
+              canSubmit ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+            }`}
+          >
+            {isDownloading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Download size={20} color="white" />
+                <Text className="ml-2 text-white font-semibold text-base">
+                  Export PDF
+                </Text>
+              </>
+            )}
+          </Pressable>
         </View>
-      )}
+        {!canSubmit && (
+          <Text className="text-center text-xs text-gray-400 mt-2">
+            Complete all required fields to export PDF
+          </Text>
+        )}
+      </View>
     </KeyboardAvoidingView>
   );
 }
