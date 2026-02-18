@@ -9,6 +9,9 @@ router.get('/templates/:id', optionalAuth, formsController.getTemplate);
 router.post('/templates', authenticate, formsController.createTemplate);
 router.post('/templates/seed', formsController.seedDefaultTemplates); // No auth for initial setup
 
+// OCR for nameplate photos (must be before /:id routes)
+router.post('/ocr/nameplate', authenticate, formsController.extractNameplateOcr);
+
 // Form instance routes
 router.get('/', optionalAuth, formsController.getForms);
 router.get('/:id', optionalAuth, formsController.getForm);
@@ -18,8 +21,5 @@ router.delete('/:id', authenticate, formsController.deleteForm);
 
 // PDF generation
 router.get('/:id/pdf', optionalAuth, formsController.generateFormPdf);
-
-// OCR for nameplate photos
-router.post('/ocr/nameplate', authenticate, formsController.extractNameplateOcr);
 
 module.exports = router;
