@@ -16,6 +16,7 @@ import {
   Upload,
   Files,
   Brain,
+  Users,
 } from 'lucide-react-native';
 import { useDailyLogStore } from '@/lib/store';
 import { useLanguage } from '@/i18n/LanguageProvider';
@@ -25,6 +26,7 @@ import { cn } from '@/lib/cn';
 import { Project } from '@/lib/types';
 import { saveCurrentProjectName, getBackendId, setBackendId } from '@/lib/data-provider';
 import { deleteProjectApi, getProjects, queryKeys, createProject as createProjectApi } from '@/lib/api';
+import { PendingInvitations } from '@/components/PendingInvitations';
 
 export default function ProjectsScreen() {
   const insets = useSafeAreaInsets();
@@ -183,6 +185,14 @@ export default function ProjectsScreen() {
           </Text>
         </View>
 
+        {/* Pending Invitations */}
+        <PendingInvitations
+          onAccepted={() => {
+            // Refresh projects list after accepting invitation
+            queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+          }}
+        />
+
         {/* Projects List */}
         <View className="px-4 mt-4">
           {projects.length === 0 ? (
@@ -254,14 +264,29 @@ export default function ProjectsScreen() {
                     </View>
                   </Pressable>
 
-                  {/* Delete Button */}
-                  <View className="border-t border-gray-100 dark:border-gray-800">
+                  {/* Action Buttons */}
+                  <View className="flex-row border-t border-gray-100 dark:border-gray-800">
+                    {/* Team Button */}
+                    <Pressable
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push(`/project-team?projectId=${project.id}`);
+                      }}
+                      className="flex-1 flex-row items-center justify-center py-3 border-r border-gray-100 dark:border-gray-800"
+                    >
+                      <Users size={16} color="#3B82F6" />
+                      <Text className="ml-2 text-sm font-medium text-blue-500">
+                        Team
+                      </Text>
+                    </Pressable>
+
+                    {/* Delete Button */}
                     <Pressable
                       onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                         setProjectToDelete(project);
                       }}
-                      className="flex-row items-center justify-center py-3"
+                      className="flex-1 flex-row items-center justify-center py-3"
                     >
                       <Trash2 size={16} color="#EF4444" />
                       <Text className="ml-2 text-sm font-medium text-red-500">

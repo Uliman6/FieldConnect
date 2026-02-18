@@ -1,4 +1,4 @@
-// FieldConnect Backend - v1.5.0 (OCR + Project Sharing)
+// FieldConnect Backend - v1.6.0 (Project Invitations)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -32,6 +32,7 @@ const templatesRoutes = require('./routes/templates.routes');
 const documentSchemaRoutes = require('./routes/document-schema.routes');
 const photosRoutes = require('./routes/photos.routes');
 const formsRoutes = require('./routes/forms.routes');
+const projectInvitationsRoutes = require('./routes/project-invitations.routes');
 
 // Import middleware
 const errorHandler = require('./middleware/error-handler.middleware');
@@ -97,6 +98,7 @@ app.use('/api/templates', templatesRoutes); // Auth handled in route file
 app.use('/api/document-schemas', documentSchemaRoutes); // Auth handled in route file
 app.use('/api/photos', authenticate, photosRoutes);
 app.use('/api/forms', formsRoutes); // Auth handled in route file
+app.use('/api', projectInvitationsRoutes); // Auth handled in route file
 
 // 404 handler
 app.use((req, res) => {
