@@ -161,24 +161,30 @@ export default function SettingsScreen() {
     setShowTranscriptionSelector(false);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      t('settings.logout'),
-      t('settings.logoutConfirm'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('settings.logout'),
-          style: 'destructive',
-          onPress: async () => {
-            if (Platform.OS !== 'web') {
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      // Use window.confirm for web since Alert.alert doesn't work
+      const confirmed = window.confirm(t('settings.logoutConfirm'));
+      if (confirmed) {
+        await logout();
+      }
+    } else {
+      Alert.alert(
+        t('settings.logout'),
+        t('settings.logoutConfirm'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('settings.logout'),
+            style: 'destructive',
+            onPress: async () => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            }
-            await logout();
+              await logout();
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const currentLang = supportedLanguages.find(l => l.code === language);

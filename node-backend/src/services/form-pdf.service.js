@@ -316,32 +316,43 @@ function drawYesNoNaRow(doc, label, value) {
   const y = doc.y;
   const labelWidth = 420;
   const boxWidth = 35;
+  const minRowHeight = 16;
+  const padding = 4;
 
-  doc.rect(40, y, 532, 16).stroke();
-  doc.fontSize(7).font('Helvetica').text(label, 45, y + 4, { width: labelWidth - 10 });
+  // Calculate actual text height for dynamic row sizing
+  doc.fontSize(7).font('Helvetica');
+  const textHeight = doc.heightOfString(label, { width: labelWidth - 10 });
+  const rowHeight = Math.max(minRowHeight, textHeight + padding * 2);
+
+  // Draw main row box with dynamic height
+  doc.rect(40, y, 532, rowHeight).stroke();
+  doc.text(label, 45, y + padding, { width: labelWidth - 10 });
+
+  // Calculate vertical center for YES/NO/NA boxes
+  const boxY = y + (rowHeight - minRowHeight) / 2;
 
   // YES box
-  doc.rect(40 + labelWidth, y, boxWidth, 16).stroke();
-  doc.fontSize(8).font('Helvetica-Bold').text('YES', 40 + labelWidth + 5, y + 4);
+  doc.rect(40 + labelWidth, y, boxWidth, rowHeight).stroke();
+  doc.fontSize(8).font('Helvetica-Bold').text('YES', 40 + labelWidth + 5, boxY + 4);
   if (value === 'YES') {
-    doc.fontSize(12).text('X', 40 + labelWidth + 20, y + 2);
+    doc.fontSize(12).text('X', 40 + labelWidth + 20, boxY + 2);
   }
 
   // NO box
-  doc.rect(40 + labelWidth + boxWidth, y, boxWidth, 16).stroke();
-  doc.text('NO', 40 + labelWidth + boxWidth + 8, y + 4);
+  doc.rect(40 + labelWidth + boxWidth, y, boxWidth, rowHeight).stroke();
+  doc.text('NO', 40 + labelWidth + boxWidth + 8, boxY + 4);
   if (value === 'NO') {
-    doc.fontSize(12).text('X', 40 + labelWidth + boxWidth + 22, y + 2);
+    doc.fontSize(12).text('X', 40 + labelWidth + boxWidth + 22, boxY + 2);
   }
 
   // N/A box
-  doc.rect(40 + labelWidth + boxWidth * 2, y, boxWidth + 2, 16).stroke();
-  doc.text('N/A', 40 + labelWidth + boxWidth * 2 + 5, y + 4);
+  doc.rect(40 + labelWidth + boxWidth * 2, y, boxWidth + 2, rowHeight).stroke();
+  doc.text('N/A', 40 + labelWidth + boxWidth * 2 + 5, boxY + 4);
   if (value === 'NA') {
-    doc.fontSize(12).text('X', 40 + labelWidth + boxWidth * 2 + 22, y + 2);
+    doc.fontSize(12).text('X', 40 + labelWidth + boxWidth * 2 + 22, boxY + 2);
   }
 
-  doc.y = y + 16;
+  doc.y = y + rowHeight;
 }
 
 function drawCheckbox(doc, x, y, checked, label) {
