@@ -168,13 +168,25 @@ function getFieldDescriptions(equipmentType, fieldsToExtract) {
  */
 function mapOcrFieldsToFormFields(ocrData, sectionId, instanceIndex = 0) {
   const mappings = {
-    // Pump equipment section mappings
+    // Pump equipment section mappings (old template)
     pump_equipment: {
       brand: 'pump_brand',
       model: 'pump_model',
       serial_number: 'pump_serial',
       capacity_gpm: 'pump_capacity',
       rpm: 'pump_rpm',
+    },
+    // Pump label info section mappings (bilingual template)
+    pump_label_info: {
+      brand: 'pump_brand',
+      model: 'pump_model',
+      serial_number: 'pump_serial',
+      capacity_gpm: 'pump_capacity',
+      capacity: 'pump_capacity',
+      rpm: 'pump_rpm',
+      pressure: 'pump_pressure',
+      pressure_psi: 'pump_pressure',
+      year: 'pump_year',
     },
     // Engine section mappings
     engine_info: {
@@ -190,7 +202,7 @@ function mapOcrFieldsToFormFields(ocrData, sectionId, instanceIndex = 0) {
       bhp: 'engine_bhp',
       rpm: 'engine_rpm',
     },
-    // Controller section mappings
+    // Controller section mappings (old template)
     controller_info: {
       controller_brand: 'controller_brand',
       controller_model: 'controller_model',
@@ -198,6 +210,13 @@ function mapOcrFieldsToFormFields(ocrData, sectionId, instanceIndex = 0) {
       brand: 'controller_brand',
       model: 'controller_model',
       serial_number: 'controller_serial',
+    },
+    // Controller label info section mappings (bilingual template)
+    controller_label_info: {
+      brand: 'controller_brand',
+      model: 'controller_model',
+      serial_number: 'controller_serial',
+      year: 'controller_year',
     },
     // Performance readings
     performance_readings: {

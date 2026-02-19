@@ -351,6 +351,141 @@ function VoiceTextInput({
   );
 }
 
+// Voice-enabled TextArea Component (for TEXTAREA fields with voice support)
+function VoiceTextAreaField({
+  field,
+  value,
+  onChange,
+  disabled,
+}: {
+  field: FormField;
+  value: string | undefined;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  const startRecording = useCallback(async () => {
+    if (disabled || isRecording) return;
+
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      chunksRef.current = [];
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true }
+      });
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : 'audio/mp4';
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const audioUrl = URL.createObjectURL(blob);
+        stream.getTracks().forEach(track => track.stop());
+
+        // Transcribe the audio
+        setIsTranscribing(true);
+        try {
+          const result = await transcribeAudio(audioUrl);
+          if (result.success && result.text) {
+            // Append transcribed text to existing value
+            const newValue = value ? `${value}\n${result.text}` : result.text;
+            onChange(newValue);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } else {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            if (Platform.OS === 'web') {
+              window.alert('Transcription failed: ' + (result.error || 'Unknown error'));
+            }
+          }
+        } catch (error) {
+          console.error('[VoiceTextAreaField] Transcription error:', error);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        } finally {
+          setIsTranscribing(false);
+          URL.revokeObjectURL(audioUrl);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('[VoiceTextAreaField] Recording error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        window.alert('Could not access microphone. Please check permissions.');
+      }
+    }
+  }, [disabled, isRecording, value, onChange]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, [isRecording]);
+
+  return (
+    <View>
+      <View className="flex-row items-start">
+        <TextInput
+          value={value || ''}
+          onChangeText={onChange}
+          editable={!disabled && !isRecording && !isTranscribing}
+          placeholder="Enter notes or use voice recording..."
+          placeholderTextColor="#9CA3AF"
+          multiline
+          numberOfLines={6}
+          className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-gray-900 dark:text-white min-h-[150px]"
+          style={{ textAlignVertical: 'top' }}
+        />
+        <Pressable
+          onPress={isRecording ? stopRecording : startRecording}
+          disabled={disabled || isTranscribing}
+          className={`ml-2 p-3 rounded-full ${
+            isRecording
+              ? 'bg-red-500'
+              : isTranscribing
+              ? 'bg-gray-400'
+              : 'bg-orange-500'
+          }`}
+        >
+          {isTranscribing ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : isRecording ? (
+            <StopIcon size={20} color="white" fill="white" />
+          ) : (
+            <Mic size={20} color="white" />
+          )}
+        </Pressable>
+      </View>
+      {isRecording && (
+        <Text className="text-xs text-red-500 mt-1">Recording... tap stop when done</Text>
+      )}
+      {isTranscribing && (
+        <Text className="text-xs text-orange-500 mt-1">Transcribing...</Text>
+      )}
+    </View>
+  );
+}
+
 // Number Input Field Component
 function NumberFieldInput({
   field,
@@ -636,6 +771,8 @@ function DateField({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
   // Format date for display
   const formatDate = (dateStr: string) => {
     try {
@@ -649,24 +786,53 @@ function DateField({
   const handleDatePicker = () => {
     if (disabled) return;
 
-    if (Platform.OS === 'web') {
-      // On web, create a temporary date input
-      const input = document.createElement('input');
-      input.type = 'date';
-      input.value = value || new Date().toISOString().split('T')[0];
-      input.onchange = (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target.value) {
-          onChange(target.value);
-        }
-      };
-      input.click();
+    if (Platform.OS === 'web' && inputRef.current) {
+      // On web, click the hidden date input to show picker
+      inputRef.current.showPicker?.() || inputRef.current.click();
     } else {
       // TODO: Use native date picker for mobile
       const today = new Date().toISOString().split('T')[0];
       onChange(today);
     }
   };
+
+  if (Platform.OS === 'web') {
+    return (
+      <View className="relative">
+        <Pressable
+          onPress={handleDatePicker}
+          disabled={disabled}
+          className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3"
+        >
+          <Calendar size={20} color="#9CA3AF" />
+          <Text className={`ml-3 flex-1 ${value ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+            {value ? formatDate(value) : 'Select date...'}
+          </Text>
+        </Pressable>
+        {/* Hidden date input for web */}
+        <input
+          ref={inputRef as any}
+          type="date"
+          value={value || ''}
+          onChange={(e) => {
+            if (e.target.value) {
+              onChange(e.target.value);
+            }
+          }}
+          disabled={disabled}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            opacity: 0,
+            cursor: 'pointer',
+          }}
+        />
+      </View>
+    );
+  }
 
   return (
     <Pressable
@@ -1244,9 +1410,10 @@ function FormSectionComponent({
                   instanceIndex={instanceIndex}
                   onOcrComplete={(ocrFields) => {
                     // Auto-fill related form fields with OCR data
+                    // Apply getFieldKey to ensure correct key format with instance prefix
                     Object.entries(ocrFields).forEach(([fieldId, value]) => {
                       if (value) {
-                        onFieldChange(fieldId, value);
+                        onFieldChange(getFieldKey(fieldId), value);
                       }
                     });
                   }}
@@ -1259,6 +1426,28 @@ function FormSectionComponent({
                   onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
                   disabled={disabled}
                 />
+              )}
+              {field.type === 'TEXTAREA' && (
+                section.voiceEnabled ? (
+                  <VoiceTextAreaField
+                    field={field}
+                    value={formData[getFieldKey(field.id)]}
+                    onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
+                    disabled={disabled}
+                  />
+                ) : (
+                  <TextInput
+                    value={formData[getFieldKey(field.id)] || ''}
+                    onChangeText={(val) => onFieldChange(getFieldKey(field.id), val)}
+                    editable={!disabled}
+                    placeholder="Enter notes..."
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={6}
+                    className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-gray-900 dark:text-white min-h-[150px]"
+                    style={{ textAlignVertical: 'top' }}
+                  />
+                )
               )}
             </Animated.View>
           ))}
