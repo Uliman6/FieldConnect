@@ -363,6 +363,192 @@ function drawCheckbox(doc, x, y, checked, label) {
   doc.fontSize(8).font('Helvetica').text(label, x + 15, y + 1);
 }
 
+/**
+ * Generate a generic PDF from any form template
+ * Works with any template schema structure
+ */
+function generateGenericFormPdf(form, project) {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        size: 'LETTER',
+        margins: { top: 40, bottom: 40, left: 40, right: 40 },
+        autoFirstPage: true,
+      });
+
+      const chunks = [];
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const data = form.data || {};
+      const template = form.template;
+      const schema = template?.schema || {};
+      const sections = schema.sections || [];
+
+      // Colors
+      const headerBg = '#4A90A4'; // Blue-ish header
+      const borderColor = '#000000';
+
+      // ===== HEADER =====
+      doc.fontSize(16).font('Helvetica-Bold').text(template?.name || 'Form Report', { align: 'center' });
+      doc.moveDown(0.3);
+
+      // Project Info Box
+      const infoY = doc.y;
+      doc.rect(40, infoY, 532, 50).stroke();
+
+      doc.fontSize(9).font('Helvetica-Bold');
+      doc.text('Project:', 45, infoY + 5);
+      doc.font('Helvetica').text(project?.name || form.projectId || 'N/A', 100, infoY + 5);
+
+      doc.font('Helvetica-Bold').text('Date:', 350, infoY + 5);
+      doc.font('Helvetica').text(new Date(form.createdAt).toLocaleDateString(), 390, infoY + 5);
+
+      doc.font('Helvetica-Bold').text('Prepared By:', 45, infoY + 20);
+      doc.font('Helvetica').text(form.createdByName || 'N/A', 115, infoY + 20);
+
+      doc.font('Helvetica-Bold').text('Status:', 350, infoY + 20);
+      doc.font('Helvetica').text(form.status || 'DRAFT', 395, infoY + 20);
+
+      if (form.location) {
+        doc.font('Helvetica-Bold').text('Location:', 45, infoY + 35);
+        doc.font('Helvetica').text(form.location, 100, infoY + 35);
+      }
+
+      doc.y = infoY + 60;
+
+      // ===== SECTIONS =====
+      for (const section of sections) {
+        // Check if we need a new page
+        if (doc.y > 680) {
+          doc.addPage();
+        }
+
+        // Section Header
+        const sectionY = doc.y;
+        doc.rect(40, sectionY, 532, 20).fill(headerBg).stroke(borderColor);
+        doc.fillColor('white').fontSize(10).font('Helvetica-Bold');
+        doc.text(section.name || 'Section', 45, sectionY + 5);
+        doc.fillColor('black');
+        doc.y = sectionY + 22;
+
+        // Section Fields
+        const fields = section.fields || [];
+        for (const field of fields) {
+          // Check if we need a new page
+          if (doc.y > 700) {
+            doc.addPage();
+          }
+
+          const fieldValue = data[field.id];
+
+          if (field.type === 'YES_NO_NA' || field.type === 'YES_NO') {
+            drawYesNoNaRow(doc, field.label || field.id, fieldValue);
+          } else if (field.type === 'SIGNATURE') {
+            drawSignatureField(doc, field.label || field.id, fieldValue);
+          } else if (field.type === 'TEXTAREA') {
+            drawTextAreaField(doc, field.label || field.id, fieldValue);
+          } else if (field.type === 'PHOTO' || field.type === 'PHOTO_GALLERY') {
+            drawPhotoField(doc, field.label || field.id, fieldValue);
+          } else {
+            // TEXT, NUMBER, DATE, etc.
+            drawTextField(doc, field.label || field.id, fieldValue, field.unit);
+          }
+        }
+
+        doc.moveDown(0.5);
+      }
+
+      // Footer
+      doc.y = Math.max(doc.y, 720);
+      if (doc.y > 720) {
+        doc.addPage();
+        doc.y = 720;
+      }
+      doc.fontSize(7).font('Helvetica').fillColor('gray');
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 740);
+      doc.text('FieldConnect', 500, 740);
+
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function drawTextField(doc, label, value, unit) {
+  const y = doc.y;
+  const labelWidth = 250;
+  const valueWidth = 280;
+  const rowHeight = 20;
+
+  doc.rect(40, y, 532, rowHeight).stroke();
+  doc.fontSize(8).font('Helvetica-Bold').text(label, 45, y + 5, { width: labelWidth - 10 });
+
+  const displayValue = value !== undefined && value !== null && value !== ''
+    ? (unit ? `${value} ${unit}` : String(value))
+    : '';
+  doc.font('Helvetica').text(displayValue, 45 + labelWidth, y + 5, { width: valueWidth - 10 });
+
+  doc.y = y + rowHeight;
+}
+
+function drawSignatureField(doc, label, value) {
+  const y = doc.y;
+  const rowHeight = 35;
+
+  doc.rect(40, y, 532, rowHeight).stroke();
+  doc.fontSize(8).font('Helvetica-Bold').text(label, 45, y + 3);
+
+  if (value?.signed) {
+    doc.fontSize(10).font('Helvetica').text(value.name || 'Signed', 45, y + 15);
+    if (value.signedAt) {
+      doc.fontSize(6).text(new Date(value.signedAt).toLocaleString(), 45, y + 27);
+    }
+  } else {
+    doc.fontSize(8).font('Helvetica').fillColor('gray').text('Not signed', 45, y + 15);
+    doc.fillColor('black');
+  }
+
+  doc.y = y + rowHeight;
+}
+
+function drawTextAreaField(doc, label, value) {
+  const y = doc.y;
+  const text = value || '';
+  const minHeight = 40;
+
+  doc.fontSize(8).font('Helvetica');
+  const textHeight = text ? doc.heightOfString(text, { width: 520 }) : 0;
+  const rowHeight = Math.max(minHeight, textHeight + 25);
+
+  doc.rect(40, y, 532, rowHeight).stroke();
+  doc.font('Helvetica-Bold').text(label, 45, y + 3);
+  doc.font('Helvetica').text(text || '', 45, y + 15, { width: 520 });
+
+  doc.y = y + rowHeight;
+}
+
+function drawPhotoField(doc, label, value) {
+  const y = doc.y;
+  const rowHeight = 25;
+
+  doc.rect(40, y, 532, rowHeight).stroke();
+  doc.fontSize(8).font('Helvetica-Bold').text(label, 45, y + 5);
+
+  if (value?.uri || (Array.isArray(value) && value.length > 0)) {
+    const count = Array.isArray(value) ? value.length : 1;
+    doc.font('Helvetica').text(`[${count} photo(s) attached]`, 300, y + 5);
+  } else {
+    doc.font('Helvetica').fillColor('gray').text('No photo', 300, y + 5);
+    doc.fillColor('black');
+  }
+
+  doc.y = y + rowHeight;
+}
+
 module.exports = {
-  generatePreTaskPlanPdf
+  generatePreTaskPlanPdf,
+  generateGenericFormPdf
 };
