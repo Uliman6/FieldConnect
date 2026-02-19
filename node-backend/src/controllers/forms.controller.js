@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { generatePreTaskPlanPdf } = require('../services/form-pdf.service');
+const { generatePreTaskPlanPdf, generateGenericFormPdf } = require('../services/form-pdf.service');
 const { extractNameplateData, mapOcrFieldsToFormFields } = require('../services/ocr.service');
 
 // Pre-Task Plan template (DPR Construction style)
@@ -2941,8 +2941,8 @@ async function generateFormPdf(req, res) {
     if (form.template?.name === 'Pre-Task Plan') {
       pdfBuffer = await generatePreTaskPlanPdf(form, project);
     } else {
-      // Generic PDF generation for other templates
-      pdfBuffer = await generatePreTaskPlanPdf(form, project); // Use same for now
+      // Generic PDF generation for other templates (Fire Pump, etc.)
+      pdfBuffer = await generateGenericFormPdf(form, project);
     }
 
     // Set response headers for PDF download

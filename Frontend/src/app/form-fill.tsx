@@ -229,6 +229,7 @@ function VoiceTextInput({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
+  const { transcriptionLanguage } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -265,10 +266,10 @@ function VoiceTextInput({
         const audioUrl = URL.createObjectURL(blob);
         stream.getTracks().forEach(track => track.stop());
 
-        // Transcribe the audio
+        // Transcribe the audio with user's selected language
         setIsTranscribing(true);
         try {
-          const result = await transcribeAudio(audioUrl);
+          const result = await transcribeAudio(audioUrl, { language: transcriptionLanguage });
           if (result.success && result.text) {
             // Append transcribed text to existing value
             const newValue = value ? `${value}\n${result.text}` : result.text;
@@ -298,7 +299,7 @@ function VoiceTextInput({
         window.alert('Could not access microphone. Please check permissions.');
       }
     }
-  }, [disabled, isRecording, value, onChange]);
+  }, [disabled, isRecording, value, onChange, transcriptionLanguage]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -363,6 +364,7 @@ function VoiceTextAreaField({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
+  const { transcriptionLanguage } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -399,10 +401,10 @@ function VoiceTextAreaField({
         const audioUrl = URL.createObjectURL(blob);
         stream.getTracks().forEach(track => track.stop());
 
-        // Transcribe the audio
+        // Transcribe the audio with user's selected language
         setIsTranscribing(true);
         try {
-          const result = await transcribeAudio(audioUrl);
+          const result = await transcribeAudio(audioUrl, { language: transcriptionLanguage });
           if (result.success && result.text) {
             // Append transcribed text to existing value
             const newValue = value ? `${value}\n${result.text}` : result.text;
@@ -432,7 +434,7 @@ function VoiceTextAreaField({
         window.alert('Could not access microphone. Please check permissions.');
       }
     }
-  }, [disabled, isRecording, value, onChange]);
+  }, [disabled, isRecording, value, onChange, transcriptionLanguage]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
