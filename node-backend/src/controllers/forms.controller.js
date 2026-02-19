@@ -16,7 +16,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Prior to start, have you walked your work area to address lighting, housekeeping, slip/trip issues etc.?',
           shortLabel: 'Walked work area',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['walked', 'walk around', 'housekeeping', 'lighting', 'slip', 'trip']
         },
         {
@@ -24,7 +24,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Has a Hazardous Material Survey been conducted on the project/clearance records? (asbestos, lead, PCBs, etc.)',
           shortLabel: 'Hazmat survey',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['hazmat', 'hazardous', 'asbestos', 'lead', 'pcb', 'survey']
         },
         {
@@ -32,7 +32,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Is there a new hire, or new team member on the project who will need support?',
           shortLabel: 'New team member',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['new hire', 'new guy', 'new team member', 'apprentice', 'first day']
         },
         {
@@ -40,7 +40,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Are enough people assigned to safely complete the task? (lifting, repetition, spotters etc.)',
           shortLabel: 'Enough people assigned',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['enough people', 'manpower', 'staffing', 'spotters', 'lifting']
         },
         {
@@ -48,7 +48,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Are there any hazards created by any other workers in your area or does your work create hazards for others?',
           shortLabel: 'Hazards from/to others',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['other workers', 'hazards', 'nearby', 'adjacent']
         },
         {
@@ -56,7 +56,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Does your task require the use of a personal fall arrest system? Has a rescue plan been developed and communicated to all crew members?',
           shortLabel: 'Fall protection required',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['fall protection', 'harness', 'fall arrest', 'rescue plan', 'heights']
         },
         {
@@ -64,7 +64,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Are you working around live systems or energized equipment? Will you need to use Lockout/Tagout procedures? Any other hazardous energy to be considered; e.g., Pressure Testing?',
           shortLabel: 'Lockout/Tagout needed',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['lockout', 'tagout', 'loto', 'energized', 'live systems', 'pressure']
         },
         {
@@ -72,7 +72,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Does your work require you to be exposed to pinch points, cave-ins, articulating equipment (caught in-between); falling or flying materials or debris, vehicular traffic, moving equipment (struck by)?',
           shortLabel: 'Struck-by/Caught hazards',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['pinch points', 'cave in', 'struck by', 'caught between', 'traffic', 'debris']
         },
         {
@@ -80,7 +80,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Are operators certified/trained/authorized for the equipment they are operating? (Scissor lift, powder actuated tools, forklift, mobile equipment, rigging, etc.)',
           shortLabel: 'Operators certified',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['certified', 'trained', 'authorized', 'scissor lift', 'forklift', 'rigging']
         },
         {
@@ -88,7 +88,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Does this task require any special permits, procedures or inspection forms? (Confined Space, Hot Work, Excavation, Elevated Work, Energized Electrical Work, Scaffold/Scissor/Boom/Forklift Inspection, etc.)',
           shortLabel: 'Special permits required',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['permit', 'confined space', 'hot work', 'excavation', 'elevated work']
         },
         {
@@ -96,7 +96,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Do you have the right type of work platform or equipment to reach your work? Have you been trained to use this equipment?',
           shortLabel: 'Right equipment/platform',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['platform', 'reach', 'ladder', 'scaffold', 'lift']
         },
         {
@@ -104,7 +104,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Do you need to review SDS\'s (safety data sheets) to proceed with this work?',
           shortLabel: 'SDS review needed',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['sds', 'safety data sheet', 'msds', 'chemical']
         },
         {
@@ -112,7 +112,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Have you addressed any barricading, warning system or signage requirements appropriate to the task?',
           shortLabel: 'Barricading/signage',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['barricade', 'warning', 'signage', 'caution tape', 'cones']
         },
         {
@@ -120,7 +120,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Have all tools, equipment and materials been inspected prior to use and are they adequate to perform work safely?',
           shortLabel: 'Tools inspected',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['tools', 'equipment', 'inspected', 'materials']
         },
         {
@@ -128,7 +128,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Will this task require any lifting, bending or twisting?',
           shortLabel: 'Lifting/bending/twisting',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['lifting', 'bending', 'twisting', 'ergonomic', 'back']
         },
         {
@@ -136,7 +136,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Have you completed Stretch & Flex today?',
           shortLabel: 'Stretch & Flex done',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['stretch', 'flex', 'stretching', 'warm up']
         },
         {
@@ -144,7 +144,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Do you have an injury to report or were you injured the prior working day?',
           shortLabel: 'Injury to report',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['injury', 'injured', 'hurt', 'report']
         }
       ]
@@ -159,7 +159,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Identify the drawing you are working from today, is it the current version?',
           shortLabel: 'Current drawing version',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['drawing', 'plans', 'current version', 'revision']
         },
         {
@@ -167,7 +167,7 @@ const PRE_TASK_PLAN_TEMPLATE = {
           label: 'Have you reviewed all construction details associated with our work?',
           shortLabel: 'Reviewed details',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['reviewed', 'details', 'construction details']
         },
         {
@@ -387,7 +387,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Firma Adı / Company Name',
           shortLabel: 'Firma/Company',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'company_address',
@@ -415,7 +415,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Periyodik Kontrol Başlangıç Tarihi ve Saati / Periodic Maintenance Start Date',
           shortLabel: 'Başlangıç/Start',
           type: 'DATE',
-          required: true
+          required: false
         },
         {
           id: 'maintenance_end_date',
@@ -436,7 +436,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Rapor Tarihi / Report Date',
           shortLabel: 'Rapor/Report',
           type: 'DATE',
-          required: true
+          required: false
         }
       ]
     },
@@ -458,21 +458,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Markası / Brand',
           shortLabel: 'Marka/Brand',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_model',
           label: 'Model/Tipi / Model/Type',
           shortLabel: 'Model/Type',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_serial',
           label: 'Seri / Üretim No / Serial Number',
           shortLabel: 'Seri/Serial',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_year',
@@ -486,7 +486,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Kapasite / Capacity (GPM)',
           shortLabel: 'Kapasite/Cap',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'GPM'
         },
         {
@@ -494,7 +494,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Basınç / Pressure (PSI)',
           shortLabel: 'Basınç/Press',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         },
         {
@@ -547,14 +547,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Markası / Brand',
           shortLabel: 'Marka/Brand',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'controller_model',
           label: 'Model/Tipi / Model/Type',
           shortLabel: 'Model/Type',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'controller_serial',
@@ -703,112 +703,112 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Yangın pompası otomatik konumda mı? / Is the fire pump controller in automatic position?',
           shortLabel: 'Otomatik/Auto',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'controller_doors_closed',
           label: 'Son bakımdan itibaren kontrol panelleri açık mıydı? / Were controller doors open since last maintenance?',
           shortLabel: 'Kapılar/Doors',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'room_temp_adequate',
           label: 'Pompa odasındaki ısı 40°F/5°C veya daha yüksek mi? / Is pump room temperature above 40°F (5°C)?',
           shortLabel: 'Sıcaklık/Temp',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'air_intake_adequate',
           label: 'Pompa odasından hava girişi yeterli/çalışır durumda görünüyor mu? / Is there adequate air intake for operation?',
           shortLabel: 'Hava/Air',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'valves_open',
           label: 'Pompa emiş, basma ve bypass vanaları açık mı? / Are pump suction, discharge, and bypass valves open?',
           shortLabel: 'Vanalar/Valves',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'suction_reservoir_full',
           label: 'Su deposu dolu mu? / Is suction reservoir full?',
           shortLabel: 'Depo/Tank',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'no_leaks',
           label: 'Boru veya hortum sızıntısı yok mu? / No piping or hose leaks?',
           shortLabel: 'Sızıntı/Leaks',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'weekly_run',
           label: 'Pompalar ayda yüksüz elektrikli pompa 10 dakika, dizel 30 dakika çalışıyor mu? / Does pump run weekly per NFPA?',
           shortLabel: 'Haftalık/Weekly',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pressures_acceptable',
           label: 'Yukarıdaki basınç ve değerler kabul edilir mi? / Are the above pressures and values acceptable?',
           shortLabel: 'Basınç/Press',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'controller_on_position',
           label: 'Kontrol Panel "on" pozisyonda mı? / Controller is in "on" position?',
           shortLabel: 'Panel On',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'waterflow_valves_closed',
           label: 'Su akış test vanaları kapalı konumda mı? / Waterflow test valves are in closed position?',
           shortLabel: 'Test Vanaları',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pilot_light_on',
           label: 'Kontrol paneli pilot ışığı (güç açık) yanıyor mu? / Controller pilot light (power on) is illuminated?',
           shortLabel: 'Pilot Işık',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'bearings_lubricated',
           label: 'Pompa yatakları yağlanmış mı? / Are the pump bearings lubricated?',
           shortLabel: 'Yağlama/Lube',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'no_vibration',
           label: 'Pompa çalışırken vibrasyon yok mu? / There is no vibration when the pump is running?',
           shortLabel: 'Titreşim/Vibr',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pump_accessible',
           label: 'Pompanın çalışma süresine ulaşılabiliyor mu? / Is the pump run time accessible?',
           shortLabel: 'Erişim/Access',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pressure_calibration_done',
           label: 'Pompa basınç kalibrasyonları yapıldı mı? / Have pump pressure calibrations been done?',
           shortLabel: 'Kalibrasyon',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pump_start_pressure',
@@ -831,56 +831,56 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Pompa Manual stop ayarlı mı? / Is the pump set to Manual stop?',
           shortLabel: 'Manual Stop',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'auto_stop_ejector',
           label: 'Pompa otomatik stop ejector mu? / Does the pump stop automatically?',
           shortLabel: 'Oto Stop',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pump_painted',
           label: 'Pompa hissettiren hafitten start verildi mi? / Has the pump been started manually?',
           shortLabel: 'Manuel Start',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'lightness_checked',
           label: 'Kaidelerin sıkılığı kontrol edildi mi? / Check the lightness of the connections?',
           shortLabel: 'Sıkılık/Tight',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pump_marked',
           label: 'Pompalar manuel start verildi mi? / Have the pumps been started manually?',
           shortLabel: 'Manuel/Manual',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'alarm_light_check',
           label: "Tüm alarm ışıkları 'kapalı' mı? All alarm pilot lights are 'off'?",
           shortLabel: 'Alarm Işık',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'sound_alarm_off',
           label: 'Dizel motor çıkış ısısı uygun mu? / Is the sound of the pump okay?',
           shortLabel: 'Motor Ses',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'no_corrosion',
           label: 'Herhangi bir devir kartında korozyon yok mu? / No corrosion on circuit boards?',
           shortLabel: 'Korozyon/Corr',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         }
       ]
     },
@@ -894,56 +894,56 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Salmastra sıkma aparatları düzgün ayarlanmış görünüyor mu? / Packing glands appear properly adjusted?',
           shortLabel: 'Salmastra',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pump_manual_start',
           label: 'Pompaya basılmadan manuel start verildi mi? / Has the pump been manually started from the controller?',
           shortLabel: 'Manuel Start',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'fire_pump_couplings',
           label: 'Yangın pompası şaft kaplın düzgün şekilde hizalandı görünüyor mu? / Fire pump couplings appear properly aligned?',
           shortLabel: 'Kaplin/Coupling',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'drains_normal',
           label: 'Salmastradan damlama normal mi? / Is it normal for the packings to drip?',
           shortLabel: 'Damlama/Drip',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pump_start_normal',
           label: 'Pompanın start alması, çekiş olarak normal mi? / Pump start is normal?',
           shortLabel: 'Start Normal',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'solenoid_operating',
           label: 'Solenoid valf düzgün çalışıyor mu? / Is the solenoid valve operating correctly?',
           shortLabel: 'Solenoid',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'operating_time_normal',
           label: 'Pompa çalışma süresi normal mi? / Is the operating time of the pump normal?',
           shortLabel: 'Çalışma Süresi',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'maintenance_hours',
           label: 'Son Bakımdan bu yana pompaları haftalık çalıştırıldı mı? / Since the last maintenance, the pumps have been weekly?',
           shortLabel: 'Haftalık/Weekly',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'starts_since_last',
@@ -957,112 +957,112 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Motorun fani hızı gelen süreyi gözlemleyin / Observe time for motor to crank',
           shortLabel: 'Süre/Time',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'solenoid_coolant_valve',
           label: 'Soğutma suyu solenoid valf tutucu mu? / Is the coolant solenoid valve holding?',
           shortLabel: 'Soğutma Valf',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pilot_lights_batteries',
           label: 'Güne pil ışıkları yanıyor veya pil arızası pilotı yakar mı? / Pilot lights for batteries are on or fail lights are off?',
           shortLabel: 'Pil Işıkları',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'crankcase_oil_normal',
           label: 'Karter yağ seviyesi uygun mu? / Crankcase oil level is normal?',
           shortLabel: 'Yağ/Oil',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'cooling_water_normal',
           label: 'Antifrizi seviyesi uygun mu? / Cooling water level is normal?',
           shortLabel: 'Antifriz',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'electrolyte_normal',
           label: 'Akü su seviyesi uygun mu? / Electrolyte level in batteries is normal?',
           shortLabel: 'Akü Su',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'battery_terminals_clean',
           label: 'Akü kutup başlarında korozyon yok mu? / Battery terminals are free of corrosion?',
           shortLabel: 'Kutup Başları',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'water_jacket_heater',
           label: 'Isıtıcı yeter durumda mı? / Water-jacket heater is operational?',
           shortLabel: 'Isıtıcı/Heater',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'exhaust_no_leak',
           label: 'Egzost hattında gaz sızıntısı yok mu? / There is no gas leak in the exhaust line?',
           shortLabel: 'Egzost/Exhaust',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'aftercooler_drain',
           label: 'Aftercooler da yoğuşan su varsa boşaltın / Drain condensate if any in aftercooler',
           shortLabel: 'Aftercooler',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'diesel_fuel_tank',
           label: 'Dizel yakıt deposunda su olup olmadığını kontrol edin / Check for water in diesel fuel tank',
           shortLabel: 'Yakıt/Fuel',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'strainer_clean',
           label: 'Dizel yangın pompası için soğutma sistemini temiz su süzgecini temizleyin mi? / Clean water strainer in cooling system for diesel fire pump?',
           shortLabel: 'Süzgeç/Strainer',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'filters_changed',
           label: 'Yağ, yağ filtresi, yakıt filtresi, and/or ve hava filtresi yenisi ile değiştir mi? / Has the engine oil, oil filter, fuel filter, and/or air filter been changed?',
           shortLabel: 'Filtreler',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'coolant_pressure_check',
           label: 'Soğutma kayışından geçen su basıncı oluştu not edin / Note the water pressure through the coolant',
           shortLabel: 'Soğutma Basınç',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'electrical_wiring',
           label: 'Hareketli maruzi kablo yöntemini aksatılmış sürünme olup olmadığını kontrol edin / Check electrical wiring for movement',
           shortLabel: 'Kablolama',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'filters_oils_changed_50hrs',
           label: 'Tüm Filtreler ve yağlar her 50 saatte bir yoksa yılda bir mi değiştirildi? / Have all filters and oils been changed every 50 hours or yearly?',
           shortLabel: '50 Saat Bakım',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'diesel_crank_time',
@@ -1084,42 +1084,42 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Ağa test yapılırsa pompa RV nin çalışmadığını doğrulayın / Verify that the pump RV is not operating during the flow test',
           shortLabel: 'RV Kontrolü',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'alarm_conditions_activate',
           label: 'Alarm sensörü konumlarındaki alarm devrelerin (aynı zamanda uzak alarmlar) etkinleştirecek pompa ve pompa performans eğrisi çekek ve önceki iki yıla test verileriyle karşılaştırın / Simulate pump and driver alarm conditions by activating alarm circuits at alarm sensor locations',
           shortLabel: 'Alarm Test',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'performance_curve_compare',
           label: "Pompa'nın orijinal unadjusted alan kabul test eğrisine ve önceki yıllardan test verileriyle ile göndere ve pompanın original performansı işli göndece ile ön eki iki yılın / Draw pump performance curve shall be drawn and compared to pumps original field acceptance test curve",
           shortLabel: 'Performans Eğrisi',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'ecm_primary_backup',
           label: 'Dizel motorsun üzerinde birincil ve yedek elektronik kontrol modüllerini (ECM) test edin / Test primary and backup electronic control modules (ECM) on diesel fuel injected engines',
           shortLabel: 'ECM Test',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pressure_relief_valves',
           label: 'Basınç tahliye ve vakum kontrol vanalarını test edin / Yük Kontrol Test Pressure-relieving and suction-control valves',
           shortLabel: 'Tahliye Vanaları',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'circulation_relief_valve',
           label: 'Sirkülasyon tahliye vanasını (varsa) suyu boşaltmak için çalışır çalışmadığını kontrol edin / Inspect the circulation relief valve (where equipped) for operation to discharge water',
           shortLabel: 'Sirkülasyon Valf',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         }
       ]
     },
@@ -1133,21 +1133,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Jokey pompa şalteri açık mı? / Is the jockey pump switch on?',
           shortLabel: 'Şalter/Switch',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_manual_check',
           label: 'Jokey pompa manuel çalışıyor mu? / Does the jockey pump start manually?',
           shortLabel: 'Manuel/Manual',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_start_pressure',
           label: 'Jokey pompa start basıncı / Jockey pump start pressure',
           shortLabel: 'Start PSI',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         },
         {
@@ -1155,7 +1155,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Jokey pompa stop basıncı / Jockey pump stop pressure',
           shortLabel: 'Stop PSI',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         },
         {
@@ -1163,42 +1163,42 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Jokey pompa basınç kalibrasyonu yapıldı mı? / Jockey pump pressure calibration done?',
           shortLabel: 'Kalibrasyon',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_controller_auto',
           label: 'Jokey pompası kontrolörü "otomatik" olarak ayarlandı mı? / Jockey pump controller is set to "auto"?',
           shortLabel: 'Otomatik/Auto',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_rotation',
           label: 'Jokey pompa dönüş yönü doğru mu? / Is the jockey pump rotation direction correct?',
           shortLabel: 'Dönüş/Rotation',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_energy',
           label: 'Jokey pompası enerjili mi? / Does the jockey pump have energy?',
           shortLabel: 'Enerji/Energy',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_panel_ul',
           label: 'Jokey pompa Panel UL listeli mi? / Is the jockey pump panel UL listed?',
           shortLabel: 'UL Listeli',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_pressures_acceptable',
           label: 'Yukarıdaki basınç ve değerler kabul edilir mi? / Are the above pressures and values acceptable?',
           shortLabel: 'Değerler OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         }
       ]
     },
@@ -1255,6 +1255,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
       id: 'notes_section',
       name: 'Notlar / Notes',
       description: 'Ek notlar ve gözlemler / Additional notes and observations',
+      voiceEnabled: true,
       fields: [
         {
           id: 'notes',
@@ -1283,14 +1284,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Denetçi Adı / Inspector Name',
           shortLabel: 'Denetçi/Inspector',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'sig_inspector',
           label: 'Denetçi İmzası / Inspector Signature',
           shortLabel: 'İmza/Signature',
           type: 'SIGNATURE',
-          required: true
+          required: false
         },
         {
           id: 'company_rep_name',
@@ -1324,7 +1325,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Company Name',
           shortLabel: 'Company',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'company_address',
@@ -1338,7 +1339,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Maintenance Start Date',
           shortLabel: 'Start date',
           type: 'DATE',
-          required: true
+          required: false
         },
         {
           id: 'maintenance_end_date',
@@ -1352,7 +1353,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Report Date',
           shortLabel: 'Report date',
           type: 'DATE',
-          required: true
+          required: false
         }
       ]
     },
@@ -1369,7 +1370,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Pump Number/ID',
           shortLabel: 'Pump #',
           type: 'TEXT',
-          required: true,
+          required: false,
           voiceHints: ['pump number', 'pump id', 'pump one', 'pump two']
         },
         {
@@ -1386,7 +1387,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Pump Brand/Manufacturer',
           shortLabel: 'Brand',
           type: 'TEXT',
-          required: true,
+          required: false,
           voiceHints: ['fairbanks', 'clarke', 'aurora', 'peerless']
         },
         {
@@ -1394,14 +1395,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Model/Type',
           shortLabel: 'Model',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_serial',
           label: 'Serial Number',
           shortLabel: 'Serial #',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_year',
@@ -1415,7 +1416,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Rated Capacity (GPM)',
           shortLabel: 'Capacity',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'GPM'
         },
         {
@@ -1423,7 +1424,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Rated Pressure (PSI)',
           shortLabel: 'Rated PSI',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         }
       ]
@@ -1447,7 +1448,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Engine Brand',
           shortLabel: 'Engine brand',
           type: 'TEXT',
-          required: true,
+          required: false,
           voiceHints: ['doosan', 'cummins', 'john deere', 'caterpillar', 'clarke']
         },
         {
@@ -1455,14 +1456,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Engine Model',
           shortLabel: 'Engine model',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'engine_serial',
           label: 'Engine Serial Number',
           shortLabel: 'Engine serial',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'engine_bhp',
@@ -1501,7 +1502,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Controller Brand',
           shortLabel: 'Controller brand',
           type: 'TEXT',
-          required: true,
+          required: false,
           voiceHints: ['eaton', 'firetrol', 'metron', 'tornatech']
         },
         {
@@ -1509,7 +1510,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Controller Model',
           shortLabel: 'Controller model',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'controller_serial',
@@ -1531,7 +1532,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Performance Readings',
           shortLabel: 'Performance',
           type: 'TABLE',
-          required: true,
+          required: false,
           tableColumns: ['Flow Rate', 'Suction PSI', 'Discharge PSI', 'RPM'],
           defaultRows: [
             ['0% (No Flow)', '', '', ''],
@@ -1562,7 +1563,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Is the fire pump controller in "automatic" position?',
           shortLabel: 'Controller auto',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['automatic', 'auto position', 'controller']
         },
         {
@@ -1570,14 +1571,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Were controller doors properly closed since last maintenance?',
           shortLabel: 'Doors closed',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'room_temp_adequate',
           label: 'Is pump room temperature above 40°F (5°C)?',
           shortLabel: 'Room temp OK',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['temperature', 'room temp', 'pump room']
         },
         {
@@ -1585,14 +1586,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Is there adequate air intake for engine operation?',
           shortLabel: 'Air intake OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'valves_open',
           label: 'Are pump suction, discharge, and bypass valves open?',
           shortLabel: 'Valves open',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['valves', 'suction valve', 'discharge valve', 'bypass']
         },
         {
@@ -1600,14 +1601,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Is suction reservoir/tank full?',
           shortLabel: 'Reservoir full',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'no_leaks',
           label: 'No piping or hose leaks observed?',
           shortLabel: 'No leaks',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['leak', 'leaking', 'drip', 'hose']
         },
         {
@@ -1615,21 +1616,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Does pump run 30 minutes weekly without load per NFPA?',
           shortLabel: 'Weekly 30min run',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pressures_acceptable',
           label: 'Are all pressures and values within acceptable range?',
           shortLabel: 'Pressures OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'fuel_level_adequate',
           label: 'Is diesel fuel level adequate?',
           shortLabel: 'Fuel level OK',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['fuel', 'diesel', 'tank']
         },
         {
@@ -1637,21 +1638,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Is engine oil level within acceptable range?',
           shortLabel: 'Oil level OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'coolant_level_ok',
           label: 'Is coolant level within acceptable range?',
           shortLabel: 'Coolant OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'battery_condition_ok',
           label: 'Are batteries in good condition and charged?',
           shortLabel: 'Batteries OK',
           type: 'YES_NO_NA',
-          required: true,
+          required: false,
           voiceHints: ['battery', 'batteries', 'charged']
         },
         {
@@ -1659,14 +1660,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Are belts and hoses in good condition?',
           shortLabel: 'Belts/hoses OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'exhaust_system_ok',
           label: 'Is exhaust system functioning properly?',
           shortLabel: 'Exhaust OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         }
       ]
     },
@@ -1680,14 +1681,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Is jockey pump switch set to automatic?',
           shortLabel: 'Jockey auto',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_start_pressure',
           label: 'Jockey pump start pressure (PSI)',
           shortLabel: 'Start PSI',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         },
         {
@@ -1695,7 +1696,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Jockey pump stop pressure (PSI)',
           shortLabel: 'Stop PSI',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         },
         {
@@ -1703,21 +1704,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Is pressure switch calibration current?',
           shortLabel: 'Calibration OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_rotation_correct',
           label: 'Is rotation direction correct?',
           shortLabel: 'Rotation OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_operational',
           label: 'Does jockey pump operate correctly?',
           shortLabel: 'Jockey works',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         }
       ]
     },
@@ -1738,21 +1739,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Are all alarm pilot lights "off" (no faults)?',
           shortLabel: 'Alarms clear',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'manual_start_tested',
           label: 'Has manual start been tested?',
           shortLabel: 'Manual start OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'auto_start_tested',
           label: 'Has automatic start been tested?',
           shortLabel: 'Auto start OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'transfer_switch_ok',
@@ -1812,14 +1813,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_EN = {
           label: 'Inspector Name',
           shortLabel: 'Inspector',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'sig_inspector',
           label: 'Inspector Signature',
           shortLabel: 'Inspector signature',
           type: 'SIGNATURE',
-          required: true
+          required: false
         },
         {
           id: 'company_rep_name',
@@ -1853,7 +1854,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Firma Adı',
           shortLabel: 'Firma',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'company_address',
@@ -1867,7 +1868,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Periyodik Bakım Başlangıç Tarihi',
           shortLabel: 'Başlangıç',
           type: 'DATE',
-          required: true
+          required: false
         },
         {
           id: 'maintenance_end_date',
@@ -1881,7 +1882,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Rapor Tarihi',
           shortLabel: 'Rapor tarihi',
           type: 'DATE',
-          required: true
+          required: false
         }
       ]
     },
@@ -1898,7 +1899,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Pompa Numarası/ID',
           shortLabel: 'Pompa #',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_photo',
@@ -1913,21 +1914,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Pompa Markası',
           shortLabel: 'Marka',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_model',
           label: 'Model/Tip',
           shortLabel: 'Model',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_serial',
           label: 'Seri Numarası',
           shortLabel: 'Seri No',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'pump_year',
@@ -1941,7 +1942,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Kapasite (GPM)',
           shortLabel: 'Kapasite',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'GPM'
         },
         {
@@ -1949,7 +1950,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Anma Basıncı (PSI)',
           shortLabel: 'Basınç',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         }
       ]
@@ -1972,21 +1973,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Motor Markası',
           shortLabel: 'Motor markası',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'engine_model',
           label: 'Motor Modeli',
           shortLabel: 'Motor modeli',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'engine_serial',
           label: 'Motor Seri Numarası',
           shortLabel: 'Motor seri no',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'engine_bhp',
@@ -2024,14 +2025,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Kontrol Paneli Markası',
           shortLabel: 'Panel markası',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'controller_model',
           label: 'Panel Modeli',
           shortLabel: 'Panel modeli',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'controller_serial',
@@ -2053,7 +2054,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Performans Ölçümleri',
           shortLabel: 'Performans',
           type: 'TABLE',
-          required: true,
+          required: false,
           tableColumns: ['Akış Oranı', 'Emiş PSI', 'Basma PSI', 'RPM'],
           defaultRows: [
             ['%0 (Akışsız)', '', '', ''],
@@ -2082,105 +2083,105 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Yangın pompası kontrolörü "otomatik" konumda mı?',
           shortLabel: 'Kontrolör otomatik',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'controller_doors_closed',
           label: 'Son bakımdan bu yana kontrolör kapıları kapalı mıydı?',
           shortLabel: 'Kapılar kapalı',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'room_temp_adequate',
           label: 'Pompa odası sıcaklığı 5°C üzerinde mi?',
           shortLabel: 'Oda sıcaklığı OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'air_intake_adequate',
           label: 'Motor çalışması için yeterli hava girişi var mı?',
           shortLabel: 'Hava girişi OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'valves_open',
           label: 'Pompa emiş, basma ve bypass vanaları açık mı?',
           shortLabel: 'Vanalar açık',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'suction_reservoir_full',
           label: 'Su deposu dolu mu?',
           shortLabel: 'Depo dolu',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'no_leaks',
           label: 'Boru veya hortum sızıntısı yok mu?',
           shortLabel: 'Sızıntı yok',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'weekly_run_30min',
           label: 'Pompa ayda 10 dakika elektrik, 30 dakika dizel çalıştırılıyor mu?',
           shortLabel: 'Haftalık çalıştırma',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'pressures_acceptable',
           label: 'Tüm basınç ve değerler kabul edilebilir aralıkta mı?',
           shortLabel: 'Basınçlar OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'fuel_level_adequate',
           label: 'Dizel yakıt seviyesi yeterli mi?',
           shortLabel: 'Yakıt OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'oil_level_ok',
           label: 'Motor yağ seviyesi uygun mu?',
           shortLabel: 'Yağ OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'coolant_level_ok',
           label: 'Soğutma suyu seviyesi uygun mu?',
           shortLabel: 'Soğutma suyu OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'battery_condition_ok',
           label: 'Aküler iyi durumda ve şarjlı mı?',
           shortLabel: 'Aküler OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'belts_hoses_ok',
           label: 'Kayışlar ve hortumlar iyi durumda mı?',
           shortLabel: 'Kayışlar OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'exhaust_system_ok',
           label: 'Egzoz sistemi düzgün çalışıyor mu?',
           shortLabel: 'Egzoz OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         }
       ]
     },
@@ -2194,14 +2195,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Jockey pompa şalteri otomatik konumda mı?',
           shortLabel: 'Jockey otomatik',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_start_pressure',
           label: 'Jockey pompa başlama basıncı (PSI)',
           shortLabel: 'Başlama PSI',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         },
         {
@@ -2209,7 +2210,7 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Jockey pompa durma basıncı (PSI)',
           shortLabel: 'Durma PSI',
           type: 'NUMBER',
-          required: true,
+          required: false,
           unit: 'PSI'
         },
         {
@@ -2217,21 +2218,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Basınç şalteri kalibrasyonu güncel mi?',
           shortLabel: 'Kalibrasyon OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_rotation_correct',
           label: 'Dönüş yönü doğru mu?',
           shortLabel: 'Dönüş OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'jockey_operational',
           label: 'Jockey pompa düzgün çalışıyor mu?',
           shortLabel: 'Jockey çalışıyor',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         }
       ]
     },
@@ -2252,21 +2253,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Tüm alarm pilot ışıkları "kapalı" mı (arıza yok)?',
           shortLabel: 'Alarmlar temiz',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'manual_start_tested',
           label: 'Manuel çalıştırma test edildi mi?',
           shortLabel: 'Manuel başlatma OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'auto_start_tested',
           label: 'Otomatik çalıştırma test edildi mi?',
           shortLabel: 'Otomatik başlatma OK',
           type: 'YES_NO_NA',
-          required: true
+          required: false
         },
         {
           id: 'transfer_switch_ok',
@@ -2324,14 +2325,14 @@ const DIESEL_FIRE_PUMP_TEMPLATE_TR = {
           label: 'Denetçi Adı',
           shortLabel: 'Denetçi',
           type: 'TEXT',
-          required: true
+          required: false
         },
         {
           id: 'sig_inspector',
           label: 'Denetçi İmzası',
           shortLabel: 'Denetçi imzası',
           type: 'SIGNATURE',
-          required: true
+          required: false
         },
         {
           id: 'company_rep_name',
