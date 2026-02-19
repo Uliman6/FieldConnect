@@ -771,8 +771,6 @@ function DateField({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
   // Format date for display
   const formatDate = (dateStr: string) => {
     try {
@@ -783,35 +781,12 @@ function DateField({
     }
   };
 
-  const handleDatePicker = () => {
-    if (disabled) return;
-
-    if (Platform.OS === 'web' && inputRef.current) {
-      // On web, click the hidden date input to show picker
-      inputRef.current.showPicker?.() || inputRef.current.click();
-    } else {
-      // TODO: Use native date picker for mobile
-      const today = new Date().toISOString().split('T')[0];
-      onChange(today);
-    }
-  };
-
   if (Platform.OS === 'web') {
+    // On web, use a styled native date input directly
     return (
-      <View className="relative">
-        <Pressable
-          onPress={handleDatePicker}
-          disabled={disabled}
-          className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3"
-        >
-          <Calendar size={20} color="#9CA3AF" />
-          <Text className={`ml-3 flex-1 ${value ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
-            {value ? formatDate(value) : 'Select date...'}
-          </Text>
-        </Pressable>
-        {/* Hidden date input for web */}
+      <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
+        <Calendar size={20} color="#9CA3AF" />
         <input
-          ref={inputRef as any}
           type="date"
           value={value || ''}
           onChange={(e) => {
@@ -821,18 +796,26 @@ function DateField({
           }}
           disabled={disabled}
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0,
-            cursor: 'pointer',
+            flex: 1,
+            marginLeft: 12,
+            backgroundColor: 'transparent',
+            border: 'none',
+            outline: 'none',
+            fontSize: 16,
+            color: value ? 'inherit' : '#9CA3AF',
+            cursor: disabled ? 'not-allowed' : 'pointer',
           }}
         />
       </View>
     );
   }
+
+  // Native: simple pressable that sets today's date (TODO: use proper date picker)
+  const handleDatePicker = () => {
+    if (disabled) return;
+    const today = new Date().toISOString().split('T')[0];
+    onChange(today);
+  };
 
   return (
     <Pressable
@@ -1428,26 +1411,12 @@ function FormSectionComponent({
                 />
               )}
               {field.type === 'TEXTAREA' && (
-                section.voiceEnabled ? (
-                  <VoiceTextAreaField
-                    field={field}
-                    value={formData[getFieldKey(field.id)]}
-                    onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
-                    disabled={disabled}
-                  />
-                ) : (
-                  <TextInput
-                    value={formData[getFieldKey(field.id)] || ''}
-                    onChangeText={(val) => onFieldChange(getFieldKey(field.id), val)}
-                    editable={!disabled}
-                    placeholder="Enter notes..."
-                    placeholderTextColor="#9CA3AF"
-                    multiline
-                    numberOfLines={6}
-                    className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-gray-900 dark:text-white min-h-[150px]"
-                    style={{ textAlignVertical: 'top' }}
-                  />
-                )
+                <VoiceTextAreaField
+                  field={field}
+                  value={formData[getFieldKey(field.id)]}
+                  onChange={(val) => onFieldChange(getFieldKey(field.id), val)}
+                  disabled={disabled}
+                />
               )}
             </Animated.View>
           ))}
