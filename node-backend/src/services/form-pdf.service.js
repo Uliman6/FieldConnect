@@ -540,35 +540,49 @@ function generateGenericFormPdf(form, project) {
 
 function drawTextField(doc, label, value, unit) {
   const y = doc.y;
-  const labelWidth = 250;
-  const valueWidth = 280;
-  const rowHeight = 20;
+  const labelWidth = 280;
+  const valueWidth = 250;
+  const minRowHeight = 20;
+  const padding = 6;
+
+  // Calculate height needed for label text
+  doc.fontSize(8).font(FONT_BOLD);
+  const labelHeight = doc.heightOfString(label, { width: labelWidth - 10 });
+  const rowHeight = Math.max(minRowHeight, labelHeight + padding * 2);
 
   doc.rect(40, y, 532, rowHeight).stroke();
-  doc.fontSize(8).font(FONT_BOLD).text(label, 45, y + 5, { width: labelWidth - 10 });
+  doc.text(label, 45, y + padding, { width: labelWidth - 10 });
 
   const displayValue = value !== undefined && value !== null && value !== ''
     ? (unit ? `${value} ${unit}` : String(value))
     : '';
-  doc.font(FONT_REGULAR).text(displayValue, 45 + labelWidth, y + 5, { width: valueWidth - 10 });
+  doc.font(FONT_REGULAR).text(displayValue, 45 + labelWidth, y + padding, { width: valueWidth - 10 });
 
   doc.y = y + rowHeight;
 }
 
 function drawSignatureField(doc, label, value) {
   const y = doc.y;
-  const rowHeight = 35;
+  const minRowHeight = 35;
+  const labelWidth = 280;
+
+  // Calculate height needed for label text
+  doc.fontSize(8).font(FONT_BOLD);
+  const labelHeight = doc.heightOfString(label, { width: labelWidth - 10 });
+  const rowHeight = Math.max(minRowHeight, labelHeight + 25);
 
   doc.rect(40, y, 532, rowHeight).stroke();
-  doc.fontSize(8).font(FONT_BOLD).text(label, 45, y + 3);
+  doc.text(label, 45, y + 3, { width: labelWidth - 10 });
 
+  // Position signature/status to the right of label
+  const sigX = 45 + labelWidth;
   if (value?.signed) {
-    doc.fontSize(10).font(FONT_REGULAR).text(value.name || 'Signed', 45, y + 15);
+    doc.fontSize(10).font(FONT_REGULAR).text(value.name || 'Signed', sigX, y + 8);
     if (value.signedAt) {
-      doc.fontSize(6).text(new Date(value.signedAt).toLocaleString(), 45, y + 27);
+      doc.fontSize(6).text(new Date(value.signedAt).toLocaleString(), sigX, y + 22);
     }
   } else {
-    doc.fontSize(8).font(FONT_REGULAR).fillColor('gray').text('Not signed', 45, y + 15);
+    doc.fontSize(8).font(FONT_REGULAR).fillColor('gray').text('Not signed', sigX, y + 12);
     doc.fillColor('black');
   }
 
@@ -593,16 +607,23 @@ function drawTextAreaField(doc, label, value) {
 
 function drawPhotoField(doc, label, value) {
   const y = doc.y;
-  const rowHeight = 25;
+  const labelWidth = 280;
+  const minRowHeight = 22;
+  const padding = 5;
+
+  // Calculate height needed for label text
+  doc.fontSize(8).font(FONT_BOLD);
+  const labelHeight = doc.heightOfString(label, { width: labelWidth - 10 });
+  const rowHeight = Math.max(minRowHeight, labelHeight + padding * 2);
 
   doc.rect(40, y, 532, rowHeight).stroke();
-  doc.fontSize(8).font(FONT_BOLD).text(label, 45, y + 5);
+  doc.text(label, 45, y + padding, { width: labelWidth - 10 });
 
   if (value?.uri || (Array.isArray(value) && value.length > 0)) {
     const count = Array.isArray(value) ? value.length : 1;
-    doc.font(FONT_REGULAR).text(`[${count} photo(s) attached]`, 300, y + 5);
+    doc.font(FONT_REGULAR).text(`[${count} photo(s) attached]`, 45 + labelWidth, y + padding);
   } else {
-    doc.font(FONT_REGULAR).fillColor('gray').text('No photo', 300, y + 5);
+    doc.font(FONT_REGULAR).fillColor('gray').text('No photo', 45 + labelWidth, y + padding);
     doc.fillColor('black');
   }
 
@@ -611,18 +632,25 @@ function drawPhotoField(doc, label, value) {
 
 function drawCheckboxField(doc, label, value) {
   const y = doc.y;
-  const rowHeight = 20;
+  const minRowHeight = 20;
+  const padding = 5;
+
+  // Calculate height needed for label text
+  doc.fontSize(8).font(FONT_REGULAR);
+  const labelHeight = doc.heightOfString(label, { width: 500 });
+  const rowHeight = Math.max(minRowHeight, labelHeight + padding * 2);
 
   doc.rect(40, y, 532, rowHeight).stroke();
 
-  // Draw checkbox
-  doc.rect(45, y + 5, 10, 10).stroke();
+  // Draw checkbox (vertically centered)
+  const checkboxY = y + (rowHeight - 10) / 2;
+  doc.rect(45, checkboxY, 10, 10).stroke();
   if (value) {
-    doc.fontSize(10).font(FONT_BOLD).text('X', 46, y + 3);
+    doc.fontSize(10).font(FONT_BOLD).text('X', 46, checkboxY - 2);
   }
 
   // Draw label
-  doc.fontSize(8).font(FONT_REGULAR).text(label, 60, y + 5, { width: 500 });
+  doc.fontSize(8).font(FONT_REGULAR).text(label, 60, y + padding, { width: 500 });
 
   doc.y = y + rowHeight;
 }
