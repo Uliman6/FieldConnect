@@ -303,7 +303,12 @@ const PRE_TASK_PLAN_TEMPLATE = {
           shortLabel: 'Work steps',
           type: 'TABLE',
           required: false,
-          tableColumns: ['Steps for Work', 'Tools', 'Hazards', 'Steps Taken to Address Hazards'],
+          tableColumns: [
+            { name: 'Steps for Work', voiceEnabled: true },
+            { name: 'Tools', voiceEnabled: true },
+            { name: 'Hazards', voiceEnabled: true },
+            { name: 'Steps Taken to Address Hazards', voiceEnabled: true }
+          ],
           maxRows: 10,
           voiceHints: ['first step', 'next step', 'then we', 'using', 'tools', 'hazard', 'risk', 'mitigation', 'address']
         }
@@ -321,7 +326,11 @@ const PRE_TASK_PLAN_TEMPLATE = {
           shortLabel: 'Hand risks',
           type: 'TABLE',
           required: false,
-          tableColumns: ['Hand At Risk Tasks', 'Specific Tools', 'Corrective Measure Other Than PPE'],
+          tableColumns: [
+            { name: 'Hand At Risk Tasks', voiceEnabled: true },
+            { name: 'Specific Tools', voiceEnabled: true },
+            { name: 'Corrective Measure Other Than PPE', voiceEnabled: true }
+          ],
           maxRows: 6,
           voiceHints: ['hand', 'risk', 'cutting', 'pinch', 'tool', 'corrective', 'measure']
         }

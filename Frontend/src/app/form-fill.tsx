@@ -580,6 +580,9 @@ function SignatureField({
 }
 
 // Table Field Component (for work steps, hand at risk, etc.)
+// Helper type for table columns that can be string or object
+type TableColumn = string | { name: string; voiceEnabled?: boolean };
+
 function TableField({
   field,
   value,
@@ -591,8 +594,21 @@ function TableField({
   onChange: (value: string[][]) => void;
   disabled?: boolean;
 }) {
-  const columns = field.tableColumns || ['Column 1', 'Column 2', 'Column 3'];
+  const { transcriptionLanguage } = useLanguage();
+  const rawColumns = field.tableColumns || ['Column 1', 'Column 2', 'Column 3'];
+
+  // Normalize columns to always have name and voiceEnabled
+  const columns = rawColumns.map((col: TableColumn) =>
+    typeof col === 'string' ? { name: col, voiceEnabled: false } : col
+  );
   const maxRows = field.maxRows || 5;
+
+  // Recording state: track which cell is currently recording
+  const [recordingCell, setRecordingCell] = useState<{ row: number; col: number } | null>(null);
+  const [transcribingCell, setTranscribingCell] = useState<{ row: number; col: number } | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const mimeTypeRef = useRef<string>('audio/webm');
 
   // Use defaultRows if provided and no value exists
   const getInitialRows = () => {
@@ -626,6 +642,89 @@ function TableField({
     }
   };
 
+  // Voice recording functions
+  const startCellRecording = useCallback(async (rowIndex: number, colIndex: number) => {
+    if (disabled || recordingCell) return;
+
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      chunksRef.current = [];
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true }
+      });
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : 'audio/mp4';
+
+      mimeTypeRef.current = mimeType;
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+        const audioUrl = URL.createObjectURL(blob);
+        stream.getTracks().forEach(track => track.stop());
+
+        // Transcribe the audio
+        setTranscribingCell({ row: rowIndex, col: colIndex });
+        try {
+          const result = await transcribeAudio(audioUrl, { language: transcriptionLanguage });
+          if (result.success && result.text) {
+            // Append transcribed text to existing cell value
+            const currentValue = rows[rowIndex]?.[colIndex] || '';
+            const newValue = currentValue ? `${currentValue} ${result.text}` : result.text;
+            updateCell(rowIndex, colIndex, newValue);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } else {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            if (Platform.OS === 'web') {
+              window.alert('Transcription failed: ' + (result.error || 'Unknown error'));
+            }
+          }
+        } catch (error) {
+          console.error('[TableField] Transcription error:', error);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        } finally {
+          setTranscribingCell(null);
+          URL.revokeObjectURL(audioUrl);
+        }
+      };
+
+      mediaRecorder.start();
+      setRecordingCell({ row: rowIndex, col: colIndex });
+    } catch (error) {
+      console.error('[TableField] Recording error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        window.alert('Could not access microphone. Please check permissions.');
+      }
+    }
+  }, [disabled, recordingCell, rows, transcriptionLanguage, updateCell]);
+
+  const stopCellRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setRecordingCell(null);
+  }, []);
+
+  const isRecordingCell = (row: number, col: number) =>
+    recordingCell?.row === row && recordingCell?.col === col;
+
+  const isTranscribingCell = (row: number, col: number) =>
+    transcribingCell?.row === row && transcribingCell?.col === col;
+
   return (
     <View className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       {/* Header */}
@@ -636,9 +735,14 @@ function TableField({
             className="flex-1 p-2 border-r border-gray-200 dark:border-gray-700"
             style={idx === columns.length - 1 ? { borderRightWidth: 0 } : {}}
           >
-            <Text className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {col}
-            </Text>
+            <View className="flex-row items-center">
+              <Text className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-1">
+                {col.name}
+              </Text>
+              {col.voiceEnabled && (
+                <Mic size={12} color="#F97316" style={{ marginLeft: 4 }} />
+              )}
+            </View>
           </View>
         ))}
         <View className="w-10" />
@@ -647,22 +751,52 @@ function TableField({
       {/* Rows */}
       {rows.map((row, rowIdx) => (
         <View key={rowIdx} className="flex-row border-t border-gray-200 dark:border-gray-700">
-          {columns.map((_, colIdx) => (
+          {columns.map((col, colIdx) => (
             <View
               key={colIdx}
               className="flex-1 border-r border-gray-200 dark:border-gray-700"
               style={colIdx === columns.length - 1 ? { borderRightWidth: 0 } : {}}
             >
-              <TextInput
-                value={row[colIdx] || ''}
-                onChangeText={(text) => updateCell(rowIdx, colIdx, text)}
-                editable={!disabled}
-                placeholder="..."
-                placeholderTextColor="#9CA3AF"
-                multiline
-                className="p-2 text-sm text-gray-900 dark:text-white min-h-[50px]"
-                style={{ textAlignVertical: 'top' }}
-              />
+              <View className="flex-row">
+                <TextInput
+                  value={row[colIdx] || ''}
+                  onChangeText={(text) => updateCell(rowIdx, colIdx, text)}
+                  editable={!disabled && !isRecordingCell(rowIdx, colIdx)}
+                  placeholder="..."
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  className="flex-1 p-2 text-sm text-gray-900 dark:text-white min-h-[50px]"
+                  style={{ textAlignVertical: 'top' }}
+                />
+                {/* Voice button for columns with voiceEnabled */}
+                {col.voiceEnabled && !disabled && Platform.OS === 'web' && (
+                  <View className="justify-center pr-1">
+                    {isTranscribingCell(rowIdx, colIdx) ? (
+                      <ActivityIndicator size="small" color="#F97316" />
+                    ) : (
+                      <Pressable
+                        onPress={() =>
+                          isRecordingCell(rowIdx, colIdx)
+                            ? stopCellRecording()
+                            : startCellRecording(rowIdx, colIdx)
+                        }
+                        className={`p-1.5 rounded-full ${
+                          isRecordingCell(rowIdx, colIdx)
+                            ? 'bg-red-500'
+                            : 'bg-orange-100 dark:bg-orange-900/30'
+                        }`}
+                        hitSlop={4}
+                      >
+                        {isRecordingCell(rowIdx, colIdx) ? (
+                          <StopIcon size={14} color="white" fill="white" />
+                        ) : (
+                          <Mic size={14} color="#F97316" />
+                        )}
+                      </Pressable>
+                    )}
+                  </View>
+                )}
+              </View>
             </View>
           ))}
           <Pressable
