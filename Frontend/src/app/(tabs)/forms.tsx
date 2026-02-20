@@ -35,6 +35,8 @@ import {
   Upload,
   ClipboardList,
   Trash2,
+  Mic,
+  Package,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -448,6 +450,45 @@ export default function FormsScreen() {
             <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               Upload Custom Template
             </Text>
+          </Pressable>
+        </Animated.View>
+
+        {/* Voice Lists Section */}
+        <Animated.View entering={FadeIn} className="px-4 mt-6">
+          <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+            {t('voiceLists.title')}
+          </Text>
+          <Pressable
+            onPress={() => {
+              if (!backendProjectId) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                router.push('/(tabs)/projects');
+                return;
+              }
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/voice-list-create');
+            }}
+            className="bg-gradient-to-r bg-orange-500 rounded-xl p-4 flex-row items-center"
+            style={{
+              shadowColor: '#F97316',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <View className="w-12 h-12 rounded-full bg-white/20 items-center justify-center mr-4">
+              <Mic size={24} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-lg font-semibold text-white">
+                {t('voiceLists.newList')}
+              </Text>
+              <Text className="text-sm text-white/80">
+                {t('voiceLists.tapToRecord')}
+              </Text>
+            </View>
+            <Package size={24} color="white" />
           </Pressable>
         </Animated.View>
 

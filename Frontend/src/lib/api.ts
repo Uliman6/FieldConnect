@@ -2806,6 +2806,308 @@ export async function removeProjectMember(projectId: string, memberId: string): 
   });
 }
 
+// ============================================
+// VOICE LISTS API
+// ============================================
+
+export type VoiceListStatus = 'draft' | 'completed';
+export type VoiceListType = 'material_list' | 'inventory' | 'punch_list' | 'action_items';
+
+export interface VoiceListSection {
+  id: string;
+  createdAt: string;
+  listId: string;
+  name: string;
+  description?: string | null;
+  orderIndex: number;
+  createdVia: 'voice' | 'ui';
+}
+
+export interface VoiceListItem {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  listId: string;
+  sectionId?: string | null;
+  rawText: string;
+  quantity?: number | null;
+  unit?: string | null;
+  description: string;
+  category?: string | null;
+  notes?: string | null;
+  orderIndex: number;
+  transcriptSegment?: string | null;
+}
+
+export interface VoiceList {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  projectId: string;
+  name: string;
+  listType: VoiceListType;
+  language: string;
+  status: VoiceListStatus;
+  rawTranscript?: string | null;
+  recordingDuration?: number | null;
+  createdById?: string | null;
+  createdByName?: string | null;
+  project?: {
+    id: string;
+    name: string;
+    number?: string;
+  };
+  sections?: VoiceListSection[];
+  items?: VoiceListItem[];
+  _count?: {
+    items: number;
+    sections: number;
+  };
+}
+
+export interface ParseVoiceListResult {
+  success: boolean;
+  parsed: {
+    sectionsCreated: number;
+    itemsCreated: number;
+    commands: string[];
+  };
+  voiceList: VoiceList;
+}
+
+/**
+ * Get all voice lists with optional filters
+ */
+export async function getVoiceLists(options?: {
+  projectId?: string;
+  status?: VoiceListStatus;
+  listType?: VoiceListType;
+  limit?: number;
+}): Promise<VoiceList[]> {
+  const params = new URLSearchParams();
+  if (options?.projectId) params.append('project_id', options.projectId);
+  if (options?.status) params.append('status', options.status);
+  if (options?.listType) params.append('list_type', options.listType);
+  if (options?.limit) params.append('limit', options.limit.toString());
+  const queryString = params.toString();
+  return apiFetch(`/api/voice-lists${queryString ? `?${queryString}` : ''}`);
+}
+
+/**
+ * Get a single voice list with sections and items
+ */
+export async function getVoiceList(id: string): Promise<VoiceList> {
+  return apiFetch(`/api/voice-lists/${id}`);
+}
+
+/**
+ * Create a new voice list
+ */
+export async function createVoiceList(data: {
+  id?: string;
+  project_id: string;
+  name?: string;
+  list_type?: VoiceListType;
+  language?: string;
+  created_by_name?: string;
+}): Promise<VoiceList> {
+  return apiFetch('/api/voice-lists', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update a voice list
+ */
+export async function updateVoiceList(
+  id: string,
+  data: {
+    name?: string;
+    list_type?: VoiceListType;
+    language?: string;
+    status?: VoiceListStatus;
+    raw_transcript?: string;
+    recording_duration?: number;
+  }
+): Promise<VoiceList> {
+  return apiFetch(`/api/voice-lists/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a voice list
+ */
+export async function deleteVoiceList(id: string): Promise<void> {
+  await apiFetch(`/api/voice-lists/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Parse a transcript and add items to the voice list
+ */
+export async function parseVoiceListTranscript(
+  id: string,
+  data: {
+    transcript: string;
+    append?: boolean;
+  }
+): Promise<ParseVoiceListResult> {
+  return apiFetch(`/api/voice-lists/${id}/parse`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Add a section to a voice list
+ */
+export async function addVoiceListSection(
+  listId: string,
+  data: {
+    name: string;
+    description?: string;
+  }
+): Promise<VoiceListSection> {
+  return apiFetch(`/api/voice-lists/${listId}/sections`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update a section
+ */
+export async function updateVoiceListSection(
+  listId: string,
+  sectionId: string,
+  data: {
+    name?: string;
+    description?: string;
+    order_index?: number;
+  }
+): Promise<VoiceListSection> {
+  return apiFetch(`/api/voice-lists/${listId}/sections/${sectionId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a section
+ */
+export async function deleteVoiceListSection(listId: string, sectionId: string): Promise<void> {
+  await apiFetch(`/api/voice-lists/${listId}/sections/${sectionId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Add an item to a voice list
+ */
+export async function addVoiceListItem(
+  listId: string,
+  data: {
+    section_id?: string;
+    raw_text?: string;
+    quantity?: number;
+    unit?: string;
+    description?: string;
+    category?: string;
+    notes?: string;
+  }
+): Promise<VoiceListItem> {
+  return apiFetch(`/api/voice-lists/${listId}/items`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update an item
+ */
+export async function updateVoiceListItem(
+  listId: string,
+  itemId: string,
+  data: {
+    section_id?: string;
+    raw_text?: string;
+    quantity?: number;
+    unit?: string;
+    description?: string;
+    category?: string;
+    notes?: string;
+    order_index?: number;
+  }
+): Promise<VoiceListItem> {
+  return apiFetch(`/api/voice-lists/${listId}/items/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete an item
+ */
+export async function deleteVoiceListItem(listId: string, itemId: string): Promise<void> {
+  await apiFetch(`/api/voice-lists/${listId}/items/${itemId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Download PDF for a voice list
+ * Returns a blob URL for download/share
+ */
+export async function downloadVoiceListPdf(listId: string): Promise<string> {
+  const url = `${API_BASE_URL}/api/voice-lists/${listId}/pdf`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  if (Platform.OS === 'web') {
+    const response = await fetch(url, { headers });
+
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(error.message || `Failed to download PDF: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } else {
+    // Native (iOS/Android): Download to file system
+    const filename = `voice-list-${listId}-${Date.now()}.pdf`;
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+      headers,
+    });
+
+    if (downloadResult.status === 401) {
+      useAuthStore.getState().logout();
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (downloadResult.status !== 200) {
+      throw new Error(`Failed to download PDF: ${downloadResult.status}`);
+    }
+
+    return downloadResult.uri;
+  }
+}
+
 export const queryKeys = {
   events: ['events'] as const,
   event: (id: string) => ['events', id] as const,
@@ -2846,4 +3148,7 @@ export const queryKeys = {
   projectInvitations: (projectId: string) => ['project-invitations', projectId] as const,
   myInvitations: ['my-invitations'] as const,
   projectMembers: (projectId: string) => ['project-members', projectId] as const,
+  // Voice lists
+  voiceLists: (options?: { projectId?: string; status?: VoiceListStatus }) => ['voice-lists', options] as const,
+  voiceList: (id: string) => ['voice-lists', id] as const,
 };

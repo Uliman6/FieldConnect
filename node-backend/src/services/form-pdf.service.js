@@ -655,7 +655,190 @@ function drawCheckboxField(doc, label, value) {
   doc.y = y + rowHeight;
 }
 
+/**
+ * Generate a PDF for a Voice List
+ * @param {Object} voiceList - The voice list with sections and items
+ * @param {Object} project - The project info
+ * @returns {Promise<Buffer>} PDF buffer
+ */
+function generateVoiceListPdf(voiceList, project) {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        size: 'LETTER',
+        margins: { top: 40, bottom: 40, left: 40, right: 40 }
+      });
+
+      // Register Unicode fonts for Turkish/Spanish character support
+      registerFonts(doc);
+
+      const chunks = [];
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Colors
+      const headerBg = '#F97316'; // Orange
+      const sectionBg = '#FED7AA'; // Light orange
+      const borderColor = '#000000';
+
+      // List type labels
+      const listTypeLabels = {
+        material_list: 'Material List',
+        inventory: 'Inventory',
+        punch_list: 'Punch List',
+        action_items: 'Action Items'
+      };
+
+      // Header
+      doc.fontSize(18).font(FONT_BOLD).text(voiceList.name || 'Voice List', { align: 'center' });
+      doc.fontSize(10).font(FONT_REGULAR).text(listTypeLabels[voiceList.listType] || 'List', { align: 'center' });
+      doc.moveDown(0.5);
+
+      // Project Info Box
+      const infoY = doc.y;
+      doc.rect(40, infoY, 532, 45).stroke();
+
+      doc.fontSize(10).font(FONT_BOLD);
+      doc.text('Project:', 45, infoY + 5);
+      doc.font(FONT_REGULAR).text(project?.name || '', 100, infoY + 5);
+
+      doc.font(FONT_BOLD).text('Date:', 350, infoY + 5);
+      doc.font(FONT_REGULAR).text(new Date(voiceList.createdAt).toLocaleDateString(), 390, infoY + 5);
+
+      doc.font(FONT_BOLD).text('Created By:', 45, infoY + 22);
+      doc.font(FONT_REGULAR).text(voiceList.createdByName || '-', 110, infoY + 22);
+
+      doc.font(FONT_BOLD).text('Total Items:', 350, infoY + 22);
+      doc.font(FONT_REGULAR).text(String(voiceList.items?.length || 0), 420, infoY + 22);
+
+      doc.y = infoY + 55;
+
+      // Table Header
+      const tableHeaderY = doc.y;
+      doc.rect(40, tableHeaderY, 532, 20).fill(headerBg).stroke(borderColor);
+      doc.fillColor('white').fontSize(9).font(FONT_BOLD);
+      doc.text('#', 45, tableHeaderY + 5, { width: 25 });
+      doc.text('Qty', 70, tableHeaderY + 5, { width: 40 });
+      doc.text('Unit', 115, tableHeaderY + 5, { width: 40 });
+      doc.text('Description', 160, tableHeaderY + 5, { width: 300 });
+      doc.text('Category', 470, tableHeaderY + 5, { width: 90 });
+      doc.fillColor('black');
+      doc.y = tableHeaderY + 20;
+
+      // Group items by section
+      const sections = voiceList.sections || [];
+      const items = voiceList.items || [];
+
+      const itemsBySection = {};
+      const unsectionedItems = [];
+
+      items.forEach(item => {
+        if (item.sectionId) {
+          if (!itemsBySection[item.sectionId]) {
+            itemsBySection[item.sectionId] = [];
+          }
+          itemsBySection[item.sectionId].push(item);
+        } else {
+          unsectionedItems.push(item);
+        }
+      });
+
+      let itemNumber = 1;
+
+      // Draw sections with their items
+      for (const section of sections) {
+        const sectionItems = itemsBySection[section.id] || [];
+        if (sectionItems.length === 0) continue;
+
+        // Check if we need a new page
+        if (doc.y > 700) {
+          doc.addPage();
+          doc.y = 40;
+        }
+
+        // Section header
+        const sectionY = doc.y;
+        doc.rect(40, sectionY, 532, 18).fill(sectionBg).stroke(borderColor);
+        doc.fillColor('black').fontSize(9).font(FONT_BOLD);
+        doc.text(section.name, 45, sectionY + 4);
+        doc.fillColor('black');
+        doc.y = sectionY + 18;
+
+        // Section items
+        for (const item of sectionItems) {
+          if (doc.y > 720) {
+            doc.addPage();
+            doc.y = 40;
+          }
+
+          const rowY = doc.y;
+          const rowHeight = 18;
+          doc.rect(40, rowY, 532, rowHeight).stroke();
+
+          doc.fontSize(8).font(FONT_REGULAR);
+          doc.text(String(itemNumber), 45, rowY + 4, { width: 25 });
+          doc.text(item.quantity != null ? String(item.quantity) : '-', 70, rowY + 4, { width: 40 });
+          doc.text(item.unit || '-', 115, rowY + 4, { width: 40 });
+          doc.text(item.description || item.rawText || '', 160, rowY + 4, { width: 300 });
+          doc.text(item.category || '-', 470, rowY + 4, { width: 90 });
+
+          doc.y = rowY + rowHeight;
+          itemNumber++;
+        }
+      }
+
+      // Unsectioned items
+      if (unsectionedItems.length > 0) {
+        if (doc.y > 700) {
+          doc.addPage();
+          doc.y = 40;
+        }
+
+        // Unsectioned header
+        const unsectionedY = doc.y;
+        doc.rect(40, unsectionedY, 532, 18).fill('#E5E7EB').stroke(borderColor);
+        doc.fillColor('black').fontSize(9).font(FONT_BOLD);
+        doc.text('Other Items', 45, unsectionedY + 4);
+        doc.fillColor('black');
+        doc.y = unsectionedY + 18;
+
+        for (const item of unsectionedItems) {
+          if (doc.y > 720) {
+            doc.addPage();
+            doc.y = 40;
+          }
+
+          const rowY = doc.y;
+          const rowHeight = 18;
+          doc.rect(40, rowY, 532, rowHeight).stroke();
+
+          doc.fontSize(8).font(FONT_REGULAR);
+          doc.text(String(itemNumber), 45, rowY + 4, { width: 25 });
+          doc.text(item.quantity != null ? String(item.quantity) : '-', 70, rowY + 4, { width: 40 });
+          doc.text(item.unit || '-', 115, rowY + 4, { width: 40 });
+          doc.text(item.description || item.rawText || '', 160, rowY + 4, { width: 300 });
+          doc.text(item.category || '-', 470, rowY + 4, { width: 90 });
+
+          doc.y = rowY + rowHeight;
+          itemNumber++;
+        }
+      }
+
+      // Footer
+      doc.moveDown(2);
+      doc.fontSize(8).font(FONT_REGULAR).fillColor('gray');
+      doc.text(`Generated by FieldConnect on ${new Date().toLocaleString()}`, { align: 'center' });
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 module.exports = {
   generatePreTaskPlanPdf,
-  generateGenericFormPdf
+  generateGenericFormPdf,
+  generateVoiceListPdf
 };

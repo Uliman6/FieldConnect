@@ -914,3 +914,87 @@ model Photo {
   @@index([createdAt])
   @@map("photos")
 }
+
+// ============================================
+// VOICE LISTS (Free-form voice-driven lists)
+// ============================================
+// Material lists, inventory, procurement, action items, etc.
+// Supports continuous voice recording with AI parsing
+
+model VoiceList {
+  id                String          @id @default(uuid())
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  // Project association
+  projectId         String          @map("project_id")
+
+  // List metadata
+  name              String                              // "Panel A Inventory"
+  listType          String          @default("material_list") @map("list_type") // material_list, inventory, procurement, action_items
+  language          String          @default("en")      // en, tr, es
+  status            String          @default("draft")   // draft, completed
+
+  // Voice recording data
+  rawTranscript     String?         @map("raw_transcript") @db.Text
+  recordingDuration Int?            @map("recording_duration") // seconds
+
+  // Creator tracking
+  createdById       String?         @map("created_by_id")
+  createdByName     String?         @map("created_by_name")
+
+  // Relations
+  sections          VoiceListSection[]
+  items             VoiceListItem[]
+
+  @@index([projectId])
+  @@index([status])
+  @@index([listType])
+  @@index([createdAt])
+  @@map("voice_lists")
+}
+
+model VoiceListSection {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  listId      String    @map("list_id")
+  name        String
+  description String?   @db.Text
+  orderIndex  Int       @map("order_index")
+  createdVia  String    @default("ui") @map("created_via") // 'voice' or 'ui'
+
+  list        VoiceList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  items       VoiceListItem[]
+
+  @@index([listId])
+  @@index([orderIndex])
+  @@map("voice_list_sections")
+}
+
+model VoiceListItem {
+  id                String    @id @default(uuid())
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  listId            String    @map("list_id")
+  sectionId         String?   @map("section_id")
+
+  // Smart hybrid data: AI extracts structured fields when possible
+  rawText           String    @map("raw_text")         // Always stored: "2.5 Siyah 10 metre"
+  quantity          Float?                              // Extracted: 10
+  unit              String?                             // Extracted: "m", "pcs", "kg"
+  description       String                              // Extracted/cleaned: "2.5 Siyah cable"
+  category          String?                             // AI-inferred category
+  notes             String?   @db.Text                  // Additional context
+  orderIndex        Int       @map("order_index")
+  transcriptSegment String?   @map("transcript_segment") @db.Text // Original voice segment
+
+  list              VoiceList         @relation(fields: [listId], references: [id], onDelete: Cascade)
+  section           VoiceListSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@index([listId])
+  @@index([sectionId])
+  @@index([orderIndex])
+  @@map("voice_list_items")
+}
