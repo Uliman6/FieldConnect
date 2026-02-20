@@ -2953,8 +2953,9 @@ async function generateFormPdf(req, res) {
 
     res.send(pdfBuffer);
   } catch (error) {
-    console.error('[forms] Error generating PDF:', error);
-    res.status(500).json({ error: 'Failed to generate PDF' });
+    console.error('[forms] Error generating PDF:', error.message);
+    console.error('[forms] PDF error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to generate PDF', details: error.message });
   }
 }
 

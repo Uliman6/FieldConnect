@@ -370,6 +370,10 @@ function drawCheckbox(doc, x, y, checked, label) {
 function generateGenericFormPdf(form, project) {
   return new Promise((resolve, reject) => {
     try {
+      console.log('[form-pdf] Starting generic PDF generation');
+      console.log('[form-pdf] Template name:', form.template?.name);
+      console.log('[form-pdf] Schema sections count:', form.template?.schema?.sections?.length || 0);
+
       const doc = new PDFDocument({
         size: 'LETTER',
         margins: { top: 40, bottom: 40, left: 40, right: 40 },
@@ -378,13 +382,21 @@ function generateGenericFormPdf(form, project) {
 
       const chunks = [];
       doc.on('data', chunk => chunks.push(chunk));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
-      doc.on('error', reject);
+      doc.on('end', () => {
+        console.log('[form-pdf] PDF generation complete, buffer size:', Buffer.concat(chunks).length);
+        resolve(Buffer.concat(chunks));
+      });
+      doc.on('error', (err) => {
+        console.error('[form-pdf] PDF document error:', err);
+        reject(err);
+      });
 
       const data = form.data || {};
       const template = form.template;
       const schema = template?.schema || {};
       const sections = schema.sections || [];
+
+      console.log('[form-pdf] Processing', sections.length, 'sections');
 
       // Colors
       const headerBg = '#4A90A4'; // Blue-ish header
