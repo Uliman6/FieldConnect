@@ -607,27 +607,93 @@ function drawTextAreaField(doc, label, value) {
 
 function drawPhotoField(doc, label, value) {
   const y = doc.y;
-  const labelWidth = 280;
-  const minRowHeight = 22;
+  const labelWidth = 200;
   const padding = 5;
+  const maxImageWidth = 320;
+  const maxImageHeight = 200;
 
-  // Calculate height needed for label text
-  doc.fontSize(8).font(FONT_BOLD);
-  const labelHeight = doc.heightOfString(label, { width: labelWidth - 10 });
-  const rowHeight = Math.max(minRowHeight, labelHeight + padding * 2);
-
-  doc.rect(40, y, 532, rowHeight).stroke();
-  doc.text(label, 45, y + padding, { width: labelWidth - 10 });
-
-  if (value?.uri || (Array.isArray(value) && value.length > 0)) {
-    const count = Array.isArray(value) ? value.length : 1;
-    doc.font(FONT_REGULAR).text(`[${count} photo(s) attached]`, 45 + labelWidth, y + padding);
-  } else {
-    doc.font(FONT_REGULAR).fillColor('gray').text('No photo', 45 + labelWidth, y + padding);
-    doc.fillColor('black');
+  // Get photos array
+  let photos = [];
+  if (Array.isArray(value)) {
+    photos = value.filter(p => p?.uri);
+  } else if (value?.uri) {
+    photos = [value];
   }
 
-  doc.y = y + rowHeight;
+  // Calculate height needed
+  doc.fontSize(8).font(FONT_BOLD);
+  const labelHeight = doc.heightOfString(label, { width: labelWidth - 10 });
+
+  if (photos.length === 0) {
+    // No photos - just show label and "No photo"
+    const rowHeight = Math.max(22, labelHeight + padding * 2);
+    doc.rect(40, y, 532, rowHeight).stroke();
+    doc.text(label, 45, y + padding, { width: labelWidth - 10 });
+    doc.font(FONT_REGULAR).fillColor('gray').text('No photo', 45 + labelWidth, y + padding);
+    doc.fillColor('black');
+    doc.y = y + rowHeight;
+    return;
+  }
+
+  // Draw label section
+  doc.rect(40, y, 532, 20).stroke();
+  doc.text(label, 45, y + padding, { width: labelWidth - 10 });
+  doc.font(FONT_REGULAR).text(`${photos.length} photo(s)`, 45 + labelWidth, y + padding);
+  doc.y = y + 20;
+
+  // Draw each photo
+  for (const photo of photos) {
+    try {
+      const photoUri = photo.uri;
+
+      // Check if it's a base64 data URI
+      if (photoUri && photoUri.startsWith('data:image')) {
+        // Check if we need a new page
+        if (doc.y + maxImageHeight + 20 > doc.page.height - doc.page.margins.bottom) {
+          doc.addPage();
+        }
+
+        const photoY = doc.y;
+
+        // Extract base64 data from data URI
+        const base64Data = photoUri.split(',')[1];
+        if (base64Data) {
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+
+          // Draw border around image area
+          doc.rect(45, photoY, maxImageWidth + 10, maxImageHeight + 10).stroke();
+
+          // Embed the image with fit option to maintain aspect ratio
+          doc.image(imageBuffer, 50, photoY + 5, {
+            fit: [maxImageWidth, maxImageHeight],
+            align: 'center',
+            valign: 'center'
+          });
+
+          doc.y = photoY + maxImageHeight + 15;
+        }
+      } else if (photoUri && (photoUri.startsWith('http://') || photoUri.startsWith('https://'))) {
+        // URL-based photo - show as link
+        const photoY = doc.y;
+        doc.fontSize(8).font(FONT_REGULAR);
+        doc.fillColor('blue').text('Photo: ' + photoUri, 50, photoY, {
+          width: 500,
+          link: photoUri,
+          underline: true
+        });
+        doc.fillColor('black');
+        doc.y = photoY + 20;
+      }
+    } catch (imgErr) {
+      console.error('[form-pdf] Error embedding photo:', imgErr.message);
+      // Fall back to text if image embedding fails
+      const errorY = doc.y;
+      doc.fontSize(8).font(FONT_REGULAR).fillColor('gray');
+      doc.text('[Photo could not be embedded]', 50, errorY);
+      doc.fillColor('black');
+      doc.y = errorY + 15;
+    }
+  }
 }
 
 function drawCheckboxField(doc, label, value) {
