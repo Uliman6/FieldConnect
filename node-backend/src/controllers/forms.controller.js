@@ -759,6 +759,41 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
       ]
     },
     {
+      id: 'control_criteria',
+      name: 'Periyodik Bakım Kontrol Kriterleri ve Testler / Control Criteria',
+      description: 'Uygulanan standartlar / Applicable standards and criteria',
+      fields: [
+        {
+          id: 'nfpa_20',
+          label: 'NFPA 20',
+          shortLabel: 'NFPA 20',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'nfpa_25',
+          label: 'NFPA 25',
+          shortLabel: 'NFPA 25',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'ts_en_12845',
+          label: 'TS EN 12845',
+          shortLabel: 'TS EN 12845',
+          type: 'YES_NO_NA',
+          required: false
+        },
+        {
+          id: 'nfpa_13',
+          label: 'NFPA 13',
+          shortLabel: 'NFPA 13',
+          type: 'YES_NO_NA',
+          required: false
+        }
+      ]
+    },
+    {
       id: 'diesel_pump_checklist',
       name: 'Dizel Pompa / Diesel Pump',
       description: 'NFPA 25 / TS EN 12845 uyumlu kontrol listesi / Compliance checklist',
