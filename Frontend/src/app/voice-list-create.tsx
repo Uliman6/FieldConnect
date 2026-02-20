@@ -72,6 +72,7 @@ export default function VoiceListCreateScreen() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const mimeTypeRef = useRef<string>('audio/webm');
 
   // Recording pulse animation
   const pulseScale = useSharedValue(1);
@@ -130,9 +131,17 @@ export default function VoiceListCreateScreen() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-      });
+
+      // Check for supported mimeType - iOS Safari doesn't support webm
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : 'audio/mp4'; // Fallback for iOS Safari
+
+      console.log('[voice-list] Using mimeType:', mimeType);
+      mimeTypeRef.current = mimeType;
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
 
       audioChunksRef.current = [];
 
@@ -179,8 +188,8 @@ export default function VoiceListCreateScreen() {
         // Stop all tracks
         mediaRecorder.stream.getTracks().forEach((track) => track.stop());
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        console.log('[voice-list] Recording stopped, blob size:', audioBlob.size);
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
+        console.log('[voice-list] Recording stopped, blob size:', audioBlob.size, 'type:', mimeTypeRef.current);
 
         if (audioBlob.size < 1000) {
           Alert.alert(t('common.error'), t('voice.tooShort'));
