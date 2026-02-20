@@ -3,8 +3,9 @@ const path = require('path');
 const fs = require('fs');
 
 // Font paths for Unicode support (Turkish characters, etc.)
-const FONT_PATH_REGULAR = path.join(__dirname, '../assets/fonts/DejaVuSans.ttf');
-const FONT_PATH_BOLD = path.join(__dirname, '../assets/fonts/DejaVuSans-Bold.ttf');
+// Using Noto Sans which has excellent Unicode coverage including Turkish
+const FONT_PATH_REGULAR = path.join(__dirname, '../assets/fonts/NotoSans-Regular.ttf');
+const FONT_PATH_BOLD = path.join(__dirname, '../assets/fonts/NotoSans-Bold.ttf');
 
 // Check if fonts exist at startup and set font names accordingly
 const fontsAvailable = fs.existsSync(FONT_PATH_REGULAR) && fs.existsSync(FONT_PATH_BOLD);
