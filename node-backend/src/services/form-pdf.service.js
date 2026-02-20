@@ -1,16 +1,40 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const fs = require('fs');
 
 // Font paths for Unicode support (Turkish characters, etc.)
-const FONT_REGULAR = path.join(__dirname, '../assets/fonts/DejaVuSans.ttf');
-const FONT_BOLD = path.join(__dirname, '../assets/fonts/DejaVuSans-Bold.ttf');
+const FONT_PATH_REGULAR = path.join(__dirname, '../assets/fonts/DejaVuSans.ttf');
+const FONT_PATH_BOLD = path.join(__dirname, '../assets/fonts/DejaVuSans-Bold.ttf');
+
+// Check if fonts exist at startup and set font names accordingly
+const fontsAvailable = fs.existsSync(FONT_PATH_REGULAR) && fs.existsSync(FONT_PATH_BOLD);
+
+// Font names to use throughout the PDF generation
+// If Unicode fonts are available, we'll register them and use 'Unicode'/'Unicode-Bold'
+// Otherwise, we fall back to built-in Helvetica
+const FONT_REGULAR = fontsAvailable ? 'Unicode' : 'Helvetica';
+const FONT_BOLD = fontsAvailable ? 'Unicode-Bold' : 'Helvetica-Bold';
+
+if (fontsAvailable) {
+  console.log('[form-pdf] Unicode fonts available at:', FONT_PATH_REGULAR);
+} else {
+  console.warn('[form-pdf] Unicode fonts not found at:', FONT_PATH_REGULAR);
+  console.warn('[form-pdf] Using Helvetica fallback (Turkish characters may not display correctly)');
+}
 
 /**
- * Register Unicode fonts with a PDF document
+ * Register Unicode fonts with a PDF document (only if available)
  */
 function registerFonts(doc) {
-  doc.registerFont('Unicode', FONT_REGULAR);
-  doc.registerFont('Unicode-Bold', FONT_BOLD);
+  if (fontsAvailable) {
+    try {
+      doc.registerFont('Unicode', FONT_PATH_REGULAR);
+      doc.registerFont('Unicode-Bold', FONT_PATH_BOLD);
+    } catch (err) {
+      console.error('[form-pdf] Failed to register Unicode fonts:', err.message);
+    }
+  }
+  // If fonts not available, we use Helvetica directly (no registration needed)
 }
 
 /**
@@ -42,36 +66,36 @@ function generatePreTaskPlanPdf(form, project) {
       // ===== PAGE 1 =====
 
       // Header
-      doc.fontSize(18).font('Unicode-Bold').text('Pre-Task Plan', { align: 'center' });
-      doc.fontSize(8).font('Unicode').text('Archive Document - DO NOT DISCARD', { align: 'center' });
+      doc.fontSize(18).font(FONT_BOLD).text('Pre-Task Plan', { align: 'center' });
+      doc.fontSize(8).font(FONT_REGULAR).text('Archive Document - DO NOT DISCARD', { align: 'center' });
       doc.moveDown(0.5);
 
       // Project Info Box
       const infoY = doc.y;
       doc.rect(40, infoY, 532, 60).stroke();
 
-      doc.fontSize(10).font('Unicode-Bold');
+      doc.fontSize(10).font(FONT_BOLD);
       doc.text('Project:', 45, infoY + 5);
-      doc.font('Unicode').text(project?.name || form.projectId || '', 100, infoY + 5);
+      doc.font(FONT_REGULAR).text(project?.name || form.projectId || '', 100, infoY + 5);
 
-      doc.font('Unicode-Bold').text('Date:', 350, infoY + 5);
-      doc.font('Unicode').text(new Date(form.createdAt).toLocaleDateString(), 390, infoY + 5);
+      doc.font(FONT_BOLD).text('Date:', 350, infoY + 5);
+      doc.font(FONT_REGULAR).text(new Date(form.createdAt).toLocaleDateString(), 390, infoY + 5);
 
-      doc.font('Unicode-Bold').text('Project Number:', 45, infoY + 22);
-      doc.font('Unicode').text(project?.projectNumber || '', 130, infoY + 22);
+      doc.font(FONT_BOLD).text('Project Number:', 45, infoY + 22);
+      doc.font(FONT_REGULAR).text(project?.projectNumber || '', 130, infoY + 22);
 
-      doc.font('Unicode-Bold').text('Prepared By:', 350, infoY + 22);
-      doc.font('Unicode').text(form.createdByName || '', 420, infoY + 22);
+      doc.font(FONT_BOLD).text('Prepared By:', 350, infoY + 22);
+      doc.font(FONT_REGULAR).text(form.createdByName || '', 420, infoY + 22);
 
-      doc.font('Unicode-Bold').text('Specific Location of Work:', 45, infoY + 40);
-      doc.font('Unicode').text(form.location || '', 180, infoY + 40);
+      doc.font(FONT_BOLD).text('Specific Location of Work:', 45, infoY + 40);
+      doc.font(FONT_REGULAR).text(form.location || '', 180, infoY + 40);
 
       doc.y = infoY + 70;
 
       // Safety Questions Section
       const safetyHeaderY = doc.y;
       doc.rect(40, safetyHeaderY, 532, 18).fill(headerBg).stroke(borderColor);
-      doc.fillColor('black').fontSize(9).font('Unicode-Bold');
+      doc.fillColor('black').fontSize(9).font(FONT_BOLD);
       doc.text('Answer the following when evaluating your work:', 45, safetyHeaderY + 4);
       doc.text('Check YES, NO or N/A', 450, safetyHeaderY + 4);
       doc.y = safetyHeaderY + 18;
@@ -106,7 +130,7 @@ function generatePreTaskPlanPdf(form, project) {
       doc.moveDown(0.3);
       const qualityHeaderY = doc.y;
       doc.rect(40, qualityHeaderY, 532, 16).fill(headerBg).stroke(borderColor);
-      doc.fillColor('black').fontSize(9).font('Unicode-Bold');
+      doc.fillColor('black').fontSize(9).font(FONT_BOLD);
       doc.text('Quality:', 260, qualityHeaderY + 3);
       doc.y = qualityHeaderY + 16;
       doc.moveDown(0.1);
@@ -115,12 +139,12 @@ function generatePreTaskPlanPdf(form, project) {
       drawYesNoNaRow(doc, 'Have you reviewed all construction details associated with our work?', data.reviewed_details);
 
       // Text fields for quality
-      doc.fontSize(8).font('Unicode-Bold').text('Who on the crew is responsible for quality control today?', 45);
-      doc.font('Unicode').text(data.qc_responsible || '_______________', 45);
+      doc.fontSize(8).font(FONT_BOLD).text('Who on the crew is responsible for quality control today?', 45);
+      doc.font(FONT_REGULAR).text(data.qc_responsible || '_______________', 45);
       doc.moveDown(0.3);
 
-      doc.font('Unicode-Bold').text('What is the quality item you will be focusing on today? What will you do today that will prevent rework tomorrow?', 45);
-      doc.font('Unicode').text(data.quality_focus || '_______________', 45);
+      doc.font(FONT_BOLD).text('What is the quality item you will be focusing on today? What will you do today that will prevent rework tomorrow?', 45);
+      doc.font(FONT_REGULAR).text(data.quality_focus || '_______________', 45);
       doc.moveDown(0.5);
 
       // PPE and Locate/Identify side by side
@@ -129,7 +153,7 @@ function generatePreTaskPlanPdf(form, project) {
       // PPE Box
       doc.rect(40, ppeY, 260, 120).stroke();
       doc.rect(40, ppeY, 260, 16).fill(headerBg).stroke(borderColor);
-      doc.fillColor('black').fontSize(9).font('Unicode-Bold');
+      doc.fillColor('black').fontSize(9).font(FONT_BOLD);
       doc.text('Are any of the following PPE required?', 45, ppeY + 4);
 
       const ppeItems = [
@@ -151,7 +175,7 @@ function generatePreTaskPlanPdf(form, project) {
       // Locate and Identify Box
       doc.rect(312, ppeY, 260, 120).stroke();
       doc.rect(312, ppeY, 260, 16).fill(headerBg).stroke(borderColor);
-      doc.fillColor('black').fontSize(9).font('Unicode-Bold');
+      doc.fillColor('black').fontSize(9).font(FONT_BOLD);
       doc.text('Locate and identify:', 317, ppeY + 4);
 
       const locateItems = [
@@ -174,12 +198,12 @@ function generatePreTaskPlanPdf(form, project) {
       doc.addPage();
 
       // Header
-      doc.fontSize(18).font('Unicode-Bold').text('Pre-Task Plan', { align: 'center' });
-      doc.fontSize(8).font('Unicode').text('Archive Document - DO NOT DISCARD', { align: 'center' });
+      doc.fontSize(18).font(FONT_BOLD).text('Pre-Task Plan', { align: 'center' });
+      doc.fontSize(8).font(FONT_REGULAR).text('Archive Document - DO NOT DISCARD', { align: 'center' });
       doc.moveDown(0.5);
 
       // Instruction
-      doc.fontSize(9).font('Unicode-Bold');
+      doc.fontSize(9).font(FONT_BOLD);
       doc.text('Safety items identified on the front side question list must be addressed on the table below:', 40);
       doc.moveDown(0.3);
 
@@ -191,7 +215,7 @@ function generatePreTaskPlanPdf(form, project) {
 
       // Header row
       doc.rect(40, tableY, 532, 18).fill(headerBg).stroke(borderColor);
-      doc.fillColor('black').fontSize(8).font('Unicode-Bold');
+      doc.fillColor('black').fontSize(8).font(FONT_BOLD);
       let headerX = 40;
       tableHeaders.forEach((header, i) => {
         doc.text(header, headerX + 3, tableY + 5, { width: colWidths[i] - 6 });
@@ -208,7 +232,7 @@ function generatePreTaskPlanPdf(form, project) {
         for (let j = 0; j < 4; j++) {
           doc.rect(cellX, rowY, colWidths[j], rowHeight).stroke();
           if (workSteps[i] && workSteps[i][j]) {
-            doc.fontSize(7).font('Unicode').text(workSteps[i][j], cellX + 2, rowY + 3, {
+            doc.fontSize(7).font(FONT_REGULAR).text(workSteps[i][j], cellX + 2, rowY + 3, {
               width: colWidths[j] - 4,
               height: rowHeight - 6
             });
@@ -227,7 +251,7 @@ function generatePreTaskPlanPdf(form, project) {
 
       // Header row
       doc.rect(40, handTableY, 532, 18).fill(headerBg).stroke(borderColor);
-      doc.fillColor('black').fontSize(8).font('Unicode-Bold');
+      doc.fillColor('black').fontSize(8).font(FONT_BOLD);
       let handHeaderX = 40;
       handHeaders.forEach((header, i) => {
         doc.text(header, handHeaderX + 3, handTableY + 5, { width: handColWidths[i] - 6 });
@@ -244,7 +268,7 @@ function generatePreTaskPlanPdf(form, project) {
         for (let j = 0; j < 3; j++) {
           doc.rect(cellX, handRowY, handColWidths[j], rowHeight).stroke();
           if (handRisks[i] && handRisks[i][j]) {
-            doc.fontSize(7).font('Unicode').text(handRisks[i][j], cellX + 2, handRowY + 3, {
+            doc.fontSize(7).font(FONT_REGULAR).text(handRisks[i][j], cellX + 2, handRowY + 3, {
               width: handColWidths[j] - 4,
               height: rowHeight - 6
             });
@@ -257,7 +281,7 @@ function generatePreTaskPlanPdf(form, project) {
       doc.y = handRowY + 10;
 
       // Note
-      doc.fontSize(8).font('Unicode-Bold').text('*If you need more space, attach another PRE-TASK PLAN SHEET', { align: 'center' });
+      doc.fontSize(8).font(FONT_BOLD).text('*If you need more space, attach another PRE-TASK PLAN SHEET', { align: 'center' });
       doc.moveDown(0.5);
 
       // Signatures row
@@ -266,32 +290,32 @@ function generatePreTaskPlanPdf(form, project) {
 
       // Work Planner
       doc.rect(40, sigY, sigWidth, 40).stroke();
-      doc.fontSize(8).font('Unicode-Bold').text('Work Planner', 45, sigY + 3);
+      doc.fontSize(8).font(FONT_BOLD).text('Work Planner', 45, sigY + 3);
       if (data.sig_work_planner?.signed) {
-        doc.fontSize(10).font('Unicode').text(data.sig_work_planner.name || 'Signed', 45, sigY + 18);
+        doc.fontSize(10).font(FONT_REGULAR).text(data.sig_work_planner.name || 'Signed', 45, sigY + 18);
         doc.fontSize(6).text(new Date(data.sig_work_planner.signedAt).toLocaleString(), 45, sigY + 30);
       }
 
       // Supervisor
       doc.rect(40 + sigWidth, sigY, sigWidth, 40).stroke();
-      doc.fontSize(8).font('Unicode-Bold').text('Supervisor', 45 + sigWidth, sigY + 3);
+      doc.fontSize(8).font(FONT_BOLD).text('Supervisor', 45 + sigWidth, sigY + 3);
       if (data.sig_supervisor?.signed) {
-        doc.fontSize(10).font('Unicode').text(data.sig_supervisor.name || 'Signed', 45 + sigWidth, sigY + 18);
+        doc.fontSize(10).font(FONT_REGULAR).text(data.sig_supervisor.name || 'Signed', 45 + sigWidth, sigY + 18);
         doc.fontSize(6).text(new Date(data.sig_supervisor.signedAt).toLocaleString(), 45 + sigWidth, sigY + 30);
       }
 
       // EHS
       doc.rect(40 + sigWidth * 2, sigY, sigWidth + 1, 40).stroke();
-      doc.fontSize(8).font('Unicode-Bold').text('EHS Professional', 45 + sigWidth * 2, sigY + 3);
+      doc.fontSize(8).font(FONT_BOLD).text('EHS Professional', 45 + sigWidth * 2, sigY + 3);
       if (data.sig_ehs?.signed) {
-        doc.fontSize(10).font('Unicode').text(data.sig_ehs.name || 'Signed', 45 + sigWidth * 2, sigY + 18);
+        doc.fontSize(10).font(FONT_REGULAR).text(data.sig_ehs.name || 'Signed', 45 + sigWidth * 2, sigY + 18);
         doc.fontSize(6).text(new Date(data.sig_ehs.signedAt).toLocaleString(), 45 + sigWidth * 2, sigY + 30);
       }
 
       doc.y = sigY + 50;
 
       // Crew Members section
-      doc.fontSize(9).font('Unicode-Bold');
+      doc.fontSize(9).font(FONT_BOLD);
       doc.text('Crew Members – additional crew members sign on back or a separate page if necessary:', 40);
       doc.moveDown(0.3);
 
@@ -309,14 +333,14 @@ function generatePreTaskPlanPdf(form, project) {
 
           const idx = row * 3 + col;
           if (crewMembers[idx]?.signed) {
-            doc.fontSize(8).font('Unicode').text(crewMembers[idx].name || 'Signed', x + 3, y + 5);
+            doc.fontSize(8).font(FONT_REGULAR).text(crewMembers[idx].name || 'Signed', x + 3, y + 5);
           }
         }
       }
 
       // Footer
       doc.y = 720;
-      doc.fontSize(7).font('Unicode');
+      doc.fontSize(7).font(FONT_REGULAR);
       doc.text('Copyright © 2001 DPR Construction', 40, doc.y);
       doc.text('Pre-Task Plan - English', 250, doc.y);
       doc.text(`Generated: ${new Date().toLocaleString()}`, 450, doc.y);
@@ -336,7 +360,7 @@ function drawYesNoNaRow(doc, label, value) {
   const padding = 4;
 
   // Calculate actual text height for dynamic row sizing
-  doc.fontSize(7).font('Unicode');
+  doc.fontSize(7).font(FONT_REGULAR);
   const textHeight = doc.heightOfString(label, { width: labelWidth - 10 });
   const rowHeight = Math.max(minRowHeight, textHeight + padding * 2);
 
@@ -349,7 +373,7 @@ function drawYesNoNaRow(doc, label, value) {
 
   // YES box
   doc.rect(40 + labelWidth, y, boxWidth, rowHeight).stroke();
-  doc.fontSize(8).font('Unicode-Bold').text('YES', 40 + labelWidth + 5, boxY + 4);
+  doc.fontSize(8).font(FONT_BOLD).text('YES', 40 + labelWidth + 5, boxY + 4);
   if (value === 'YES') {
     doc.fontSize(12).text('X', 40 + labelWidth + 20, boxY + 2);
   }
@@ -374,9 +398,9 @@ function drawYesNoNaRow(doc, label, value) {
 function drawCheckbox(doc, x, y, checked, label) {
   doc.rect(x, y, 10, 10).stroke();
   if (checked) {
-    doc.fontSize(10).font('Unicode-Bold').text('X', x + 1, y - 1);
+    doc.fontSize(10).font(FONT_BOLD).text('X', x + 1, y - 1);
   }
-  doc.fontSize(8).font('Unicode').text(label, x + 15, y + 1);
+  doc.fontSize(8).font(FONT_REGULAR).text(label, x + 15, y + 1);
 }
 
 /**
@@ -422,29 +446,29 @@ function generateGenericFormPdf(form, project) {
       const borderColor = '#000000';
 
       // ===== HEADER =====
-      doc.fontSize(16).font('Unicode-Bold').text(template?.name || 'Form Report', { align: 'center' });
+      doc.fontSize(16).font(FONT_BOLD).text(template?.name || 'Form Report', { align: 'center' });
       doc.moveDown(0.3);
 
       // Project Info Box
       const infoY = doc.y;
       doc.rect(40, infoY, 532, 50).stroke();
 
-      doc.fontSize(9).font('Unicode-Bold');
+      doc.fontSize(9).font(FONT_BOLD);
       doc.text('Project:', 45, infoY + 5);
-      doc.font('Unicode').text(project?.name || form.projectId || 'N/A', 100, infoY + 5);
+      doc.font(FONT_REGULAR).text(project?.name || form.projectId || 'N/A', 100, infoY + 5);
 
-      doc.font('Unicode-Bold').text('Date:', 350, infoY + 5);
-      doc.font('Unicode').text(new Date(form.createdAt).toLocaleDateString(), 390, infoY + 5);
+      doc.font(FONT_BOLD).text('Date:', 350, infoY + 5);
+      doc.font(FONT_REGULAR).text(new Date(form.createdAt).toLocaleDateString(), 390, infoY + 5);
 
-      doc.font('Unicode-Bold').text('Prepared By:', 45, infoY + 20);
-      doc.font('Unicode').text(form.createdByName || 'N/A', 115, infoY + 20);
+      doc.font(FONT_BOLD).text('Prepared By:', 45, infoY + 20);
+      doc.font(FONT_REGULAR).text(form.createdByName || 'N/A', 115, infoY + 20);
 
-      doc.font('Unicode-Bold').text('Status:', 350, infoY + 20);
-      doc.font('Unicode').text(form.status || 'DRAFT', 395, infoY + 20);
+      doc.font(FONT_BOLD).text('Status:', 350, infoY + 20);
+      doc.font(FONT_REGULAR).text(form.status || 'DRAFT', 395, infoY + 20);
 
       if (form.location) {
-        doc.font('Unicode-Bold').text('Location:', 45, infoY + 35);
-        doc.font('Unicode').text(form.location, 100, infoY + 35);
+        doc.font(FONT_BOLD).text('Location:', 45, infoY + 35);
+        doc.font(FONT_REGULAR).text(form.location, 100, infoY + 35);
       }
 
       doc.y = infoY + 60;
@@ -459,7 +483,7 @@ function generateGenericFormPdf(form, project) {
         // Section Header
         const sectionY = doc.y;
         doc.rect(40, sectionY, 532, 20).fill(headerBg).stroke(borderColor);
-        doc.fillColor('white').fontSize(10).font('Unicode-Bold');
+        doc.fillColor('white').fontSize(10).font(FONT_BOLD);
         doc.text(section.name || 'Section', 45, sectionY + 5);
         doc.fillColor('black');
         doc.y = sectionY + 22;
@@ -502,7 +526,7 @@ function generateGenericFormPdf(form, project) {
       if (doc.y > 700) {
         doc.addPage();
       }
-      doc.fontSize(7).font('Unicode').fillColor('gray');
+      doc.fontSize(7).font(FONT_REGULAR).fillColor('gray');
       doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 740);
       doc.text('FieldConnect', 500, 740);
 
@@ -520,12 +544,12 @@ function drawTextField(doc, label, value, unit) {
   const rowHeight = 20;
 
   doc.rect(40, y, 532, rowHeight).stroke();
-  doc.fontSize(8).font('Unicode-Bold').text(label, 45, y + 5, { width: labelWidth - 10 });
+  doc.fontSize(8).font(FONT_BOLD).text(label, 45, y + 5, { width: labelWidth - 10 });
 
   const displayValue = value !== undefined && value !== null && value !== ''
     ? (unit ? `${value} ${unit}` : String(value))
     : '';
-  doc.font('Unicode').text(displayValue, 45 + labelWidth, y + 5, { width: valueWidth - 10 });
+  doc.font(FONT_REGULAR).text(displayValue, 45 + labelWidth, y + 5, { width: valueWidth - 10 });
 
   doc.y = y + rowHeight;
 }
@@ -535,15 +559,15 @@ function drawSignatureField(doc, label, value) {
   const rowHeight = 35;
 
   doc.rect(40, y, 532, rowHeight).stroke();
-  doc.fontSize(8).font('Unicode-Bold').text(label, 45, y + 3);
+  doc.fontSize(8).font(FONT_BOLD).text(label, 45, y + 3);
 
   if (value?.signed) {
-    doc.fontSize(10).font('Unicode').text(value.name || 'Signed', 45, y + 15);
+    doc.fontSize(10).font(FONT_REGULAR).text(value.name || 'Signed', 45, y + 15);
     if (value.signedAt) {
       doc.fontSize(6).text(new Date(value.signedAt).toLocaleString(), 45, y + 27);
     }
   } else {
-    doc.fontSize(8).font('Unicode').fillColor('gray').text('Not signed', 45, y + 15);
+    doc.fontSize(8).font(FONT_REGULAR).fillColor('gray').text('Not signed', 45, y + 15);
     doc.fillColor('black');
   }
 
@@ -555,13 +579,13 @@ function drawTextAreaField(doc, label, value) {
   const text = value || '';
   const minHeight = 40;
 
-  doc.fontSize(8).font('Unicode');
+  doc.fontSize(8).font(FONT_REGULAR);
   const textHeight = text ? doc.heightOfString(text, { width: 520 }) : 0;
   const rowHeight = Math.max(minHeight, textHeight + 25);
 
   doc.rect(40, y, 532, rowHeight).stroke();
-  doc.font('Unicode-Bold').text(label, 45, y + 3);
-  doc.font('Unicode').text(text || '', 45, y + 15, { width: 520 });
+  doc.font(FONT_BOLD).text(label, 45, y + 3);
+  doc.font(FONT_REGULAR).text(text || '', 45, y + 15, { width: 520 });
 
   doc.y = y + rowHeight;
 }
@@ -571,13 +595,13 @@ function drawPhotoField(doc, label, value) {
   const rowHeight = 25;
 
   doc.rect(40, y, 532, rowHeight).stroke();
-  doc.fontSize(8).font('Unicode-Bold').text(label, 45, y + 5);
+  doc.fontSize(8).font(FONT_BOLD).text(label, 45, y + 5);
 
   if (value?.uri || (Array.isArray(value) && value.length > 0)) {
     const count = Array.isArray(value) ? value.length : 1;
-    doc.font('Unicode').text(`[${count} photo(s) attached]`, 300, y + 5);
+    doc.font(FONT_REGULAR).text(`[${count} photo(s) attached]`, 300, y + 5);
   } else {
-    doc.font('Unicode').fillColor('gray').text('No photo', 300, y + 5);
+    doc.font(FONT_REGULAR).fillColor('gray').text('No photo', 300, y + 5);
     doc.fillColor('black');
   }
 
@@ -593,11 +617,11 @@ function drawCheckboxField(doc, label, value) {
   // Draw checkbox
   doc.rect(45, y + 5, 10, 10).stroke();
   if (value) {
-    doc.fontSize(10).font('Unicode-Bold').text('X', 46, y + 3);
+    doc.fontSize(10).font(FONT_BOLD).text('X', 46, y + 3);
   }
 
   // Draw label
-  doc.fontSize(8).font('Unicode').text(label, 60, y + 5, { width: 500 });
+  doc.fontSize(8).font(FONT_REGULAR).text(label, 60, y + 5, { width: 500 });
 
   doc.y = y + rowHeight;
 }
