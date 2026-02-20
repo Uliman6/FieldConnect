@@ -25,15 +25,19 @@ class TranscriptController {
       }
 
       const { language } = req.body;
-      // Default to translating to English for consistent output
-      // Users speaking Spanish will get English transcripts
-      const translateToEnglish = req.body.translateToEnglish !== 'false';
+      // Only translate to English if explicitly requested
+      // If a specific language is set, respect it and transcribe in that language
+      const translateToEnglish = req.body.translateToEnglish === 'true';
+
+      console.log('[transcription] Request - language:', language, 'translateToEnglish:', translateToEnglish);
 
       const result = await transcriptionService.transcribe(
         req.file.buffer,
         req.file.originalname,
         { language, translateToEnglish }
       );
+
+      console.log('[transcription] Result - provider:', result.provider, 'mode:', result.mode, 'text length:', result.text?.length);
 
       if (!result.success) {
         return res.status(500).json({
