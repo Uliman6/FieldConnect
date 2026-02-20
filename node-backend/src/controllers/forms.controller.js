@@ -2946,7 +2946,16 @@ async function generateFormPdf(req, res) {
     }
 
     // Set response headers for PDF download
-    const filename = `${form.template?.name || 'Form'}_${new Date(form.createdAt).toISOString().split('T')[0]}.pdf`;
+    // Sanitize filename: remove/replace characters that are invalid in HTTP headers
+    const rawName = form.template?.name || 'Form';
+    const sanitizedName = rawName
+      .replace(/[\/\\:*?"<>|]/g, '-')  // Replace invalid filename characters with dash
+      .replace(/[^\x20-\x7E]/g, '')    // Remove non-ASCII characters
+      .replace(/\s+/g, '_')            // Replace spaces with underscores
+      .replace(/-+/g, '-')             // Replace multiple dashes with single dash
+      .replace(/^-|-$/g, '')           // Remove leading/trailing dashes
+      .substring(0, 100);              // Limit length
+    const filename = `${sanitizedName || 'Form'}_${new Date(form.createdAt).toISOString().split('T')[0]}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', pdfBuffer.length);
