@@ -456,7 +456,9 @@ export default {
     parseError: 'Kayit islenemedi',
     exportPdf: 'PDF Indir',
     delete: 'Listeyi Sil',
+    deleteList: 'Listeyi Sil',
     deleteConfirm: 'Bu sesli listeyi silmek istediginizden emin misiniz?',
+    deleteError: 'Sesli liste silinemedi. Lutfen tekrar deneyin.',
     // Voice commands help
     voiceCommands: 'Sesli Komutlar',
     voiceCommandsHelp: 'Bolum olusturmak icin "yeni bolum [isim]" deyin',

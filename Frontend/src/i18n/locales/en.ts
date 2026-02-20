@@ -456,7 +456,9 @@ export default {
     parseError: 'Failed to parse recording',
     exportPdf: 'Export PDF',
     delete: 'Delete List',
+    deleteList: 'Delete List',
     deleteConfirm: 'Are you sure you want to delete this voice list?',
+    deleteError: 'Failed to delete voice list. Please try again.',
     // Voice commands help
     voiceCommands: 'Voice Commands',
     voiceCommandsHelp: 'Say "new section [name]" to create a section',
