@@ -29,7 +29,31 @@ async function extractNameplateData(imageBase64, fieldsToExtract = [], equipment
     // Build the extraction prompt based on equipment type
     const fieldDescriptions = getFieldDescriptions(equipmentType, fieldsToExtract);
 
-    const prompt = `You are an expert at reading industrial equipment nameplates and data plates.
+    // Build equipment-specific prompt
+    let equipmentPrompt = '';
+    if (equipmentType === 'fire pump controller' || equipmentType === 'controller') {
+      equipmentPrompt = `You are an expert at reading fire pump controller and electrical panel nameplates.
+
+Analyze this controller nameplate/data plate image and extract the following information:
+${fieldDescriptions}
+
+IMPORTANT GUIDELINES FOR CONTROLLER PANELS:
+- Look for the brand/manufacturer name prominently displayed (e.g., EATON, Firetrol, Metron, Tornatech)
+- CAT. NO. or CATALOG NO. contains the catalog/model number
+- H.P. is horsepower rating
+- PHASE indicates single (1) or three phase (3)
+- HERTZ is the frequency (50 or 60 Hz)
+- VOLTS is the main voltage rating
+- CONTROL CIRCUIT VOLTS is the control voltage (often 120V or 24V)
+- SERIAL NO. is the serial number
+- ENCL. TYPE is the enclosure type rating
+- SCCR or "AMPERES R.M.S. SYMMETRICAL" is the short circuit current rating
+- Look for "MADE IN" followed by country name
+- Read ALL text carefully, including small print and certification marks
+- If a field is not visible, return null for that field
+- Return ONLY valid JSON, no markdown formatting`;
+    } else {
+      equipmentPrompt = `You are an expert at reading industrial equipment nameplates and data plates.
 
 Analyze this ${equipmentType} nameplate image and extract the following information:
 ${fieldDescriptions}
@@ -42,16 +66,24 @@ IMPORTANT GUIDELINES:
 - For RPM values, just provide the number
 - For BHP/horsepower, just provide the number
 - If a field is not visible or cannot be determined, return null for that field
-- Return ONLY valid JSON, no markdown formatting
+- Return ONLY valid JSON, no markdown formatting`;
+    }
+
+    const prompt = `${equipmentPrompt}
 
 Return a JSON object with the extracted values. Example format:
 {
-  "brand": "Clarke",
-  "model": "ABC-123",
-  "serial_number": "SN12345",
-  "capacity_gpm": "2500",
-  "rpm": "1750",
-  "bhp": "100"
+  "brand": "Eaton",
+  "catalog_no": "FDJP-2C-T",
+  "serial_number": "16BR671J",
+  "hp": "2",
+  "phase": "3",
+  "hertz": "50",
+  "volts": "380",
+  "control_volts": "120",
+  "enclosure_type": "2",
+  "sccr": "100000",
+  "country": "Canada"
 }`;
 
     const response = await fetch(OPENAI_VISION_ENDPOINT, {
@@ -142,9 +174,19 @@ function getFieldDescriptions(equipmentType, fieldsToExtract) {
     engine_rpm: 'Engine rated RPM',
 
     // Controller fields
-    controller_brand: 'Controller manufacturer (e.g., Eaton, Firetrol, Metron)',
-    controller_model: 'Controller model number',
-    controller_serial: 'Controller serial number',
+    controller_brand: 'Controller manufacturer/brand name (e.g., Eaton, Firetrol, Metron, Tornatech)',
+    controller_catalog_no: 'Catalog number (CAT. NO.)',
+    controller_model: 'Controller model number or type',
+    controller_serial: 'Controller serial number (SERIAL NO.)',
+    controller_hp: 'Horsepower rating (H.P.)',
+    controller_phase: 'Phase (single phase = 1, three phase = 3)',
+    controller_hertz: 'Frequency in Hertz (Hz) - typically 50 or 60',
+    controller_volts: 'Main voltage rating (VOLTS)',
+    controller_control_volts: 'Control circuit voltage (CONTROL CIRCUIT VOLTS)',
+    controller_enclosure_type: 'Enclosure type (ENCL. TYPE) - e.g., Type 2, NEMA 3R',
+    controller_sccr: 'Short circuit current rating / Max amperes (SCCR or AMPERES R.M.S. SYMMETRICAL)',
+    controller_country: 'Country of manufacture (MADE IN)',
+    controller_year: 'Year of manufacture if visible',
 
     // Pressure gauge fields
     suction_psi: 'Suction pressure reading in PSI',
@@ -214,9 +256,37 @@ function mapOcrFieldsToFormFields(ocrData, sectionId, instanceIndex = 0) {
     // Controller label info section mappings (bilingual template)
     controller_label_info: {
       brand: 'controller_brand',
+      controller_brand: 'controller_brand',
+      catalog_no: 'controller_catalog_no',
+      controller_catalog_no: 'controller_catalog_no',
       model: 'controller_model',
+      controller_model: 'controller_model',
       serial_number: 'controller_serial',
+      controller_serial: 'controller_serial',
+      hp: 'controller_hp',
+      controller_hp: 'controller_hp',
+      horsepower: 'controller_hp',
+      phase: 'controller_phase',
+      controller_phase: 'controller_phase',
+      hertz: 'controller_hertz',
+      controller_hertz: 'controller_hertz',
+      frequency: 'controller_hertz',
+      volts: 'controller_volts',
+      controller_volts: 'controller_volts',
+      voltage: 'controller_volts',
+      control_volts: 'controller_control_volts',
+      controller_control_volts: 'controller_control_volts',
+      control_circuit_volts: 'controller_control_volts',
+      enclosure_type: 'controller_enclosure_type',
+      controller_enclosure_type: 'controller_enclosure_type',
+      sccr: 'controller_sccr',
+      controller_sccr: 'controller_sccr',
+      max_amperes: 'controller_sccr',
+      country: 'controller_country',
+      controller_country: 'controller_country',
+      made_in: 'controller_country',
       year: 'controller_year',
+      controller_year: 'controller_year',
     },
     // Performance readings
     performance_readings: {
