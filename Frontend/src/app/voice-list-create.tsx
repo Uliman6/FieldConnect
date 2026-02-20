@@ -209,11 +209,14 @@ export default function VoiceListCreateScreen() {
             throw new Error('Could not create voice list');
           }
 
-          // Transcribe the audio
+          // Transcribe the audio - create blob URL first
           console.log('[voice-list] Transcribing audio, language:', transcriptionLanguage);
-          const transcriptionResult = await transcribeAudio(audioBlob, 'recording.webm', {
+          const audioBlobUrl = URL.createObjectURL(audioBlob);
+          const transcriptionResult = await transcribeAudio(audioBlobUrl, {
             language: transcriptionLanguage,
           });
+          // Clean up the blob URL after use
+          URL.revokeObjectURL(audioBlobUrl);
 
           if (!transcriptionResult.success || !transcriptionResult.text) {
             throw new Error(transcriptionResult.error || 'Transcription failed');
