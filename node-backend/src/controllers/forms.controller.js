@@ -540,12 +540,21 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           label: 'Kontrol Paneli Fotoğrafı / Controller Photo',
           shortLabel: 'Panel Fotoğraf',
           type: 'PHOTO',
-          required: false
+          required: false,
+          ocrEnabled: true,
+          ocrFields: ['controller_brand', 'controller_catalog_no', 'controller_serial', 'controller_hp', 'controller_phase', 'controller_hertz', 'controller_volts', 'controller_control_volts', 'controller_enclosure_type', 'controller_sccr', 'controller_country']
         },
         {
           id: 'controller_brand',
           label: 'Markası / Brand',
           shortLabel: 'Marka/Brand',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_catalog_no',
+          label: 'Katalog No / Catalog No.',
+          shortLabel: 'Katalog/CAT',
           type: 'TEXT',
           required: false
         },
@@ -560,6 +569,62 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           id: 'controller_serial',
           label: 'Seri / Üretim No / Serial Number',
           shortLabel: 'Seri/Serial',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_hp',
+          label: 'Beygir Gücü / Horsepower (H.P.)',
+          shortLabel: 'H.P.',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_phase',
+          label: 'Faz / Phase',
+          shortLabel: 'Faz/Phase',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_hertz',
+          label: 'Frekans / Hertz',
+          shortLabel: 'Hz',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_volts',
+          label: 'Voltaj / Volts',
+          shortLabel: 'Volt',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_control_volts',
+          label: 'Kontrol Devresi Voltajı / Control Circuit Volts',
+          shortLabel: 'Kontrol V',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_enclosure_type',
+          label: 'Muhafaza Tipi / Enclosure Type',
+          shortLabel: 'Muhafaza/Encl',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_sccr',
+          label: 'SCCR / Maks. Amper',
+          shortLabel: 'SCCR',
+          type: 'TEXT',
+          required: false
+        },
+        {
+          id: 'controller_country',
+          label: 'Üretim Ülkesi / Country',
+          shortLabel: 'Ülke/Country',
           type: 'TEXT',
           required: false
         },
