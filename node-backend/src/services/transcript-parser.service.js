@@ -1446,6 +1446,368 @@ Return a JSON object with: title, event_type, severity, action_items, location, 
       .slice(0, 3) // Max 3 action items
       .map(item => item.charAt(0).toUpperCase() + item.slice(1));
   }
+
+  /**
+   * Parse a Voice List transcript using AI for intelligent extraction
+   * Supports Turkish, English, and Spanish
+   * Handles section commands: "yeni bölüm", "new section", "nueva sección"
+   * Returns: { sections: [...], items: [...] }
+   * @param {string} transcript - The continuous voice transcript text
+   * @param {object} context - Context including language ('en', 'tr', 'es'), projectName
+   * @returns {Promise<Object>} Structured voice list data
+   */
+  async parseVoiceListWithAI(transcript, context = {}) {
+    if (!transcript || typeof transcript !== 'string') {
+      console.error('[voice-list-parser] No transcript provided');
+      return { sections: [], items: [], error: 'No transcript provided' };
+    }
+
+    const language = context.language || 'en';
+    console.log('[voice-list-parser] Starting AI parse, length:', transcript.length, 'language:', language);
+
+    // If no AI API key, return basic fallback
+    if (!PARSING_API_KEY) {
+      console.log('[voice-list-parser] No AI key, using basic extraction');
+      return this.parseVoiceListBasic(transcript, language);
+    }
+
+    try {
+      const systemPrompt = this.getVoiceListSystemPrompt(language);
+      const userPrompt = this.getVoiceListUserPrompt(transcript, context, language);
+
+      console.log('[voice-list-parser] Calling AI via', useGroqForParsing ? 'Groq' : 'OpenAI');
+
+      const response = await fetch(CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${PARSING_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: CHAT_MODEL,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[voice-list-parser] AI API error:', response.status, errorText);
+        return this.parseVoiceListBasic(transcript, language);
+      }
+
+      const result = await response.json();
+      const content = result.choices?.[0]?.message?.content;
+
+      if (!content) {
+        console.error('[voice-list-parser] No content in AI response');
+        return this.parseVoiceListBasic(transcript, language);
+      }
+
+      const parsed = JSON.parse(content);
+      console.log('[voice-list-parser] AI result:', {
+        sections: parsed.sections?.length || 0,
+        items: parsed.items?.length || 0
+      });
+
+      // Normalize and validate the response
+      return this.normalizeVoiceListResponse(parsed);
+
+    } catch (error) {
+      console.error('[voice-list-parser] AI error:', error.message);
+      return this.parseVoiceListBasic(transcript, language);
+    }
+  }
+
+  /**
+   * Get language-specific system prompt for voice list parsing
+   */
+  getVoiceListSystemPrompt(language) {
+    const languageNames = {
+      en: 'English',
+      tr: 'Turkish',
+      es: 'Spanish'
+    };
+
+    const sectionCommands = {
+      en: '"new section [name]", "section [name]", "next section [name]"',
+      tr: '"yeni bölüm [isim]", "bölüm [isim]", "sonraki bölüm [isim]"',
+      es: '"nueva sección [nombre]", "sección [nombre]", "siguiente sección [nombre]"'
+    };
+
+    const unitMappings = {
+      en: 'pieces/pcs → pcs, meters/m → m, feet/ft → ft, inches/in → in, yards → yd, rolls → roll, boxes → box, bags → bag, kg/kilograms → kg, lbs/pounds → lb',
+      tr: 'adet/ad/tane → pcs, metre/m → m, parça → pcs, top/rulo → roll, kutu → box, torba/çuval → bag, kilo/kg → kg',
+      es: 'piezas/pzs → pcs, metros/m → m, rollos → roll, cajas → box, bolsas → bag, kilos/kg → kg, libras/lbs → lb'
+    };
+
+    const exampleTranscript = {
+      en: '2 rolls of black 2.5mm cable, 10 meters of red 6mm, new section breakers, 3 pieces 40 amp breakers',
+      tr: '2.5 Siyah 10 metre, 6 Mavi 5 metre, yeni bölüm sigortalar, 3 adet 40 amper sigorta',
+      es: '2.5 negro 10 metros, 6 azul 5 metros, nueva sección interruptores, 3 piezas interruptores de 40 amp'
+    };
+
+    return `You are a construction material list parser. Your job is to parse voice transcripts in ${languageNames[language]} into structured inventory items.
+
+**INPUT**: Continuous voice recording of materials/items being listed
+**OUTPUT**: JSON with sections and items arrays
+
+═══════════════════════════════════════════════════════════════
+SECTION DETECTION (${languageNames[language]}):
+═══════════════════════════════════════════════════════════════
+Detect section commands: ${sectionCommands[language]}
+
+When a section command is detected:
+1. Create a new section with the name following the command
+2. Assign subsequent items to this section until the next section command
+
+═══════════════════════════════════════════════════════════════
+ITEM EXTRACTION RULES:
+═══════════════════════════════════════════════════════════════
+For each item spoken, extract:
+1. raw_text: The exact words spoken (preserve original)
+2. quantity: The number (if stated), otherwise null
+3. unit: The unit of measurement (if stated), normalized: ${unitMappings[language]}
+4. description: Clean description of the item
+5. category: Inferred category (cable, breaker, fitting, tool, etc.)
+
+IMPORTANT:
+- If quantity is NOT explicitly stated, set quantity to null
+- If unit is NOT explicitly stated, set unit to null
+- Always preserve the raw_text exactly as spoken
+- Clean up filler words from description but keep technical terms
+
+═══════════════════════════════════════════════════════════════
+EXAMPLE (${languageNames[language]}):
+═══════════════════════════════════════════════════════════════
+Input: "${exampleTranscript[language]}"
+
+Output:
+{
+  "sections": [
+    { "name": "${language === 'en' ? 'cables' : language === 'tr' ? 'kablolar' : 'cables'}", "order_index": 0, "created_via": "voice" },
+    { "name": "${language === 'en' ? 'breakers' : language === 'tr' ? 'sigortalar' : 'interruptores'}", "order_index": 1, "created_via": "voice" }
+  ],
+  "items": [
+    { "raw_text": "${language === 'en' ? '2 rolls of black 2.5mm cable' : language === 'tr' ? '2.5 Siyah 10 metre' : '2.5 negro 10 metros'}", "quantity": ${language === 'en' ? 2 : 10}, "unit": "${language === 'en' ? 'roll' : 'm'}", "description": "${language === 'en' ? 'Black 2.5mm cable' : language === 'tr' ? '2.5mm Siyah kablo' : 'Cable 2.5mm negro'}", "category": "cable", "section_index": 0, "order_index": 0 },
+    { "raw_text": "${language === 'en' ? '10 meters of red 6mm' : language === 'tr' ? '6 Mavi 5 metre' : '6 azul 5 metros'}", "quantity": ${language === 'en' ? 10 : 5}, "unit": "m", "description": "${language === 'en' ? 'Red 6mm cable' : language === 'tr' ? '6mm Mavi kablo' : 'Cable 6mm azul'}", "category": "cable", "section_index": 0, "order_index": 1 },
+    { "raw_text": "${language === 'en' ? '3 pieces 40 amp breakers' : language === 'tr' ? '3 adet 40 amper sigorta' : '3 piezas interruptores de 40 amp'}", "quantity": 3, "unit": "pcs", "description": "${language === 'en' ? '40 amp breaker' : language === 'tr' ? '40 amper sigorta' : 'Interruptor de 40 amp'}", "category": "breaker", "section_index": 1, "order_index": 0 }
+  ]
+}
+
+═══════════════════════════════════════════════════════════════
+SPECIAL COMMANDS TO DETECT:
+═══════════════════════════════════════════════════════════════
+${language === 'en' ? `
+- "delete last" / "remove last" → Mark last item for deletion
+- "save" / "done" → End of list marker
+- "finish" / "stop" → End of recording marker
+` : language === 'tr' ? `
+- "son sil" / "sonuncuyu sil" → Mark last item for deletion
+- "kaydet" / "tamam" → End of list marker
+- "bitir" / "dur" → End of recording marker
+` : `
+- "eliminar último" / "borrar último" → Mark last item for deletion
+- "guardar" / "listo" → End of list marker
+- "terminar" / "parar" → End of recording marker
+`}
+
+If these commands are detected, include them in a separate "commands" array.
+
+═══════════════════════════════════════════════════════════════
+OUTPUT FORMAT:
+═══════════════════════════════════════════════════════════════
+{
+  "sections": [
+    { "name": "string", "order_index": number, "created_via": "voice" }
+  ],
+  "items": [
+    {
+      "raw_text": "string (exact spoken text)",
+      "quantity": number | null,
+      "unit": "string | null",
+      "description": "string (cleaned description)",
+      "category": "string | null",
+      "section_index": number | null,
+      "order_index": number
+    }
+  ],
+  "commands": ["delete_last", "save", "finish"] // optional
+}`;
+  }
+
+  /**
+   * Get language-specific user prompt for voice list parsing
+   */
+  getVoiceListUserPrompt(transcript, context, language) {
+    const labels = {
+      en: { project: 'Project', listName: 'List Name', transcript: 'TRANSCRIPT' },
+      tr: { project: 'Proje', listName: 'Liste Adı', transcript: 'TRANSKRİPT' },
+      es: { project: 'Proyecto', listName: 'Nombre de lista', transcript: 'TRANSCRIPCIÓN' }
+    };
+
+    const label = labels[language] || labels.en;
+
+    return `Parse this voice list recording:
+
+${context.projectName ? `${label.project}: ${context.projectName}` : ''}
+${context.listName ? `${label.listName}: ${context.listName}` : ''}
+
+${label.transcript}:
+"""
+${transcript}
+"""
+
+Return a JSON object with sections and items arrays.`;
+  }
+
+  /**
+   * Normalize voice list AI response
+   */
+  normalizeVoiceListResponse(parsed) {
+    const result = {
+      sections: [],
+      items: [],
+      commands: []
+    };
+
+    // Normalize sections
+    if (Array.isArray(parsed.sections)) {
+      result.sections = parsed.sections.map((s, index) => ({
+        name: s.name || `Section ${index + 1}`,
+        orderIndex: typeof s.order_index === 'number' ? s.order_index : index,
+        createdVia: s.created_via || 'voice',
+        description: s.description || null
+      }));
+    }
+
+    // Normalize items
+    if (Array.isArray(parsed.items)) {
+      result.items = parsed.items.map((item, index) => ({
+        rawText: item.raw_text || item.rawText || '',
+        quantity: typeof item.quantity === 'number' ? item.quantity : null,
+        unit: this.normalizeUnit(item.unit),
+        description: item.description || item.raw_text || '',
+        category: item.category || null,
+        sectionIndex: typeof item.section_index === 'number' ? item.section_index : null,
+        orderIndex: typeof item.order_index === 'number' ? item.order_index : index,
+        notes: item.notes || null
+      })).filter(item => item.rawText || item.description);
+    }
+
+    // Normalize commands
+    if (Array.isArray(parsed.commands)) {
+      result.commands = parsed.commands.filter(cmd =>
+        ['delete_last', 'save', 'finish'].includes(cmd)
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Normalize unit to standard abbreviation
+   */
+  normalizeUnit(unit) {
+    if (!unit) return null;
+
+    const unitMap = {
+      // Length
+      'meters': 'm', 'meter': 'm', 'metre': 'm', 'metres': 'm', 'metro': 'm', 'metros': 'm',
+      'feet': 'ft', 'foot': 'ft', 'ft': 'ft',
+      'inches': 'in', 'inch': 'in', 'in': 'in',
+      'yards': 'yd', 'yard': 'yd', 'yd': 'yd',
+      // Quantity
+      'pieces': 'pcs', 'piece': 'pcs', 'pcs': 'pcs', 'pc': 'pcs',
+      'adet': 'pcs', 'ad': 'pcs', 'tane': 'pcs', 'parça': 'pcs',
+      'piezas': 'pcs', 'pieza': 'pcs', 'pzs': 'pcs',
+      // Rolls
+      'rolls': 'roll', 'roll': 'roll', 'rulo': 'roll', 'top': 'roll', 'rollo': 'roll', 'rollos': 'roll',
+      // Boxes
+      'boxes': 'box', 'box': 'box', 'kutu': 'box', 'caja': 'box', 'cajas': 'box',
+      // Bags
+      'bags': 'bag', 'bag': 'bag', 'torba': 'bag', 'çuval': 'bag', 'bolsa': 'bag', 'bolsas': 'bag',
+      // Weight
+      'kilograms': 'kg', 'kilogram': 'kg', 'kg': 'kg', 'kilo': 'kg', 'kilos': 'kg',
+      'pounds': 'lb', 'pound': 'lb', 'lbs': 'lb', 'lb': 'lb', 'libras': 'lb', 'libra': 'lb',
+      // Other
+      'sets': 'set', 'set': 'set', 'takım': 'set', 'juego': 'set', 'juegos': 'set',
+      'pairs': 'pair', 'pair': 'pair', 'çift': 'pair', 'par': 'pair', 'pares': 'pair'
+    };
+
+    const lower = unit.toLowerCase().trim();
+    return unitMap[lower] || unit;
+  }
+
+  /**
+   * Basic fallback voice list parsing without AI
+   */
+  parseVoiceListBasic(transcript, language = 'en') {
+    const result = {
+      sections: [],
+      items: [],
+      commands: []
+    };
+
+    // Section command patterns by language
+    const sectionPatterns = {
+      en: /(?:new section|section|next section)[:\s]+([^,.]+)/gi,
+      tr: /(?:yeni bölüm|bölüm|sonraki bölüm)[:\s]+([^,.]+)/gi,
+      es: /(?:nueva sección|sección|siguiente sección)[:\s]+([^,.]+)/gi
+    };
+
+    const pattern = sectionPatterns[language] || sectionPatterns.en;
+
+    // Find sections
+    let match;
+    let sectionIndex = 0;
+    while ((match = pattern.exec(transcript)) !== null) {
+      result.sections.push({
+        name: match[1].trim(),
+        orderIndex: sectionIndex++,
+        createdVia: 'voice',
+        description: null
+      });
+    }
+
+    // Split transcript by common separators (comma, period, "and", etc.)
+    const separators = {
+      en: /[,.]|\band\b|\balso\b|\bnext\b/gi,
+      tr: /[,.]|\bve\b|\bayrıca\b|\bsonra\b/gi,
+      es: /[,.]|\by\b|\btambién\b|\bluego\b/gi
+    };
+
+    const sep = separators[language] || separators.en;
+    const parts = transcript.split(sep).map(p => p.trim()).filter(p => p.length > 2);
+
+    // Create items from parts (basic extraction)
+    let itemIndex = 0;
+    for (const part of parts) {
+      // Skip section commands
+      if (sectionPatterns[language].test(part)) continue;
+
+      // Try to extract quantity (number at start or end)
+      const qtyMatch = part.match(/^(\d+(?:\.\d+)?)\s+|(\d+(?:\.\d+)?)\s*$/);
+      const quantity = qtyMatch ? parseFloat(qtyMatch[1] || qtyMatch[2]) : null;
+
+      result.items.push({
+        rawText: part,
+        quantity,
+        unit: null,
+        description: part,
+        category: null,
+        sectionIndex: result.sections.length > 0 ? result.sections.length - 1 : null,
+        orderIndex: itemIndex++,
+        notes: null
+      });
+    }
+
+    return result;
+  }
 }
 
 module.exports = new TranscriptParserService();

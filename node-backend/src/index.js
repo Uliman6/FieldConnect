@@ -33,6 +33,7 @@ const documentSchemaRoutes = require('./routes/document-schema.routes');
 const photosRoutes = require('./routes/photos.routes');
 const formsRoutes = require('./routes/forms.routes');
 const projectInvitationsRoutes = require('./routes/project-invitations.routes');
+const voiceListsRoutes = require('./routes/voice-lists.routes');
 
 // Import middleware
 const errorHandler = require('./middleware/error-handler.middleware');
@@ -98,6 +99,7 @@ app.use('/api/templates', templatesRoutes); // Auth handled in route file
 app.use('/api/document-schemas', documentSchemaRoutes); // Auth handled in route file
 app.use('/api/photos', authenticate, photosRoutes);
 app.use('/api/forms', formsRoutes); // Auth handled in route file
+app.use('/api/voice-lists', voiceListsRoutes); // Auth handled in route file
 app.use('/api', projectInvitationsRoutes); // Auth handled in route file
 
 // 404 handler
