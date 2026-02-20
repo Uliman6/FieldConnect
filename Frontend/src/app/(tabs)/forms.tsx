@@ -18,9 +18,12 @@ import {
   createFormInstance,
   deleteFormInstance,
   seedFormTemplates,
+  getVoiceLists,
+  deleteVoiceList,
   queryKeys,
   FormTemplate,
   FormInstance,
+  VoiceList,
 } from '@/lib/api';
 import { getBackendId } from '@/lib/data-provider';
 import { useLanguage } from '@/i18n/LanguageProvider';
@@ -208,12 +211,111 @@ function TemplateCard({
   );
 }
 
+const LIST_TYPE_LABELS: Record<string, string> = {
+  material_list: 'Material List',
+  inventory: 'Inventory',
+  punch_list: 'Punch List',
+  action_items: 'Action Items',
+};
+
+function VoiceListCard({
+  voiceList,
+  onPress,
+  onDelete,
+  isDeleting,
+  t,
+}: {
+  voiceList: VoiceList;
+  onPress: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+  t: (key: string) => string;
+}) {
+  const timeAgo = React.useMemo(() => {
+    const now = new Date();
+    const created = new Date(voiceList.createdAt);
+    const diffMs = now.getTime() - created.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return format(created, 'MMM d, h:mm a');
+  }, [voiceList.createdAt]);
+
+  const itemCount = voiceList._count?.items || 0;
+  const typeLabel = LIST_TYPE_LABELS[voiceList.listType] || voiceList.listType;
+
+  return (
+    <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
+      <View className="flex-row items-start justify-between">
+        <Pressable onPress={onPress} className="flex-1 mr-3">
+          <View className="flex-row items-center mb-2">
+            <View
+              className="px-2 py-0.5 rounded-full mr-2"
+              style={{ backgroundColor: voiceList.status === 'completed' ? '#10B98120' : '#6B728020' }}
+            >
+              <Text
+                className="text-xs font-semibold"
+                style={{ color: voiceList.status === 'completed' ? '#10B981' : '#6B7280' }}
+              >
+                {voiceList.status === 'completed' ? t('voiceLists.completed') : t('voiceLists.draft')}
+              </Text>
+            </View>
+            <Text className="text-xs text-gray-400">{itemCount} items</Text>
+          </View>
+
+          <Text className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+            {voiceList.name}
+          </Text>
+
+          <Text className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            {typeLabel}
+          </Text>
+
+          <View className="flex-row items-center">
+            <Clock size={12} color="#9CA3AF" />
+            <Text className="text-xs text-gray-400 ml-1">{timeAgo}</Text>
+          </View>
+        </Pressable>
+
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onDelete();
+            }}
+            disabled={isDeleting}
+            className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30"
+          >
+            {isDeleting ? (
+              <ActivityIndicator size={20} color="#EF4444" />
+            ) : (
+              <Trash2 size={20} color="#EF4444" />
+            )}
+          </Pressable>
+
+          <Pressable onPress={onPress}>
+            {voiceList.status === 'completed' ? (
+              <CheckCircle2 size={24} color="#10B981" />
+            ) : (
+              <ChevronRight size={24} color="#9CA3AF" />
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export default function FormsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [startingTemplate, setStartingTemplate] = useState<string | null>(null);
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
+  const [deletingVoiceListId, setDeletingVoiceListId] = useState<string | null>(null);
 
   const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
   const projects = useDailyLogStore((s) => s.projects);
@@ -253,6 +355,13 @@ export default function FormsScreen() {
     enabled: !!backendProjectId,
   });
 
+  // Fetch voice lists for current project
+  const voiceListsQuery = useQuery({
+    queryKey: queryKeys.voiceLists({ projectId: backendProjectId }),
+    queryFn: () => getVoiceLists({ projectId: backendProjectId, limit: 50 }),
+    enabled: !!backendProjectId,
+  });
+
   // Create form mutation
   const createFormMutation = useMutation({
     mutationFn: (templateId: string) => createFormInstance({
@@ -288,6 +397,7 @@ export default function FormsScreen() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.formTemplates(backendProjectId) }),
       queryClient.invalidateQueries({ queryKey: queryKeys.formInstances({ projectId: backendProjectId }) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.voiceLists({ projectId: backendProjectId }) }),
     ]);
   }, [queryClient, backendProjectId]);
 
@@ -333,6 +443,48 @@ export default function FormsScreen() {
     }
   }, [queryClient, backendProjectId]);
 
+  // Delete voice list handler
+  const handleDeleteVoiceList = useCallback(async (listId: string) => {
+    const confirmDelete = (): Promise<boolean> => {
+      return new Promise((resolve) => {
+        if (Platform.OS === 'web') {
+          resolve(window.confirm(t('voiceLists.deleteConfirm')));
+        } else {
+          Alert.alert(
+            t('voiceLists.deleteList'),
+            t('voiceLists.deleteConfirm'),
+            [
+              { text: t('common.cancel'), style: 'cancel', onPress: () => resolve(false) },
+              { text: t('common.delete'), style: 'destructive', onPress: () => resolve(true) },
+            ]
+          );
+        }
+      });
+    };
+
+    const confirmed = await confirmDelete();
+    if (!confirmed) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setDeletingVoiceListId(listId);
+
+    try {
+      await deleteVoiceList(listId);
+      queryClient.invalidateQueries({ queryKey: queryKeys.voiceLists({ projectId: backendProjectId }) });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('[forms] Failed to delete voice list:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS === 'web') {
+        window.alert(t('voiceLists.deleteError'));
+      } else {
+        Alert.alert(t('common.error'), t('voiceLists.deleteError'));
+      }
+    } finally {
+      setDeletingVoiceListId(null);
+    }
+  }, [queryClient, backendProjectId, t]);
+
   // Separate forms by status
   const inProgressForms = React.useMemo(() => {
     if (!formsQuery.data) return [];
@@ -349,6 +501,7 @@ export default function FormsScreen() {
   }, [formsQuery.data]);
 
   const templates = templatesQuery.data || [];
+  const voiceLists = voiceListsQuery.data || [];
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -458,6 +611,8 @@ export default function FormsScreen() {
           <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             {t('voiceLists.title')}
           </Text>
+
+          {/* New Voice List Button */}
           <Pressable
             onPress={() => {
               if (!backendProjectId) {
@@ -468,7 +623,7 @@ export default function FormsScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               router.push('/voice-list-create');
             }}
-            className="bg-gradient-to-r bg-orange-500 rounded-xl p-4 flex-row items-center"
+            className="bg-gradient-to-r bg-orange-500 rounded-xl p-4 flex-row items-center mb-4"
             style={{
               shadowColor: '#F97316',
               shadowOffset: { width: 0, height: 4 },
@@ -490,6 +645,28 @@ export default function FormsScreen() {
             </View>
             <Package size={24} color="white" />
           </Pressable>
+
+          {/* Existing Voice Lists */}
+          {voiceListsQuery.isLoading ? (
+            <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
+              <ActivityIndicator size="small" color="#F97316" />
+              <Text className="mt-2 text-gray-500">{t('common.loading')}</Text>
+            </View>
+          ) : voiceLists.length > 0 ? (
+            <View>
+              {voiceLists.map((list, index) => (
+                <Animated.View key={list.id} entering={FadeInDown.delay(index * 50)}>
+                  <VoiceListCard
+                    voiceList={list}
+                    onPress={() => router.push(`/voice-list-detail?id=${list.id}`)}
+                    onDelete={() => handleDeleteVoiceList(list.id)}
+                    isDeleting={deletingVoiceListId === list.id}
+                    t={t}
+                  />
+                </Animated.View>
+              ))}
+            </View>
+          ) : null}
         </Animated.View>
 
         {/* Completed Today Section */}

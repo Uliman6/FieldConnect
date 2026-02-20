@@ -456,7 +456,9 @@ export default {
     parseError: 'Error al procesar grabacion',
     exportPdf: 'Exportar PDF',
     delete: 'Eliminar Lista',
+    deleteList: 'Eliminar Lista',
     deleteConfirm: 'Estas seguro de que deseas eliminar esta lista de voz?',
+    deleteError: 'Error al eliminar la lista de voz. Por favor intenta de nuevo.',
     // Voice commands help
     voiceCommands: 'Comandos de Voz',
     voiceCommandsHelp: 'Di "nueva seccion [nombre]" para crear una seccion',
