@@ -54,7 +54,8 @@
       "Bash(git -C \"C:/sitespeak/Backend\" commit -m \"Fix: correct middleware path in project-invitations routes\n\nChanged ''../middleware/auth'' to ''../middleware/auth.middleware''\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\")",
       "Bash(ADMIN_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdkMDNhNmRmLTQ2NmMtNDM1MS05ZWIxLTM0MTdmNTVjYjIwNyIsImVtYWlsIjoiYWRtaW5AZmllbGRjb25uZWN0LmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MTQ1NjcwMiwiZXhwIjoxNzcyMDYxNTAyfQ.YmkERij8iRjoHyn1gY_VpNxkJJT80By6Kt-y2y7uRn4\")",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdkMDNhNmRmLTQ2NmMtNDM1MS05ZWIxLTM0MTdmNTVjYjIwNyIsImVtYWlsIjoiYWRtaW5AZmllbGRjb25uZWN0LmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MTU1MjQyNCwiZXhwIjoxNzcyMTU3MjI0fQ.RcTMVgiRyPzXDrvLNG2CDOPICxJ9JBT_WfIBgWO4Ct0\")",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdkMDNhNmRmLTQ2NmMtNDM1MS05ZWIxLTM0MTdmNTVjYjIwNyIsImVtYWlsIjoiYWRtaW5AZmllbGRjb25uZWN0LmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MTU1MzI5MCwiZXhwIjoxNzcyMTU4MDkwfQ.5Vz_AKfcaxGa2mGmaIZYFPiOXS3nPBgm3G2VnWtyWP4\")"
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdkMDNhNmRmLTQ2NmMtNDM1MS05ZWIxLTM0MTdmNTVjYjIwNyIsImVtYWlsIjoiYWRtaW5AZmllbGRjb25uZWN0LmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MTU1MzI5MCwiZXhwIjoxNzcyMTU4MDkwfQ.5Vz_AKfcaxGa2mGmaIZYFPiOXS3nPBgm3G2VnWtyWP4\")",
+      "Bash(xxd:*)"
     ]
   }
 }
