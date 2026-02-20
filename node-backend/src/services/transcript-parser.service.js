@@ -1573,13 +1573,13 @@ For each item spoken, extract:
 2. quantity: The number (if stated), otherwise null
 3. unit: The unit of measurement (if stated), normalized: ${unitMappings[language]}
 4. description: Clean description of the item
-5. category: Inferred category (cable, breaker, fitting, tool, etc.)
 
 IMPORTANT:
 - If quantity is NOT explicitly stated, set quantity to null
 - If unit is NOT explicitly stated, set unit to null
 - Always preserve the raw_text exactly as spoken
 - Clean up filler words from description but keep technical terms
+- Do NOT extract or infer categories - users will add notes manually
 
 ═══════════════════════════════════════════════════════════════
 EXAMPLE (${languageNames[language]}):
@@ -1593,9 +1593,9 @@ Output:
     { "name": "${language === 'en' ? 'breakers' : language === 'tr' ? 'sigortalar' : 'interruptores'}", "order_index": 1, "created_via": "voice" }
   ],
   "items": [
-    { "raw_text": "${language === 'en' ? '2 rolls of black 2.5mm cable' : language === 'tr' ? '2.5 Siyah 10 metre' : '2.5 negro 10 metros'}", "quantity": ${language === 'en' ? 2 : 10}, "unit": "${language === 'en' ? 'roll' : 'm'}", "description": "${language === 'en' ? 'Black 2.5mm cable' : language === 'tr' ? '2.5mm Siyah kablo' : 'Cable 2.5mm negro'}", "category": "cable", "section_index": 0, "order_index": 0 },
-    { "raw_text": "${language === 'en' ? '10 meters of red 6mm' : language === 'tr' ? '6 Mavi 5 metre' : '6 azul 5 metros'}", "quantity": ${language === 'en' ? 10 : 5}, "unit": "m", "description": "${language === 'en' ? 'Red 6mm cable' : language === 'tr' ? '6mm Mavi kablo' : 'Cable 6mm azul'}", "category": "cable", "section_index": 0, "order_index": 1 },
-    { "raw_text": "${language === 'en' ? '3 pieces 40 amp breakers' : language === 'tr' ? '3 adet 40 amper sigorta' : '3 piezas interruptores de 40 amp'}", "quantity": 3, "unit": "pcs", "description": "${language === 'en' ? '40 amp breaker' : language === 'tr' ? '40 amper sigorta' : 'Interruptor de 40 amp'}", "category": "breaker", "section_index": 1, "order_index": 0 }
+    { "raw_text": "${language === 'en' ? '2 rolls of black 2.5mm cable' : language === 'tr' ? '2.5 Siyah 10 metre' : '2.5 negro 10 metros'}", "quantity": ${language === 'en' ? 2 : 10}, "unit": "${language === 'en' ? 'roll' : 'm'}", "description": "${language === 'en' ? 'Black 2.5mm cable' : language === 'tr' ? '2.5mm Siyah kablo' : 'Cable 2.5mm negro'}", "section_index": 0, "order_index": 0 },
+    { "raw_text": "${language === 'en' ? '10 meters of red 6mm' : language === 'tr' ? '6 Mavi 5 metre' : '6 azul 5 metros'}", "quantity": ${language === 'en' ? 10 : 5}, "unit": "m", "description": "${language === 'en' ? 'Red 6mm cable' : language === 'tr' ? '6mm Mavi kablo' : 'Cable 6mm azul'}", "section_index": 0, "order_index": 1 },
+    { "raw_text": "${language === 'en' ? '3 pieces 40 amp breakers' : language === 'tr' ? '3 adet 40 amper sigorta' : '3 piezas interruptores de 40 amp'}", "quantity": 3, "unit": "pcs", "description": "${language === 'en' ? '40 amp breaker' : language === 'tr' ? '40 amper sigorta' : 'Interruptor de 40 amp'}", "section_index": 1, "order_index": 0 }
   ]
 }
 
@@ -1631,7 +1631,6 @@ OUTPUT FORMAT:
       "quantity": number | null,
       "unit": "string | null",
       "description": "string (cleaned description)",
-      "category": "string | null",
       "section_index": number | null,
       "order_index": number
     }
@@ -1692,10 +1691,10 @@ Return a JSON object with sections and items arrays.`;
         quantity: typeof item.quantity === 'number' ? item.quantity : null,
         unit: this.normalizeUnit(item.unit),
         description: item.description || item.raw_text || '',
-        category: item.category || null,
         sectionIndex: typeof item.section_index === 'number' ? item.section_index : null,
         orderIndex: typeof item.order_index === 'number' ? item.order_index : index,
-        notes: item.notes || null
+        notes: item.notes || null,
+        category: null // No longer extracted - users add notes manually
       })).filter(item => item.rawText || item.description);
     }
 
@@ -1799,10 +1798,10 @@ Return a JSON object with sections and items arrays.`;
         quantity,
         unit: null,
         description: part,
-        category: null,
         sectionIndex: result.sections.length > 0 ? result.sections.length - 1 : null,
         orderIndex: itemIndex++,
-        notes: null
+        notes: null,
+        category: null
       });
     }
 

@@ -418,20 +418,20 @@ export default {
     continuousRecording: 'Modo de grabacion continua',
     elapsedTime: 'Tiempo Transcurrido',
     // Sections
-    sections: 'Secciones',
+    sections: 'secciones',
     addSection: 'Agregar Seccion',
     newSection: 'Nueva Seccion',
     sectionName: 'Nombre de Seccion',
     noSections: 'Sin secciones',
     unsectioned: 'Items Sin Seccion',
     // Items
-    items: 'Items',
+    items: 'items',
     addItem: 'Agregar Item',
     editItem: 'Editar Item',
     quantity: 'Cantidad',
     unit: 'Unidad',
     description: 'Descripcion',
-    category: 'Categoria',
+    notes: 'Notas',
     noItems: 'Aun no hay items',
     itemCount: '{{count}} items',
     // Units

@@ -54,6 +54,7 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
     quantity: item.quantity?.toString() || '',
     unit: item.unit || '',
     description: item.description,
+    notes: item.notes || '',
   });
 
   const updateMutation = useMutation({
@@ -75,6 +76,7 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
       quantity: editedItem.quantity ? parseFloat(editedItem.quantity) : undefined,
       unit: editedItem.unit || undefined,
       description: editedItem.description,
+      notes: editedItem.notes || undefined,
     });
   };
 
@@ -127,6 +129,15 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
           multiline
           className="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 mb-2"
         />
+        <TextInput
+          value={editedItem.notes}
+          onChangeText={(val) =>
+            setEditedItem((e) => ({ ...e, notes: val }))
+          }
+          placeholder={t('voiceLists.notes') + ' (e.g., next week, installed)'}
+          placeholderTextColor="#9CA3AF"
+          className="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 mb-2"
+        />
         <View className="flex-row justify-end gap-2">
           <Pressable
             onPress={() => setIsEditing(false)}
@@ -168,8 +179,8 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
         <Text className="text-sm text-gray-900 dark:text-white">
           {item.description}
         </Text>
-        {item.category && (
-          <Text className="text-xs text-gray-400 mt-0.5">{item.category}</Text>
+        {item.notes && (
+          <Text className="text-xs text-blue-500 dark:text-blue-400 mt-0.5">{item.notes}</Text>
         )}
       </View>
 
