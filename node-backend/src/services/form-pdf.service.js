@@ -443,28 +443,33 @@ function generateGenericFormPdf(form, project) {
 
           const fieldValue = data[field.id];
 
-          if (field.type === 'YES_NO_NA' || field.type === 'YES_NO') {
-            drawYesNoNaRow(doc, field.label || field.id, fieldValue);
-          } else if (field.type === 'SIGNATURE') {
-            drawSignatureField(doc, field.label || field.id, fieldValue);
-          } else if (field.type === 'TEXTAREA') {
-            drawTextAreaField(doc, field.label || field.id, fieldValue);
-          } else if (field.type === 'PHOTO' || field.type === 'PHOTO_GALLERY') {
-            drawPhotoField(doc, field.label || field.id, fieldValue);
-          } else {
-            // TEXT, NUMBER, DATE, etc.
-            drawTextField(doc, field.label || field.id, fieldValue, field.unit);
+          try {
+            if (field.type === 'YES_NO_NA' || field.type === 'YES_NO') {
+              drawYesNoNaRow(doc, field.label || field.id, fieldValue);
+            } else if (field.type === 'SIGNATURE') {
+              drawSignatureField(doc, field.label || field.id, fieldValue);
+            } else if (field.type === 'TEXTAREA') {
+              drawTextAreaField(doc, field.label || field.id, fieldValue);
+            } else if (field.type === 'PHOTO' || field.type === 'PHOTO_GALLERY') {
+              drawPhotoField(doc, field.label || field.id, fieldValue);
+            } else if (field.type === 'CHECKBOX') {
+              drawCheckboxField(doc, field.label || field.id, fieldValue);
+            } else {
+              // TEXT, NUMBER, DATE, etc.
+              drawTextField(doc, field.label || field.id, fieldValue, field.unit);
+            }
+          } catch (fieldError) {
+            console.error(`[form-pdf] Error drawing field ${field.id}:`, fieldError);
+            // Skip field and continue
           }
         }
 
         doc.moveDown(0.5);
       }
 
-      // Footer
-      doc.y = Math.max(doc.y, 720);
-      if (doc.y > 720) {
+      // Footer - add at bottom of current or new page
+      if (doc.y > 700) {
         doc.addPage();
-        doc.y = 720;
       }
       doc.fontSize(7).font('Helvetica').fillColor('gray');
       doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 740);
@@ -544,6 +549,24 @@ function drawPhotoField(doc, label, value) {
     doc.font('Helvetica').fillColor('gray').text('No photo', 300, y + 5);
     doc.fillColor('black');
   }
+
+  doc.y = y + rowHeight;
+}
+
+function drawCheckboxField(doc, label, value) {
+  const y = doc.y;
+  const rowHeight = 20;
+
+  doc.rect(40, y, 532, rowHeight).stroke();
+
+  // Draw checkbox
+  doc.rect(45, y + 5, 10, 10).stroke();
+  if (value) {
+    doc.fontSize(10).font('Helvetica-Bold').text('X', 46, y + 3);
+  }
+
+  // Draw label
+  doc.fontSize(8).font('Helvetica').text(label, 60, y + 5, { width: 500 });
 
   doc.y = y + rowHeight;
 }
