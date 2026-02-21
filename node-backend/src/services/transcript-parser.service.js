@@ -1573,12 +1573,15 @@ For each item spoken, extract:
 2. quantity: The number (if stated), otherwise null
 3. unit: The unit of measurement (if stated), normalized: ${unitMappings[language]}
 4. description: Clean description of the item
+5. brand_name: Brand or manufacturer name if mentioned (e.g., "Schneider", "ABB", "Legrand", "Siemens")
 
 IMPORTANT:
 - If quantity is NOT explicitly stated, set quantity to null
 - If unit is NOT explicitly stated, set unit to null
+- If brand is NOT explicitly mentioned, set brand_name to null
 - Always preserve the raw_text exactly as spoken
 - Clean up filler words from description but keep technical terms
+- Common electrical/construction brands: Schneider, ABB, Legrand, Siemens, Eaton, GE, Square D, Philips, Osram, etc.
 - Do NOT extract or infer categories - users will add notes manually
 
 ═══════════════════════════════════════════════════════════════
@@ -1631,6 +1634,7 @@ OUTPUT FORMAT:
       "quantity": number | null,
       "unit": "string | null",
       "description": "string (cleaned description)",
+      "brand_name": "string | null (brand/manufacturer if mentioned)",
       "section_index": number | null,
       "order_index": number
     }
@@ -1691,6 +1695,7 @@ Return a JSON object with sections and items arrays.`;
         quantity: typeof item.quantity === 'number' ? item.quantity : null,
         unit: this.normalizeUnit(item.unit),
         description: item.description || item.raw_text || '',
+        brandName: item.brand_name || item.brandName || null,
         sectionIndex: typeof item.section_index === 'number' ? item.section_index : null,
         orderIndex: typeof item.order_index === 'number' ? item.order_index : index,
         notes: item.notes || null,

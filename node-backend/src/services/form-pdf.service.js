@@ -766,6 +766,7 @@ function generateVoiceListPdf(voiceList, project) {
           qty: 'Qty',
           unit: 'Unit',
           description: 'Description',
+          brand: 'Brand',
           notes: 'Notes',
           otherItems: 'Other Items'
         },
@@ -784,6 +785,7 @@ function generateVoiceListPdf(voiceList, project) {
           qty: 'Adet',
           unit: 'Birim',
           description: 'Açıklama',
+          brand: 'Marka',
           notes: 'Notlar',
           otherItems: 'Diğer Kalemler'
         },
@@ -802,6 +804,7 @@ function generateVoiceListPdf(voiceList, project) {
           qty: 'Cant.',
           unit: 'Unidad',
           description: 'Descripción',
+          brand: 'Marca',
           notes: 'Notas',
           otherItems: 'Otros Items'
         }
@@ -837,10 +840,11 @@ function generateVoiceListPdf(voiceList, project) {
       doc.rect(40, tableHeaderY, 532, 20).fill(headerBg).stroke(borderColor);
       doc.fillColor('white').fontSize(9).font(FONT_BOLD);
       doc.text('#', 45, tableHeaderY + 5, { width: 25 });
-      doc.text(labels.qty, 70, tableHeaderY + 5, { width: 40 });
-      doc.text(labels.unit, 115, tableHeaderY + 5, { width: 40 });
-      doc.text(labels.description, 160, tableHeaderY + 5, { width: 300 });
-      doc.text(labels.notes, 470, tableHeaderY + 5, { width: 90 });
+      doc.text(labels.qty, 70, tableHeaderY + 5, { width: 35 });
+      doc.text(labels.unit, 105, tableHeaderY + 5, { width: 35 });
+      doc.text(labels.description, 145, tableHeaderY + 5, { width: 200 });
+      doc.text(labels.brand, 350, tableHeaderY + 5, { width: 70 });
+      doc.text(labels.notes, 425, tableHeaderY + 5, { width: 140 });
       doc.fillColor('black');
       doc.y = tableHeaderY + 20;
 
@@ -890,16 +894,22 @@ function generateVoiceListPdf(voiceList, project) {
             doc.y = 40;
           }
 
+          // Calculate row height based on description text
+          doc.fontSize(8).font(FONT_REGULAR);
+          const descText = item.description || item.rawText || '';
+          const descHeight = doc.heightOfString(descText, { width: 195 });
+          const rowHeight = Math.max(18, descHeight + 8);
+
           const rowY = doc.y;
-          const rowHeight = 18;
           doc.rect(40, rowY, 532, rowHeight).stroke();
 
           doc.fontSize(8).font(FONT_REGULAR);
           doc.text(String(itemNumber), 45, rowY + 4, { width: 25 });
-          doc.text(item.quantity != null ? String(item.quantity) : '-', 70, rowY + 4, { width: 40 });
-          doc.text(item.unit || '-', 115, rowY + 4, { width: 40 });
-          doc.text(item.description || item.rawText || '', 160, rowY + 4, { width: 300 });
-          doc.text(item.notes || '-', 470, rowY + 4, { width: 90 });
+          doc.text(item.quantity != null ? String(item.quantity) : '-', 70, rowY + 4, { width: 35 });
+          doc.text(item.unit || '-', 105, rowY + 4, { width: 35 });
+          doc.text(descText, 145, rowY + 4, { width: 195 });
+          doc.text(item.brandName || '-', 350, rowY + 4, { width: 70 });
+          doc.text(item.notes || '-', 425, rowY + 4, { width: 140 });
 
           doc.y = rowY + rowHeight;
           itemNumber++;
@@ -927,16 +937,22 @@ function generateVoiceListPdf(voiceList, project) {
             doc.y = 40;
           }
 
+          // Calculate row height based on description text
+          doc.fontSize(8).font(FONT_REGULAR);
+          const descText = item.description || item.rawText || '';
+          const descHeight = doc.heightOfString(descText, { width: 195 });
+          const rowHeight = Math.max(18, descHeight + 8);
+
           const rowY = doc.y;
-          const rowHeight = 18;
           doc.rect(40, rowY, 532, rowHeight).stroke();
 
           doc.fontSize(8).font(FONT_REGULAR);
           doc.text(String(itemNumber), 45, rowY + 4, { width: 25 });
-          doc.text(item.quantity != null ? String(item.quantity) : '-', 70, rowY + 4, { width: 40 });
-          doc.text(item.unit || '-', 115, rowY + 4, { width: 40 });
-          doc.text(item.description || item.rawText || '', 160, rowY + 4, { width: 300 });
-          doc.text(item.notes || '-', 470, rowY + 4, { width: 90 });
+          doc.text(item.quantity != null ? String(item.quantity) : '-', 70, rowY + 4, { width: 35 });
+          doc.text(item.unit || '-', 105, rowY + 4, { width: 35 });
+          doc.text(descText, 145, rowY + 4, { width: 195 });
+          doc.text(item.brandName || '-', 350, rowY + 4, { width: 70 });
+          doc.text(item.notes || '-', 425, rowY + 4, { width: 140 });
 
           doc.y = rowY + rowHeight;
           itemNumber++;

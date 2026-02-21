@@ -431,6 +431,7 @@ export default {
     quantity: 'Quantity',
     unit: 'Unit',
     description: 'Description',
+    brand: 'Brand',
     notes: 'Notes',
     noItems: 'No items yet',
     itemCount: '{{count}} items',

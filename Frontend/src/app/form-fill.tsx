@@ -46,6 +46,7 @@ import {
   Copy,
   Mic,
   Square as StopIcon,
+  Pencil,
 } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 import * as Haptics from 'expo-haptics';
@@ -1555,6 +1556,8 @@ export default function FormFillScreen() {
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [formName, setFormName] = useState<string>('');
+  const [isEditingName, setIsEditingName] = useState(false);
 
   // Fetch form instance
   const formQuery = useQuery({
@@ -1569,6 +1572,13 @@ export default function FormFillScreen() {
       setFormData(formQuery.data.data);
     }
   }, [formQuery.data?.data]);
+
+  // Initialize form name when loaded
+  useEffect(() => {
+    if (formQuery.data) {
+      setFormName(formQuery.data.name || formQuery.data.template?.name || 'Form');
+    }
+  }, [formQuery.data]);
 
   // Debounced form data for auto-save
   const debouncedFormData = useDebounce(formData, 2000);
@@ -1726,6 +1736,16 @@ export default function FormFillScreen() {
     }
   };
 
+  // Handle name edit
+  const handleNameSave = useCallback(() => {
+    if (formId && formName.trim()) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setIsSaving(true);
+      updateMutation.mutate({ name: formName.trim() });
+    }
+    setIsEditingName(false);
+  }, [formId, formName, updateMutation]);
+
   // Handle PDF download
   const handleDownloadPdf = async () => {
     if (!formId) return;
@@ -1856,9 +1876,42 @@ export default function FormFillScreen() {
           </View>
         </View>
 
-        <Text className="text-xl font-bold text-gray-900 dark:text-white mt-3">
-          {template?.name || 'Form'}
-        </Text>
+        {/* Editable Form Name */}
+        {isEditingName ? (
+          <View className="flex-row items-center mt-3">
+            <TextInput
+              value={formName}
+              onChangeText={setFormName}
+              onBlur={handleNameSave}
+              onSubmitEditing={handleNameSave}
+              autoFocus
+              className="flex-1 text-xl font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2"
+              returnKeyType="done"
+            />
+            <Pressable onPress={handleNameSave} className="ml-2 p-2">
+              <Check size={20} color="#10B981" />
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setFormName(form.name || form.template?.name || 'Form');
+                setIsEditingName(false);
+              }}
+              className="p-2"
+            >
+              <X size={20} color="#EF4444" />
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => setIsEditingName(true)}
+            className="flex-row items-center mt-3"
+          >
+            <Text className="text-xl font-bold text-gray-900 dark:text-white">
+              {formName || template?.name || 'Form'}
+            </Text>
+            <Pencil size={16} color="#9CA3AF" style={{ marginLeft: 8 }} />
+          </Pressable>
+        )}
         {form.location && (
           <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {form.location}

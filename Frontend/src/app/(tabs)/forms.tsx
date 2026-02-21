@@ -123,7 +123,7 @@ function FormCard({
           </View>
 
           <Text className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-            {form.template?.name || 'Form'}
+            {form.name || form.template?.name || 'Form'}
           </Text>
 
           {form.location && (

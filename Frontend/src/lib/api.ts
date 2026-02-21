@@ -2538,6 +2538,7 @@ export interface FormInstance {
   templateId: string;
   projectId: string;
   location: string | null;
+  name: string | null;
   status: FormStatus;
   completedAt: string | null;
   data: Record<string, any>;
@@ -2615,6 +2616,7 @@ export async function updateFormInstance(id: string, data: {
   data?: Record<string, any>;
   status?: FormStatus;
   location?: string;
+  name?: string;
   signatures?: FormSignature[];
   voiceTranscript?: string;
 }): Promise<FormInstance> {
@@ -2833,6 +2835,7 @@ export interface VoiceListItem {
   quantity?: number | null;
   unit?: string | null;
   description: string;
+  brandName?: string | null;
   category?: string | null;
   notes?: string | null;
   orderIndex: number;
@@ -3038,6 +3041,7 @@ export async function updateVoiceListItem(
     quantity?: number;
     unit?: string;
     description?: string;
+    brand_name?: string;
     category?: string;
     notes?: string;
     order_index?: number;
