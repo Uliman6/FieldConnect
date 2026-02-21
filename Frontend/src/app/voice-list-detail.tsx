@@ -228,7 +228,7 @@ function SectionCard({ section, items, listId, onUpdate }: SectionCardProps) {
         onPress={() => setIsExpanded(!isExpanded)}
         className="flex-row items-center bg-orange-100 dark:bg-orange-900/30 rounded-t-xl px-4 py-3"
       >
-        <FolderOpen size={18} color="#4B6F44" />
+        <FolderOpen size={18} color="#1F5C1A" />
         <Text className="flex-1 ml-2 font-semibold text-orange-800 dark:text-orange-300">
           {section.name}
         </Text>
@@ -236,9 +236,9 @@ function SectionCard({ section, items, listId, onUpdate }: SectionCardProps) {
           {items.length} {t('voiceLists.items').toLowerCase()}
         </Text>
         {isExpanded ? (
-          <ChevronUp size={18} color="#4B6F44" />
+          <ChevronUp size={18} color="#1F5C1A" />
         ) : (
-          <ChevronDown size={18} color="#4B6F44" />
+          <ChevronDown size={18} color="#1F5C1A" />
         )}
       </Pressable>
 
@@ -365,7 +365,7 @@ export default function VoiceListDetailScreen() {
   if (voiceListQuery.isLoading) {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
-        <ActivityIndicator size="large" color="#4B6F44" />
+        <ActivityIndicator size="large" color="#1F5C1A" />
       </View>
     );
   }

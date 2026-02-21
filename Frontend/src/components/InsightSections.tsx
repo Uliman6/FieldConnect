@@ -202,7 +202,7 @@ export function InspectionNotesSection({ notes, onAdd, onUpdate, onRemove }: Ins
     <View>
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center">
-          <ClipboardCheck size={20} color="#4B6F44" />
+          <ClipboardCheck size={20} color="#1F5C1A" />
           <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
             Inspection Notes
           </Text>
@@ -241,7 +241,7 @@ export function InspectionNotesSection({ notes, onAdd, onUpdate, onRemove }: Ins
         title="Add Inspection"
         onPress={handleAdd}
         variant="secondary"
-        icon={<Plus size={20} color="#4B6F44" />}
+        icon={<Plus size={20} color="#1F5C1A" />}
       />
     </View>
   );
@@ -324,7 +324,7 @@ export function AdditionalWorkSection({ work, onAdd, onUpdate, onRemove }: Addit
   return (
     <View>
       <View className="flex-row items-center mb-3">
-        <FileWarning size={20} color="#4B6F44" />
+        <FileWarning size={20} color="#1F5C1A" />
         <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
           Additional Work / Rework
         </Text>
@@ -348,7 +348,7 @@ export function AdditionalWorkSection({ work, onAdd, onUpdate, onRemove }: Addit
         title="Add Entry"
         onPress={handleAdd}
         variant="secondary"
-        icon={<Plus size={20} color="#4B6F44" />}
+        icon={<Plus size={20} color="#1F5C1A" />}
       />
 
       {work.length === 0 && (

@@ -30,14 +30,14 @@ function generatePdfHtml(log: DailyLog, project: Project | undefined): string {
           padding: 40px;
         }
         .header {
-          border-bottom: 3px solid #4B6F44;
+          border-bottom: 3px solid #1F5C1A;
           padding-bottom: 20px;
           margin-bottom: 20px;
         }
         .title {
           font-size: 24px;
           font-weight: bold;
-          color: #4B6F44;
+          color: #1F5C1A;
           margin-bottom: 4px;
         }
         .subtitle {
@@ -64,7 +64,7 @@ function generatePdfHtml(log: DailyLog, project: Project | undefined): string {
         .section-title {
           font-size: 14px;
           font-weight: bold;
-          color: #4B6F44;
+          color: #1F5C1A;
           text-transform: uppercase;
           letter-spacing: 0.5px;
           margin-bottom: 10px;
@@ -99,7 +99,7 @@ function generatePdfHtml(log: DailyLog, project: Project | undefined): string {
         }
         .issue {
           background: #fff8f0;
-          border-left: 4px solid #4B6F44;
+          border-left: 4px solid #1F5C1A;
           padding: 12px;
           margin-bottom: 10px;
           border-radius: 0 4px 4px 0;
@@ -536,7 +536,7 @@ export default function ExportScreen() {
             title="Print Document"
             onPress={handlePrint}
             variant="secondary"
-            icon={<Printer size={20} color="#4B6F44" />}
+            icon={<Printer size={20} color="#1F5C1A" />}
           />
         </View>
       </ScrollView>

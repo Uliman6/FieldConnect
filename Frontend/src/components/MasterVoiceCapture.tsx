@@ -73,7 +73,7 @@ const TALKING_POINTS = [
     prompts: ['Deliveries received', 'Material issues'],
   },
   {
-    icon: <UserCheck size={16} color="#4B6F44" />,
+    icon: <UserCheck size={16} color="#1F5C1A" />,
     title: 'Visitors',
     prompts: ['Who visited today', 'Purpose of visit'],
   },
@@ -298,7 +298,7 @@ export function MasterVoiceCapture({ onRecordingComplete, projectName, date }: M
       <Pressable
         onPress={() => setShowModal(true)}
         className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-4 flex-row items-center"
-        style={{ backgroundColor: '#4B6F44' }}
+        style={{ backgroundColor: '#1F5C1A' }}
       >
         <View className="w-12 h-12 bg-white/20 rounded-full items-center justify-center mr-4">
           <Mic size={24} color="white" />

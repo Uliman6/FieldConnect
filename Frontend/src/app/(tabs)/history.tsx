@@ -60,7 +60,7 @@ type DocumentCategory = 'daily_log' | 'punch_list' | 'rfi';
 type StatusFilter = 'ALL' | 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
 
 const CATEGORY_CONFIG: Record<DocumentCategory, { label: string; icon: any; color: string }> = {
-  daily_log: { label: 'Daily Logs', icon: Calendar, color: '#4B6F44' },
+  daily_log: { label: 'Daily Logs', icon: Calendar, color: '#1F5C1A' },
   punch_list: { label: 'Punch Lists', icon: ClipboardList, color: '#F59E0B' },
   rfi: { label: 'RFIs', icon: FileQuestion, color: '#3B82F6' },
 };
@@ -571,7 +571,7 @@ export default function LogsHistoryScreen() {
             </View>
           </View>
           <View className="flex-row items-center mt-1">
-            <Building2 size={14} color={currentProject ? '#4B6F44' : '#9CA3AF'} />
+            <Building2 size={14} color={currentProject ? '#1F5C1A' : '#9CA3AF'} />
             <Text className={cn(
               'ml-1 text-sm font-medium',
               currentProject ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'
@@ -638,7 +638,7 @@ export default function LogsHistoryScreen() {
         {/* Loading State */}
         {isLoading && (
           <View className="flex-1 items-center justify-center py-20">
-            <ActivityIndicator size="large" color="#4B6F44" />
+            <ActivityIndicator size="large" color="#1F5C1A" />
             <Text className="mt-3 text-gray-500">{t('common.loading')}</Text>
           </View>
         )}
@@ -656,7 +656,7 @@ export default function LogsHistoryScreen() {
                     className="flex-row items-center mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
                   >
                     {dailyLogs.every(l => selectedIds.has(l.id)) ? (
-                      <CheckSquare size={20} color="#4B6F44" />
+                      <CheckSquare size={20} color="#1F5C1A" />
                     ) : (
                       <Square size={20} color="#9CA3AF" />
                     )}
@@ -674,7 +674,7 @@ export default function LogsHistoryScreen() {
                         className="mr-3 p-1"
                       >
                         {selectedIds.has(log.id) ? (
-                          <CheckSquare size={24} color="#4B6F44" />
+                          <CheckSquare size={24} color="#1F5C1A" />
                         ) : (
                           <Square size={24} color="#9CA3AF" />
                         )}
@@ -770,7 +770,7 @@ export default function LogsHistoryScreen() {
                         className="flex-row items-center mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
                       >
                         {checklistItems.every((e: IndexedEvent) => selectedIds.has(e.id)) ? (
-                          <CheckSquare size={20} color="#4B6F44" />
+                          <CheckSquare size={20} color="#1F5C1A" />
                         ) : (
                           <Square size={20} color="#9CA3AF" />
                         )}
@@ -788,7 +788,7 @@ export default function LogsHistoryScreen() {
                             className="mr-3 p-1"
                           >
                             {selectedIds.has(event.id) ? (
-                              <CheckSquare size={24} color="#4B6F44" />
+                              <CheckSquare size={24} color="#1F5C1A" />
                             ) : (
                               <Square size={24} color="#9CA3AF" />
                             )}
@@ -886,7 +886,7 @@ function DailyLogCard({
       <View className="flex-row items-start justify-between">
         <View className="flex-1">
           <View className="flex-row items-center">
-            <Calendar size={18} color="#4B6F44" />
+            <Calendar size={18} color="#1F5C1A" />
             <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">
               {format(logDate, 'EEEE, MMMM d, yyyy')}
             </Text>
@@ -942,7 +942,7 @@ function DailyLogCard({
             <Pencil size={20} color="#3B82F6" />
           </Pressable>
           <Pressable onPress={onViewPdf} className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg mr-2">
-            <Eye size={20} color="#4B6F44" />
+            <Eye size={20} color="#1F5C1A" />
           </Pressable>
           <Pressable onPress={onDownloadPdf} className="bg-orange-500 p-2 rounded-lg mr-2">
             <Download size={20} color="#FFF" />

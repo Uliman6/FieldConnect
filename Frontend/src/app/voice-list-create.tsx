@@ -263,7 +263,7 @@ export default function VoiceListCreateScreen() {
               >
                 <Icon
                   size={18}
-                  color={listType === type ? '#4B6F44' : '#6B7280'}
+                  color={listType === type ? '#1F5C1A' : '#6B7280'}
                 />
                 <Text
                   className={`ml-2 font-medium ${
@@ -310,7 +310,7 @@ export default function VoiceListCreateScreen() {
             )}
             {isTranscribing && !isProcessing && (
               <>
-                <ActivityIndicator size="large" color="#4B6F44" />
+                <ActivityIndicator size="large" color="#1F5C1A" />
                 <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   {t('voice.transcribing')}
                 </Text>
@@ -318,7 +318,7 @@ export default function VoiceListCreateScreen() {
             )}
             {isProcessing && (
               <>
-                <ActivityIndicator size="large" color="#4B6F44" />
+                <ActivityIndicator size="large" color="#1F5C1A" />
                 <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   {t('voiceLists.processing')}
                 </Text>
@@ -342,7 +342,7 @@ export default function VoiceListCreateScreen() {
                 : 'bg-orange-500'
             }`}
             style={{
-              shadowColor: isRecording ? '#EF4444' : '#4B6F44',
+              shadowColor: isRecording ? '#EF4444' : '#1F5C1A',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 8,

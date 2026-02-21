@@ -272,7 +272,7 @@ export function PendingIssuesSection({
       {/* Header with count */}
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center">
-          <AlertTriangle size={20} color="#4B6F44" />
+          <AlertTriangle size={20} color="#1F5C1A" />
           <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
             Pending Issues
           </Text>
@@ -310,7 +310,7 @@ export function PendingIssuesSection({
         title="Add Issue"
         onPress={handleAddIssue}
         variant="secondary"
-        icon={<Plus size={20} color="#4B6F44" />}
+        icon={<Plus size={20} color="#1F5C1A" />}
         className="mt-2"
       />
 

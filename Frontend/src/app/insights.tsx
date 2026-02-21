@@ -113,7 +113,7 @@ function FilterDropdown({
         )}
       >
         <View className="flex-row items-center flex-1">
-          <Icon size={14} color={hasSelection ? '#4B6F44' : color} />
+          <Icon size={14} color={hasSelection ? '#1F5C1A' : color} />
           <Text
             className={cn(
               'text-xs ml-1.5 flex-1',
@@ -128,7 +128,7 @@ function FilterDropdown({
         </View>
         <ChevronDown
           size={14}
-          color={hasSelection ? '#4B6F44' : '#9CA3AF'}
+          color={hasSelection ? '#1F5C1A' : '#9CA3AF'}
           style={{ transform: [{ rotate: isOpen ? '180deg' : '0deg' }] }}
         />
       </Pressable>
@@ -405,7 +405,7 @@ function InsightCard({
           >
             {insight.needsFollowUp ? (
               <>
-                <Bell size={14} color="#4B6F44" />
+                <Bell size={14} color="#1F5C1A" />
                 <Text className="text-xs text-orange-600 ml-1">Follow-up</Text>
               </>
             ) : (
@@ -525,7 +525,7 @@ const SearchInputBox = React.memo(function SearchInputBox({
   return (
     <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
       <View className="flex-row items-center mb-3">
-        <Sparkles size={18} color="#4B6F44" />
+        <Sparkles size={18} color="#1F5C1A" />
         <Text className="ml-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
           Ask AI
         </Text>
@@ -899,7 +899,7 @@ export default function InsightsScreen() {
       {/* Loading State */}
       {backendProjectId && isLoading && (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4B6F44" />
+          <ActivityIndicator size="large" color="#1F5C1A" />
           <Text className="mt-3 text-gray-500">Loading insights...</Text>
         </View>
       )}
@@ -935,7 +935,7 @@ export default function InsightsScreen() {
                   title="Need Follow-up"
                   value={stats.needsFollowUp}
                   icon={Bell}
-                  color="#4B6F44"
+                  color="#1F5C1A"
                 />
               </View>
 
@@ -1371,7 +1371,7 @@ export default function InsightsScreen() {
               {/* Empty State */}
               {!nlQueryResult && !isQuerying && !nlError && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-                  <Sparkles size={40} color="#4B6F44" />
+                  <Sparkles size={40} color="#1F5C1A" />
                   <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
                     AI-Powered Search
                   </Text>

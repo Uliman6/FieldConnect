@@ -308,7 +308,7 @@ function AnalyzeModal({
                           : 'border-gray-200 dark:border-gray-600'
                       )}
                     >
-                      <Building2 size={14} color={projectId === project.id ? '#4B6F44' : '#6B7280'} />
+                      <Building2 size={14} color={projectId === project.id ? '#1F5C1A' : '#6B7280'} />
                       <Text
                         className={cn(
                           'text-sm font-medium ml-1',

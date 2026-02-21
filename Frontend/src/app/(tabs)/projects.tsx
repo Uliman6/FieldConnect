@@ -227,7 +227,7 @@ export default function ProjectsScreen() {
                     <View className="flex-row items-start justify-between">
                       <View className="flex-1">
                         <View className="flex-row items-center">
-                          <Building2 size={20} color="#4B6F44" />
+                          <Building2 size={20} color="#1F5C1A" />
                           <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
                             {project.name}
                           </Text>
@@ -322,7 +322,7 @@ export default function ProjectsScreen() {
               router.push('/import');
             }}
             variant="secondary"
-            icon={<Upload size={20} color="#4B6F44" />}
+            icon={<Upload size={20} color="#1F5C1A" />}
           />
         </View>
 
@@ -335,7 +335,7 @@ export default function ProjectsScreen() {
               router.push('/templates');
             }}
             variant="secondary"
-            icon={<Files size={20} color="#4B6F44" />}
+            icon={<Files size={20} color="#1F5C1A" />}
           />
         </View>
 
@@ -348,7 +348,7 @@ export default function ProjectsScreen() {
               router.push('/schemas');
             }}
             variant="secondary"
-            icon={<Brain size={20} color="#4B6F44" />}
+            icon={<Brain size={20} color="#1F5C1A" />}
           />
         </View>
       </ScrollView>

@@ -261,7 +261,7 @@ export default function SettingsScreen() {
                       </View>
                     </View>
                     {language === lang.code && (
-                      <Check size={20} color="#4B6F44" />
+                      <Check size={20} color="#1F5C1A" />
                     )}
                   </Pressable>
                 ))}
@@ -322,7 +322,7 @@ export default function SettingsScreen() {
                       </View>
                     </View>
                     {transcriptionLanguage === lang.code && (
-                      <Check size={20} color="#4B6F44" />
+                      <Check size={20} color="#1F5C1A" />
                     )}
                   </Pressable>
                 ))}
@@ -363,14 +363,14 @@ export default function SettingsScreen() {
                     onPress={() => setShowCreateUserModal(true)}
                     className={`flex-row items-center p-4 ${isDark ? 'active:bg-gray-800' : 'active:bg-gray-100'}`}
                   >
-                    <Plus size={18} color="#4B6F44" />
+                    <Plus size={18} color="#1F5C1A" />
                     <Text className="ml-2 font-medium text-orange-500">Add New User</Text>
                   </Pressable>
 
                   {/* Users List */}
                   {usersQuery.isLoading ? (
                     <View className="p-4 items-center">
-                      <ActivityIndicator color="#4B6F44" />
+                      <ActivityIndicator color="#1F5C1A" />
                     </View>
                   ) : usersQuery.error ? (
                     <View className="p-4">

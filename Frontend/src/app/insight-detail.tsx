@@ -53,7 +53,7 @@ const CATEGORY_CONFIG: Record<string, { color: string; icon: React.ComponentType
   quality: { color: '#F59E0B', icon: CheckCircle2, label: 'Quality' },
   cost_impact: { color: '#EF4444', icon: DollarSign, label: 'Cost Impact' },
   delay: { color: '#6366F1', icon: Clock, label: 'Delay' },
-  rework: { color: '#4B6F44', icon: RefreshCw, label: 'Rework' },
+  rework: { color: '#1F5C1A', icon: RefreshCw, label: 'Rework' },
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -160,7 +160,7 @@ export default function InsightDetailScreen() {
       {/* Loading State */}
       {isLoading && (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4B6F44" />
+          <ActivityIndicator size="large" color="#1F5C1A" />
           <Text className="mt-3 text-gray-500">Loading insight...</Text>
         </View>
       )}
@@ -396,7 +396,7 @@ export default function InsightDetailScreen() {
               className="mx-4 mt-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-4"
             >
               <View className="flex-row items-center mb-2">
-                <Bell size={16} color="#4B6F44" />
+                <Bell size={16} color="#1F5C1A" />
                 <Text className="text-sm font-semibold text-orange-700 dark:text-orange-300 ml-2">
                   Follow-up Reason
                 </Text>
@@ -406,7 +406,7 @@ export default function InsightDetailScreen() {
               </Text>
               {insight.followUpDueDate && (
                 <View className="flex-row items-center mt-2">
-                  <Calendar size={14} color="#4B6F44" />
+                  <Calendar size={14} color="#1F5C1A" />
                   <Text className="text-xs text-orange-600 ml-1">
                     Due: {format(new Date(insight.followUpDueDate), 'MMM d, yyyy')}
                   </Text>
@@ -548,7 +548,7 @@ export default function InsightDetailScreen() {
                         {/* Project (cross-project indicator) */}
                         {similar.project && similar.project.id !== insight.project?.id && (
                           <View className="flex-row items-center mb-1">
-                            <Building2 size={12} color="#4B6F44" />
+                            <Building2 size={12} color="#1F5C1A" />
                             <Text className="text-xs text-orange-600 ml-1">
                               {similar.project.name}
                             </Text>

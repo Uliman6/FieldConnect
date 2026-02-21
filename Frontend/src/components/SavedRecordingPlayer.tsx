@@ -310,7 +310,7 @@ export function SavedRecordingPlayer({
         <View className="border-t border-gray-200 dark:border-gray-700 pt-4">
           {isTranscribing ? (
             <View className="flex-row items-center justify-center py-4">
-              <ActivityIndicator size="small" color="#4B6F44" />
+              <ActivityIndicator size="small" color="#1F5C1A" />
               <Text className="ml-2 text-sm text-orange-600 dark:text-orange-400">
                 Transcribing audio...
               </Text>
