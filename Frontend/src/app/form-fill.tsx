@@ -593,14 +593,25 @@ function TableField({
           return;
         }
 
+        // Clean up any existing recording first
+        if (nativeRecordingRef.current) {
+          try {
+            await nativeRecordingRef.current.stopAndUnloadAsync();
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+          nativeRecordingRef.current = null;
+        }
+
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: true,
           playsInSilentModeIOS: true,
         });
 
-        const recording = new Audio.Recording();
-        await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-        await recording.startAsync();
+        // Use createAsync for better reliability
+        const { recording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
         nativeRecordingRef.current = recording;
       }
 
