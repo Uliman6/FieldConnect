@@ -55,7 +55,8 @@
       "Bash(ADMIN_TOKEN=\"***REMOVED***\")",
       "Bash(TOKEN=\"***REMOVED***\")",
       "Bash(TOKEN=\"***REMOVED***\")",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(xargs sed:*)"
     ]
   }
 }

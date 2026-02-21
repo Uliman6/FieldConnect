@@ -247,10 +247,10 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#4B6F44',
+    backgroundColor: '#1F5C1A',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#4B6F44',
+    shadowColor: '#1F5C1A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingVertical: 10,
     paddingHorizontal: 24,
-    backgroundColor: '#4B6F44',
+    backgroundColor: '#1F5C1A',
     borderRadius: 8,
   },
   retryText: {

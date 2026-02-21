@@ -238,7 +238,7 @@ export function TasksSection({ tasks, onAdd, onUpdate, onRemove, totalWorkers, t
     <View>
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center">
-          <Users size={20} color="#4B6F44" />
+          <Users size={20} color="#1F5C1A" />
           <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">Activity / Tasks</Text>
         </View>
         <View className="flex-row">
@@ -265,7 +265,7 @@ export function TasksSection({ tasks, onAdd, onUpdate, onRemove, totalWorkers, t
 
       <View className="flex-row">
         <View className="flex-1 mr-2">
-          <Button title="Add Company" onPress={handleAdd} variant="secondary" icon={<Plus size={20} color="#4B6F44" />} />
+          <Button title="Add Company" onPress={handleAdd} variant="secondary" icon={<Plus size={20} color="#1F5C1A" />} />
         </View>
         {previousCompanies.length > 0 && (
           <Pressable
@@ -334,7 +334,7 @@ export function TasksSection({ tasks, onAdd, onUpdate, onRemove, totalWorkers, t
                         {company.workers} workers · {company.hours} hrs
                       </Text>
                     </View>
-                    <Plus size={20} color="#4B6F44" />
+                    <Plus size={20} color="#1F5C1A" />
                   </Pressable>
                 ))}
               </>
@@ -433,7 +433,7 @@ export function VisitorsSection({ visitors, onAdd, onUpdate, onRemove, onAudioRe
   return (
     <View>
       <View className="flex-row items-center mb-3">
-        <UserCheck size={20} color="#4B6F44" />
+        <UserCheck size={20} color="#1F5C1A" />
         <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">Visitors</Text>
         {visitors.length > 0 ? (
           <View className="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded-full">
@@ -452,7 +452,7 @@ export function VisitorsSection({ visitors, onAdd, onUpdate, onRemove, onAudioRe
         />
       ))}
 
-      <Button title="Add Visitor" onPress={handleAdd} variant="secondary" size="sm" icon={<Plus size={18} color="#4B6F44" />} />
+      <Button title="Add Visitor" onPress={handleAdd} variant="secondary" size="sm" icon={<Plus size={18} color="#1F5C1A" />} />
     </View>
   );
 }
@@ -519,7 +519,7 @@ export function EquipmentSection({ equipment, onAdd, onUpdate, onRemove, onAudio
   return (
     <View>
       <View className="flex-row items-center mb-3">
-        <Wrench size={20} color="#4B6F44" />
+        <Wrench size={20} color="#1F5C1A" />
         <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">Equipment</Text>
         {equipment.length > 0 ? (
           <View className="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded-full">
@@ -538,7 +538,7 @@ export function EquipmentSection({ equipment, onAdd, onUpdate, onRemove, onAudio
         />
       ))}
 
-      <Button title="Add Equipment" onPress={handleAdd} variant="secondary" size="sm" icon={<Plus size={18} color="#4B6F44" />} />
+      <Button title="Add Equipment" onPress={handleAdd} variant="secondary" size="sm" icon={<Plus size={18} color="#1F5C1A" />} />
     </View>
   );
 }
@@ -621,7 +621,7 @@ export function MaterialsSection({ materials, onAdd, onUpdate, onRemove, onAudio
   return (
     <View>
       <View className="flex-row items-center mb-3">
-        <Package size={20} color="#4B6F44" />
+        <Package size={20} color="#1F5C1A" />
         <Text className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">Materials</Text>
         {materials.length > 0 ? (
           <View className="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded-full">
@@ -640,7 +640,7 @@ export function MaterialsSection({ materials, onAdd, onUpdate, onRemove, onAudio
         />
       ))}
 
-      <Button title="Add Material" onPress={handleAdd} variant="secondary" size="sm" icon={<Plus size={18} color="#4B6F44" />} />
+      <Button title="Add Material" onPress={handleAdd} variant="secondary" size="sm" icon={<Plus size={18} color="#1F5C1A" />} />
     </View>
   );
 }

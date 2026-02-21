@@ -74,7 +74,7 @@ export function PDFViewerModal({ visible, pdfUri, title = 'PDF Preview', onClose
         <View className="flex-1 bg-gray-100">
           {loading && (
             <View className="absolute inset-0 items-center justify-center bg-gray-100 z-10">
-              <ActivityIndicator size="large" color="#4B6F44" />
+              <ActivityIndicator size="large" color="#1F5C1A" />
               <Text className="mt-3 text-gray-600">Loading PDF...</Text>
             </View>
           )}

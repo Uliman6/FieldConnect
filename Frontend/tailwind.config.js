@@ -11,20 +11,28 @@ module.exports = {
   theme: {
     // NOTE to AI: You can extend the theme with custom colors or styles here.
     extend: {
-      // FieldConnect green theme - override orange with forest green matching the FC logo
+      // FieldConnect brand colors
       colors: {
+        // Override orange with primary green
         orange: {
-          50: '#f3f6f2',
-          100: '#e4ebe2',
-          200: '#c9d8c5',
-          300: '#a4bc9d',
-          400: '#7a9a70',
-          500: '#4B6F44',   // Primary brand color (logo green)
-          600: '#3d5a38',
-          700: '#32482e',
-          800: '#2a3b27',
-          900: '#243222',
-          950: '#121a11',
+          50: '#f2f7f1',
+          100: '#e3efe2',
+          200: '#c7dfc5',
+          300: '#9dc899',
+          400: '#6da968',
+          500: '#1F5C1A',   // Primary brand green
+          600: '#1a4d16',
+          700: '#163f13',
+          800: '#123310',
+          900: '#0e290d',
+          950: '#071507',
+        },
+        // Custom brand colors
+        fc: {
+          bg: '#FAF9F6',        // Warm white background
+          surface: '#F5F4F1',   // Surface color
+          border: '#E2E0DB',    // Border color
+          text: '#0D0D0D',      // Text color
         },
       },
       fontSize: {

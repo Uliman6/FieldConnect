@@ -137,7 +137,7 @@ export function VoiceRecorder({
           </>
         ) : (
           <>
-            <Mic size={compact ? 16 : 20} color="#4B6F44" />
+            <Mic size={compact ? 16 : 20} color="#1F5C1A" />
             <Text style={styles.text}>{placeholder}</Text>
           </>
         )}
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: '#fff',
     borderWidth: 2,
-    borderColor: '#4B6F44',
+    borderColor: '#1F5C1A',
   },
   buttonRecording: {
     backgroundColor: '#EF4444',
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   text: {
-    color: '#4B6F44',
+    color: '#1F5C1A',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#4B6F44',
+    backgroundColor: '#1F5C1A',
     borderRadius: 8,
   },
   retryText: {
