@@ -748,29 +748,65 @@ function generateVoiceListPdf(voiceList, project) {
       const sectionBg = '#FED7AA'; // Light orange
       const borderColor = '#000000';
 
-      // List type labels - multilingual
+      // All PDF labels - multilingual
       const language = voiceList.language || 'en';
-      const listTypeLabels = {
+      const pdfLabels = {
         en: {
+          // List types
           material_list: 'Material List',
           inventory: 'Inventory',
           punch_list: 'Punch List',
-          action_items: 'Action Items'
+          action_items: 'Action Items',
+          // Info labels
+          project: 'Project:',
+          date: 'Date:',
+          createdBy: 'Created By:',
+          totalItems: 'Total Items:',
+          // Column headers
+          qty: 'Qty',
+          unit: 'Unit',
+          description: 'Description',
+          notes: 'Notes',
+          otherItems: 'Other Items'
         },
         tr: {
+          // List types
           material_list: 'Malzeme Listesi',
           inventory: 'Envanter',
           punch_list: 'Eksik Listesi',
-          action_items: 'Aksiyon Kalemleri'
+          action_items: 'Aksiyon Kalemleri',
+          // Info labels
+          project: 'Proje:',
+          date: 'Tarih:',
+          createdBy: 'Oluşturan:',
+          totalItems: 'Toplam Kalem:',
+          // Column headers
+          qty: 'Adet',
+          unit: 'Birim',
+          description: 'Açıklama',
+          notes: 'Notlar',
+          otherItems: 'Diğer Kalemler'
         },
         es: {
+          // List types
           material_list: 'Lista de Materiales',
           inventory: 'Inventario',
           punch_list: 'Lista de Pendientes',
-          action_items: 'Acciones Pendientes'
+          action_items: 'Acciones Pendientes',
+          // Info labels
+          project: 'Proyecto:',
+          date: 'Fecha:',
+          createdBy: 'Creado Por:',
+          totalItems: 'Total Items:',
+          // Column headers
+          qty: 'Cant.',
+          unit: 'Unidad',
+          description: 'Descripción',
+          notes: 'Notas',
+          otherItems: 'Otros Items'
         }
       };
-      const labels = listTypeLabels[language] || listTypeLabels.en;
+      const labels = pdfLabels[language] || pdfLabels.en;
 
       // Header
       doc.fontSize(18).font(FONT_BOLD).text(voiceList.name || 'Voice List', { align: 'center' });
@@ -782,17 +818,17 @@ function generateVoiceListPdf(voiceList, project) {
       doc.rect(40, infoY, 532, 45).stroke();
 
       doc.fontSize(10).font(FONT_BOLD);
-      doc.text('Project:', 45, infoY + 5);
-      doc.font(FONT_REGULAR).text(project?.name || '', 100, infoY + 5);
+      doc.text(labels.project, 45, infoY + 5);
+      doc.font(FONT_REGULAR).text(project?.name || '', 110, infoY + 5);
 
-      doc.font(FONT_BOLD).text('Date:', 350, infoY + 5);
-      doc.font(FONT_REGULAR).text(new Date(voiceList.createdAt).toLocaleDateString(), 390, infoY + 5);
+      doc.font(FONT_BOLD).text(labels.date, 350, infoY + 5);
+      doc.font(FONT_REGULAR).text(new Date(voiceList.createdAt).toLocaleDateString(), 400, infoY + 5);
 
-      doc.font(FONT_BOLD).text('Created By:', 45, infoY + 22);
-      doc.font(FONT_REGULAR).text(voiceList.createdByName || '-', 110, infoY + 22);
+      doc.font(FONT_BOLD).text(labels.createdBy, 45, infoY + 22);
+      doc.font(FONT_REGULAR).text(voiceList.createdByName || '-', 120, infoY + 22);
 
-      doc.font(FONT_BOLD).text('Total Items:', 350, infoY + 22);
-      doc.font(FONT_REGULAR).text(String(voiceList.items?.length || 0), 420, infoY + 22);
+      doc.font(FONT_BOLD).text(labels.totalItems, 350, infoY + 22);
+      doc.font(FONT_REGULAR).text(String(voiceList.items?.length || 0), 440, infoY + 22);
 
       doc.y = infoY + 55;
 
@@ -801,10 +837,10 @@ function generateVoiceListPdf(voiceList, project) {
       doc.rect(40, tableHeaderY, 532, 20).fill(headerBg).stroke(borderColor);
       doc.fillColor('white').fontSize(9).font(FONT_BOLD);
       doc.text('#', 45, tableHeaderY + 5, { width: 25 });
-      doc.text('Qty', 70, tableHeaderY + 5, { width: 40 });
-      doc.text('Unit', 115, tableHeaderY + 5, { width: 40 });
-      doc.text('Description', 160, tableHeaderY + 5, { width: 300 });
-      doc.text('Notes', 470, tableHeaderY + 5, { width: 90 });
+      doc.text(labels.qty, 70, tableHeaderY + 5, { width: 40 });
+      doc.text(labels.unit, 115, tableHeaderY + 5, { width: 40 });
+      doc.text(labels.description, 160, tableHeaderY + 5, { width: 300 });
+      doc.text(labels.notes, 470, tableHeaderY + 5, { width: 90 });
       doc.fillColor('black');
       doc.y = tableHeaderY + 20;
 
@@ -881,7 +917,7 @@ function generateVoiceListPdf(voiceList, project) {
         const unsectionedY = doc.y;
         doc.rect(40, unsectionedY, 532, 18).fill('#E5E7EB').stroke(borderColor);
         doc.fillColor('black').fontSize(9).font(FONT_BOLD);
-        doc.text('Other Items', 45, unsectionedY + 4);
+        doc.text(labels.otherItems, 45, unsectionedY + 4);
         doc.fillColor('black');
         doc.y = unsectionedY + 18;
 
