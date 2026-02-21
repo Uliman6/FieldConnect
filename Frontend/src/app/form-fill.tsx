@@ -49,9 +49,11 @@ import {
 } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 import * as Haptics from 'expo-haptics';
+import { Audio } from 'expo-av';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import { transcribeAudio } from '@/lib/transcription';
+import { useVoiceRecording } from '@/lib/useVoiceRecording';
 
 // Cross-platform confirm dialog
 function showConfirm(title: string, message: string, onConfirm: () => void, onCancel?: () => void) {
@@ -217,7 +219,7 @@ function TextFieldInput({
   );
 }
 
-// Voice-enabled Text Input Component
+// Voice-enabled Text Input Component (cross-platform: web + iOS)
 function VoiceTextInput({
   field,
   value,
@@ -230,84 +232,36 @@ function VoiceTextInput({
   disabled?: boolean;
 }) {
   const { transcriptionLanguage } = useLanguage();
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
 
-  const startRecording = useCallback(async () => {
-    if (disabled || isRecording) return;
+  const handleTranscriptionComplete = useCallback((text: string) => {
+    // Append transcribed text to existing value
+    const newValue = value ? `${value}\n${text}` : text;
+    onChange(newValue);
+  }, [value, onChange]);
 
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      chunksRef.current = [];
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true }
-      });
-
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/mp4';
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        const audioUrl = URL.createObjectURL(blob);
-        stream.getTracks().forEach(track => track.stop());
-
-        // Transcribe the audio with user's selected language
-        setIsTranscribing(true);
-        try {
-          const result = await transcribeAudio(audioUrl, { language: transcriptionLanguage });
-          if (result.success && result.text) {
-            // Append transcribed text to existing value
-            const newValue = value ? `${value}\n${result.text}` : result.text;
-            onChange(newValue);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          } else {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            if (Platform.OS === 'web') {
-              window.alert('Transcription failed: ' + (result.error || 'Unknown error'));
-            }
-          }
-        } catch (error) {
-          console.error('[VoiceTextInput] Transcription error:', error);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        } finally {
-          setIsTranscribing(false);
-          URL.revokeObjectURL(audioUrl);
-        }
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error('[VoiceTextInput] Recording error:', error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      if (Platform.OS === 'web') {
-        window.alert('Could not access microphone. Please check permissions.');
-      }
+  const handleError = useCallback((error: string) => {
+    console.error('[VoiceTextInput] Error:', error);
+    if (Platform.OS === 'web') {
+      window.alert('Voice recording error: ' + error);
+    } else {
+      Alert.alert('Error', error);
     }
-  }, [disabled, isRecording, value, onChange, transcriptionLanguage]);
+  }, []);
 
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+  const { isRecording, isTranscribing, startRecording, stopAndTranscribe } = useVoiceRecording({
+    language: transcriptionLanguage,
+    onTranscriptionComplete: handleTranscriptionComplete,
+    onError: handleError,
+  });
+
+  const handlePress = useCallback(async () => {
+    if (disabled) return;
+    if (isRecording) {
+      await stopAndTranscribe();
+    } else {
+      await startRecording();
     }
-  }, [isRecording]);
+  }, [disabled, isRecording, startRecording, stopAndTranscribe]);
 
   return (
     <View>
@@ -323,7 +277,7 @@ function VoiceTextInput({
           style={{ textAlignVertical: 'top' }}
         />
         <Pressable
-          onPress={isRecording ? stopRecording : startRecording}
+          onPress={handlePress}
           disabled={disabled || isTranscribing}
           className={`ml-2 p-3 rounded-full ${
             isRecording
@@ -352,7 +306,7 @@ function VoiceTextInput({
   );
 }
 
-// Voice-enabled TextArea Component (for TEXTAREA fields with voice support)
+// Voice-enabled TextArea Component (cross-platform: web + iOS)
 function VoiceTextAreaField({
   field,
   value,
@@ -365,84 +319,36 @@ function VoiceTextAreaField({
   disabled?: boolean;
 }) {
   const { transcriptionLanguage } = useLanguage();
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
 
-  const startRecording = useCallback(async () => {
-    if (disabled || isRecording) return;
+  const handleTranscriptionComplete = useCallback((text: string) => {
+    // Append transcribed text to existing value
+    const newValue = value ? `${value}\n${text}` : text;
+    onChange(newValue);
+  }, [value, onChange]);
 
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      chunksRef.current = [];
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true }
-      });
-
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/mp4';
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        const audioUrl = URL.createObjectURL(blob);
-        stream.getTracks().forEach(track => track.stop());
-
-        // Transcribe the audio with user's selected language
-        setIsTranscribing(true);
-        try {
-          const result = await transcribeAudio(audioUrl, { language: transcriptionLanguage });
-          if (result.success && result.text) {
-            // Append transcribed text to existing value
-            const newValue = value ? `${value}\n${result.text}` : result.text;
-            onChange(newValue);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          } else {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            if (Platform.OS === 'web') {
-              window.alert('Transcription failed: ' + (result.error || 'Unknown error'));
-            }
-          }
-        } catch (error) {
-          console.error('[VoiceTextAreaField] Transcription error:', error);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        } finally {
-          setIsTranscribing(false);
-          URL.revokeObjectURL(audioUrl);
-        }
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error('[VoiceTextAreaField] Recording error:', error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      if (Platform.OS === 'web') {
-        window.alert('Could not access microphone. Please check permissions.');
-      }
+  const handleError = useCallback((error: string) => {
+    console.error('[VoiceTextAreaField] Error:', error);
+    if (Platform.OS === 'web') {
+      window.alert('Voice recording error: ' + error);
+    } else {
+      Alert.alert('Error', error);
     }
-  }, [disabled, isRecording, value, onChange, transcriptionLanguage]);
+  }, []);
 
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+  const { isRecording, isTranscribing, startRecording, stopAndTranscribe } = useVoiceRecording({
+    language: transcriptionLanguage,
+    onTranscriptionComplete: handleTranscriptionComplete,
+    onError: handleError,
+  });
+
+  const handlePress = useCallback(async () => {
+    if (disabled) return;
+    if (isRecording) {
+      await stopAndTranscribe();
+    } else {
+      await startRecording();
     }
-  }, [isRecording]);
+  }, [disabled, isRecording, startRecording, stopAndTranscribe]);
 
   return (
     <View>
@@ -459,7 +365,7 @@ function VoiceTextAreaField({
           style={{ textAlignVertical: 'top' }}
         />
         <Pressable
-          onPress={isRecording ? stopRecording : startRecording}
+          onPress={handlePress}
           disabled={disabled || isTranscribing}
           className={`ml-2 p-3 rounded-full ${
             isRecording
@@ -579,7 +485,7 @@ function SignatureField({
   );
 }
 
-// Table Field Component (for work steps, hand at risk, etc.)
+// Table Field Component (cross-platform: web + iOS)
 // Helper type for table columns that can be string or object
 type TableColumn = string | { name: string; voiceEnabled?: boolean };
 
@@ -606,9 +512,14 @@ function TableField({
   // Recording state: track which cell is currently recording
   const [recordingCell, setRecordingCell] = useState<{ row: number; col: number } | null>(null);
   const [transcribingCell, setTranscribingCell] = useState<{ row: number; col: number } | null>(null);
+
+  // Web refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const mimeTypeRef = useRef<string>('audio/webm');
+
+  // Native refs (expo-av)
+  const nativeRecordingRef = useRef<Audio.Recording | null>(null);
 
   // Use defaultRows if provided and no value exists
   const getInitialRows = () => {
@@ -642,82 +553,141 @@ function TableField({
     }
   };
 
-  // Voice recording functions
+  // Cross-platform voice recording functions
   const startCellRecording = useCallback(async (rowIndex: number, colIndex: number) => {
     if (disabled || recordingCell) return;
 
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      chunksRef.current = [];
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true }
-      });
+      if (Platform.OS === 'web') {
+        // Web: Use MediaRecorder
+        chunksRef.current = [];
 
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/mp4';
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
 
-      mimeTypeRef.current = mimeType;
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4';
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
+        mimeTypeRef.current = mimeType;
+        const mediaRecorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorderRef.current = mediaRecorder;
 
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
-        const audioUrl = URL.createObjectURL(blob);
-        stream.getTracks().forEach(track => track.stop());
-
-        // Transcribe the audio
-        setTranscribingCell({ row: rowIndex, col: colIndex });
-        try {
-          const result = await transcribeAudio(audioUrl, { language: transcriptionLanguage });
-          if (result.success && result.text) {
-            // Append transcribed text to existing cell value
-            const currentValue = rows[rowIndex]?.[colIndex] || '';
-            const newValue = currentValue ? `${currentValue} ${result.text}` : result.text;
-            updateCell(rowIndex, colIndex, newValue);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          } else {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            if (Platform.OS === 'web') {
-              window.alert('Transcription failed: ' + (result.error || 'Unknown error'));
-            }
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunksRef.current.push(event.data);
           }
-        } catch (error) {
-          console.error('[TableField] Transcription error:', error);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        } finally {
-          setTranscribingCell(null);
-          URL.revokeObjectURL(audioUrl);
-        }
-      };
+        };
 
-      mediaRecorder.start();
+        mediaRecorder.start();
+      } else {
+        // Native: Use expo-av
+        const { status } = await Audio.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Microphone permission not granted');
+          return;
+        }
+
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+
+        const recording = new Audio.Recording();
+        await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+        await recording.startAsync();
+        nativeRecordingRef.current = recording;
+      }
+
       setRecordingCell({ row: rowIndex, col: colIndex });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[TableField] Recording error:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       if (Platform.OS === 'web') {
         window.alert('Could not access microphone. Please check permissions.');
+      } else {
+        Alert.alert('Error', error.message || 'Could not start recording');
       }
     }
-  }, [disabled, recordingCell, rows, transcriptionLanguage, updateCell]);
+  }, [disabled, recordingCell]);
 
-  const stopCellRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+  const stopCellRecording = useCallback(async () => {
+    if (!recordingCell) return;
+
+    const { row: rowIndex, col: colIndex } = recordingCell;
     setRecordingCell(null);
-  }, []);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      let audioUri: string | null = null;
+
+      if (Platform.OS === 'web') {
+        // Web: Stop MediaRecorder and get blob URL
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          await new Promise<void>((resolve) => {
+            const mediaRecorder = mediaRecorderRef.current!;
+            mediaRecorder.onstop = () => {
+              mediaRecorder.stream.getTracks().forEach(track => track.stop());
+              const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+              audioUri = URL.createObjectURL(blob);
+              resolve();
+            };
+            mediaRecorder.stop();
+          });
+        }
+      } else {
+        // Native: Stop expo-av recording
+        const recording = nativeRecordingRef.current;
+        if (recording) {
+          await recording.stopAndUnloadAsync();
+          audioUri = recording.getURI();
+          nativeRecordingRef.current = null;
+
+          await Audio.setAudioModeAsync({
+            allowsRecordingIOS: false,
+            playsInSilentModeIOS: true,
+          });
+        }
+      }
+
+      if (!audioUri) return;
+
+      // Transcribe the audio
+      setTranscribingCell({ row: rowIndex, col: colIndex });
+      try {
+        const result = await transcribeAudio(audioUri, { language: transcriptionLanguage });
+        if (result.success && result.text) {
+          // Append transcribed text to existing cell value
+          const currentValue = rows[rowIndex]?.[colIndex] || '';
+          const newValue = currentValue ? `${currentValue} ${result.text}` : result.text;
+          updateCell(rowIndex, colIndex, newValue);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          if (Platform.OS === 'web') {
+            window.alert('Transcription failed: ' + (result.error || 'Unknown error'));
+          } else {
+            Alert.alert('Error', result.error || 'Transcription failed');
+          }
+        }
+      } finally {
+        setTranscribingCell(null);
+        // Clean up blob URL on web
+        if (Platform.OS === 'web' && audioUri) {
+          URL.revokeObjectURL(audioUri);
+        }
+      }
+    } catch (error: any) {
+      console.error('[TableField] Stop recording error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setTranscribingCell(null);
+    }
+  }, [recordingCell, rows, transcriptionLanguage, updateCell]);
 
   const isRecordingCell = (row: number, col: number) =>
     recordingCell?.row === row && recordingCell?.col === col;
@@ -768,8 +738,8 @@ function TableField({
                   className="flex-1 p-2 text-sm text-gray-900 dark:text-white min-h-[50px]"
                   style={{ textAlignVertical: 'top' }}
                 />
-                {/* Voice button for columns with voiceEnabled */}
-                {col.voiceEnabled && !disabled && Platform.OS === 'web' && (
+                {/* Voice button for columns with voiceEnabled (cross-platform) */}
+                {col.voiceEnabled && !disabled && (
                   <View className="justify-center pr-1">
                     {isTranscribingCell(rowIdx, colIdx) ? (
                       <ActivityIndicator size="small" color="#F97316" />

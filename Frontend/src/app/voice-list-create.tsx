@@ -21,7 +21,7 @@ import {
 } from '@/lib/api';
 import { getBackendId } from '@/lib/data-provider';
 import { useLanguage } from '@/i18n/LanguageProvider';
-import { transcribeAudio } from '@/lib/transcription';
+import { useVoiceRecording } from '@/lib/useVoiceRecording';
 import {
   Mic,
   MicOff,
@@ -62,17 +62,30 @@ export default function VoiceListCreateScreen() {
   // State
   const [listName, setListName] = useState('');
   const [listType, setListType] = useState<VoiceListType>('material_list');
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [createdListId, setCreatedListId] = useState<string | null>(null);
 
-  // Recording refs
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const mimeTypeRef = useRef<string>('audio/webm');
+  // Cross-platform voice recording hook
+  const handleRecordingError = useCallback((error: string) => {
+    console.error('[voice-list] Recording error:', error);
+    if (Platform.OS === 'web') {
+      window.alert(error);
+    } else {
+      Alert.alert(t('common.error'), error);
+    }
+  }, [t]);
+
+  const {
+    isRecording,
+    isTranscribing,
+    recordingDuration,
+    startRecording: startVoiceRecording,
+    stopAndTranscribe
+  } = useVoiceRecording({
+    language: transcriptionLanguage,
+    onError: handleRecordingError,
+  });
 
   // Recording pulse animation
   const pulseScale = useSharedValue(1);
@@ -122,135 +135,57 @@ export default function VoiceListCreateScreen() {
     },
   });
 
-  // Start recording
+  // Start recording (cross-platform)
   const startRecording = useCallback(async () => {
-    if (Platform.OS !== 'web') {
-      Alert.alert('Not supported', 'Voice recording is only available on web');
+    await startVoiceRecording();
+  }, [startVoiceRecording]);
+
+  // Stop recording and process (cross-platform)
+  const stopRecording = useCallback(async () => {
+    // Get the transcribed text from the recording
+    const transcribedText = await stopAndTranscribe();
+
+    if (!transcribedText) {
+      // Error already handled by the hook
       return;
     }
 
+    // Start processing
+    setIsProcessing(true);
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Create the voice list first if not created
+      let listId = createdListId;
+      if (!listId && backendProjectId) {
+        const newList = await createVoiceList({
+          project_id: backendProjectId,
+          name: listName || t('voiceLists.newList'),
+          list_type: listType,
+          language: transcriptionLanguage,
+        });
+        listId = newList.id;
+        setCreatedListId(listId);
+      }
 
-      // Check for supported mimeType - iOS Safari doesn't support webm
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/mp4'; // Fallback for iOS Safari
+      if (!listId) {
+        throw new Error('Could not create voice list');
+      }
 
-      console.log('[voice-list] Using mimeType:', mimeType);
-      mimeTypeRef.current = mimeType;
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      console.log('[voice-list] Transcription result:', transcribedText.substring(0, 100));
+      setTranscript(transcribedText);
 
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.start(1000); // Collect data every second
-      mediaRecorderRef.current = mediaRecorder;
-      setIsRecording(true);
-      setRecordingDuration(0);
-
-      // Start duration timer
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingDuration((d) => d + 1);
-      }, 1000);
-
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch (error) {
-      console.error('[voice-list] Error starting recording:', error);
-      Alert.alert(t('common.error'), t('voice.noPermission'));
+      // Parse the transcript
+      await parseMutation.mutateAsync({
+        id: listId,
+        transcript: transcribedText,
+      });
+    } catch (error: any) {
+      console.error('[voice-list] Error processing:', error);
+      Alert.alert(t('common.error'), error.message || t('voiceLists.parseError'));
+      setIsProcessing(false);
     }
-  }, [t]);
-
-  // Stop recording and process
-  const stopRecording = useCallback(async () => {
-    if (!mediaRecorderRef.current) return;
-
-    setIsRecording(false);
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    // Stop the media recorder
-    const mediaRecorder = mediaRecorderRef.current;
-
-    return new Promise<void>((resolve) => {
-      mediaRecorder.onstop = async () => {
-        // Stop all tracks
-        mediaRecorder.stream.getTracks().forEach((track) => track.stop());
-
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
-        console.log('[voice-list] Recording stopped, blob size:', audioBlob.size, 'type:', mimeTypeRef.current);
-
-        if (audioBlob.size < 1000) {
-          Alert.alert(t('common.error'), t('voice.tooShort'));
-          resolve();
-          return;
-        }
-
-        // Start processing
-        setIsProcessing(true);
-
-        try {
-          // Create the voice list first if not created
-          let listId = createdListId;
-          if (!listId && backendProjectId) {
-            const newList = await createVoiceList({
-              project_id: backendProjectId,
-              name: listName || t('voiceLists.newList'),
-              list_type: listType,
-              language: transcriptionLanguage,
-            });
-            listId = newList.id;
-            setCreatedListId(listId);
-          }
-
-          if (!listId) {
-            throw new Error('Could not create voice list');
-          }
-
-          // Transcribe the audio - create blob URL first
-          console.log('[voice-list] Transcribing audio, language:', transcriptionLanguage);
-          const audioBlobUrl = URL.createObjectURL(audioBlob);
-          const transcriptionResult = await transcribeAudio(audioBlobUrl, {
-            language: transcriptionLanguage,
-          });
-          // Clean up the blob URL after use
-          URL.revokeObjectURL(audioBlobUrl);
-
-          if (!transcriptionResult.success || !transcriptionResult.text) {
-            throw new Error(transcriptionResult.error || 'Transcription failed');
-          }
-
-          console.log('[voice-list] Transcription result:', transcriptionResult.text.substring(0, 100));
-          setTranscript(transcriptionResult.text);
-
-          // Parse the transcript
-          await parseMutation.mutateAsync({
-            id: listId,
-            transcript: transcriptionResult.text,
-          });
-        } catch (error: any) {
-          console.error('[voice-list] Error processing:', error);
-          Alert.alert(t('common.error'), error.message || t('voiceLists.parseError'));
-          setIsProcessing(false);
-        }
-
-        resolve();
-      };
-
-      mediaRecorder.stop();
-    });
   }, [
+    stopAndTranscribe,
     createdListId,
     backendProjectId,
     listName,
@@ -267,18 +202,7 @@ export default function VoiceListCreateScreen() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-      }
-      if (mediaRecorderRef.current?.state === 'recording') {
-        mediaRecorderRef.current.stop();
-        mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, []);
+  // Note: Recording cleanup is handled by useVoiceRecording hook
 
   if (!backendProjectId) {
     return (
@@ -369,7 +293,7 @@ export default function VoiceListCreateScreen() {
         </Animated.View>
 
         {/* Recording Status */}
-        {(isRecording || isProcessing) && (
+        {(isRecording || isTranscribing || isProcessing) && (
           <Animated.View
             entering={FadeIn}
             className="mb-6 bg-white dark:bg-gray-800 rounded-xl p-4 items-center"
@@ -381,6 +305,14 @@ export default function VoiceListCreateScreen() {
                 </Text>
                 <Text className="text-sm text-gray-500 dark:text-gray-400">
                   {t('voiceLists.recording')}
+                </Text>
+              </>
+            )}
+            {isTranscribing && !isProcessing && (
+              <>
+                <ActivityIndicator size="large" color="#F97316" />
+                <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  {t('voice.transcribing')}
                 </Text>
               </>
             )}
@@ -401,11 +333,11 @@ export default function VoiceListCreateScreen() {
         <Animated.View style={isRecording ? pulseStyle : undefined}>
           <Pressable
             onPress={isRecording ? stopRecording : startRecording}
-            disabled={isProcessing}
+            disabled={isProcessing || isTranscribing}
             className={`w-20 h-20 rounded-full items-center justify-center ${
               isRecording
                 ? 'bg-red-500'
-                : isProcessing
+                : (isProcessing || isTranscribing)
                 ? 'bg-gray-400'
                 : 'bg-orange-500'
             }`}
@@ -417,7 +349,7 @@ export default function VoiceListCreateScreen() {
               elevation: 8,
             }}
           >
-            {isProcessing ? (
+            {(isProcessing || isTranscribing) ? (
               <ActivityIndicator size="large" color="white" />
             ) : isRecording ? (
               <Square size={32} color="white" fill="white" />
@@ -430,6 +362,8 @@ export default function VoiceListCreateScreen() {
         <Text className="text-sm text-gray-500 dark:text-gray-400 mt-4 text-center">
           {isRecording
             ? t('voiceLists.stopRecording')
+            : isTranscribing
+            ? t('voice.transcribing')
             : isProcessing
             ? t('voiceLists.processing')
             : t('voiceLists.tapToRecord')}
