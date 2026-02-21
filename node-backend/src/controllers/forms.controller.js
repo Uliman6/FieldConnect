@@ -2926,7 +2926,7 @@ async function createForm(req, res) {
 async function updateForm(req, res) {
   try {
     const { id } = req.params;
-    const { data, status, location, signatures, voiceTranscript } = req.body;
+    const { data, status, location, signatures, voiceTranscript, name } = req.body;
 
     // First, check if form exists and user has access
     const existingForm = await prisma.formInstance.findUnique({
@@ -2950,6 +2950,7 @@ async function updateForm(req, res) {
     if (location !== undefined) updateData.location = location;
     if (signatures !== undefined) updateData.signatures = signatures;
     if (voiceTranscript !== undefined) updateData.voiceTranscript = voiceTranscript;
+    if (name !== undefined) updateData.name = name;
 
     // Set completedAt when status changes to COMPLETED
     if (status === 'COMPLETED') {

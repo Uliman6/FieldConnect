@@ -431,6 +431,7 @@ export default {
     quantity: 'Miktar',
     unit: 'Birim',
     description: 'Aciklama',
+    brand: 'Marka',
     notes: 'Notlar',
     noItems: 'Henuz kalem yok',
     itemCount: '{{count}} kalem',

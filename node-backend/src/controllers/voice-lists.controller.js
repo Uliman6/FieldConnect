@@ -373,6 +373,7 @@ class VoiceListsController {
             quantity: item.quantity,
             unit: item.unit,
             description: item.description,
+            brandName: item.brandName || null,
             category: item.category,
             notes: item.notes,
             orderIndex: existingItemCount + i,
@@ -578,6 +579,7 @@ class VoiceListsController {
         quantity,
         unit,
         description,
+        brand_name,
         category,
         notes
       } = req.body;
@@ -622,6 +624,7 @@ class VoiceListsController {
           quantity: quantity || null,
           unit: unit || null,
           description: description || raw_text,
+          brandName: brand_name || null,
           category: category || null,
           notes: notes || null,
           orderIndex: (maxItem?.orderIndex ?? -1) + 1
@@ -647,6 +650,7 @@ class VoiceListsController {
         quantity,
         unit,
         description,
+        brand_name,
         category,
         notes,
         order_index
@@ -678,6 +682,7 @@ class VoiceListsController {
           ...(quantity !== undefined && { quantity }),
           ...(unit !== undefined && { unit }),
           ...(description !== undefined && { description }),
+          ...(brand_name !== undefined && { brandName: brand_name }),
           ...(category !== undefined && { category }),
           ...(notes !== undefined && { notes }),
           ...(order_index !== undefined && { orderIndex: order_index })

@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   getVoiceList,
+  updateVoiceList,
   updateVoiceListItem,
   deleteVoiceListItem,
   addVoiceListSection,
@@ -37,6 +38,7 @@ import {
   Package,
   FolderOpen,
   Download,
+  Pencil,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -54,6 +56,7 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
     quantity: item.quantity?.toString() || '',
     unit: item.unit || '',
     description: item.description,
+    brandName: item.brandName || '',
     notes: item.notes || '',
   });
 
@@ -76,6 +79,7 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
       quantity: editedItem.quantity ? parseFloat(editedItem.quantity) : undefined,
       unit: editedItem.unit || undefined,
       description: editedItem.description,
+      brand_name: editedItem.brandName || undefined,
       notes: editedItem.notes || undefined,
     });
   };
@@ -130,6 +134,15 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
           className="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 mb-2"
         />
         <TextInput
+          value={editedItem.brandName}
+          onChangeText={(val) =>
+            setEditedItem((e) => ({ ...e, brandName: val }))
+          }
+          placeholder={t('voiceLists.brand')}
+          placeholderTextColor="#9CA3AF"
+          className="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 mb-2"
+        />
+        <TextInput
           value={editedItem.notes}
           onChangeText={(val) =>
             setEditedItem((e) => ({ ...e, notes: val }))
@@ -174,11 +187,14 @@ function ItemRow({ item, listId, onUpdate }: ItemRowProps) {
         )}
       </View>
 
-      {/* Description */}
+      {/* Description & Brand */}
       <View className="flex-1">
         <Text className="text-sm text-gray-900 dark:text-white">
           {item.description}
         </Text>
+        {item.brandName && (
+          <Text className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">{item.brandName}</Text>
+        )}
         {item.notes && (
           <Text className="text-xs text-blue-500 dark:text-blue-400 mt-0.5">{item.notes}</Text>
         )}
@@ -272,6 +288,8 @@ export default function VoiceListDetailScreen() {
   const [showAddItem, setShowAddItem] = useState(false);
   const [newItem, setNewItem] = useState({ quantity: '', unit: '', description: '' });
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
 
   // Fetch voice list
   const voiceListQuery = useQuery({
@@ -306,6 +324,30 @@ export default function VoiceListDetailScreen() {
       handleRefresh();
     },
   });
+
+  // Update name mutation
+  const updateNameMutation = useMutation({
+    mutationFn: (name: string) => updateVoiceList(id!, { name }),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      handleRefresh();
+    },
+    onError: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    },
+  });
+
+  const handleSaveName = useCallback(() => {
+    if (editedName.trim() && editedName.trim() !== voiceList?.name) {
+      updateNameMutation.mutate(editedName.trim());
+    }
+    setIsEditingName(false);
+  }, [editedName, voiceList?.name, updateNameMutation]);
+
+  const handleStartEditName = useCallback(() => {
+    setEditedName(voiceList?.name || '');
+    setIsEditingName(true);
+  }, [voiceList?.name]);
 
   const handleDeleteList = () => {
     if (Platform.OS === 'web') {
@@ -391,9 +433,35 @@ export default function VoiceListDetailScreen() {
             <ChevronLeft size={24} color="#6B7280" />
           </Pressable>
           <View className="flex-1 ml-2">
-            <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-              {voiceList.name}
-            </Text>
+            {isEditingName ? (
+              <View className="flex-row items-center">
+                <TextInput
+                  value={editedName}
+                  onChangeText={setEditedName}
+                  onBlur={handleSaveName}
+                  onSubmitEditing={handleSaveName}
+                  autoFocus
+                  className="flex-1 text-lg font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-lg px-2 py-1"
+                  returnKeyType="done"
+                />
+                <Pressable onPress={handleSaveName} className="ml-2 p-1">
+                  <Check size={18} color="#10B981" />
+                </Pressable>
+                <Pressable
+                  onPress={() => setIsEditingName(false)}
+                  className="p-1"
+                >
+                  <X size={18} color="#EF4444" />
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable onPress={handleStartEditName} className="flex-row items-center">
+                <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {voiceList.name}
+                </Text>
+                <Pencil size={14} color="#9CA3AF" style={{ marginLeft: 6 }} />
+              </Pressable>
+            )}
             <Text className="text-xs text-gray-500 dark:text-gray-400">
               {voiceList.items?.length || 0} {t('voiceLists.items').toLowerCase()} •{' '}
               {voiceList.sections?.length || 0} {t('voiceLists.sections').toLowerCase()}

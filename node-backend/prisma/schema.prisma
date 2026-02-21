@@ -841,6 +841,7 @@ model FormInstance {
   // Project and location
   projectId     String     @map("project_id")
   location      String?                   // Specific work location
+  name          String?                   // Custom name for the form instance
 
   // Form status
   status        FormStatus @default(DRAFT)
@@ -987,6 +988,7 @@ model VoiceListItem {
   quantity          Float?                              // Extracted: 10
   unit              String?                             // Extracted: "m", "pcs", "kg"
   description       String                              // Extracted/cleaned: "2.5 Siyah cable"
+  brandName         String?   @map("brand_name")       // Extracted brand: "Schneider", "ABB"
   category          String?                             // AI-inferred category
   notes             String?   @db.Text                  // Additional context
   orderIndex        Int       @map("order_index")
