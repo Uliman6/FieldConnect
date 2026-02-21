@@ -3,7 +3,7 @@
     "name": "FieldConnect",
     "slug": "fieldconnect",
     "scheme": "fieldconnect",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -86,7 +86,7 @@
       "router": {}
     },
     "owner": "ulis-organization",
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": "1.1.0",
     "updates": {
       "url": "https://u.expo.dev/8697f118-69e2-4cc2-a676-80d0a0591aa0",
       "checkAutomatically": "ON_LOAD",
