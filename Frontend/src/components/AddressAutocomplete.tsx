@@ -214,7 +214,7 @@ export function AddressAutocomplete({
 
           {isLoading && (
             <View className="pr-3">
-              <ActivityIndicator size="small" color="#F97316" />
+              <ActivityIndicator size="small" color="#4B6F44" />
             </View>
           )}
 
@@ -248,7 +248,7 @@ export function AddressAutocomplete({
                   index < suggestions.length - 1 && 'border-b border-gray-100 dark:border-gray-700'
                 )}
               >
-                <MapPin size={16} color="#F97316" />
+                <MapPin size={16} color="#4B6F44" />
                 <View className="flex-1 ml-3">
                   <Text className="text-base text-gray-900 dark:text-white" numberOfLines={1}>
                     {suggestion.name}

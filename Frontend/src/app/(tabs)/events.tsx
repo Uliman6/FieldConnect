@@ -418,7 +418,7 @@ export default function EventsScreen() {
         {currentProject ? (
           <View className="mx-4 mt-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3">
             <View className="flex-row items-center">
-              <Building2 size={18} color="#F97316" />
+              <Building2 size={18} color="#4B6F44" />
               <Text className="ml-2 text-sm font-medium text-orange-700 dark:text-orange-300">
                 {t('events.recordingFor')} {currentProject.name}
               </Text>

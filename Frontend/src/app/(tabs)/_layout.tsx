@@ -16,7 +16,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#F97316',
+        tabBarActiveTintColor: '#4B6F44',
         tabBarInactiveTintColor: isDark ? '#6B7280' : '#9CA3AF',
         tabBarStyle: {
           backgroundColor: isDark ? '#111' : '#FFF',
@@ -46,7 +46,7 @@ export default function TabLayout() {
               onPress={() => router.push('/insights')}
               className="mr-4 p-2"
             >
-              <Lightbulb size={22} color="#F97316" />
+              <Lightbulb size={22} color="#4B6F44" />
             </Pressable>
           ),
         }}

@@ -223,7 +223,7 @@ export default function DailyLogScreen() {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center p-8">
         <View className="w-20 h-20 rounded-full bg-orange-100 dark:bg-orange-900/30 items-center justify-center mb-4">
-          <FileText size={40} color="#F97316" />
+          <FileText size={40} color="#4B6F44" />
         </View>
         <Text className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-2">
           {hasProjects ? t('projects.projectRequired') : t('projects.noProjects')}
@@ -284,7 +284,7 @@ export default function DailyLogScreen() {
               onPress={openDatePicker}
               className="flex-1 mx-3 flex-row items-center justify-center py-2"
             >
-              <Calendar size={18} color="#F97316" />
+              <Calendar size={18} color="#4B6F44" />
               <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">
                 {format(parseISO(log.date), 'EEEE, MMMM d, yyyy')}
               </Text>
@@ -392,7 +392,7 @@ export default function DailyLogScreen() {
         <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4">
           <View className="flex-row items-center mb-3">
             <View className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 items-center justify-center">
-              <Mic size={20} color="#F97316" />
+              <Mic size={20} color="#4B6F44" />
             </View>
             <View className="ml-3 flex-1">
               <Text className="text-lg font-semibold text-gray-900 dark:text-white">

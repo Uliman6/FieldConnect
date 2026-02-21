@@ -125,7 +125,7 @@ function SyncStatusBanner() {
         </View>
       )}
       {isOnline && pendingCount > 0 && !isSyncing && (
-        <View style={[styles.syncIndicator, { backgroundColor: '#F97316' }]}>
+        <View style={[styles.syncIndicator, { backgroundColor: '#4B6F44' }]}>
           <Text style={styles.syncText}>{pendingCount} pending changes</Text>
         </View>
       )}

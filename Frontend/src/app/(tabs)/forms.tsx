@@ -190,7 +190,7 @@ function TemplateCard({
       className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 flex-row items-center"
     >
       <View className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 items-center justify-center mr-3">
-        <ClipboardList size={20} color="#F97316" />
+        <ClipboardList size={20} color="#4B6F44" />
       </View>
       <View className="flex-1">
         <Text className="text-base font-semibold text-gray-900 dark:text-white">
@@ -201,7 +201,7 @@ function TemplateCard({
         </Text>
       </View>
       {isLoading ? (
-        <ActivityIndicator size="small" color="#F97316" />
+        <ActivityIndicator size="small" color="#4B6F44" />
       ) : (
         <View className="bg-orange-500 rounded-full p-2">
           <Plus size={16} color="white" />
@@ -519,7 +519,7 @@ export default function FormsScreen() {
         {currentProject ? (
           <View className="mx-4 mt-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3">
             <View className="flex-row items-center">
-              <Building2 size={18} color="#F97316" />
+              <Building2 size={18} color="#4B6F44" />
               <Text className="ml-2 text-sm font-medium text-orange-700 dark:text-orange-300">
                 {currentProject.name}
               </Text>
@@ -566,7 +566,7 @@ export default function FormsScreen() {
 
           {templatesQuery.isLoading ? (
             <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-              <ActivityIndicator size="small" color="#F97316" />
+              <ActivityIndicator size="small" color="#4B6F44" />
               <Text className="mt-2 text-gray-500">Loading templates...</Text>
             </View>
           ) : templates.length === 0 ? (
@@ -625,7 +625,7 @@ export default function FormsScreen() {
             }}
             className="bg-gradient-to-r bg-orange-500 rounded-xl p-4 flex-row items-center mb-4"
             style={{
-              shadowColor: '#F97316',
+              shadowColor: '#4B6F44',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
               shadowRadius: 8,
@@ -649,7 +649,7 @@ export default function FormsScreen() {
           {/* Existing Voice Lists */}
           {voiceListsQuery.isLoading ? (
             <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
-              <ActivityIndicator size="small" color="#F97316" />
+              <ActivityIndicator size="small" color="#4B6F44" />
               <Text className="mt-2 text-gray-500">{t('common.loading')}</Text>
             </View>
           ) : voiceLists.length > 0 ? (

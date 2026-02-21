@@ -340,7 +340,7 @@ export default function ProjectTeamScreen() {
       >
         {isLoading ? (
           <View className="items-center py-12">
-            <ActivityIndicator size="large" color="#F97316" />
+            <ActivityIndicator size="large" color="#4B6F44" />
             <Text className="mt-3 text-gray-500">Loading team...</Text>
           </View>
         ) : (
@@ -486,7 +486,7 @@ export default function ProjectTeamScreen() {
                           : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                       }`}
                     >
-                      <RoleIcon size={20} color={isSelected ? '#F97316' : roleColor} />
+                      <RoleIcon size={20} color={isSelected ? '#4B6F44' : roleColor} />
                       <Text
                         className={`mt-1 text-sm font-medium ${
                           isSelected ? 'text-orange-600' : 'text-gray-600 dark:text-gray-400'

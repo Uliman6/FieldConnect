@@ -11,11 +11,22 @@ module.exports = {
   theme: {
     // NOTE to AI: You can extend the theme with custom colors or styles here.
     extend: {
-      // For example, you can add a primary or secondary color here.
-      // colors: {
-      //   primary: "#INSERT_VALID_HEX_CODE",
-      //   secondary: "#INSERT_VALID_HEX_CODE",
-      // },
+      // FieldConnect green theme - override orange with forest green matching the FC logo
+      colors: {
+        orange: {
+          50: '#f3f6f2',
+          100: '#e4ebe2',
+          200: '#c9d8c5',
+          300: '#a4bc9d',
+          400: '#7a9a70',
+          500: '#4B6F44',   // Primary brand color (logo green)
+          600: '#3d5a38',
+          700: '#32482e',
+          800: '#2a3b27',
+          900: '#243222',
+          950: '#121a11',
+        },
+      },
       fontSize: {
         xs: "10px",
         sm: "12px",

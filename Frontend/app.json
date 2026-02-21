@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F97316"
+      "backgroundColor": "#4B6F44"
     },
     "ios": {
       "supportsTablet": true,
@@ -27,7 +27,7 @@
       "package": "com.const.fieldconnect",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F97316"
+        "backgroundColor": "#4B6F44"
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
