@@ -376,7 +376,7 @@ function UploadModal({
                         : 'border-gray-200 dark:border-gray-600'
                     )}
                   >
-                    <Building2 size={14} color={projectId === project.id ? '#F97316' : '#6B7280'} />
+                    <Building2 size={14} color={projectId === project.id ? '#4B6F44' : '#6B7280'} />
                     <Text
                       className={cn(
                         'text-sm font-medium ml-1',
@@ -641,7 +641,7 @@ export default function TemplatesScreen() {
                 viewMode === 'project' && 'bg-white dark:bg-gray-800'
               )}
             >
-              <Building2 size={16} color={viewMode === 'project' ? '#F97316' : '#6B7280'} />
+              <Building2 size={16} color={viewMode === 'project' ? '#4B6F44' : '#6B7280'} />
               <Text
                 className={cn(
                   'font-medium ml-1.5',

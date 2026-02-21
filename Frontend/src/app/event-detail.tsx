@@ -1071,7 +1071,7 @@ export default function EventDetailScreen() {
   if (isLoadingBackend) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
-        <ActivityIndicator size="large" color="#F97316" />
+        <ActivityIndicator size="large" color="#4B6F44" />
         <Text className="mt-3 text-gray-500">Loading observation...</Text>
       </SafeAreaView>
     );
@@ -1101,7 +1101,7 @@ export default function EventDetailScreen() {
   if (!event) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
-        <ActivityIndicator size="large" color="#F97316" />
+        <ActivityIndicator size="large" color="#4B6F44" />
         <Text className="mt-3 text-gray-500">Loading...</Text>
       </SafeAreaView>
     );
@@ -1469,7 +1469,7 @@ export default function EventDetailScreen() {
               disabled={!hasChanges}
               className={cn('p-2', !hasChanges && 'opacity-50')}
             >
-              <Save size={24} color={hasChanges ? '#F97316' : '#9CA3AF'} />
+              <Save size={24} color={hasChanges ? '#4B6F44' : '#9CA3AF'} />
             </Pressable>
           ),
         }}

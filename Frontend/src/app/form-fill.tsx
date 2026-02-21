@@ -721,7 +721,7 @@ function TableField({
                 {col.name}
               </Text>
               {col.voiceEnabled && (
-                <Mic size={12} color="#F97316" style={{ marginLeft: 4 }} />
+                <Mic size={12} color="#4B6F44" style={{ marginLeft: 4 }} />
               )}
             </View>
           </View>
@@ -753,7 +753,7 @@ function TableField({
                 {col.voiceEnabled && !disabled && (
                   <View className="justify-center pr-1">
                     {isTranscribingCell(rowIdx, colIdx) ? (
-                      <ActivityIndicator size="small" color="#F97316" />
+                      <ActivityIndicator size="small" color="#4B6F44" />
                     ) : (
                       <Pressable
                         onPress={() =>
@@ -771,7 +771,7 @@ function TableField({
                         {isRecordingCell(rowIdx, colIdx) ? (
                           <StopIcon size={14} color="white" fill="white" />
                         ) : (
-                          <Mic size={14} color="#F97316" />
+                          <Mic size={14} color="#4B6F44" />
                         )}
                       </Pressable>
                     )}
@@ -796,7 +796,7 @@ function TableField({
           onPress={addRow}
           className="flex-row items-center justify-center p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
         >
-          <Plus size={16} color="#F97316" />
+          <Plus size={16} color="#4B6F44" />
           <Text className="ml-2 text-sm text-orange-500 font-medium">Add Row</Text>
         </Pressable>
       )}
@@ -1124,7 +1124,7 @@ function PhotoField({
           className="items-center justify-center py-8"
         >
           {isLoading ? (
-            <ActivityIndicator size="large" color="#F97316" />
+            <ActivityIndicator size="large" color="#4B6F44" />
           ) : (
             <>
               <Camera size={40} color="#9CA3AF" />
@@ -1323,7 +1323,7 @@ function RepeatableSectionWrapper({
           onPress={addInstance}
           className="flex-row items-center justify-center py-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border-2 border-dashed border-orange-300 dark:border-orange-700"
         >
-          <Plus size={20} color="#F97316" />
+          <Plus size={20} color="#4B6F44" />
           <Text className="ml-2 text-orange-500 font-medium">
             Add {repeatLabel} ({instanceCount}/{maxRepeats})
           </Text>
@@ -1771,7 +1771,7 @@ export default function FormFillScreen() {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
         <Stack.Screen options={{ headerShown: false }} />
-        <ActivityIndicator size="large" color="#F97316" />
+        <ActivityIndicator size="large" color="#4B6F44" />
         <Text className="mt-4 text-gray-500">Loading form...</Text>
       </View>
     );
@@ -1842,7 +1842,7 @@ export default function FormFillScreen() {
           <View className="flex-row items-center">
             {isSaving && (
               <View className="flex-row items-center mr-3">
-                <ActivityIndicator size="small" color="#F97316" />
+                <ActivityIndicator size="small" color="#4B6F44" />
                 <Text className="ml-1 text-xs text-gray-400">Saving...</Text>
               </View>
             )}
@@ -1851,7 +1851,7 @@ export default function FormFillScreen() {
               disabled={!hasChanges || isSaving}
               className={`p-2 ${hasChanges ? 'opacity-100' : 'opacity-50'}`}
             >
-              <Save size={22} color={hasChanges ? '#F97316' : '#9CA3AF'} />
+              <Save size={22} color={hasChanges ? '#4B6F44' : '#9CA3AF'} />
             </Pressable>
           </View>
         </View>

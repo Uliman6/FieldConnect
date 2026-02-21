@@ -24,9 +24,9 @@ const STATUS_CONFIG: Record<
     bgColor: 'bg-gray-100 dark:bg-gray-800',
   },
   syncing: {
-    icon: <ActivityIndicator size="small" color="#F97316" />,
+    icon: <ActivityIndicator size="small" color="#4B6F44" />,
     label: 'Syncing...',
-    color: '#F97316',
+    color: '#4B6F44',
     bgColor: 'bg-orange-100 dark:bg-orange-900',
   },
   synced: {

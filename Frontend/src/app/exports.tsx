@@ -77,7 +77,7 @@ function ExportButton({
         <View className="flex-row items-center">
           <View className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 items-center justify-center">
             {loading ? (
-              <ActivityIndicator color="#F97316" />
+              <ActivityIndicator color="#4B6F44" />
             ) : success ? (
               <Check size={24} color="#10B981" />
             ) : (
@@ -426,7 +426,7 @@ export default function ExportsScreen() {
             </View>
             <View className="items-center">
               <View className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 items-center justify-center mb-2">
-                <Database size={20} color="#F97316" />
+                <Database size={20} color="#4B6F44" />
               </View>
               <Text className="text-xl font-bold text-gray-900 dark:text-white">
                 {events.length}
@@ -444,7 +444,7 @@ export default function ExportsScreen() {
         <ExportButton
           title="Export Last 7 Days"
           description="All data from the past week"
-          icon={<Calendar size={24} color="#F97316" />}
+          icon={<Calendar size={24} color="#4B6F44" />}
           onPress={handleExportLast7Days}
           loading={loadingKey === '7days'}
           success={successKey === '7days'}
@@ -454,7 +454,7 @@ export default function ExportsScreen() {
         <ExportButton
           title="Export Last 30 Days"
           description="All data from the past month"
-          icon={<Calendar size={24} color="#F97316" />}
+          icon={<Calendar size={24} color="#4B6F44" />}
           onPress={handleExportLast30Days}
           loading={loadingKey === '30days'}
           success={successKey === '30days'}
@@ -464,7 +464,7 @@ export default function ExportsScreen() {
         <ExportButton
           title="Export This Project"
           description={currentProject ? currentProject.name : 'Select a project first'}
-          icon={<Building2 size={24} color="#F97316" />}
+          icon={<Building2 size={24} color="#4B6F44" />}
           onPress={handleExportCurrentProject}
           loading={loadingKey === 'project'}
           success={successKey === 'project'}
@@ -474,7 +474,7 @@ export default function ExportsScreen() {
         <ExportButton
           title="Export All Data"
           description="Complete backup of all projects, logs, and events"
-          icon={<Database size={24} color="#F97316" />}
+          icon={<Database size={24} color="#4B6F44" />}
           onPress={handleExportAllData}
           loading={loadingKey === 'all'}
           success={successKey === 'all'}
@@ -484,7 +484,7 @@ export default function ExportsScreen() {
         <ExportButton
           title="Export Audio Manifest"
           description="All data with audio file references"
-          icon={<FileAudio size={24} color="#F97316" />}
+          icon={<FileAudio size={24} color="#4B6F44" />}
           onPress={handleExportAudioManifest}
           loading={loadingKey === 'audio'}
           success={successKey === 'audio'}

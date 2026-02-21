@@ -97,7 +97,7 @@ interface SectionConfig {
 }
 
 const SECTION_CONFIGS: SectionConfig[] = [
-  { key: 'tasks', title: 'Tasks', icon: <ClipboardList size={20} color="#F97316" />, color: '#F97316' },
+  { key: 'tasks', title: 'Tasks', icon: <ClipboardList size={20} color="#4B6F44" />, color: '#4B6F44' },
   { key: 'issues', title: 'Pending Issues', icon: <AlertTriangle size={20} color="#EF4444" />, color: '#EF4444' },
   { key: 'visitors', title: 'Visitors', icon: <UserCheck size={20} color="#10B981" />, color: '#10B981' },
   { key: 'equipment', title: 'Equipment', icon: <Truck size={20} color="#6B7280" />, color: '#6B7280' },
@@ -149,7 +149,7 @@ function SectionHeader({
           onPress={onAdd}
           className="flex-row items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg"
         >
-          <Plus size={16} color="#F97316" />
+          <Plus size={16} color="#4B6F44" />
           <Text className="ml-1 text-sm font-medium text-orange-500">Add</Text>
         </Pressable>
       )}
@@ -1194,7 +1194,7 @@ Hours: ${log.dailyTotalsHours || 0}`;
   if (isLoading) {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
-        <ActivityIndicator size="large" color="#F97316" />
+        <ActivityIndicator size="large" color="#4B6F44" />
         <Text className="mt-4 text-gray-500 dark:text-gray-400">Loading daily log...</Text>
       </View>
     );
@@ -1244,7 +1244,7 @@ Hours: ${log.dailyTotalsHours || 0}`;
           {log.project && (
             <View className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 mb-3">
               <View className="flex-row items-center">
-                <Building2 size={18} color="#F97316" />
+                <Building2 size={18} color="#4B6F44" />
                 <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-white">
                   {log.project.name}
                 </Text>
@@ -1294,7 +1294,7 @@ Hours: ${log.dailyTotalsHours || 0}`;
             <View className="flex-row">
               <View className="flex-1 items-center">
                 <View className="flex-row items-center">
-                  <Users size={20} color="#F97316" />
+                  <Users size={20} color="#4B6F44" />
                   <Text className="ml-2 text-2xl font-bold text-gray-900 dark:text-white">
                     {log.dailyTotalsWorkers || 0}
                   </Text>
@@ -1304,7 +1304,7 @@ Hours: ${log.dailyTotalsHours || 0}`;
               <View className="w-px bg-gray-200 dark:bg-gray-700" />
               <View className="flex-1 items-center">
                 <View className="flex-row items-center">
-                  <Clock size={20} color="#F97316" />
+                  <Clock size={20} color="#4B6F44" />
                   <Text className="ml-2 text-2xl font-bold text-gray-900 dark:text-white">
                     {log.dailyTotalsHours || 0}
                   </Text>
@@ -1337,7 +1337,7 @@ Hours: ${log.dailyTotalsHours || 0}`;
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
             <SectionHeader
               title="Tasks"
-              icon={<ClipboardList size={20} color="#F97316" />}
+              icon={<ClipboardList size={20} color="#4B6F44" />}
               count={log.tasks?.length}
               onAdd={() => setEditingTask({ isNew: true })}
             />

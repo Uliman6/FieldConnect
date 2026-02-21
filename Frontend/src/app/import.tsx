@@ -60,7 +60,7 @@ export default function ImportScreen() {
       title: 'Import Project',
       description: 'Import a complete project with all logs and events',
       icon: Building2,
-      color: '#F97316',
+      color: '#4B6F44',
     },
     {
       id: 'forms' as ImportType,

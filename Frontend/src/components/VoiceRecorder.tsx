@@ -278,7 +278,7 @@ export function VoiceRecorder({
         onPress={checkPermissions}
         className="flex-row items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-3"
       >
-        <Mic size={20} color="#F97316" />
+        <Mic size={20} color="#4B6F44" />
         <Text className="ml-2 text-gray-600 dark:text-gray-400">Tap to enable microphone</Text>
       </Pressable>
     );
@@ -710,7 +710,7 @@ export function VoiceInputField({
               </Pressable>
             )}
             <Pressable onPress={() => setShowRecorder(!showRecorder)}>
-              <Mic size={18} color="#F97316" />
+              <Mic size={18} color="#4B6F44" />
             </Pressable>
           </View>
         </View>
