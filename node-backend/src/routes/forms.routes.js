@@ -13,6 +13,9 @@ router.post('/templates/update', authenticate, formsController.updateDefaultTemp
 // OCR for nameplate photos (must be before /:id routes)
 router.post('/ocr/nameplate', authenticate, formsController.extractNameplateOcr);
 
+// Photo upload for forms (must be before /:id routes)
+router.post('/upload-photo', authenticate, formsController.uploadFormPhotoBase64);
+
 // Form instance routes - require authentication and project access
 router.get('/', authenticate, loadAccessibleProjects, formsController.getForms);
 router.get('/:id', authenticate, loadAccessibleProjects, formsController.getForm);
