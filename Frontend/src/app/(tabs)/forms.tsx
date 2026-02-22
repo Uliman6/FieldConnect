@@ -20,6 +20,8 @@ import {
   seedFormTemplates,
   getVoiceLists,
   deleteVoiceList,
+  fetchBulkExportByIds,
+  fetchBulkExport,
   queryKeys,
   FormTemplate,
   FormInstance,
@@ -40,7 +42,12 @@ import {
   Trash2,
   Mic,
   Package,
+  Archive,
+  Square,
+  CheckSquare,
 } from 'lucide-react-native';
+import * as Sharing from 'expo-sharing';
+import { cn } from '@/lib/cn';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { format } from 'date-fns';
@@ -316,6 +323,9 @@ export default function FormsScreen() {
   const [startingTemplate, setStartingTemplate] = useState<string | null>(null);
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
   const [deletingVoiceListId, setDeletingVoiceListId] = useState<string | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isExporting, setIsExporting] = useState(false);
 
   const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
   const projects = useDailyLogStore((s) => s.projects);
@@ -489,6 +499,91 @@ export default function FormsScreen() {
     }
   }, [queryClient, backendProjectId, t]);
 
+  // Selection mode handlers
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback((ids: string[]) => {
+    setSelectedIds(prev => {
+      const allSelected = ids.every(id => prev.has(id));
+      if (allSelected) {
+        return new Set();
+      } else {
+        return new Set(ids);
+      }
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleBulkExport = useCallback(async () => {
+    // If in selection mode, require selected items
+    if (selectionMode && selectedIds.size === 0) {
+      Alert.alert('No Selection', 'Please select forms to export');
+      return;
+    }
+
+    // If not in selection mode, require project
+    if (!selectionMode && !backendProjectId) {
+      Alert.alert('No Project', 'Please select a project first');
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsExporting(true);
+
+    try {
+      // Use selected IDs if in selection mode, otherwise export entire project
+      const zipUri = selectionMode && selectedIds.size > 0
+        ? await fetchBulkExportByIds('form', Array.from(selectedIds))
+        : await fetchBulkExport(backendProjectId!, 'form');
+
+      if (Platform.OS === 'web') {
+        // Trigger download
+        const a = document.createElement('a');
+        a.href = zipUri;
+        a.download = 'forms-export.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(zipUri);
+      } else {
+        // Share the ZIP file on native
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(zipUri, {
+            mimeType: 'application/zip',
+            dialogTitle: 'Export Forms',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
+      }
+    } catch (error: any) {
+      console.error('[bulk-export] Failed:', error);
+      Alert.alert('Export Failed', error?.message || 'Failed to export forms');
+    } finally {
+      setIsExporting(false);
+      // Clear selection after export
+      if (selectionMode) {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+      }
+    }
+  }, [backendProjectId, selectionMode, selectedIds]);
+
   // Separate forms by status
   const inProgressForms = React.useMemo(() => {
     if (!formsQuery.data) return [];
@@ -519,9 +614,74 @@ export default function FormsScreen() {
           />
         }
       >
+        {/* Header with Export Actions */}
+        <View className="px-4 pt-4 pb-2">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+              {t('forms.title')}
+            </Text>
+            <View className="flex-row items-center">
+              {selectionMode ? (
+                <>
+                  <Pressable
+                    onPress={clearSelection}
+                    className="bg-gray-200 dark:bg-gray-700 px-3 py-2 rounded-lg mr-2"
+                  >
+                    <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                      {t('common.cancel')}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleBulkExport}
+                    disabled={isExporting || selectedIds.size === 0}
+                    className={cn(
+                      "flex-row items-center px-3 py-2 rounded-lg",
+                      selectedIds.size > 0 ? "bg-orange-500" : "bg-gray-300 dark:bg-gray-600"
+                    )}
+                  >
+                    {isExporting ? (
+                      <ActivityIndicator size={16} color="#FFF" />
+                    ) : (
+                      <Archive size={16} color="#FFF" />
+                    )}
+                    <Text className="text-white text-sm font-medium ml-2">
+                      {t('export.title')} ({selectedIds.size})
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Pressable
+                    onPress={() => setSelectionMode(true)}
+                    className="bg-gray-200 dark:bg-gray-700 p-2 rounded-lg mr-2"
+                  >
+                    <CheckSquare size={18} color="#6B7280" />
+                  </Pressable>
+                  {backendProjectId && (
+                    <Pressable
+                      onPress={handleBulkExport}
+                      disabled={isExporting}
+                      className="flex-row items-center bg-orange-500 px-3 py-2 rounded-lg"
+                    >
+                      {isExporting ? (
+                        <ActivityIndicator size={16} color="#FFF" />
+                      ) : (
+                        <Archive size={16} color="#FFF" />
+                      )}
+                      <Text className="text-white text-sm font-medium ml-2">
+                        {t('export.title')}
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
+          </View>
+        </View>
+
         {/* Project Banner */}
         {currentProject ? (
-          <View className="mx-4 mt-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3">
+          <View className="mx-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3">
             <View className="flex-row items-center">
               <Building2 size={18} color="#1F5C1A" />
               <Text className="ml-2 text-sm font-medium text-orange-700 dark:text-orange-300">
@@ -549,14 +709,45 @@ export default function FormsScreen() {
             <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               In Progress ({inProgressForms.length})
             </Text>
+            {selectionMode && inProgressForms.length > 0 && (
+              <Pressable
+                onPress={() => toggleSelectAll(inProgressForms.map(f => f.id))}
+                className="flex-row items-center mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                {inProgressForms.every(f => selectedIds.has(f.id)) ? (
+                  <CheckSquare size={20} color="#1F5C1A" />
+                ) : (
+                  <Square size={20} color="#9CA3AF" />
+                )}
+                <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                  Select All In Progress ({inProgressForms.length})
+                </Text>
+              </Pressable>
+            )}
             {inProgressForms.map((form, index) => (
               <Animated.View key={form.id} entering={FadeInDown.delay(index * 50)}>
-                <FormCard
-                  form={form}
-                  onPress={() => router.push(`/form-fill?id=${form.id}`)}
-                  onDelete={() => handleDeleteForm(form.id)}
-                  isDeleting={deletingFormId === form.id}
-                />
+                <View className="flex-row items-center">
+                  {selectionMode && (
+                    <Pressable
+                      onPress={() => toggleSelection(form.id)}
+                      className="mr-3 p-1"
+                    >
+                      {selectedIds.has(form.id) ? (
+                        <CheckSquare size={24} color="#1F5C1A" />
+                      ) : (
+                        <Square size={24} color="#9CA3AF" />
+                      )}
+                    </Pressable>
+                  )}
+                  <View className="flex-1">
+                    <FormCard
+                      form={form}
+                      onPress={() => selectionMode ? toggleSelection(form.id) : router.push(`/form-fill?id=${form.id}`)}
+                      onDelete={() => handleDeleteForm(form.id)}
+                      isDeleting={deletingFormId === form.id}
+                    />
+                  </View>
+                </View>
               </Animated.View>
             ))}
           </Animated.View>
@@ -679,14 +870,45 @@ export default function FormsScreen() {
             <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Completed Today ({completedToday.length})
             </Text>
+            {selectionMode && completedToday.length > 0 && (
+              <Pressable
+                onPress={() => toggleSelectAll(completedToday.map(f => f.id))}
+                className="flex-row items-center mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                {completedToday.every(f => selectedIds.has(f.id)) ? (
+                  <CheckSquare size={20} color="#1F5C1A" />
+                ) : (
+                  <Square size={20} color="#9CA3AF" />
+                )}
+                <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                  Select All Completed ({completedToday.length})
+                </Text>
+              </Pressable>
+            )}
             {completedToday.map((form, index) => (
               <Animated.View key={form.id} entering={FadeInDown.delay(index * 50)}>
-                <FormCard
-                  form={form}
-                  onPress={() => router.push(`/form-fill?id=${form.id}`)}
-                  onDelete={() => handleDeleteForm(form.id)}
-                  isDeleting={deletingFormId === form.id}
-                />
+                <View className="flex-row items-center">
+                  {selectionMode && (
+                    <Pressable
+                      onPress={() => toggleSelection(form.id)}
+                      className="mr-3 p-1"
+                    >
+                      {selectedIds.has(form.id) ? (
+                        <CheckSquare size={24} color="#1F5C1A" />
+                      ) : (
+                        <Square size={24} color="#9CA3AF" />
+                      )}
+                    </Pressable>
+                  )}
+                  <View className="flex-1">
+                    <FormCard
+                      form={form}
+                      onPress={() => selectionMode ? toggleSelection(form.id) : router.push(`/form-fill?id=${form.id}`)}
+                      onDelete={() => handleDeleteForm(form.id)}
+                      isDeleting={deletingFormId === form.id}
+                    />
+                  </View>
+                </View>
               </Animated.View>
             ))}
           </Animated.View>

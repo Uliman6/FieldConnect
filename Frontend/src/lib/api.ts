@@ -604,7 +604,7 @@ export async function fetchDailyLogPdf(id: string, preview: boolean = false): Pr
  */
 export async function fetchBulkExport(
   projectId: string,
-  type: 'daily_log' | 'punch_list' | 'rfi'
+  type: 'daily_log' | 'punch_list' | 'rfi' | 'form'
 ): Promise<string> {
   const url = `${API_BASE_URL}/api/reports/bulk-export/project/${projectId}?type=${type}`;
   const token = getAuthToken();
@@ -1295,7 +1295,7 @@ export async function parseEventWithAI(
  * Bulk export specific documents by IDs
  */
 export async function fetchBulkExportByIds(
-  type: 'daily_log' | 'punch_list' | 'rfi',
+  type: 'daily_log' | 'punch_list' | 'rfi' | 'form',
   ids: string[]
 ): Promise<string> {
   const url = `${API_BASE_URL}/api/reports/bulk-export`;
