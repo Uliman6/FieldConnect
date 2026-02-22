@@ -19,6 +19,7 @@ import {
   updateFormInstance,
   deleteFormInstance,
   downloadFormPdf,
+  uploadFormPhoto,
   queryKeys,
   FormInstance,
   FormField,
@@ -1048,6 +1049,21 @@ function PhotoField({
     }
   };
 
+  // Helper to upload photo to cloud storage
+  const uploadToCloud = async (base64Data: string): Promise<string | null> => {
+    try {
+      const result = await uploadFormPhoto(base64Data);
+      if (result.success && result.url) {
+        return result.url;
+      }
+      console.error('[PhotoField] Cloud upload failed:', result.error);
+      return null;
+    } catch (error) {
+      console.error('[PhotoField] Cloud upload error:', error);
+      return null;
+    }
+  };
+
   const handleTakePhoto = async () => {
     if (disabled) return;
 
@@ -1064,19 +1080,19 @@ function PhotoField({
           setIsLoading(true);
           const reader = new FileReader();
           reader.onload = async (event) => {
-            const uri = event.target?.result as string;
+            const base64Data = event.target?.result as string;
 
-            // Save photo immediately
-            onChange({ uri, ocrData: null });
-
-            // Run OCR if enabled
+            // Run OCR first (needs base64)
+            let ocrData = null;
             if (field.ocrEnabled) {
-              const ocrData = await runOcr(uri);
-              if (ocrData) {
-                onChange({ uri, ocrData });
-              }
+              ocrData = await runOcr(base64Data);
             }
 
+            // Upload to cloud storage
+            const cloudUrl = await uploadToCloud(base64Data);
+            const uri = cloudUrl || base64Data; // Fallback to base64 if upload fails
+
+            onChange({ uri, ocrData });
             setIsLoading(false);
           };
           reader.readAsDataURL(file);
@@ -1112,20 +1128,22 @@ function PhotoField({
 
                   if (!result.canceled && result.assets[0]) {
                     const asset = result.assets[0];
-                    // Use actual mime type or default to jpeg
                     const mimeType = asset.mimeType || 'image/jpeg';
-                    const uri = asset.base64
+                    const base64Data = asset.base64
                       ? `data:${mimeType};base64,${asset.base64}`
-                      : asset.uri;
+                      : null;
 
-                    onChange({ uri, ocrData: null });
-
-                    if (field.ocrEnabled && asset.base64) {
-                      const ocrData = await runOcr(`data:${mimeType};base64,${asset.base64}`);
-                      if (ocrData) {
-                        onChange({ uri, ocrData });
-                      }
+                    // Run OCR first if enabled (needs base64)
+                    let ocrData = null;
+                    if (field.ocrEnabled && base64Data) {
+                      ocrData = await runOcr(base64Data);
                     }
+
+                    // Upload to cloud storage
+                    const cloudUrl = base64Data ? await uploadToCloud(base64Data) : null;
+                    const uri = cloudUrl || base64Data || asset.uri;
+
+                    onChange({ uri, ocrData });
                   }
                 } finally {
                   setIsLoading(false);
@@ -1153,20 +1171,22 @@ function PhotoField({
 
                   if (!result.canceled && result.assets[0]) {
                     const asset = result.assets[0];
-                    // Use actual mime type or default to jpeg
                     const mimeType = asset.mimeType || 'image/jpeg';
-                    const uri = asset.base64
+                    const base64Data = asset.base64
                       ? `data:${mimeType};base64,${asset.base64}`
-                      : asset.uri;
+                      : null;
 
-                    onChange({ uri, ocrData: null });
-
-                    if (field.ocrEnabled && asset.base64) {
-                      const ocrData = await runOcr(`data:${mimeType};base64,${asset.base64}`);
-                      if (ocrData) {
-                        onChange({ uri, ocrData });
-                      }
+                    // Run OCR first if enabled (needs base64)
+                    let ocrData = null;
+                    if (field.ocrEnabled && base64Data) {
+                      ocrData = await runOcr(base64Data);
                     }
+
+                    // Upload to cloud storage
+                    const cloudUrl = base64Data ? await uploadToCloud(base64Data) : null;
+                    const uri = cloudUrl || base64Data || asset.uri;
+
+                    onChange({ uri, ocrData });
                   }
                 } finally {
                   setIsLoading(false);
@@ -1284,6 +1304,19 @@ function PhotoGalleryField({
   const photos = value || [];
   const maxPhotos = field.maxPhotos || 10;
 
+  // Helper to upload photo to cloud
+  const uploadPhotoToCloud = async (base64Data: string): Promise<string> => {
+    try {
+      const result = await uploadFormPhoto(base64Data);
+      if (result.success && result.url) {
+        return result.url;
+      }
+      return base64Data; // Fallback to base64 if upload fails
+    } catch {
+      return base64Data; // Fallback to base64 if upload fails
+    }
+  };
+
   const handleAddPhoto = async () => {
     if (disabled || photos.length >= maxPhotos) return;
 
@@ -1292,18 +1325,20 @@ function PhotoGalleryField({
       input.type = 'file';
       input.accept = 'image/*';
       input.multiple = true;
-      input.onchange = (e) => {
+      input.onchange = async (e) => {
         const target = e.target as HTMLInputElement;
         const files = target.files;
         if (files) {
-          Array.from(files).slice(0, maxPhotos - photos.length).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              const uri = event.target?.result as string;
-              onChange([...photos, { uri }]);
-            };
-            reader.readAsDataURL(file);
-          });
+          const filesToProcess = Array.from(files).slice(0, maxPhotos - photos.length);
+          for (const file of filesToProcess) {
+            const base64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (event) => resolve(event.target?.result as string);
+              reader.readAsDataURL(file);
+            });
+            const uri = await uploadPhotoToCloud(base64);
+            onChange([...photos, { uri }]);
+          }
         }
       };
       input.click();
@@ -1332,9 +1367,10 @@ function PhotoGalleryField({
               if (!result.canceled && result.assets[0]) {
                 const asset = result.assets[0];
                 const mimeType = asset.mimeType || 'image/jpeg';
-                const uri = asset.base64
+                const base64Data = asset.base64
                   ? `data:${mimeType};base64,${asset.base64}`
-                  : asset.uri;
+                  : null;
+                const uri = base64Data ? await uploadPhotoToCloud(base64Data) : asset.uri;
                 onChange([...photos, { uri }]);
               }
             },
@@ -1358,14 +1394,15 @@ function PhotoGalleryField({
               });
 
               if (!result.canceled && result.assets.length > 0) {
-                const newPhotos = result.assets.map(asset => {
+                const newPhotos: { uri: string }[] = [];
+                for (const asset of result.assets) {
                   const mimeType = asset.mimeType || 'image/jpeg';
-                  return {
-                    uri: asset.base64
-                      ? `data:${mimeType};base64,${asset.base64}`
-                      : asset.uri
-                  };
-                });
+                  const base64Data = asset.base64
+                    ? `data:${mimeType};base64,${asset.base64}`
+                    : null;
+                  const uri = base64Data ? await uploadPhotoToCloud(base64Data) : asset.uri;
+                  newPhotos.push({ uri });
+                }
                 onChange([...photos, ...newPhotos]);
               }
             },

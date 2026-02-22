@@ -2683,6 +2683,25 @@ export async function extractNameplateOcr(data: {
   });
 }
 
+/**
+ * Upload a form photo to cloud storage
+ */
+export interface FormPhotoUploadResponse {
+  success: boolean;
+  url?: string;
+  publicId?: string;
+  width?: number;
+  height?: number;
+  error?: string;
+}
+
+export async function uploadFormPhoto(imageBase64: string): Promise<FormPhotoUploadResponse> {
+  return apiFetch('/api/forms/upload-photo', {
+    method: 'POST',
+    body: JSON.stringify({ imageBase64 }),
+  });
+}
+
 // ============================================
 // PROJECT INVITATIONS
 // ============================================

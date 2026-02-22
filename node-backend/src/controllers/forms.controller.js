@@ -3116,6 +3116,90 @@ async function extractNameplateOcr(req, res) {
   }
 }
 
+/**
+ * Upload a form photo to cloud storage
+ */
+async function uploadFormPhoto(req, res) {
+  try {
+    const cloudinaryService = require('../services/cloudinary.service');
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Upload to Cloudinary
+    const result = await cloudinaryService.uploadBuffer(req.file.buffer, {
+      folder: 'fieldconnect/forms',
+      transformation: [
+        { width: 1600, height: 1600, crop: 'limit' }, // Limit max size
+        { quality: 'auto:good' }
+      ]
+    });
+
+    if (!result.success) {
+      return res.status(500).json({ error: result.error || 'Failed to upload photo' });
+    }
+
+    res.json({
+      success: true,
+      url: result.url,
+      publicId: result.publicId,
+      width: result.width,
+      height: result.height
+    });
+  } catch (error) {
+    console.error('[forms] Photo upload error:', error);
+    res.status(500).json({ error: 'Failed to upload photo' });
+  }
+}
+
+/**
+ * Upload a form photo from base64 data
+ */
+async function uploadFormPhotoBase64(req, res) {
+  try {
+    const cloudinaryService = require('../services/cloudinary.service');
+    const { imageBase64 } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ error: 'No image data provided' });
+    }
+
+    // Extract base64 data (remove data URL prefix if present)
+    let base64Data = imageBase64;
+    if (imageBase64.includes(',')) {
+      base64Data = imageBase64.split(',')[1];
+    }
+
+    // Convert base64 to buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Upload to Cloudinary
+    const result = await cloudinaryService.uploadBuffer(buffer, {
+      folder: 'fieldconnect/forms',
+      transformation: [
+        { width: 1600, height: 1600, crop: 'limit' },
+        { quality: 'auto:good' }
+      ]
+    });
+
+    if (!result.success) {
+      return res.status(500).json({ error: result.error || 'Failed to upload photo' });
+    }
+
+    res.json({
+      success: true,
+      url: result.url,
+      publicId: result.publicId,
+      width: result.width,
+      height: result.height
+    });
+  } catch (error) {
+    console.error('[forms] Photo upload error:', error);
+    res.status(500).json({ error: 'Failed to upload photo' });
+  }
+}
+
 module.exports = {
   getTemplates,
   getTemplate,
@@ -3129,5 +3213,7 @@ module.exports = {
   deleteForm,
   generateFormPdf,
   extractNameplateOcr,
+  uploadFormPhoto,
+  uploadFormPhotoBase64,
   PRE_TASK_PLAN_TEMPLATE
 };
