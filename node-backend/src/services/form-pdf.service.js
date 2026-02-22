@@ -1,6 +1,40 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
+
+/**
+ * Download image from URL and return as buffer
+ */
+async function downloadImage(url) {
+  return new Promise((resolve, reject) => {
+    const protocol = url.startsWith('https') ? https : http;
+    const request = protocol.get(url, { timeout: 10000 }, (response) => {
+      // Handle redirects
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        downloadImage(response.headers.location).then(resolve).catch(reject);
+        return;
+      }
+
+      if (response.statusCode !== 200) {
+        reject(new Error(`Failed to download image: ${response.statusCode}`));
+        return;
+      }
+
+      const chunks = [];
+      response.on('data', chunk => chunks.push(chunk));
+      response.on('end', () => resolve(Buffer.concat(chunks)));
+      response.on('error', reject);
+    });
+
+    request.on('error', reject);
+    request.on('timeout', () => {
+      request.destroy();
+      reject(new Error('Image download timeout'));
+    });
+  });
+}
 
 // Font paths for Unicode support (Turkish characters, etc.)
 // Using Noto Sans which has excellent Unicode coverage including Turkish
@@ -408,8 +442,8 @@ function drawCheckbox(doc, x, y, checked, label) {
  * Generate a generic PDF from any form template
  * Works with any template schema structure
  */
-function generateGenericFormPdf(form, project) {
-  return new Promise((resolve, reject) => {
+async function generateGenericFormPdf(form, project) {
+  return new Promise(async (resolve, reject) => {
     try {
       console.log('[form-pdf] Starting generic PDF generation');
       console.log('[form-pdf] Template name:', form.template?.name);
@@ -507,7 +541,7 @@ function generateGenericFormPdf(form, project) {
             } else if (field.type === 'TEXTAREA') {
               drawTextAreaField(doc, field.label || field.id, fieldValue);
             } else if (field.type === 'PHOTO' || field.type === 'PHOTO_GALLERY') {
-              drawPhotoField(doc, field.label || field.id, fieldValue);
+              await drawPhotoField(doc, field.label || field.id, fieldValue);
             } else if (field.type === 'CHECKBOX') {
               drawCheckboxField(doc, field.label || field.id, fieldValue);
             } else {
@@ -605,7 +639,7 @@ function drawTextAreaField(doc, label, value) {
   doc.y = y + rowHeight;
 }
 
-function drawPhotoField(doc, label, value) {
+async function drawPhotoField(doc, label, value) {
   const y = doc.y;
   const labelWidth = 200;
   const padding = 5;
@@ -645,9 +679,39 @@ function drawPhotoField(doc, label, value) {
   for (const photo of photos) {
     try {
       const photoUri = photo.uri;
+      let imageBuffer = null;
 
       // Check if it's a base64 data URI
       if (photoUri && photoUri.startsWith('data:image')) {
+        // Extract base64 data from data URI
+        const base64Data = photoUri.split(',')[1];
+        if (base64Data) {
+          imageBuffer = Buffer.from(base64Data, 'base64');
+        }
+      } else if (photoUri && (photoUri.startsWith('http://') || photoUri.startsWith('https://'))) {
+        // URL-based photo - download and embed as actual image
+        try {
+          console.log('[form-pdf] Downloading image from:', photoUri.substring(0, 80) + '...');
+          imageBuffer = await downloadImage(photoUri);
+          console.log('[form-pdf] Image downloaded, size:', imageBuffer.length);
+        } catch (downloadErr) {
+          console.error('[form-pdf] Failed to download image:', downloadErr.message);
+          // Fall back to showing as link if download fails
+          const photoY = doc.y;
+          doc.fontSize(8).font(FONT_REGULAR);
+          doc.fillColor('blue').text('Photo: ' + photoUri, 50, photoY, {
+            width: 500,
+            link: photoUri,
+            underline: true
+          });
+          doc.fillColor('black');
+          doc.y = photoY + 20;
+          continue;
+        }
+      }
+
+      // Embed the image if we have a buffer
+      if (imageBuffer) {
         // Check if we need a new page
         if (doc.y + maxImageHeight + 20 > doc.page.height - doc.page.margins.bottom) {
           doc.addPage();
@@ -655,34 +719,17 @@ function drawPhotoField(doc, label, value) {
 
         const photoY = doc.y;
 
-        // Extract base64 data from data URI
-        const base64Data = photoUri.split(',')[1];
-        if (base64Data) {
-          const imageBuffer = Buffer.from(base64Data, 'base64');
+        // Draw border around image area
+        doc.rect(45, photoY, maxImageWidth + 10, maxImageHeight + 10).stroke();
 
-          // Draw border around image area
-          doc.rect(45, photoY, maxImageWidth + 10, maxImageHeight + 10).stroke();
-
-          // Embed the image with fit option to maintain aspect ratio
-          doc.image(imageBuffer, 50, photoY + 5, {
-            fit: [maxImageWidth, maxImageHeight],
-            align: 'center',
-            valign: 'center'
-          });
-
-          doc.y = photoY + maxImageHeight + 15;
-        }
-      } else if (photoUri && (photoUri.startsWith('http://') || photoUri.startsWith('https://'))) {
-        // URL-based photo - show as link
-        const photoY = doc.y;
-        doc.fontSize(8).font(FONT_REGULAR);
-        doc.fillColor('blue').text('Photo: ' + photoUri, 50, photoY, {
-          width: 500,
-          link: photoUri,
-          underline: true
+        // Embed the image with fit option to maintain aspect ratio
+        doc.image(imageBuffer, 50, photoY + 5, {
+          fit: [maxImageWidth, maxImageHeight],
+          align: 'center',
+          valign: 'center'
         });
-        doc.fillColor('black');
-        doc.y = photoY + 20;
+
+        doc.y = photoY + maxImageHeight + 15;
       }
     } catch (imgErr) {
       console.error('[form-pdf] Error embedding photo:', imgErr.message);
