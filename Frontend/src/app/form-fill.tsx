@@ -49,8 +49,11 @@ import {
   Pencil,
 } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import { transcribeAudio } from '@/lib/transcription';
@@ -889,6 +892,8 @@ function DateField({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
+  const [showPicker, setShowPicker] = useState(false);
+
   // Format date for display
   const formatDate = (dateStr: string) => {
     try {
@@ -898,6 +903,18 @@ function DateField({
       return dateStr;
     }
   };
+
+  // Parse current value to Date object
+  const currentDate = useMemo(() => {
+    if (value) {
+      try {
+        return new Date(value);
+      } catch {
+        return new Date();
+      }
+    }
+    return new Date();
+  }, [value]);
 
   if (Platform.OS === 'web') {
     // On web, use a styled native date input directly
@@ -928,24 +945,36 @@ function DateField({
     );
   }
 
-  // Native: simple pressable that sets today's date (TODO: use proper date picker)
-  const handleDatePicker = () => {
-    if (disabled) return;
-    const today = new Date().toISOString().split('T')[0];
-    onChange(today);
+  // Native: Use DateTimePicker
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowPicker(false);
+    if (event.type === 'set' && selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      onChange(dateStr);
+    }
   };
 
   return (
-    <Pressable
-      onPress={handleDatePicker}
-      disabled={disabled}
-      className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3"
-    >
-      <Calendar size={20} color="#9CA3AF" />
-      <Text className={`ml-3 flex-1 ${value ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
-        {value ? formatDate(value) : 'Select date...'}
-      </Text>
-    </Pressable>
+    <View>
+      <Pressable
+        onPress={() => !disabled && setShowPicker(true)}
+        disabled={disabled}
+        className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3"
+      >
+        <Calendar size={20} color="#9CA3AF" />
+        <Text className={`ml-3 flex-1 ${value ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+          {value ? formatDate(value) : 'Select date...'}
+        </Text>
+      </Pressable>
+      {showPicker && (
+        <DateTimePicker
+          value={currentDate}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleDateChange}
+        />
+      )}
+    </View>
   );
 }
 
@@ -1055,8 +1084,97 @@ function PhotoField({
       };
       input.click();
     } else {
-      // TODO: Use expo-image-picker for native
-      console.log('[PhotoField] Native camera not yet implemented');
+      // Native: Use expo-image-picker with action sheet to choose camera or gallery
+      try {
+        // Show action sheet to choose between camera and gallery
+        Alert.alert(
+          'Add Photo',
+          'Choose an option',
+          [
+            {
+              text: 'Take Photo',
+              onPress: async () => {
+                const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                if (status !== 'granted') {
+                  Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
+                  return;
+                }
+
+                setIsLoading(true);
+                try {
+                  const result = await ImagePicker.launchCameraAsync({
+                    mediaTypes: ['images'],
+                    allowsEditing: false,
+                    quality: 0.8,
+                    base64: true,
+                  });
+
+                  if (!result.canceled && result.assets[0]) {
+                    const asset = result.assets[0];
+                    const uri = asset.base64
+                      ? `data:image/jpeg;base64,${asset.base64}`
+                      : asset.uri;
+
+                    onChange({ uri, ocrData: null });
+
+                    if (field.ocrEnabled && asset.base64) {
+                      const ocrData = await runOcr(`data:image/jpeg;base64,${asset.base64}`);
+                      if (ocrData) {
+                        onChange({ uri, ocrData });
+                      }
+                    }
+                  }
+                } finally {
+                  setIsLoading(false);
+                }
+              },
+            },
+            {
+              text: 'Choose from Library',
+              onPress: async () => {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') {
+                  Alert.alert('Permission Denied', 'Photo library permission is required.');
+                  return;
+                }
+
+                setIsLoading(true);
+                try {
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ['images'],
+                    allowsEditing: false,
+                    quality: 0.8,
+                    base64: true,
+                  });
+
+                  if (!result.canceled && result.assets[0]) {
+                    const asset = result.assets[0];
+                    const uri = asset.base64
+                      ? `data:image/jpeg;base64,${asset.base64}`
+                      : asset.uri;
+
+                    onChange({ uri, ocrData: null });
+
+                    if (field.ocrEnabled && asset.base64) {
+                      const ocrData = await runOcr(`data:image/jpeg;base64,${asset.base64}`);
+                      if (ocrData) {
+                        onChange({ uri, ocrData });
+                      }
+                    }
+                  }
+                } finally {
+                  setIsLoading(false);
+                }
+              },
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+      } catch (error) {
+        console.error('[PhotoField] Error picking image:', error);
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
+        setIsLoading(false);
+      }
     }
   };
 
@@ -1183,6 +1301,65 @@ function PhotoGalleryField({
         }
       };
       input.click();
+    } else {
+      // Native: Use expo-image-picker with action sheet
+      Alert.alert(
+        'Add Photo',
+        'Choose an option',
+        [
+          {
+            text: 'Take Photo',
+            onPress: async () => {
+              const { status } = await ImagePicker.requestCameraPermissionsAsync();
+              if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Camera permission is required.');
+                return;
+              }
+
+              const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ['images'],
+                quality: 0.8,
+                base64: true,
+              });
+
+              if (!result.canceled && result.assets[0]) {
+                const uri = result.assets[0].base64
+                  ? `data:image/jpeg;base64,${result.assets[0].base64}`
+                  : result.assets[0].uri;
+                onChange([...photos, { uri }]);
+              }
+            },
+          },
+          {
+            text: 'Choose from Library',
+            onPress: async () => {
+              const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Photo library permission is required.');
+                return;
+              }
+
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                quality: 0.8,
+                base64: true,
+                allowsMultipleSelection: true,
+                selectionLimit: maxPhotos - photos.length,
+              });
+
+              if (!result.canceled && result.assets.length > 0) {
+                const newPhotos = result.assets.map(asset => ({
+                  uri: asset.base64
+                    ? `data:image/jpeg;base64,${asset.base64}`
+                    : asset.uri
+                }));
+                onChange([...photos, ...newPhotos]);
+              }
+            },
+          },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
     }
   };
 
@@ -1767,9 +1944,37 @@ export default function FormFillScreen() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } else {
-        // Native: Use sharing
-        // TODO: Save to file system and share
-        console.log('[form-fill] Native PDF download not yet implemented');
+        // Native: Save to file system and share
+        const fileName = `Form_${new Date().toISOString().split('T')[0]}_${Date.now()}.pdf`;
+        const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+
+        // Convert blob to base64
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const base64 = (reader.result as string).split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+        });
+        reader.readAsDataURL(blob);
+        const base64Data = await base64Promise;
+
+        // Write to file system
+        await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        // Check if sharing is available
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(fileUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Export Form PDF',
+            UTI: 'com.adobe.pdf',
+          });
+        } else {
+          Alert.alert('Success', 'PDF saved to app cache.');
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
