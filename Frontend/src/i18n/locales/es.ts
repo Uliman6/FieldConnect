@@ -139,7 +139,7 @@ export default {
     today: 'HOY',
     earlier: 'ANTERIOR',
     logged: 'Registrado',
-    viewAll: 'Ver todas las {{count}} observaciones',
+    viewAll: 'Ver todas las %{count} observaciones',
     // Recording/Playback
     playRecording: 'Reproducir Grabación',
     tapToListen: 'Toca para escuchar',
@@ -208,10 +208,10 @@ export default {
     newest: 'Más Reciente',
     oldest: 'Más Antiguo',
     allProjects: 'Todos los Proyectos',
-    chooseProjectToView: 'Selecciona un proyecto en la pestaña Proyectos para ver {{type}}',
-    noItemsYet: 'Aún no hay {{type}}',
+    chooseProjectToView: 'Selecciona un proyecto en la pestaña Proyectos para ver %{type}',
+    noItemsYet: 'Aún no hay %{type}',
     createDailyLogPrompt: 'Crea un registro diario para verlo aquí',
-    createDocPrompt: 'Registra un evento y aplícalo a {{type}}',
+    createDocPrompt: 'Registra un evento y aplícalo a %{type}',
     selectAll: 'Seleccionar Todo',
   },
 
@@ -390,7 +390,7 @@ export default {
     synced: 'Todos los cambios sincronizados',
     notSynced: 'No sincronizado',
     offline: 'Sin conexion - los cambios se sincronizaran al conectarse',
-    pendingChanges: '{{count}} cambios pendientes',
+    pendingChanges: '%{count} cambios pendientes',
     error: 'Error de sincronizacion',
     retry: 'Reintentar sincronizacion',
   },
@@ -438,11 +438,11 @@ export default {
     today: 'Hoy',
     yesterday: 'Ayer',
     tomorrow: 'Manana',
-    daysAgo: 'hace {{count}} dias',
-    weeksAgo: 'hace {{count}} semanas',
-    monthsAgo: 'hace {{count}} meses',
-    hoursAgo: 'hace {{count}} horas',
-    minutesAgo: 'hace {{count}} minutos',
+    daysAgo: 'hace %{count} dias',
+    weeksAgo: 'hace %{count} semanas',
+    monthsAgo: 'hace %{count} meses',
+    hoursAgo: 'hace %{count} horas',
+    minutesAgo: 'hace %{count} minutos',
     justNow: 'Ahora mismo',
   },
 
@@ -455,7 +455,7 @@ export default {
     addComment: 'Agregar Comentario',
     comments: 'Comentarios',
     noComments: 'Aun no hay comentarios',
-    statusChanged: 'Estado cambiado a {{status}}',
+    statusChanged: 'Estado cambiado a %{status}',
   },
 
   // Forms
@@ -491,8 +491,8 @@ export default {
     completed: 'Completado',
     // Time strings
     justNow: 'Ahora mismo',
-    mAgo: 'hace {{count}}m',
-    hAgo: 'hace {{count}}h',
+    mAgo: 'hace %{count}m',
+    hAgo: 'hace %{count}h',
     // Progress
     complete: 'completo',
     // Selection
@@ -542,7 +542,7 @@ export default {
     brand: 'Marca',
     notes: 'Notas',
     noItems: 'Aun no hay items',
-    itemCount: '{{count}} items',
+    itemCount: '%{count} items',
     // Units
     units: {
       pcs: 'pzs',
