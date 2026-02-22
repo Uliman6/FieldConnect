@@ -212,6 +212,7 @@ export default {
     noItemsYet: 'No {{type}} yet',
     createDailyLogPrompt: 'Create a daily log to see it here',
     createDocPrompt: 'Record an event and apply it to a {{type}}',
+    selectAll: 'Select All',
   },
 
   // Projects
@@ -287,6 +288,54 @@ export default {
     exportPdf: 'Export PDF',
     exporting: 'Exporting...',
     selectProject: 'Select a project to view insights',
+    // Tab names
+    dashboard: 'Dashboard',
+    all: 'All',
+    followUps: 'Follow-ups',
+    search: 'Search',
+    // Stats
+    totalInsights: 'Total Insights',
+    needFollowUp: 'Need Follow-up',
+    unresolved: 'Unresolved',
+    totalCostImpact: 'Total Cost Impact',
+    withCosts: 'with costs',
+    // Sections
+    byType: 'By Type',
+    bySource: 'By Source',
+    tapToFilter: 'tap to filter',
+    topTrades: 'Top Trades',
+    topIssueTypes: 'Top Issue Types',
+    topSystems: 'Top Systems',
+    // Empty states
+    noInsightsYet: 'No Insights Yet',
+    recordEventsToGenerate: 'Record events to automatically generate insights. Insights help you track issues, patterns, and follow-ups.',
+    // AI Search
+    askAi: 'Ask AI',
+    tryAsking: 'Try asking:',
+    aiPoweredSearch: 'AI-Powered Search',
+    askQuestionsPlainEnglish: 'Ask questions in plain English like:',
+    createListExample: 'create a list of all items for the next building inspection',
+    // Results
+    items: 'items',
+    results: 'Results',
+    activeFilters: 'Active Filters',
+    clearAll: 'Clear all',
+    noMatchFilters: 'No insights match your filters. Try adjusting or clearing filters.',
+    noMatchQuery: 'No insights match your query. Try different keywords or index more data.',
+    // Filter labels
+    type: 'Type',
+    // Sources
+    sources: {
+      event: 'Event',
+      pending_issue: 'Pending Issue',
+      inspection_note: 'Inspection',
+      additional_work: 'Additional Work',
+      manual: 'Manual Entry',
+    },
+    // Loading
+    loadingInsights: 'Loading insights...',
+    goToProjects: 'Go to Projects',
+    errorLoadingInsights: 'Unable to load insights. Please check your connection and try again.',
   },
 
   // Export
@@ -436,6 +485,23 @@ export default {
     addSignature: 'Add Signature',
     signedBy: 'Signed by',
     signConfirm: 'Confirm your signature as',
+    // Status labels
+    draft: 'Draft',
+    pendingSignatures: 'Pending Signatures',
+    completed: 'Completed',
+    // Time strings
+    justNow: 'Just now',
+    mAgo: '{{count}}m ago',
+    hAgo: '{{count}}h ago',
+    // Progress
+    complete: 'complete',
+    // Selection
+    selectAll: 'Select All',
+    selectAllInProgress: 'Select All In Progress',
+    selectAllCompleted: 'Select All Completed',
+    // Delete
+    deleteForm: 'Delete Form',
+    deleteConfirm: 'Are you sure you want to delete this form? This action cannot be undone.',
   },
 
   // Voice Lists
