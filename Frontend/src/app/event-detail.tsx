@@ -82,6 +82,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { useLanguage } from '@/i18n';
 import { format } from 'date-fns';
 
 const EVENT_TYPES: EventType[] = [
@@ -317,6 +318,7 @@ function PhotoSection({
   onPhotoUploaded: () => void;
   onPhotoDeleted: (photoId: string) => void;
 }) {
+  const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
@@ -387,7 +389,7 @@ function PhotoSection({
         <View className="flex-row items-center">
           <Camera size={16} color="#10B981" />
           <Text className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Photos ({photos.length})
+            {t('events.photos')} ({photos.length})
           </Text>
         </View>
         <PhotoPicker onPhotoPicked={handlePhotoPicked} disabled={isUploading}>
@@ -398,7 +400,7 @@ function PhotoSection({
               <>
                 <Plus size={14} color="#10B981" />
                 <Text className="ml-1 text-xs font-medium text-green-600 dark:text-green-400">
-                  Add Photo
+                  {t('events.addPhoto')}
                 </Text>
               </>
             )}
@@ -415,7 +417,7 @@ function PhotoSection({
           <View className="flex-row items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-xl py-8 border-2 border-dashed border-gray-200 dark:border-gray-600">
             <ImageIcon size={24} color="#9CA3AF" />
             <Text className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-              Tap to add photos
+              {t('events.tapToAddPhotos')}
             </Text>
           </View>
         </PhotoPicker>
@@ -761,6 +763,18 @@ export default function EventDetailScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { t } = useLanguage();
+
+  // Helper to get translated event type
+  const getEventTypeLabel = (type: EventType): string => {
+    const key = type.toLowerCase().replace(/ /g, '_') as keyof typeof t extends `events.types.${infer K}` ? K : never;
+    return t(`events.types.${key}` as any) || type;
+  };
+
+  // Helper to get translated severity
+  const getSeverityLabel = (sev: EventSeverity): string => {
+    return t(`events.severities.${sev.toLowerCase()}` as any) || sev;
+  };
 
   // First try local store
   const localEvent = useDailyLogStore((s) => s.events.find((e) => e.id === id));
@@ -1455,7 +1469,7 @@ export default function EventDetailScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: 'Observation Details',
+          headerTitle: t('events.details'),
           headerStyle: { backgroundColor: isDark ? '#111' : '#FFF' },
           headerTintColor: isDark ? '#FFF' : '#111',
           headerLeft: () => (
@@ -1508,10 +1522,10 @@ export default function EventDetailScreen() {
               </View>
               <View className="ml-4">
                 <Text className="text-base font-medium text-gray-900 dark:text-white">
-                  {isPlaying ? 'Playing...' : 'Play Recording'}
+                  {isPlaying ? t('voice.recording') : t('events.playRecording')}
                 </Text>
                 <Text className="text-sm text-gray-500 dark:text-gray-400">
-                  Tap to {isPlaying ? 'pause' : 'listen'}
+                  {t('events.tapToListen')}
                 </Text>
               </View>
             </Pressable>
@@ -1541,7 +1555,7 @@ export default function EventDetailScreen() {
                 <View className="flex-row items-center">
                   <FileText size={16} color="#3B82F6" />
                   <Text className="ml-2 text-sm font-medium text-blue-700 dark:text-blue-300">
-                    Transcription
+                    {t('events.transcription')}
                   </Text>
                 </View>
                 <Pressable
@@ -1560,7 +1574,7 @@ export default function EventDetailScreen() {
                 >
                   <Copy size={14} color="#3B82F6" />
                   <Text className="ml-1 text-xs font-medium text-blue-600 dark:text-blue-400">
-                    Copy to Description
+                    {t('events.copyToDescription')}
                   </Text>
                 </Pressable>
               </View>
@@ -1576,7 +1590,7 @@ export default function EventDetailScreen() {
               <View className="flex-row items-center mb-3">
                 <AlertTriangle size={18} color="#F59E0B" />
                 <Text className="ml-2 text-base font-semibold text-amber-700 dark:text-amber-400">
-                  Action Items
+                  {t('events.actionItems')}
                 </Text>
                 <View className="ml-auto bg-amber-200 dark:bg-amber-700 px-2 py-0.5 rounded-full">
                   <Text className="text-xs font-bold text-amber-800 dark:text-amber-200">
@@ -1602,7 +1616,7 @@ export default function EventDetailScreen() {
           {/* Title Input */}
           <View className="mb-4">
             <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
-              Title
+              {t('events.title_field')}
             </Text>
             <TextInput
               value={title}
@@ -1619,7 +1633,7 @@ export default function EventDetailScreen() {
           {/* Description Input */}
           <View className="mb-4">
             <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
-              Description
+              {t('events.description')}
             </Text>
             <TextInput
               value={description}
@@ -1642,7 +1656,7 @@ export default function EventDetailScreen() {
           className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
         >
           <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">
-            Observation Type
+            {t('events.type')}
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {EVENT_TYPES.map((type) => (
@@ -1673,7 +1687,7 @@ export default function EventDetailScreen() {
                       : 'text-gray-600 dark:text-gray-300'
                   )}
                 >
-                  {type}
+                  {getEventTypeLabel(type)}
                 </Text>
               </Pressable>
             ))}
@@ -1702,7 +1716,7 @@ export default function EventDetailScreen() {
           className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4"
         >
           <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">
-            Severity
+            {t('events.severity')}
           </Text>
           <View className="flex-row gap-3">
             {SEVERITIES.map((sev) => (
@@ -1733,7 +1747,7 @@ export default function EventDetailScreen() {
                       : 'text-gray-600 dark:text-gray-300'
                   )}
                 >
-                  {sev}
+                  {getSeverityLabel(sev)}
                 </Text>
               </Pressable>
             ))}
@@ -1749,7 +1763,7 @@ export default function EventDetailScreen() {
             <View className="flex-row items-center mb-1">
               <MapPin size={14} color="#9CA3AF" />
               <Text className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Location
+                {t('events.location')}
               </Text>
             </View>
             <TextInput
@@ -1768,7 +1782,7 @@ export default function EventDetailScreen() {
             <View className="flex-row items-center mb-1">
               <HardHat size={14} color="#9CA3AF" />
               <Text className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Trade / Vendor
+                {t('events.tradeVendor')}
               </Text>
             </View>
             <TextInput
@@ -1777,7 +1791,7 @@ export default function EventDetailScreen() {
                 setTradeVendor(text);
                 markChanged();
               }}
-              placeholder="e.g., ABC Concrete / Rebar sub"
+              placeholder={t('events.tradeVendorPlaceholder')}
               placeholderTextColor="#9CA3AF"
               className="bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white"
             />
@@ -1951,7 +1965,7 @@ export default function EventDetailScreen() {
               <View className="flex-row items-center">
                 <Wand2 size={16} color="#F59E0B" />
                 <Text className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Apply to Document
+                  {t('events.applyDocument')}
                 </Text>
               </View>
               {selectedSchema && (
@@ -2006,7 +2020,7 @@ export default function EventDetailScreen() {
                   >
                     <Wand2 size={18} color="#F59E0B" />
                     <Text className="ml-2 text-sm font-medium text-amber-600 dark:text-amber-400">
-                      Apply to Punch List or RFI
+                      {t('events.applyToPunchListOrRfi')}
                     </Text>
                   </Pressable>
                 )}
@@ -2155,7 +2169,7 @@ export default function EventDetailScreen() {
             >
               <ClipboardPlus size={20} color="white" />
               <Text className="ml-2 text-base font-semibold text-white">
-                Add to Today's Daily Log
+                {t('events.addToDailyLog')}
               </Text>
             </Pressable>
           )}
@@ -2164,7 +2178,7 @@ export default function EventDetailScreen() {
             <View className="flex-row items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-xl py-4 mb-3">
               <ClipboardPlus size={20} color="#3B82F6" />
               <Text className="ml-2 text-base font-semibold text-blue-600 dark:text-blue-400">
-                Added to Daily Log
+                {t('events.addToDailyLog')}
               </Text>
             </View>
           )}
@@ -2186,7 +2200,7 @@ export default function EventDetailScreen() {
                 event.is_resolved ? 'text-white' : 'text-gray-600 dark:text-gray-300'
               )}
             >
-              {event.is_resolved ? 'Resolved' : 'Mark as Resolved'}
+              {event.is_resolved ? t('events.resolved') : t('events.markResolved')}
             </Text>
           </Pressable>
 
@@ -2197,7 +2211,7 @@ export default function EventDetailScreen() {
           >
             <Trash2 size={18} color="#EF4444" />
             <Text className="ml-2 text-base font-medium text-red-500">
-              Delete Observation
+              {t('events.deleteEvent')}
             </Text>
           </Pressable>
         </Animated.View>
