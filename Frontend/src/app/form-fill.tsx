@@ -1107,18 +1107,21 @@ function PhotoField({
                     allowsEditing: false,
                     quality: 0.8,
                     base64: true,
+                    exif: false,
                   });
 
                   if (!result.canceled && result.assets[0]) {
                     const asset = result.assets[0];
+                    // Use actual mime type or default to jpeg
+                    const mimeType = asset.mimeType || 'image/jpeg';
                     const uri = asset.base64
-                      ? `data:image/jpeg;base64,${asset.base64}`
+                      ? `data:${mimeType};base64,${asset.base64}`
                       : asset.uri;
 
                     onChange({ uri, ocrData: null });
 
                     if (field.ocrEnabled && asset.base64) {
-                      const ocrData = await runOcr(`data:image/jpeg;base64,${asset.base64}`);
+                      const ocrData = await runOcr(`data:${mimeType};base64,${asset.base64}`);
                       if (ocrData) {
                         onChange({ uri, ocrData });
                       }
@@ -1145,18 +1148,21 @@ function PhotoField({
                     allowsEditing: false,
                     quality: 0.8,
                     base64: true,
+                    exif: false,
                   });
 
                   if (!result.canceled && result.assets[0]) {
                     const asset = result.assets[0];
+                    // Use actual mime type or default to jpeg
+                    const mimeType = asset.mimeType || 'image/jpeg';
                     const uri = asset.base64
-                      ? `data:image/jpeg;base64,${asset.base64}`
+                      ? `data:${mimeType};base64,${asset.base64}`
                       : asset.uri;
 
                     onChange({ uri, ocrData: null });
 
                     if (field.ocrEnabled && asset.base64) {
-                      const ocrData = await runOcr(`data:image/jpeg;base64,${asset.base64}`);
+                      const ocrData = await runOcr(`data:${mimeType};base64,${asset.base64}`);
                       if (ocrData) {
                         onChange({ uri, ocrData });
                       }
@@ -1320,12 +1326,15 @@ function PhotoGalleryField({
                 mediaTypes: ['images'],
                 quality: 0.8,
                 base64: true,
+                exif: false,
               });
 
               if (!result.canceled && result.assets[0]) {
-                const uri = result.assets[0].base64
-                  ? `data:image/jpeg;base64,${result.assets[0].base64}`
-                  : result.assets[0].uri;
+                const asset = result.assets[0];
+                const mimeType = asset.mimeType || 'image/jpeg';
+                const uri = asset.base64
+                  ? `data:${mimeType};base64,${asset.base64}`
+                  : asset.uri;
                 onChange([...photos, { uri }]);
               }
             },
@@ -1343,16 +1352,20 @@ function PhotoGalleryField({
                 mediaTypes: ['images'],
                 quality: 0.8,
                 base64: true,
+                exif: false,
                 allowsMultipleSelection: true,
                 selectionLimit: maxPhotos - photos.length,
               });
 
               if (!result.canceled && result.assets.length > 0) {
-                const newPhotos = result.assets.map(asset => ({
-                  uri: asset.base64
-                    ? `data:image/jpeg;base64,${asset.base64}`
-                    : asset.uri
-                }));
+                const newPhotos = result.assets.map(asset => {
+                  const mimeType = asset.mimeType || 'image/jpeg';
+                  return {
+                    uri: asset.base64
+                      ? `data:${mimeType};base64,${asset.base64}`
+                      : asset.uri
+                  };
+                });
                 onChange([...photos, ...newPhotos]);
               }
             },
