@@ -383,6 +383,10 @@ export default function FormsScreen() {
   });
 
   const handleStartForm = (templateId: string) => {
+    // Prevent double submissions
+    if (createFormMutation.isPending || startingTemplate) {
+      return;
+    }
     if (!backendProjectId) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       router.push('/(tabs)/projects');
