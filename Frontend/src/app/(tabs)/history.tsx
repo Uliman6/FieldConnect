@@ -521,7 +521,7 @@ export default function LogsHistoryScreen() {
                     className="bg-gray-200 dark:bg-gray-700 px-3 py-2 rounded-lg mr-2"
                   >
                     <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium">
-                      Cancel
+                      {t('common.cancel')}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -538,7 +538,7 @@ export default function LogsHistoryScreen() {
                       <Archive size={16} color="#FFF" />
                     )}
                     <Text className="text-white text-sm font-medium ml-2">
-                      Export ({selectedIds.size})
+                      {t('export.title')} ({selectedIds.size})
                     </Text>
                   </Pressable>
                 </>
@@ -661,7 +661,7 @@ export default function LogsHistoryScreen() {
                       <Square size={20} color="#9CA3AF" />
                     )}
                     <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      Select All ({dailyLogs.length})
+                      {t('history.selectAll')} ({dailyLogs.length})
                     </Text>
                   </Pressable>
                 )}
@@ -775,7 +775,7 @@ export default function LogsHistoryScreen() {
                           <Square size={20} color="#9CA3AF" />
                         )}
                         <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                          Select All ({checklistItems.length})
+                          {t('history.selectAll')} ({checklistItems.length})
                         </Text>
                       </Pressable>
                     )}

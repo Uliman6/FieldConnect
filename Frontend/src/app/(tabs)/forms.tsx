@@ -70,15 +70,28 @@ function FormCard({
   form,
   onPress,
   onDelete,
-  isDeleting
+  isDeleting,
+  t
 }: {
   form: FormInstance;
   onPress: () => void;
   onDelete: () => void;
   isDeleting: boolean;
+  t: (key: string) => string;
 }) {
   const statusColor = STATUS_COLORS[form.status] || STATUS_COLORS.DRAFT;
-  const statusLabel = STATUS_LABELS[form.status] || 'Draft';
+
+  // Get translated status label
+  const getStatusLabel = () => {
+    switch (form.status) {
+      case 'DRAFT': return t('forms.draft');
+      case 'IN_PROGRESS': return t('forms.inProgress');
+      case 'PENDING_SIGNATURES': return t('forms.pendingSignatures');
+      case 'COMPLETED': return t('forms.completed');
+      default: return t('forms.draft');
+    }
+  };
+  const statusLabel = getStatusLabel();
 
   const timeAgo = React.useMemo(() => {
     const now = new Date();
@@ -87,11 +100,11 @@ function FormCard({
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 1) return t('forms.justNow');
+    if (diffMins < 60) return t('forms.mAgo').replace('{{count}}', String(diffMins));
+    if (diffHours < 24) return t('forms.hAgo').replace('{{count}}', String(diffHours));
     return format(created, 'MMM d, h:mm a');
-  }, [form.createdAt]);
+  }, [form.createdAt, t]);
 
   // Calculate completion percentage
   const completionPercent = React.useMemo(() => {
@@ -125,7 +138,7 @@ function FormCard({
               </Text>
             </View>
             {form.status !== 'COMPLETED' && (
-              <Text className="text-xs text-gray-400">{completionPercent}% complete</Text>
+              <Text className="text-xs text-gray-400">{completionPercent}% {t('forms.complete')}</Text>
             )}
           </View>
 
@@ -245,11 +258,11 @@ function VoiceListCard({
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 1) return t('forms.justNow');
+    if (diffMins < 60) return t('forms.mAgo').replace('{{count}}', String(diffMins));
+    if (diffHours < 24) return t('forms.hAgo').replace('{{count}}', String(diffHours));
     return format(created, 'MMM d, h:mm a');
-  }, [voiceList.createdAt]);
+  }, [voiceList.createdAt, t]);
 
   const itemCount = voiceList._count?.items || 0;
   const typeLabel = LIST_TYPE_LABELS[voiceList.listType] || voiceList.listType;
@@ -420,14 +433,14 @@ export default function FormsScreen() {
     const confirmDelete = (): Promise<boolean> => {
       return new Promise((resolve) => {
         if (Platform.OS === 'web') {
-          resolve(window.confirm('Are you sure you want to delete this form? This action cannot be undone.'));
+          resolve(window.confirm(t('forms.deleteConfirm')));
         } else {
           Alert.alert(
-            'Delete Form',
-            'Are you sure you want to delete this form? This action cannot be undone.',
+            t('forms.deleteForm'),
+            t('forms.deleteConfirm'),
             [
-              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-              { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+              { text: t('common.cancel'), style: 'cancel', onPress: () => resolve(false) },
+              { text: t('common.delete'), style: 'destructive', onPress: () => resolve(true) },
             ]
           );
         }
@@ -448,14 +461,14 @@ export default function FormsScreen() {
       console.error('[forms] Failed to delete form:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       if (Platform.OS === 'web') {
-        window.alert('Failed to delete form. Please try again.');
+        window.alert(t('errors.generic'));
       } else {
-        Alert.alert('Error', 'Failed to delete form. Please try again.');
+        Alert.alert(t('common.error'), t('errors.generic'));
       }
     } finally {
       setDeletingFormId(null);
     }
-  }, [queryClient, backendProjectId]);
+  }, [queryClient, backendProjectId, t]);
 
   // Delete voice list handler
   const handleDeleteVoiceList = useCallback(async (listId: string) => {
@@ -697,7 +710,7 @@ export default function FormsScreen() {
             <View className="flex-row items-center">
               <AlertTriangle size={18} color="#F59E0B" />
               <Text className="ml-2 text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                Select a project to use forms
+                {t('forms.selectProject')}
               </Text>
             </View>
           </Pressable>
@@ -707,7 +720,7 @@ export default function FormsScreen() {
         {inProgressForms.length > 0 && (
           <Animated.View entering={FadeIn} className="px-4 mt-6">
             <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              In Progress ({inProgressForms.length})
+              {t('forms.inProgress')} ({inProgressForms.length})
             </Text>
             {selectionMode && inProgressForms.length > 0 && (
               <Pressable
@@ -720,7 +733,7 @@ export default function FormsScreen() {
                   <Square size={20} color="#9CA3AF" />
                 )}
                 <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                  Select All In Progress ({inProgressForms.length})
+                  {t('forms.selectAllInProgress')} ({inProgressForms.length})
                 </Text>
               </Pressable>
             )}
@@ -745,6 +758,7 @@ export default function FormsScreen() {
                       onPress={() => selectionMode ? toggleSelection(form.id) : router.push(`/form-fill?id=${form.id}`)}
                       onDelete={() => handleDeleteForm(form.id)}
                       isDeleting={deletingFormId === form.id}
+                      t={t}
                     />
                   </View>
                 </View>
@@ -756,19 +770,19 @@ export default function FormsScreen() {
         {/* Templates Section */}
         <Animated.View entering={FadeIn} className="px-4 mt-6">
           <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-            Start New Form
+            {t('forms.startNew')}
           </Text>
 
           {templatesQuery.isLoading ? (
             <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
               <ActivityIndicator size="small" color="#1F5C1A" />
-              <Text className="mt-2 text-gray-500">Loading templates...</Text>
+              <Text className="mt-2 text-gray-500">{t('forms.loadingTemplates')}</Text>
             </View>
           ) : templates.length === 0 ? (
             <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
               <FileText size={32} color="#9CA3AF" />
               <Text className="mt-3 text-gray-500 dark:text-gray-400 text-center">
-                No templates available yet
+                {t('forms.noTemplates')}
               </Text>
             </View>
           ) : (
@@ -796,7 +810,7 @@ export default function FormsScreen() {
           >
             <Upload size={24} color="#9CA3AF" />
             <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Upload Custom Template
+              {t('forms.uploadTemplate')}
             </Text>
           </Pressable>
         </Animated.View>
@@ -868,7 +882,7 @@ export default function FormsScreen() {
         {completedToday.length > 0 && (
           <Animated.View entering={FadeIn} className="px-4 mt-6">
             <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              Completed Today ({completedToday.length})
+              {t('forms.completedToday')} ({completedToday.length})
             </Text>
             {selectionMode && completedToday.length > 0 && (
               <Pressable
@@ -881,7 +895,7 @@ export default function FormsScreen() {
                   <Square size={20} color="#9CA3AF" />
                 )}
                 <Text className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                  Select All Completed ({completedToday.length})
+                  {t('forms.selectAllCompleted')} ({completedToday.length})
                 </Text>
               </Pressable>
             )}
@@ -906,6 +920,7 @@ export default function FormsScreen() {
                       onPress={() => selectionMode ? toggleSelection(form.id) : router.push(`/form-fill?id=${form.id}`)}
                       onDelete={() => handleDeleteForm(form.id)}
                       isDeleting={deletingFormId === form.id}
+                      t={t}
                     />
                   </View>
                 </View>

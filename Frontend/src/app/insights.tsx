@@ -47,7 +47,7 @@ import { PDFViewerModal } from '@/components/PDFViewerModal';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
-import { useLanguage } from '@/i18n';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import { getBackendId } from '@/lib/data-provider';
 import {
   getInsights,
@@ -262,6 +262,15 @@ function InsightCard({
   onToggleFollowUp: (needsFollowUp: boolean) => void;
   onToggleResolved: (isResolved: boolean) => void;
 }) {
+  const { t } = useLanguage();
+
+  // Helper function for source labels
+  const getSourceLabel = (sourceType: string): string => {
+    const key = `insights.sources.${sourceType}` as any;
+    const translated = t(key);
+    return translated !== key ? translated : sourceType;
+  };
+
   // Determine display type - priority: eventType > issueTypes[0] > category
   // eventType is PascalCase (Safety, Quality, etc), category/issueTypes are lowercase
   const eventType = insight.eventType;
@@ -334,7 +343,7 @@ function InsightCard({
             )}
             <View className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full mb-1">
               <Text className="text-xs text-gray-500 dark:text-gray-400">
-                {SOURCE_LABELS[insight.sourceType] || insight.sourceType}
+                {getSourceLabel(insight.sourceType)}
               </Text>
             </View>
           </View>
@@ -407,7 +416,7 @@ function InsightCard({
             {insight.needsFollowUp ? (
               <>
                 <Bell size={14} color="#1F5C1A" />
-                <Text className="text-xs text-orange-600 ml-1">Follow-up</Text>
+                <Text className="text-xs text-orange-600 ml-1">{t('insights.followUp')}</Text>
               </>
             ) : (
               <BellOff size={14} color="#9CA3AF" />
@@ -431,7 +440,7 @@ function InsightCard({
             {insight.isResolved ? (
               <>
                 <CheckCircle2 size={14} color="#10B981" />
-                <Text className="text-xs text-green-600 ml-1">Resolved</Text>
+                <Text className="text-xs text-green-600 ml-1">{t('insights.resolved')}</Text>
               </>
             ) : (
               <Clock size={14} color="#9CA3AF" />
@@ -506,6 +515,7 @@ const SearchInputBox = React.memo(function SearchInputBox({
   onSetExample: (example: string) => void;
   isQuerying: boolean;
 }) {
+  const { t } = useLanguage();
   const [inputValue, setInputValue] = useState('');
 
   const handleSubmit = useCallback(() => {
@@ -528,14 +538,14 @@ const SearchInputBox = React.memo(function SearchInputBox({
       <View className="flex-row items-center mb-3">
         <Sparkles size={18} color="#1F5C1A" />
         <Text className="ml-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Ask AI
+          {t('insights.askAi')}
         </Text>
       </View>
       <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-4 py-3">
         <TextInput
           value={inputValue}
           onChangeText={setInputValue}
-          placeholder="e.g., 'items for next building inspection'"
+          placeholder={t('insights.searchPlaceholder')}
           placeholderTextColor="#9CA3AF"
           style={{
             flex: 1,
@@ -575,7 +585,7 @@ const SearchInputBox = React.memo(function SearchInputBox({
       {/* Example queries */}
       {!isQuerying && (
         <View className="mt-3">
-          <Text className="text-xs text-gray-400 mb-2">Try asking:</Text>
+          <Text className="text-xs text-gray-400 mb-2">{t('insights.tryAsking')}</Text>
           <View className="flex-row flex-wrap">
             {[
               'open safety issues',
@@ -601,9 +611,17 @@ const SearchInputBox = React.memo(function SearchInputBox({
 export default function InsightsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const currentProjectId = useDailyLogStore((s) => s.currentProjectId);
   const projects = useDailyLogStore((s) => s.projects);
   const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  // Helper function for source labels
+  const getSourceLabel = (sourceType: string): string => {
+    const key = `insights.sources.${sourceType}` as any;
+    const translated = t(key);
+    return translated !== key ? translated : sourceType;
+  };
 
   // Get backend project ID for API calls
   const backendProjectId = currentProjectId
@@ -860,7 +878,7 @@ export default function InsightsScreen() {
                   : 'text-gray-600 dark:text-gray-400'
               )}
             >
-              {tab === 'dashboard' ? 'Dashboard' : tab === 'all' ? 'All' : tab === 'follow-ups' ? 'Follow-ups' : 'Search'}
+              {tab === 'dashboard' ? t('insights.dashboard') : tab === 'all' ? t('insights.all') : tab === 'follow-ups' ? t('insights.followUps') : t('insights.search')}
             </Text>
           </Pressable>
         ))}
@@ -872,7 +890,7 @@ export default function InsightsScreen() {
           <View className="flex-row items-center">
             <AlertCircle size={20} color="#EF4444" />
             <Text className="ml-2 text-sm text-red-700 dark:text-red-300">
-              Unable to load insights. Please check your connection and try again.
+              {t('insights.errorLoadingInsights')}
             </Text>
           </View>
         </View>
@@ -883,16 +901,16 @@ export default function InsightsScreen() {
         <View className="flex-1 items-center justify-center px-6">
           <Building2 size={48} color="#9CA3AF" />
           <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">
-            Select a Project
+            {t('projects.selectProject')}
           </Text>
           <Text className="mt-2 text-sm text-gray-500 text-center">
-            Please select a project from the Projects tab to view its insights.
+            {t('insights.selectProject')}
           </Text>
           <Pressable
             onPress={() => router.push('/(tabs)/projects')}
             className="mt-4 bg-orange-500 py-3 px-6 rounded-xl"
           >
-            <Text className="text-white font-semibold">Go to Projects</Text>
+            <Text className="text-white font-semibold">{t('insights.goToProjects')}</Text>
           </Pressable>
         </View>
       )}
@@ -901,7 +919,7 @@ export default function InsightsScreen() {
       {backendProjectId && isLoading && (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1F5C1A" />
-          <Text className="mt-3 text-gray-500">Loading insights...</Text>
+          <Text className="mt-3 text-gray-500">{t('insights.loadingInsights')}</Text>
         </View>
       )}
 
@@ -927,13 +945,13 @@ export default function InsightsScreen() {
               {/* Overview Cards */}
               <View className="flex-row mb-4">
                 <StatCard
-                  title="Total Insights"
+                  title={t('insights.totalInsights')}
                   value={stats.total}
                   icon={BarChart3}
                   color="#3B82F6"
                 />
                 <StatCard
-                  title="Need Follow-up"
+                  title={t('insights.needFollowUp')}
                   value={stats.needsFollowUp}
                   icon={Bell}
                   color="#1F5C1A"
@@ -942,17 +960,17 @@ export default function InsightsScreen() {
 
               <View className="flex-row mb-4">
                 <StatCard
-                  title="Unresolved"
+                  title={t('insights.unresolved')}
                   value={stats.unresolved}
                   icon={AlertCircle}
                   color="#EF4444"
                 />
                 <StatCard
-                  title="Total Cost Impact"
+                  title={t('insights.totalCostImpact')}
                   value={stats.totalCostImpact > 0 ? `$${(stats.totalCostImpact / 1000).toFixed(0)}k` : '$0'}
                   icon={DollarSign}
                   color="#10B981"
-                  subtitle={`${stats.withCostImpact} with costs`}
+                  subtitle={`${stats.withCostImpact} ${t('insights.withCosts')}`}
                 />
               </View>
 
@@ -960,7 +978,7 @@ export default function InsightsScreen() {
               {stats.byCategory.length > 0 && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3">
                   <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    By Type (tap to filter)
+                    {t('insights.byType')} ({t('insights.tapToFilter')})
                   </Text>
                   <View className="flex-row flex-wrap">
                     {stats.byCategory.map((item) => {
@@ -989,7 +1007,7 @@ export default function InsightsScreen() {
               {stats.bySourceType.length > 0 && (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-3">
                   <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    By Source (tap to filter)
+                    {t('insights.bySource')} ({t('insights.tapToFilter')})
                   </Text>
                   <View className="flex-row flex-wrap">
                     {stats.bySourceType.map((item) => (
@@ -999,7 +1017,7 @@ export default function InsightsScreen() {
                         className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full mr-2 mb-2"
                       >
                         <Text className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                          {SOURCE_LABELS[item.sourceType] || item.sourceType}: {item.count}
+                          {getSourceLabel(item.sourceType)}: {item.count}
                         </Text>
                       </Pressable>
                     ))}
@@ -1009,7 +1027,7 @@ export default function InsightsScreen() {
 
               {/* Top Lists - Clickable */}
               <TopItemsList
-                title="Top Trades"
+                title={t('insights.topTrades')}
                 items={stats.topTrades}
                 icon={Wrench}
                 color="#3B82F6"
@@ -1017,7 +1035,7 @@ export default function InsightsScreen() {
               />
 
               <TopItemsList
-                title="Top Issue Types"
+                title={t('insights.topIssueTypes')}
                 items={stats.topIssueTypes}
                 icon={AlertTriangle}
                 color="#F59E0B"
@@ -1025,7 +1043,7 @@ export default function InsightsScreen() {
               />
 
               <TopItemsList
-                title="Top Systems"
+                title={t('insights.topSystems')}
                 items={stats.topSystems}
                 icon={Zap}
                 color="#8B5CF6"
@@ -1037,11 +1055,10 @@ export default function InsightsScreen() {
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
                   <Lightbulb size={48} color="#9CA3AF" />
                   <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    No Insights Yet
+                    {t('insights.noInsightsYet')}
                   </Text>
                   <Text className="mt-2 text-sm text-gray-500 text-center">
-                    Record events to automatically generate insights.{'\n'}
-                    Insights help you track issues, patterns, and follow-ups.
+                    {t('insights.recordEventsToGenerate')}
                   </Text>
                 </View>
               )}
@@ -1056,7 +1073,7 @@ export default function InsightsScreen() {
                 <View className="flex-row items-center">
                   <Filter size={14} color="#6B7280" />
                   <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide ml-1">
-                    {hasActiveFilters ? `Filtered (${activeFilterCount})` : 'All'} - {allInsights.length} items
+                    {hasActiveFilters ? `${t('insights.filters')} (${activeFilterCount})` : t('insights.all')} - {allInsights.length} {t('insights.items')}
                   </Text>
                 </View>
                 <Pressable
@@ -1078,7 +1095,7 @@ export default function InsightsScreen() {
                         'text-xs font-medium ml-1',
                         allInsights.length === 0 ? 'text-gray-500' : 'text-white'
                       )}>
-                        Export PDF
+                        {t('insights.exportPdf')}
                       </Text>
                     </>
                   )}
@@ -1089,7 +1106,7 @@ export default function InsightsScreen() {
               {stats && (
                 <View className="flex-row mb-3" style={{ zIndex: 100 }}>
                   <FilterDropdown
-                    label="Type"
+                    label={t('insights.type')}
                     icon={AlertCircle}
                     color="#EF4444"
                     options={stats.byCategory.map(c => ({
@@ -1100,12 +1117,12 @@ export default function InsightsScreen() {
                     onToggle={(value) => handleToggleFilter('categories', value)}
                   />
                   <FilterDropdown
-                    label="Source"
+                    label={t('insights.source')}
                     icon={FileText}
                     color="#3B82F6"
                     options={stats.bySourceType.map(s => ({
                       value: s.sourceType,
-                      label: `${SOURCE_LABELS[s.sourceType] || s.sourceType} (${s.count})`,
+                      label: `${getSourceLabel(s.sourceType)} (${s.count})`,
                     }))}
                     selectedValues={activeFilters.sourceTypes}
                     onToggle={(value) => handleToggleFilter('sourceTypes', value)}
@@ -1116,18 +1133,18 @@ export default function InsightsScreen() {
               {stats && (
                 <View className="flex-row mb-3" style={{ zIndex: 90 }}>
                   <FilterDropdown
-                    label="Trade"
+                    label={t('insights.trade')}
                     icon={Wrench}
                     color="#3B82F6"
-                    options={stats.topTrades.map(t => ({
-                      value: t.name,
-                      label: `${t.name} (${t.count})`,
+                    options={stats.topTrades.map(item => ({
+                      value: item.name,
+                      label: `${item.name} (${item.count})`,
                     }))}
                     selectedValues={activeFilters.trades}
                     onToggle={(value) => handleToggleFilter('trades', value)}
                   />
                   <FilterDropdown
-                    label="System"
+                    label={t('insights.system')}
                     icon={Zap}
                     color="#8B5CF6"
                     options={stats.topSystems.map(s => ({
@@ -1145,11 +1162,11 @@ export default function InsightsScreen() {
                 <View className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 mb-3">
                   <View className="flex-row items-center justify-between mb-2">
                     <Text className="text-xs font-semibold text-orange-800 dark:text-orange-300">
-                      Active Filters ({activeFilterCount})
+                      {t('insights.activeFilters')} ({activeFilterCount})
                     </Text>
                     <Pressable onPress={handleClearAllFilters}>
                       <Text className="text-xs text-orange-600 dark:text-orange-400 underline">
-                        Clear all
+                        {t('insights.clearAll')}
                       </Text>
                     </Pressable>
                   </View>
@@ -1173,7 +1190,7 @@ export default function InsightsScreen() {
                         className="flex-row items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full mr-2 mb-1"
                       >
                         <Text className="text-xs text-gray-700 dark:text-gray-300 mr-1">
-                          {SOURCE_LABELS[src] || src}
+                          {getSourceLabel(src)}
                         </Text>
                         <X size={12} color="#9CA3AF" />
                       </Pressable>
@@ -1223,15 +1240,15 @@ export default function InsightsScreen() {
                   <FileText size={32} color="#9CA3AF" />
                   <Text className="mt-3 text-gray-500 text-center">
                     {hasActiveFilters
-                      ? 'No insights match your filters.\nTry adjusting or clearing filters.'
-                      : 'No insights indexed yet.\nTap the database icon to index your data.'}
+                      ? t('insights.noMatchFilters')
+                      : t('insights.noInsights')}
                   </Text>
                   {hasActiveFilters && (
                     <Pressable
                       onPress={handleClearAllFilters}
                       className="mt-3 bg-orange-500 py-2 px-4 rounded-lg"
                     >
-                      <Text className="text-white font-medium text-sm">Clear Filters</Text>
+                      <Text className="text-white font-medium text-sm">{t('insights.clearFilters')}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -1254,14 +1271,14 @@ export default function InsightsScreen() {
           {activeTab === 'follow-ups' && (
             <Animated.View entering={FadeIn} className="px-4 pt-4">
               <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Needs Follow-up ({followUps.length})
+                {t('insights.needsFollowUp')} ({followUps.length})
               </Text>
 
               {followUps.length === 0 ? (
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
                   <CheckCircle2 size={32} color="#10B981" />
                   <Text className="mt-3 text-gray-500 text-center">
-                    No insights need follow-up right now.
+                    {t('insights.noInsights')}
                   </Text>
                 </View>
               ) : (
@@ -1345,7 +1362,7 @@ export default function InsightsScreen() {
                   {nlQueryResult.results.length > 0 ? (
                     <View>
                       <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                        Results ({nlQueryResult.results.length})
+                        {t('insights.results')} ({nlQueryResult.results.length})
                       </Text>
                       {nlQueryResult.results.map((insight, index) => (
                         <Animated.View key={insight.id} entering={FadeInDown.delay(index * 20)}>
@@ -1362,7 +1379,7 @@ export default function InsightsScreen() {
                     <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
                       <Search size={32} color="#9CA3AF" />
                       <Text className="mt-3 text-gray-500 text-center">
-                        No insights match your query.{'\n'}Try different keywords or index more data.
+                        {t('insights.noMatchQuery')}
                       </Text>
                     </View>
                   )}
@@ -1374,11 +1391,11 @@ export default function InsightsScreen() {
                 <View className="bg-white dark:bg-gray-800 rounded-xl p-6 items-center">
                   <Sparkles size={40} color="#1F5C1A" />
                   <Text className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    AI-Powered Search
+                    {t('insights.aiPoweredSearch')}
                   </Text>
                   <Text className="mt-2 text-sm text-gray-500 text-center">
-                    Ask questions in plain English like:{'\n'}
-                    "create a list of all items for{'\n'}the next building inspection"
+                    {t('insights.askQuestionsPlainEnglish')}{'\n'}
+                    "{t('insights.createListExample')}"
                   </Text>
                 </View>
               )}
@@ -1391,7 +1408,7 @@ export default function InsightsScreen() {
       <PDFViewerModal
         visible={pdfViewerVisible}
         pdfUri={pdfViewerUri}
-        title="Insights Export"
+        title={t('insights.exportPdf')}
         onClose={() => {
           setPdfViewerVisible(false);
           setPdfViewerUri(null);
