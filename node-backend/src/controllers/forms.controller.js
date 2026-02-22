@@ -460,7 +460,8 @@ const DIESEL_FIRE_PUMP_TEMPLATE_BILINGUAL = {
           shortLabel: 'Fotoğraf/Photo',
           type: 'PHOTO',
           required: false,
-          ocrEnabled: true
+          ocrEnabled: true,
+          ocrFields: ['pump_brand', 'pump_model', 'pump_serial', 'pump_year', 'pump_capacity', 'pump_pressure', 'pump_rpm']
         },
         {
           id: 'pump_brand',
