@@ -108,24 +108,30 @@ export default {
   // Observations (formerly Events)
   events: {
     title: 'Observations',
+    details: 'Observation Details',
     newEvent: 'New Observation',
     recordEvent: 'Record Observation',
     recordingFor: 'Recording for:',
     noEvents: 'No observations yet',
     createFirst: 'Record your first observation',
-    type: 'Type',
+    type: 'Observation Type',
     severity: 'Severity',
     location: 'Location',
-    tradeVendor: 'Trade/Vendor',
+    tradeVendor: 'Trade / Vendor',
+    tradeVendorPlaceholder: 'e.g., ABC Concrete / Rebar sub',
     description: 'Description',
+    title_field: 'Title',
     notes: 'Notes',
     actionItems: 'Action Items',
     resolved: 'Resolved',
     unresolved: 'Unresolved',
     markResolved: 'Mark as Resolved',
     markUnresolved: 'Mark as Unresolved',
+    deleteEvent: 'Delete Observation',
     deleteConfirm: 'Are you sure you want to delete this observation?',
     applyDocument: 'Apply to Document',
+    applyToPunchListOrRfi: 'Apply to Punch List or RFI',
+    addToDailyLog: 'Add to Today\'s Daily Log',
     selectSchema: 'Select Document Type',
     generatePdf: 'Generate PDF',
     downloadPdf: 'Download PDF',
@@ -134,6 +140,15 @@ export default {
     earlier: 'EARLIER',
     logged: 'Logged',
     viewAll: 'View all {{count}} observations',
+    // Recording/Playback
+    playRecording: 'Play Recording',
+    tapToListen: 'Tap to listen',
+    transcription: 'Transcription',
+    copyToDescription: 'Copy to Description',
+    // Photos
+    photos: 'Photos',
+    addPhoto: 'Add Photo',
+    tapToAddPhotos: 'Tap to add photos',
     // Observation types
     types: {
       // Issues/Problems
