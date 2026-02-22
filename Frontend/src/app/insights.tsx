@@ -47,6 +47,7 @@ import { PDFViewerModal } from '@/components/PDFViewerModal';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/cn';
 import { useDailyLogStore } from '@/lib/store';
+import { useLanguage } from '@/i18n';
 import { getBackendId } from '@/lib/data-provider';
 import {
   getInsights,
