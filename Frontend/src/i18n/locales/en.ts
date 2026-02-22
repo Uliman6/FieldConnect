@@ -139,7 +139,7 @@ export default {
     today: 'TODAY',
     earlier: 'EARLIER',
     logged: 'Logged',
-    viewAll: 'View all {{count}} observations',
+    viewAll: 'View all %{count} observations',
     // Recording/Playback
     playRecording: 'Play Recording',
     tapToListen: 'Tap to listen',
@@ -208,10 +208,10 @@ export default {
     newest: 'Newest',
     oldest: 'Oldest',
     allProjects: 'All Projects',
-    chooseProjectToView: 'Choose a project from the Projects tab to view {{type}}',
-    noItemsYet: 'No {{type}} yet',
+    chooseProjectToView: 'Choose a project from the Projects tab to view %{type}',
+    noItemsYet: 'No %{type} yet',
     createDailyLogPrompt: 'Create a daily log to see it here',
-    createDocPrompt: 'Record an event and apply it to a {{type}}',
+    createDocPrompt: 'Record an event and apply it to a %{type}',
     selectAll: 'Select All',
   },
 
@@ -390,7 +390,7 @@ export default {
     synced: 'All changes synced',
     notSynced: 'Not synced',
     offline: 'Offline - changes will sync when connected',
-    pendingChanges: '{{count}} pending changes',
+    pendingChanges: '%{count} pending changes',
     error: 'Sync error',
     retry: 'Retry sync',
   },
@@ -438,11 +438,11 @@ export default {
     today: 'Today',
     yesterday: 'Yesterday',
     tomorrow: 'Tomorrow',
-    daysAgo: '{{count}} days ago',
-    weeksAgo: '{{count}} weeks ago',
-    monthsAgo: '{{count}} months ago',
-    hoursAgo: '{{count}} hours ago',
-    minutesAgo: '{{count}} minutes ago',
+    daysAgo: '%{count} days ago',
+    weeksAgo: '%{count} weeks ago',
+    monthsAgo: '%{count} months ago',
+    hoursAgo: '%{count} hours ago',
+    minutesAgo: '%{count} minutes ago',
     justNow: 'Just now',
   },
 
@@ -455,7 +455,7 @@ export default {
     addComment: 'Add Comment',
     comments: 'Comments',
     noComments: 'No comments yet',
-    statusChanged: 'Status changed to {{status}}',
+    statusChanged: 'Status changed to %{status}',
   },
 
   // Forms
@@ -491,8 +491,8 @@ export default {
     completed: 'Completed',
     // Time strings
     justNow: 'Just now',
-    mAgo: '{{count}}m ago',
-    hAgo: '{{count}}h ago',
+    mAgo: '%{count}m ago',
+    hAgo: '%{count}h ago',
     // Progress
     complete: 'complete',
     // Selection
@@ -542,7 +542,7 @@ export default {
     brand: 'Brand',
     notes: 'Notes',
     noItems: 'No items yet',
-    itemCount: '{{count}} items',
+    itemCount: '%{count} items',
     // Units
     units: {
       pcs: 'pcs',

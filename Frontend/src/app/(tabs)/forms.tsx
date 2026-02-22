@@ -101,8 +101,8 @@ function FormCard({
     const diffHours = Math.floor(diffMs / 3600000);
 
     if (diffMins < 1) return t('forms.justNow');
-    if (diffMins < 60) return t('forms.mAgo').replace('{{count}}', String(diffMins));
-    if (diffHours < 24) return t('forms.hAgo').replace('{{count}}', String(diffHours));
+    if (diffMins < 60) return t('forms.mAgo', { count: diffMins });
+    if (diffHours < 24) return t('forms.hAgo', { count: diffHours });
     return format(created, 'MMM d, h:mm a');
   }, [form.createdAt, t]);
 
@@ -259,8 +259,8 @@ function VoiceListCard({
     const diffHours = Math.floor(diffMs / 3600000);
 
     if (diffMins < 1) return t('forms.justNow');
-    if (diffMins < 60) return t('forms.mAgo').replace('{{count}}', String(diffMins));
-    if (diffHours < 24) return t('forms.hAgo').replace('{{count}}', String(diffHours));
+    if (diffMins < 60) return t('forms.mAgo', { count: diffMins });
+    if (diffHours < 24) return t('forms.hAgo', { count: diffHours });
     return format(created, 'MMM d, h:mm a');
   }, [voiceList.createdAt, t]);
 

@@ -139,7 +139,7 @@ export default {
     today: 'BUGÜN',
     earlier: 'ÖNCEKİ',
     logged: 'Kaydedildi',
-    viewAll: 'Tüm {{count}} gözlemi gör',
+    viewAll: 'Tüm %{count} gözlemi gör',
     // Recording/Playback
     playRecording: 'Kaydı Oynat',
     tapToListen: 'Dinlemek için dokun',
@@ -208,10 +208,10 @@ export default {
     newest: 'En Yeni',
     oldest: 'En Eski',
     allProjects: 'Tüm Projeler',
-    chooseProjectToView: '{{type}} görüntülemek için Projeler sekmesinden bir proje seçin',
-    noItemsYet: 'Henüz {{type}} yok',
+    chooseProjectToView: '%{type} görüntülemek için Projeler sekmesinden bir proje seçin',
+    noItemsYet: 'Henüz %{type} yok',
     createDailyLogPrompt: 'Burada görmek için bir günlük kayıt oluşturun',
-    createDocPrompt: 'Bir olay kaydedin ve {{type}} uygulayın',
+    createDocPrompt: 'Bir olay kaydedin ve %{type} uygulayın',
     selectAll: 'Tümünü Seç',
   },
 
@@ -390,7 +390,7 @@ export default {
     synced: 'Tum degisiklikler senkronize edildi',
     notSynced: 'Senkronize edilmedi',
     offline: 'Cevrimdisi - baglanti kurulunca senkronize edilecek',
-    pendingChanges: '{{count}} bekleyen degisiklik',
+    pendingChanges: '%{count} bekleyen degisiklik',
     error: 'Senkronizasyon hatasi',
     retry: 'Tekrar dene',
   },
@@ -438,11 +438,11 @@ export default {
     today: 'Bugun',
     yesterday: 'Dun',
     tomorrow: 'Yarin',
-    daysAgo: '{{count}} gun once',
-    weeksAgo: '{{count}} hafta once',
-    monthsAgo: '{{count}} ay once',
-    hoursAgo: '{{count}} saat once',
-    minutesAgo: '{{count}} dakika once',
+    daysAgo: '%{count} gun once',
+    weeksAgo: '%{count} hafta once',
+    monthsAgo: '%{count} ay once',
+    hoursAgo: '%{count} saat once',
+    minutesAgo: '%{count} dakika once',
     justNow: 'Az once',
   },
 
@@ -455,7 +455,7 @@ export default {
     addComment: 'Yorum Ekle',
     comments: 'Yorumlar',
     noComments: 'Henuz yorum yok',
-    statusChanged: 'Durum {{status}} olarak degistirildi',
+    statusChanged: 'Durum %{status} olarak degistirildi',
   },
 
   // Forms
@@ -491,8 +491,8 @@ export default {
     completed: 'Tamamlandı',
     // Time strings
     justNow: 'Az önce',
-    mAgo: '{{count}} dk önce',
-    hAgo: '{{count}} sa önce',
+    mAgo: '%{count} dk önce',
+    hAgo: '%{count} sa önce',
     // Progress
     complete: 'tamamlandı',
     // Selection
@@ -542,7 +542,7 @@ export default {
     brand: 'Marka',
     notes: 'Notlar',
     noItems: 'Henuz kalem yok',
-    itemCount: '{{count}} kalem',
+    itemCount: '%{count} kalem',
     // Units
     units: {
       pcs: 'adet',
