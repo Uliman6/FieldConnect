@@ -90,6 +90,9 @@ class ReportsController {
       } else if (type === 'punch_list' || type === 'rfi') {
         // ACCESS CONTROL: Pass accessible project IDs to filter
         addedCount = await this._addChecklistItemsToArchive(archive, ids, type, req.accessibleProjectIds);
+      } else if (type === 'form') {
+        // ACCESS CONTROL: Pass accessible project IDs to filter
+        addedCount = await this._addFormsToArchive(archive, ids, req.accessibleProjectIds);
       }
       console.log('[bulk-export] Added ' + addedCount + ' files to archive');
       if (addedCount === 0) {
@@ -149,6 +152,14 @@ class ReportsController {
         });
         console.log('[bulk-export-project] Filtered to ' + filteredEvents.length + ' ' + type + ' events');
         if (filteredEvents.length > 0) addedCount = await this._addChecklistItemsToArchive(archive, filteredEvents.map(e => e.id), type, null);
+      } else if (type === 'form') {
+        const forms = await prisma.formInstance.findMany({
+          where: { projectId },
+          select: { id: true },
+          orderBy: { createdAt: 'desc' }
+        });
+        console.log('[bulk-export-project] Found ' + forms.length + ' forms');
+        if (forms.length > 0) addedCount = await this._addFormsToArchive(archive, forms.map(f => f.id), null);
       }
       console.log('[bulk-export-project] Added ' + addedCount + ' files to archive');
       if (addedCount === 0) {
@@ -230,6 +241,59 @@ class ReportsController {
         }
       } catch (err) {
         console.error('[bulk-export] Failed to add ' + type + ' ' + id + ':', err.message, err.stack);
+      }
+    }
+    return addedCount;
+  }
+
+  async _addFormsToArchive(archive, ids, accessibleProjectIds) {
+    const { generatePreTaskPlanPdf, generateGenericFormPdf } = require('../services/form-pdf.service');
+    let addedCount = 0;
+    console.log('[bulk-export] Processing ' + ids.length + ' forms');
+    for (const id of ids) {
+      try {
+        const form = await prisma.formInstance.findUnique({
+          where: { id },
+          include: {
+            template: true
+          }
+        });
+        if (!form) {
+          console.log('[bulk-export] Form not found: ' + id);
+          continue;
+        }
+        // ACCESS CONTROL: Skip if user doesn't have access to this project
+        if (accessibleProjectIds !== null && !accessibleProjectIds.includes(form.projectId)) {
+          console.log('[bulk-export] Skipping form ' + id + ' - no access to project');
+          continue;
+        }
+        // Get project for PDF generation
+        const project = await prisma.project.findUnique({ where: { id: form.projectId } });
+        if (!project) {
+          console.log('[bulk-export] Project not found for form: ' + id);
+          continue;
+        }
+        console.log('[bulk-export] Generating PDF for form: ' + id + ' (template: ' + form.template?.name + ')');
+        try {
+          // Generate PDF based on template type
+          let pdfBuffer;
+          if (form.template?.name === 'Pre-Task Plan') {
+            pdfBuffer = await generatePreTaskPlanPdf(form, project);
+          } else {
+            pdfBuffer = await generateGenericFormPdf(form, project);
+          }
+          const formName = form.name || form.template?.name || 'Form';
+          const safeTitle = formName.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 50);
+          const dateStr = new Date(form.createdAt).toISOString().split('T')[0];
+          const archiveFilename = safeTitle + '-' + dateStr + '.pdf';
+          archive.append(pdfBuffer, { name: archiveFilename });
+          addedCount++;
+          console.log('[bulk-export] Added form: ' + archiveFilename);
+        } catch (pdfErr) {
+          console.error('[bulk-export] Failed to generate PDF for form ' + id + ':', pdfErr.message);
+        }
+      } catch (err) {
+        console.error('[bulk-export] Failed to add form ' + id + ':', err.message);
       }
     }
     return addedCount;
