@@ -11,18 +11,45 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useAuthStore } from '@/lib/auth-store';
 import { DataProvider, useDataProvider } from '@/lib/data-provider';
 import { LanguageProvider } from '@/i18n/LanguageProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import * as Sentry from '@sentry/react-native';
 import * as Updates from 'expo-updates';
+import Constants from 'expo-constants';
 
 // Initialize Sentry for crash reporting
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  dsn: SENTRY_DSN,
   // Capture 100% of transactions for performance monitoring in beta
   tracesSampleRate: 1.0,
-  // Only enable in production builds
-  enabled: !__DEV__,
-  debug: false,
+  // Enable in production builds (when DSN is configured)
+  enabled: !__DEV__ && !!SENTRY_DSN,
+  debug: __DEV__, // Show debug info in development
+  // Add release and environment info
+  release: Constants.expoConfig?.version || '1.0.0',
+  environment: __DEV__ ? 'development' : 'production',
+  // Attach user info when available
+  beforeSend(event) {
+    // You can modify the event here before it's sent
+    // Add additional context
+    event.tags = {
+      ...event.tags,
+      platform: Platform.OS,
+      runtimeVersion: Constants.expoConfig?.runtimeVersion as string,
+    };
+    return event;
+  },
 });
+
+// Log Sentry status on startup
+if (__DEV__) {
+  if (SENTRY_DSN) {
+    console.log('[Sentry] Initialized with DSN (disabled in dev mode)');
+  } else {
+    console.warn('[Sentry] DSN not configured - error reporting is disabled. Set EXPO_PUBLIC_SENTRY_DSN in your .env file.');
+  }
+}
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -184,16 +211,18 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <KeyboardProvider>
-            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-            <RootLayoutNav colorScheme={colorScheme} />
-          </KeyboardProvider>
-        </GestureHandlerRootView>
-      </LanguageProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <KeyboardProvider>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <RootLayoutNav colorScheme={colorScheme} />
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </LanguageProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
