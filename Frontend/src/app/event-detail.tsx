@@ -82,7 +82,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useLanguage } from '@/i18n';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import { format } from 'date-fns';
 
 const EVENT_TYPES: EventType[] = [
