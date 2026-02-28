@@ -496,12 +496,12 @@ Return a JSON object with the structure described. Only include categories that 
         };
       }).filter(t => t.company_name || t.task_description);
 
-      // Default hours to 8 if company and workers are specified but hours is missing
+      // Default hours to 8 if company is specified but hours is missing
       // This is a safe assumption for a standard work day unless notes indicate otherwise
       for (const task of normalized.tasks) {
-        if (task.company_name && task.workers > 0 && (!task.hours || task.hours === 0)) {
+        if (task.company_name && (!task.hours || task.hours === 0)) {
           task.hours = 8;
-          console.log(`[transcript-parser] AI: Defaulting hours to 8 for ${task.company_name} (${task.workers} workers)`);
+          console.log(`[transcript-parser] AI: Defaulting hours to 8 for ${task.company_name}${task.workers > 0 ? ` (${task.workers} workers)` : ''}`);
         }
       }
     }
@@ -814,12 +814,12 @@ Return a JSON object with the structure described. Only include categories that 
       }
     }
 
-    // Default hours to 8 if company and workers are specified but hours is missing
+    // Default hours to 8 if company is specified but hours is missing
     // This is a safe assumption for a standard work day unless notes indicate otherwise
     for (const task of tasks) {
-      if (task.company_name && task.workers > 0 && (!task.hours || task.hours === 0)) {
+      if (task.company_name && (!task.hours || task.hours === 0)) {
         task.hours = 8;
-        console.log(`[transcript-parser] Defaulting hours to 8 for ${task.company_name} (${task.workers} workers)`);
+        console.log(`[transcript-parser] Defaulting hours to 8 for ${task.company_name}${task.workers > 0 ? ` (${task.workers} workers)` : ''}`);
       }
     }
 
@@ -1290,21 +1290,24 @@ Example: "need DPR Division 7 to come back and use paint to cover this up"
 ═══════════════════════════════════════════════════════════════
 OBSERVATION TYPE GUIDELINES:
 ═══════════════════════════════════════════════════════════════
-ISSUES/PROBLEMS:
-- Trade Damage: Use when damage is caused BY another trade, accidental collision, someone hit/broke something, pipe fell on something, damage during installation by others
-- Quality: Use for workmanship defects, finish issues, NOT for damage caused by accidents
+ISSUES/PROBLEMS (only use if transcript describes an actual problem):
+- Trade Damage: Use when damage is caused BY another trade, accidental collision, someone hit/broke something
+- Quality: Use ONLY for explicit workmanship defects, "not to spec", "out of tolerance", "needs rework" - NOT for general observations
 - Safety: Use for safety hazards, injuries, near-misses
-- Delay: Use for schedule impacts, waiting on others
+- Delay: Use for schedule impacts, waiting on others, behind schedule
 - Material: Use for material defects, shortages, wrong materials delivered
 - Equipment: Use for equipment failures, breakdowns
 - Coordination: Use for communication issues, scheduling conflicts between trades
-- Inspection: Use for inspection-related events
+- Inspection: Use for inspection-related events (passed, failed, scheduled)
 
 POSITIVE OBSERVATIONS:
-- Productivity Gain: Use for efficiency improvements, ahead of schedule work, faster than expected completion, productivity wins
-- Milestone: Use for achievements, project milestones reached, significant completions
-- Progress: Use for general progress updates, work completed, areas finished
-- Recognition: Use for good work recognition, best practices observed, commendations, quality work by trades
+- Productivity Gain: Use for efficiency improvements, ahead of schedule work
+- Milestone: Use for achievements, significant completions, phases complete
+- Progress: Use for work completed, areas finished, ongoing activities
+- Recognition: Use for good work, commendations, best practices
+
+GENERAL:
+- Other: Use for general notes, observations, site conditions, or anything that doesn't clearly fit the categories above. This is the DEFAULT if no specific category applies.
 
 ═══════════════════════════════════════════════════════════════
 SEVERITY GUIDELINES:
