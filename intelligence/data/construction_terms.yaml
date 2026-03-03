@@ -1,0 +1,179 @@
+# FieldConnect Construction Terminology Dictionary
+# This file is loaded by the normalizer to expand abbreviations,
+# standardize trade names, and recognize brand names.
+# Uli will expand this over time based on real project data.
+
+# Abbreviation expansions
+abbreviations:
+  GWB: gypsum wall board
+  MEP: mechanical electrical plumbing
+  RFI: request for information
+  CO: change order
+  TI: tenant improvement
+  GC: general contractor
+  PE: project engineer
+  PM: project manager
+  OAC: owner architect contractor
+  NIC: not in contract
+  VE: value engineering
+  ASI: architect supplemental instruction
+  PCO: potential change order
+  T&M: time and materials
+  SOW: scope of work
+  NTP: notice to proceed
+  TCO: temporary certificate of occupancy
+  BIM: building information modeling
+  QA/QC: quality assurance quality control
+  FF&E: furniture fixtures and equipment
+  HVAC: heating ventilation and air conditioning
+  CMU: concrete masonry unit
+  LF: linear feet
+  SF: square feet
+  CY: cubic yards
+  PSI: pounds per square inch
+  ACT: acoustical ceiling tile
+  FRP: fiberglass reinforced panel
+  VCT: vinyl composition tile
+  LVT: luxury vinyl tile
+  WRB: weather resistant barrier
+  DWV: drain waste vent
+  AHU: air handling unit
+  RTU: rooftop unit
+  VAV: variable air volume
+  FCU: fan coil unit
+  MDF: main distribution frame
+  IDF: intermediate distribution frame
+
+# Brand-to-generic mapping
+brands:
+  Hilti: anchors and fasteners
+  Tyvek: weather resistant barrier
+  Sakrete: concrete mix
+  Grace: waterproofing membrane
+  Sika: sealant and adhesive
+  Bluebeam: pdf markup software
+  Procore: project management software
+  PlanGrid: field management software
+  Tremco: roofing and waterproofing
+  Firestone: roofing membrane
+  Carlisle: roofing membrane
+  Johns Manville: insulation
+  Owens Corning: insulation and roofing
+  USG: gypsum products
+  CertainTeed: building materials
+  Georgia Pacific: gypsum and lumber
+  Simpson Strong-Tie: structural connectors
+  ITW Red Head: anchors
+  Powers: anchors and fasteners
+  Dewalt: power tools
+  Milwaukee: power tools
+  Makita: power tools
+  Bobcat: skid steer loader
+  Caterpillar: heavy equipment
+  John Deere: heavy equipment
+  Komatsu: heavy equipment
+  Genie: aerial lifts
+  JLG: aerial lifts
+  Skyjack: aerial lifts
+
+# Trade slang/aliases -> standard name
+trades:
+  sparkies: electrical
+  sparky: electrical
+  tin knockers: sheet metal
+  pipe fitters: mechanical piping
+  iron workers: structural steel
+  rod busters: rebar
+  mud men: drywall finishers
+  tapers: drywall finishers
+  rockers: drywall installers
+  glaziers: glass and glazing
+  curtainwall guys: curtainwall
+  roofers: roofing
+  waterproofers: waterproofing
+  painters: painting and coatings
+  flooring guys: flooring
+  elevator guys: elevator
+  fire sprinkler: fire protection
+  plumbers: plumbing
+  HVAC guys: mechanical
+  carpenters: carpentry
+  framers: framing
+  millwork guys: millwork
+  cabinet guys: casework
+  masons: masonry
+  concrete guys: concrete
+  flatwork guys: concrete flatwork
+  form setters: concrete formwork
+
+# Material synonyms (group -> aliases)
+materials:
+  gypsum_wall_board:
+    - drywall
+    - sheetrock
+    - GWB
+    - gypboard
+    - plasterboard
+    - gyp board
+  concrete:
+    - mud
+    - pour
+    - slab
+    - flatwork
+    - deck pour
+  rebar:
+    - reinforcing steel
+    - reinforcement
+    - rod
+    - re-bar
+  structural_steel:
+    - steel
+    - iron
+    - moment frame
+    - beam
+    - column
+    - W-section
+    - wide flange
+  curtainwall:
+    - curtain wall
+    - storefront
+    - aluminum framing
+    - mullion
+    - glazing system
+  waterproofing:
+    - membrane
+    - water barrier
+    - below grade waterproofing
+    - foundation waterproofing
+    - wet seal
+  roofing:
+    - roof membrane
+    - TPO
+    - EPDM
+    - built-up roofing
+    - BUR
+    - modified bitumen
+    - standing seam
+  insulation:
+    - batt insulation
+    - rigid insulation
+    - spray foam
+    - mineral wool
+    - fiberglass
+  ductwork:
+    - ducts
+    - sheet metal
+    - HVAC duct
+    - flex duct
+    - spiral duct
+  conduit:
+    - EMT
+    - rigid conduit
+    - flex conduit
+    - electrical conduit
+    - pipe and wire
+  fire_stopping:
+    - firestopping
+    - fire caulk
+    - fire safing
+    - penetration sealing
