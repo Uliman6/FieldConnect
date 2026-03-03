@@ -1,0 +1,298 @@
+# FieldConnect Project Phase Definitions
+# Used by the phase mapper to categorize schedule activities into standard phases
+
+# Standard phase names (in chronological order)
+phases:
+  - preconstruction
+  - foundation
+  - structure
+  - envelope
+  - mep_rough_in
+  - interior_finishes
+  - mep_trim_out
+  - commissioning
+  - closeout
+
+# Keywords/patterns for auto-mapping schedule activities to phases
+phase_keywords:
+  preconstruction:
+    - preconstruction
+    - pre-construction
+    - mobilization
+    - site prep
+    - demolition
+    - abatement
+    - permits
+    - submittals
+    - buyout
+    - procurement
+    - utility relocation
+
+  foundation:
+    - foundation
+    - excavation
+    - excavating
+    - footings
+    - footing
+    - slab on grade
+    - SOG
+    - pile
+    - piles
+    - caisson
+    - caissons
+    - grade beam
+    - foundation wall
+    - basement
+    - underslab
+    - under slab
+    - waterproofing below grade
+    - elevator pit
+    - sump pit
+
+  structure:
+    - structure
+    - structural
+    - steel erection
+    - steel frame
+    - metal decking
+    - concrete deck
+    - concrete pour
+    - slab pour
+    - formwork
+    - shoring
+    - post tension
+    - PT pour
+    - moment frame
+    - braced frame
+    - stairs
+    - stair steel
+    - metal stud framing
+    - structural framing
+    - topping slab
+    - concrete columns
+
+  envelope:
+    - envelope
+    - curtainwall
+    - curtain wall
+    - glazing
+    - storefront
+    - window
+    - windows
+    - roofing
+    - roof membrane
+    - waterproofing
+    - air barrier
+    - weather barrier
+    - vapor barrier
+    - cladding
+    - exterior skin
+    - metal panel
+    - precast panel
+    - brick
+    - masonry veneer
+    - EIFS
+    - stucco
+    - sealants
+    - joint sealant
+    - louvers
+    - exterior doors
+    - roof drain
+    - flashing
+
+  mep_rough_in:
+    - rough in
+    - rough-in
+    - MEP rough
+    - electrical rough
+    - plumbing rough
+    - mechanical rough
+    - ductwork
+    - duct installation
+    - piping
+    - conduit
+    - cable tray
+    - fire sprinkler
+    - sprinkler main
+    - risers
+    - branch wiring
+    - waste and vent
+    - DWV
+    - domestic water
+    - hydronic
+    - chilled water
+    - hot water
+    - VAV boxes
+    - fan coil
+    - equipment setting
+    - AHU
+    - RTU
+    - chiller
+    - boiler
+    - transformer
+    - switchgear
+    - panel boards
+
+  interior_finishes:
+    - finishes
+    - finish
+    - drywall
+    - gypsum board
+    - framing
+    - metal framing
+    - insulation
+    - taping
+    - mudding
+    - painting
+    - paint
+    - flooring
+    - carpet
+    - tile
+    - VCT
+    - LVT
+    - wood floor
+    - ACT ceiling
+    - ceiling tile
+    - acoustical ceiling
+    - millwork
+    - casework
+    - cabinets
+    - countertops
+    - toilet partitions
+    - toilet accessories
+    - accessories
+    - signage
+    - specialties
+    - doors
+    - door hardware
+    - frames
+    - glass
+    - mirrors
+    - window treatment
+
+  mep_trim_out:
+    - trim out
+    - trim-out
+    - MEP trim
+    - light fixtures
+    - lighting
+    - luminaires
+    - devices
+    - outlets
+    - switches
+    - plumbing fixtures
+    - fixtures
+    - faucets
+    - toilets
+    - sinks
+    - lavatories
+    - diffusers
+    - grilles
+    - registers
+    - thermostats
+    - controls
+    - BMS
+    - fire alarm devices
+    - speakers
+    - data jacks
+    - AV equipment
+
+  commissioning:
+    - commissioning
+    - Cx
+    - TAB
+    - test and balance
+    - air balance
+    - water balance
+    - functional testing
+    - fire alarm testing
+    - sprinkler testing
+    - elevator inspection
+    - inspection
+    - third party inspection
+    - final inspection
+    - code inspection
+    - MEP startup
+    - system startup
+    - energization
+    - closeout testing
+
+  closeout:
+    - closeout
+    - close out
+    - close-out
+    - punch list
+    - punchlist
+    - final clean
+    - cleaning
+    - touch up
+    - substantial completion
+    - final completion
+    - as-builts
+    - O&M manuals
+    - training
+    - warranties
+    - attic stock
+    - turnover
+    - move in
+    - occupancy
+    - TCO
+    - CO
+    - certificate of occupancy
+
+# Trade associations with phases (which trades are typically active in each phase)
+phase_trades:
+  preconstruction:
+    - general contractor
+    - project management
+
+  foundation:
+    - concrete
+    - excavation
+    - waterproofing
+    - rebar
+
+  structure:
+    - structural steel
+    - concrete
+    - rebar
+    - carpentry
+
+  envelope:
+    - curtainwall
+    - roofing
+    - waterproofing
+    - glazing
+    - masonry
+
+  mep_rough_in:
+    - electrical
+    - plumbing
+    - mechanical
+    - fire protection
+    - low voltage
+
+  interior_finishes:
+    - drywall
+    - painting
+    - flooring
+    - carpentry
+    - millwork
+    - ceiling
+
+  mep_trim_out:
+    - electrical
+    - plumbing
+    - mechanical
+    - fire protection
+    - low voltage
+
+  commissioning:
+    - controls
+    - fire alarm
+    - elevator
+    - mechanical
+
+  closeout:
+    - general contractor
+    - all trades
