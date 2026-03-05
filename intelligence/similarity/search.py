@@ -37,7 +37,7 @@ async def get_candidates_with_embeddings(
     query = """
         SELECT
             id, source_project_id, source_project_name, source_type, source_ref,
-            raw_text, normalized_text, project_phase, phase_percentage,
+            raw_text, question_text, normalized_text, project_phase, phase_percentage,
             trade_category, issue_type, severity,
             resolution_text, cost_impact, schedule_impact_days, resulted_in_co,
             abstracted_summary, embedding, metadata, item_date
