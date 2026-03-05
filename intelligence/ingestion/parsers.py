@@ -148,6 +148,7 @@ def parse_rfi_pdf(pdf_path: str, project_id: str, project_name: str) -> Optional
         "source_project_id": project_id,
         "source_project_name": project_name,
         "raw_text": raw_text,
+        "question_text": question_text,  # Clean question for matching and display
         "item_date": item_date,
         "trade_category": discipline.lower() if discipline else None,
         "severity": priority.lower() if priority else None,
@@ -231,6 +232,7 @@ def parse_issue_pdf(pdf_path: str, project_id: str, project_name: str) -> Option
         "source_project_id": project_id,
         "source_project_name": project_name,
         "raw_text": raw_text,
+        "question_text": description,  # For punch lists, the description IS the issue
         "item_date": item_date,
         "trade_category": trade_category,
         "severity": severity.lower() if severity else None,

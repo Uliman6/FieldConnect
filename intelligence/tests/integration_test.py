@@ -301,7 +301,7 @@ async def run_tests():
     async with pool.acquire() as conn:
         # Get 10 items with their entities
         sample_items = await conn.fetch("""
-            SELECT i.id, i.raw_text, i.normalized_text, i.source_type, i.project_phase, i.trade_category
+            SELECT i.id, i.raw_text, i.question_text, i.normalized_text, i.source_type, i.project_phase, i.trade_category
             FROM intelligence.items i
             WHERE i.company_id = $1
             ORDER BY RANDOM()
@@ -325,7 +325,7 @@ async def run_tests():
         content += f"""
 <div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
     <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">{item['source_type']} | Phase: {item['project_phase'] or 'unknown'} | Trade: {item['trade_category'] or 'unknown'}</div>
-    <div style="margin-bottom:8px;">{item['raw_text'][:300]}{'...' if len(item['raw_text'] or '') > 300 else ''}</div>
+    <div style="margin-bottom:8px;">{(item.get('question_text') or item['raw_text'])[:300]}{'...' if len(item.get('question_text') or item['raw_text'] or '') > 300 else ''}</div>
     <div><strong>Entities ({len(entities)}):</strong> {entity_tags if entity_tags else '<em>None extracted</em>'}</div>
 </div>"""
 
@@ -422,7 +422,7 @@ async def run_tests():
             for i, r in enumerate(results):
                 sim = r.get('semantic_score', 0)
                 score_class = "score-high" if sim > 0.7 else "score-medium" if sim > 0.5 else "score-low"
-                text_preview = (r.get('raw_text') or '')[:120] + ('...' if len(r.get('raw_text') or '') > 120 else '')
+                text_preview = (r.get('question_text') or r.get('raw_text') or '')[:120] + ('...' if len(r.get('question_text') or r.get('raw_text') or '') > 120 else '')
                 content += f"""
         <tr>
             <td>{i+1}</td>
@@ -507,7 +507,7 @@ async def run_tests():
         <div style="font-size:12px;color:#6b7280;margin:2px 0;">
             Project Phase: {r.get('project_phase', '—')} | Trade: {r.get('trade_category', '—')} | Type: {r.get('source_type', '—')}
         </div>
-        <div style="margin:8px 0;font-size:14px;">{(r.get('raw_text') or r.get('normalized_text') or '')[:200]}{'...' if len(r.get('raw_text') or r.get('normalized_text') or '') > 200 else ''}</div>
+        <div style="margin:8px 0;font-size:14px;">{(r.get('question_text') or r.get('normalized_text') or r.get('raw_text') or '')[:200]}{'...' if len(r.get('question_text') or r.get('normalized_text') or r.get('raw_text') or '') > 200 else ''}</div>
         {f"<div style='font-size:12px;color:#dc2626;margin-top:4px;'>Cost impact: ${r['cost_impact']:,.0f}</div>" if r.get('cost_impact') else ""}
         {f"<div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>" if r.get('resulted_in_co') else ""}
     </div>"""
@@ -566,7 +566,7 @@ async def run_tests():
 
         # Items with zero entities
         orphan_items = await conn.fetch("""
-            SELECT i.id, i.raw_text, i.source_type
+            SELECT i.id, i.raw_text, i.question_text, i.source_type
             FROM intelligence.items i
             LEFT JOIN intelligence.entities e ON i.id = e.item_id
             WHERE i.company_id = $1 AND e.id IS NULL
@@ -587,7 +587,7 @@ async def run_tests():
     if orphan_items:
         content += "<h3>Items With Zero Entities (first 5)</h3><p>These items had nothing extracted. Check if the text is too short or if extraction missed them.</p>"
         for item in orphan_items:
-            content += f'<div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[{item["source_type"]}] {(item["raw_text"] or "")[:200]}</div>'
+            content += f'<div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[{item["source_type"]}] {(item.get("question_text") or item.get("raw_text") or "")[:200]}</div>'
 
     report.add_section("8. Entity Coverage Analysis", content, "review")
 

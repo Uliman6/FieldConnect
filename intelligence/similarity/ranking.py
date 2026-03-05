@@ -50,22 +50,26 @@ PHASE_INDEX = {phase: i for i, phase in enumerate(PHASE_ORDER)}
 
 def calculate_keyword_score(
     query_keywords: set[str],
-    candidate_text: str
+    candidate: dict
 ) -> dict:
     """
-    Calculate keyword matching score between query keywords and candidate text.
+    Calculate keyword matching score between query keywords and candidate.
 
     This is CRITICAL for relevance - if the query mentions "curtainwall",
     results containing "curtainwall" should rank very high.
 
+    IMPORTANT: Prioritizes question_text for matching, as it contains
+    the actual issue/clarification needed. Falls back to normalized_text
+    and raw_text if question_text is not available.
+
     Args:
         query_keywords: Set of keywords extracted from query
-        candidate_text: The text content of the candidate item
+        candidate: The candidate item dict with text fields
 
     Returns:
         Dict with score and matched keywords info
     """
-    if not query_keywords or not candidate_text:
+    if not query_keywords:
         return {
             "score": 0.0,
             "matched_keywords": [],
@@ -73,12 +77,28 @@ def calculate_keyword_score(
             "query_coverage": 0.0
         }
 
-    candidate_lower = candidate_text.lower()
+    # Prioritize question_text (clean RFI question/punch description)
+    # Fall back to normalized_text, then raw_text
+    question_text = candidate.get("question_text") or ""
+    normalized_text = candidate.get("normalized_text") or ""
+    raw_text = candidate.get("raw_text") or ""
+
+    # Combine texts for matching - question_text is most reliable
+    candidate_text = f"{question_text} {normalized_text} {raw_text}".lower()
+
+    if not candidate_text.strip():
+        return {
+            "score": 0.0,
+            "matched_keywords": [],
+            "match_count": 0,
+            "query_coverage": 0.0
+        }
+
     matched = []
 
     for keyword in query_keywords:
         # Check if keyword appears in candidate text
-        if keyword.lower() in candidate_lower:
+        if keyword.lower() in candidate_text:
             matched.append(keyword)
 
     match_count = len(matched)
@@ -308,13 +328,11 @@ def compute_ranking_score(
     if total_weight != 1.0:
         w = {k: v / total_weight for k, v in w.items()}
 
-    # Get candidate text for keyword matching
-    candidate_text = candidate.get("normalized_text") or candidate.get("raw_text") or ""
-
     # Calculate KEYWORD score (CRITICAL)
+    # Pass the full candidate dict - it will prioritize question_text
     keyword_result = calculate_keyword_score(
         query_keywords or set(),
-        candidate_text
+        candidate  # Now passes full dict, prioritizes question_text
     )
     keyword_score = keyword_result["score"]
     matched_keywords = keyword_result["matched_keywords"]

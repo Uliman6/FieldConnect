@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS intelligence.items (
     source_ref TEXT,                    -- original RFI number, punch item ID, etc.
 
     raw_text TEXT NOT NULL,             -- original description
+    question_text TEXT,                 -- extracted question/issue (for RFIs: the actual question; for punch: the description)
     normalized_text TEXT,               -- cleaned, abbreviations expanded
 
     -- Phase awareness (populated from project schedule)
