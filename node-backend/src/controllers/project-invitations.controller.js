@@ -5,6 +5,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { getUserProjectAccess } = require('../middleware/auth.middleware');
 
 /**
  * Send an invitation to join a project
@@ -19,17 +20,9 @@ async function sendInvitation(req, res) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Check if user has permission to invite (must be OWNER or ADMIN)
-    const membership = await prisma.userProject.findUnique({
-      where: {
-        userId_projectId: {
-          userId: inviterId,
-          projectId
-        }
-      }
-    });
-
-    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+    // Check if user has permission to invite (must be OWNER or ADMIN, or system admin)
+    const access = await getUserProjectAccess(inviterId, projectId);
+    if (!access || (!access.isSystemAdmin && !['OWNER', 'ADMIN'].includes(access.role))) {
       return res.status(403).json({ error: 'You do not have permission to invite users to this project' });
     }
 
@@ -106,17 +99,9 @@ async function getProjectInvitations(req, res) {
     const { projectId } = req.params;
     const userId = req.user.id;
 
-    // Check if user has access to the project
-    const membership = await prisma.userProject.findUnique({
-      where: {
-        userId_projectId: {
-          userId,
-          projectId
-        }
-      }
-    });
-
-    if (!membership) {
+    // Check if user has access to the project (including system admins)
+    const access = await getUserProjectAccess(userId, projectId);
+    if (!access) {
       return res.status(403).json({ error: 'You do not have access to this project' });
     }
 
@@ -301,17 +286,9 @@ async function cancelInvitation(req, res) {
       return res.status(404).json({ error: 'Invitation not found' });
     }
 
-    // Check if user has permission to cancel
-    const membership = await prisma.userProject.findUnique({
-      where: {
-        userId_projectId: {
-          userId,
-          projectId: invitation.projectId
-        }
-      }
-    });
-
-    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+    // Check if user has permission to cancel (including system admins)
+    const access = await getUserProjectAccess(userId, invitation.projectId);
+    if (!access || (!access.isSystemAdmin && !['OWNER', 'ADMIN'].includes(access.role))) {
       return res.status(403).json({ error: 'You do not have permission to cancel this invitation' });
     }
 
@@ -338,17 +315,9 @@ async function getProjectMembers(req, res) {
     const { projectId } = req.params;
     const userId = req.user.id;
 
-    // Check if user has access to the project
-    const membership = await prisma.userProject.findUnique({
-      where: {
-        userId_projectId: {
-          userId,
-          projectId
-        }
-      }
-    });
-
-    if (!membership) {
+    // Check if user has access to the project (including system admins)
+    const access = await getUserProjectAccess(userId, projectId);
+    if (!access) {
       return res.status(403).json({ error: 'You do not have access to this project' });
     }
 
@@ -380,22 +349,14 @@ async function removeMember(req, res) {
     const { projectId, memberId } = req.params;
     const userId = req.user.id;
 
-    // Check if user has permission (must be OWNER or ADMIN)
-    const membership = await prisma.userProject.findUnique({
-      where: {
-        userId_projectId: {
-          userId,
-          projectId
-        }
-      }
-    });
-
-    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+    // Check if user has permission (must be OWNER or ADMIN, or system admin)
+    const access = await getUserProjectAccess(userId, projectId);
+    if (!access || (!access.isSystemAdmin && !['OWNER', 'ADMIN'].includes(access.role))) {
       return res.status(403).json({ error: 'You do not have permission to remove members' });
     }
 
     // Can't remove yourself if you're the only owner
-    if (memberId === userId && membership.role === 'OWNER') {
+    if (memberId === userId && access.role === 'OWNER') {
       const ownerCount = await prisma.userProject.count({
         where: { projectId, role: 'OWNER' }
       });
@@ -418,7 +379,7 @@ async function removeMember(req, res) {
       return res.status(404).json({ error: 'Member not found' });
     }
 
-    if (targetMembership.role === 'OWNER' && membership.role !== 'OWNER') {
+    if (targetMembership.role === 'OWNER' && access.role !== 'OWNER') {
       return res.status(403).json({ error: 'Only owners can remove other owners' });
     }
 
