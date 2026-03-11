@@ -1,0 +1,1212 @@
+{
+  "generated_at": "2026-03-09T18:43:48.272635",
+  "total_labeled": 351,
+  "samples": {
+    "highly_relevant": [
+      {
+        "query": {
+          "id": "8348329d-0632-4555-a331-1fc3c5ec2497",
+          "project": "Southline Office",
+          "ref": "RFI-0920.1",
+          "text": "PSD L2 PT Deck FP Penetrations",
+          "trade": "concrete, fire protection, structural",
+          "phase": null
+        },
+        "candidate": {
+          "id": "bc84914c-7982-4740-b6d4-b522a2f582cd",
+          "project": "Southline Office",
+          "ref": "RFI-0920",
+          "text": "Ref: FP1.02.W, FP1.02E (FP Deck Sleeve Plan) Post: S2.02A, S2.03A, S2.04A, S2.05A, S2.06A (PSD SI-04 R1 dated 07/14/23, post on empty space) Please confirm that the penetrations (clouded in red) on the PT deck at L2 to L5 for fire sprinkler standpipes are acceptable.",
+          "trade": "concrete, fire protection, structural",
+          "phase": null,
+          "resolution": "Please see attached."
+        },
+        "reasoning": "The historical issue directly addresses fire protection penetrations on the same PT deck, and the resolution could provide guidance for the new observation regarding similar penetrations.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0920.1",
+          "question_text": "PSD L2 PT Deck FP Penetrations",
+          "normalized_text": "psd l2 pt deck fp penetrations ref: fp1.02.w, fp1.02e (fp deck sleeve plan) post: s2.02a (psd si-04 r1 dated 07/14/23, post on empty space) this is a .1 request for information to address des comments. the penetrations at general contractor/g1 (clouded in red) is updated per discussion with des and gpla on 09.07.23. please confirm that the penetration is acceptable. suggested answer please see attached.",
+          "raw_text": "PSD L2 PT Deck FP Penetrations\n\nRef: FP1.02.W, FP1.02E (FP Deck Sleeve Plan)\nPost: S2.02A (PSD SI-04 R1 dated 07/14/23, post on empty space)\nThis is a .1 RFI to address DES comments.\nThe penetrations at GC/G1 (clouded in red) is updated per discussion with DES and GPLA on 09.07.23.\nPlease confirm that the penetration is acceptable.\nSuggested answer\nPlease see attached.",
+          "resolution_text": "Please see attached.",
+          "trade": "concrete, fire protection, structural",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0920",
+          "question_text": "Ref: FP1.02.W, FP1.02E (FP Deck Sleeve Plan) Post: S2.02A, S2.03A, S2.04A, S2.05A, S2.06A (PSD SI-04 R1 dated 07/14/23, post on empty space) Please confirm that the penetrations (clouded in red) on the PT deck at L2 to L5 for fire sprinkler standpipes are acceptable.",
+          "normalized_text": "psd pt deck fp penetrations ref: fp1.02.w, fp1.02e (fp deck sleeve plan) post: s2.02a, s2.03a, s2.04a, s2.05a, s2.06a (psd si-04 r1 dated 07/14/23, post on empty space) please confirm that the penetrations (clouded in red) on the pt deck at l2 to l5 for fire protection standpipes are acceptable.",
+          "raw_text": "PSD PT Deck FP Penetrations\n\nRef: FP1.02.W, FP1.02E (FP Deck Sleeve Plan)\nPost: S2.02A, S2.03A, S2.04A, S2.05A, S2.06A (PSD SI-04 R1 dated 07/14/23, post on empty space)\nPlease confirm that the penetrations (clouded in red) on the PT deck at L2 to L5 for fire sprinkler standpipes are \nacceptable.",
+          "resolution_text": "Please see attached.",
+          "trade": "concrete, fire protection, structural",
+          "phase": null
+        }
+      },
+      {
+        "query": {
+          "id": "276458cd-d3a4-4858-846f-37681aa3b297",
+          "project": "Southline Office",
+          "ref": "RFI-2046",
+          "text": "PSD Tier 1 Elevator Lobby Trench Drain Confirmation 01 Mark up PSD Tier 1 Lobby Pictures Site Drawing C4.2 At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the sta",
+          "trade": "architectural, plumbing, other",
+          "phase": null
+        },
+        "candidate": {
+          "id": "f61d77a1-a90d-4e64-80ec-8eb7df7f1996",
+          "project": "Southline Office",
+          "ref": "RFI-2046.1",
+          "text": "At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the North access of the tower. With the high wind forces, the water starts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits. All the slopes have been installed per the drawings and verified in the field, per heat map included in RFI attachment. Per meeting on 3.14 with DES, Broadway, DPR, and PMA, it is proposed to install a trench drain parallel with the elevator fronts (see attached markup) with perpendicular legs at either end. Drain would feed back into the hub drain located at the fire riser. This method aligns with the walk with ownership on 3.4.25. 1. DES - Please confirm extent of drain shown in the attached markup is acceptable. If not, please define desired extents. 2. DES - Please confirm the trench drain product attached is acceptable. Please confirm grate finish selection. 3. GPLA - Please note that demo of elevator lobby SOG will be necessary as part of this RFI. Please provide structural considerations necessary for this demo and pour back details.",
+          "trade": "architectural, plumbing, other",
+          "phase": "foundation",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "The historical issue describes a similar problem of water accumulation at the elevator lobby during heavy rain, and the proposed solution of installing a trench drain directly addresses the new observation.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-2046",
+          "question_text": "PSD Tier 1 Elevator Lobby Trench Drain Confirmation 01 Mark up PSD Tier 1 Lobby Pictures Site Drawing C4.2 At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the sta",
+          "normalized_text": "- psd tier 1 elevator lobby trench drain confirmation created by luis teran with autodesk\u00ae construction cloud\u2122 on dec 6, 2024 at 9:55 am pst page 1 of 2 request for information detail #2046 psd tier 1 elevator lobby trench drain confirmation reference: - slp1 - request for information 2046 - psd tier 1 elevator lobby trench drain confirmation - a7.01 mark up - psd tier 1 lobby pictures - site drawing c4.2 at the elevator lobby on tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the north access of the tower. with the high wind forces, the water starts to flow towards the elevator fronts. this causes the water to start flowing into the elevator pits due to the slight slope at these locations. all the slopes have been installed per the drawings and verified in the field, see attached as-built. dpr proposes to install a trench drain at the location shown, which can tie-in to the existing storm drain line just north of the elevator tower. please advise.",
+          "raw_text": "- PSD Tier 1 Elevator Lobby Trench Drain Confirmation Created by Luis Teran with Autodesk\u00ae Construction Cloud\u2122 on Dec 6, 2024 at 9:55 AM PST Page 1 of 2 RFI detail #2046 PSD Tier 1 Elevator Lobby Trench Drain  Confirmation\n\nReference:\n- SLP1 - RFI 2046 - PSD Tier 1 Elevator Lobby Trench Drain Confirmation\n- A7.01 Mark up\n- PSD Tier 1 Lobby Pictures\n- Site Drawing C4.2\nAt the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate \nunder the stair landings, traveling through the North access of the tower. With the high wind forces, the water \nstarts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits due to the \nslight slope at these locations. All the slopes have been installed per the drawings and verified in the field, see \nattached as-built. \nDPR proposes to install a trench drain at the location shown, which can tie-in to the existing storm drain line just \nnorth of the elevator tower. Please advise.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural, plumbing, other",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-2046.1",
+          "question_text": "At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the North access of the tower. With the high wind forces, the water starts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits. All the slopes have been installed per the drawings and verified in the field, per heat map included in RFI attachment. Per meeting on 3.14 with DES, Broadway, DPR, and PMA, it is proposed to install a trench drain parallel with the elevator fronts (see attached markup) with perpendicular legs at either end. Drain would feed back into the hub drain located at the fire riser. This method aligns with the walk with ownership on 3.4.25. 1. DES - Please confirm extent of drain shown in the attached markup is acceptable. If not, please define desired extents. 2. DES - Please confirm the trench drain product attached is acceptable. Please confirm grate finish selection. 3. GPLA - Please note that demo of elevator lobby SOG will be necessary as part of this RFI. Please provide structural considerations necessary for this demo and pour back details.",
+          "normalized_text": "- psd tier 1 elevator lobby trench drain - water remediation request for information detail #2046.1 psd tier 1 elevator lobby trench drain - water remediation at the elevator lobby on tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the north access of the tower. with the high wind forces, the water starts to flow towards the elevator fronts. this causes the water to start flowing into the elevator pits. all the slopes have been installed per the drawings and verified in the field, per heat map included in request for information attachment. per meeting on 3.14 with des, broadway, dpr, and pma, it is proposed to install a trench drain parallel with the elevator fronts (see attached markup) with perpendicular legs at either end. drain would feed back into the hub drain located at the fire riser. this method aligns with the walk with ownership on 3.4.25. 1. des - please confirm extent of drain shown in the attached markup is acceptable. if not, please define desired extents. 2. des - please confirm the trench drain product attached is acceptable. please confirm grate finish selection. 3. gpla - please note that demo of elevator lobby sog will be necessary as part of this request for information. please provide structural considerations necessary for this demo and concrete back details.",
+          "raw_text": "- PSD Tier 1 Elevator Lobby Trench Drain - Water Remediation RFI detail #2046.1 PSD Tier 1 Elevator Lobby Trench Drain - Water  Remediation\n\nAt the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate \nunder the stair landings, traveling through the North access of the tower. With the high wind forces, the water \nstarts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits. All the \nslopes have been installed per the drawings and verified in the field, per heat map included in RFI attachment.\nPer meeting on 3.14 with DES, Broadway, DPR, and PMA, it is proposed to install a trench drain parallel with the \nelevator fronts (see attached markup) with perpendicular legs at either end. Drain would feed back into the hub \ndrain located at the fire riser. This method aligns with the walk with ownership on 3.4.25.\n1. DES - Please confirm extent of drain shown in the attached markup is acceptable. If not, please define desired \nextents.\n2. DES - Please confirm the trench drain product attached is acceptable. Please confirm grate finish selection.\n3. GPLA - Please note that demo of elevator lobby SOG will be necessary as part of this RFI. Please provide \nstructural considerations necessary for this demo and pour back details.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural, plumbing, other",
+          "phase": "foundation"
+        }
+      },
+      {
+        "query": {
+          "id": "52fba6eb-7eef-44ab-9f7c-eec534391850",
+          "project": "Southline Office",
+          "ref": "RFI-0339",
+          "text": "Ref: E0.02, E1.02, Submittal 1478-265100-1 SITE - Light Fixture (Product Data) Linear Fixtures E13 are shown in lengths in sections as small as 6\". However, the smallest increment the Targetti \"Mini Mercure\" comes in is 2'. Please adjust all E13' lengths to fit within 2' increments or select another fixture.",
+          "trade": "architectural, electrical, landscaping",
+          "phase": "mep_trim_out"
+        },
+        "candidate": {
+          "id": "a87bc803-037a-4651-bfef-55691fa662f0",
+          "project": "Southline Office",
+          "ref": "RFI-0339",
+          "text": "Ref: E0.02, E1.02, Submittal 1478-265100-1 SITE - Light Fixture (Product Data) Linear Fixtures E13 are shown in lengths in sections as small as 6\". However, the smallest increment the Targetti \"Mini Mercure\" comes in is 2'. Please adjust all E13' lengths to fit within 2' increments or select another fixture.",
+          "trade": "architectural, electrical, landscaping",
+          "phase": "mep_trim_out",
+          "resolution": "Please see attached\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Apr 24, 2023, 1:44 PM PDT"
+        },
+        "reasoning": "The new field observation and the historical issue are identical in content, indicating that the resolution from the historical issue would directly address the same problem regarding the light fixture lengths.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0339",
+          "question_text": "Ref: E0.02, E1.02, Submittal 1478-265100-1 SITE - Light Fixture (Product Data) Linear Fixtures E13 are shown in lengths in sections as small as 6\". However, the smallest increment the Targetti \"Mini Mercure\" comes in is 2'. Please adjust all E13' lengths to fit within 2' increments or select another fixture.",
+          "normalized_text": "site light fixture e13 ref: e0.02, e1.02, submittal 1478-265100-1 site - light fixture (product data) linear fixtures e13 are shown in lengths in sections as small as 6\". however, the smallest increment the targetti \"mini mercure\" comes in is 2'. please adjust all e13' lengths to fit within 2' increments or select another fixture.",
+          "raw_text": "SITE Light Fixture E13\n\nRef: E0.02, E1.02, Submittal 1478-265100-1 SITE - Light Fixture (Product Data)\nLinear Fixtures E13 are shown in lengths in sections as small as 6\". However, the smallest increment the Targetti \n\"Mini Mercure\" comes \nin is 2'. \nPlease adjust all E13' lengths to fit within 2' increments or select another fixture.",
+          "resolution_text": "Please see attached\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Apr 24, 2023, 1:44 PM PDT\n\u2022\n\u2022\n\u2022\nReferences\nFiles (3)\nSLP1 - RFI-0339 - SITE Light Fixture E13.pdf\nRFI-0339 - SITE Light Fixture E13_DES.pdf\nRFI-0339 - SITE Light Fixture E13_DES_REV.pdf",
+          "trade": "architectural, electrical, landscaping",
+          "phase": "mep_trim_out"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0339",
+          "question_text": "Ref: E0.02, E1.02, Submittal 1478-265100-1 SITE - Light Fixture (Product Data) Linear Fixtures E13 are shown in lengths in sections as small as 6\". However, the smallest increment the Targetti \"Mini Mercure\" comes in is 2'. Please adjust all E13' lengths to fit within 2' increments or select another fixture.",
+          "normalized_text": "site light fixture e13 ref: e0.02, e1.02, submittal 1478-265100-1 site - light fixture (product data) linear fixtures e13 are shown in lengths in sections as small as 6\". however, the smallest increment the targetti \"mini mercure\" comes in is 2'. please adjust all e13' lengths to fit within 2' increments or select another fixture.",
+          "raw_text": "SITE Light Fixture E13\n\nRef: E0.02, E1.02, Submittal 1478-265100-1 SITE - Light Fixture (Product Data)\nLinear Fixtures E13 are shown in lengths in sections as small as 6\". However, the smallest increment the Targetti \n\"Mini Mercure\" comes \nin is 2'. \nPlease adjust all E13' lengths to fit within 2' increments or select another fixture.",
+          "resolution_text": "Please see attached\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Apr 24, 2023, 1:44 PM PDT",
+          "trade": "architectural, electrical, landscaping",
+          "phase": "mep_trim_out"
+        }
+      },
+      {
+        "query": {
+          "id": "73c7af94-9edf-4d1d-b0d3-9cf982e7f535",
+          "project": "Southline Office",
+          "ref": "RFI-0082",
+          "text": "Ref: P4.00A B1 UG Plumbing Sleeves Drawing This is confirming RFI. Please confirm that the UG sleeves for B1 are acceptable. Note that the elevation are taken from project 0'-0\".",
+          "trade": "structural, plumbing",
+          "phase": null
+        },
+        "candidate": {
+          "id": "e465177a-3dbe-4cc4-ba6e-111793f04c8a",
+          "project": "Southline Office",
+          "ref": "RFI-0082",
+          "text": "Ref: P4.00A B1 UG Plumbing Sleeves Drawing This is confirming RFI. Please confirm that the UG sleeves for B1 are acceptable. Note that the elevation are taken from project 0'-0\".",
+          "trade": "structural, plumbing",
+          "phase": null,
+          "resolution": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Nov 2, 2022, 5:40 PM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSouthline B1 Transmittal 002.A (UG Sleeves for Approval).pdf\nSLP1 - RFI-0082 - B1 UG Plumbing Sleeves Layout_DESstruc_resp.pdf"
+        },
+        "reasoning": "The new field observation and the historical RFI are identical in content, indicating that the same issue regarding the UG plumbing sleeves is being addressed, and the resolution from the historical issue would directly apply to the new observation.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0082",
+          "question_text": "Ref: P4.00A B1 UG Plumbing Sleeves Drawing This is confirming RFI. Please confirm that the UG sleeves for B1 are acceptable. Note that the elevation are taken from project 0'-0\".",
+          "normalized_text": "b1 ug plumbing sleeves layout ref: p4.00a b1 ug plumbing sleeves drawing this is confirming request for information. please confirm that the ug sleeves for b1 are acceptable. note that the elevation are taken from project 0'-0\".",
+          "raw_text": "B1 UG Plumbing Sleeves Layout\n\nRef: P4.00A B1 UG Plumbing Sleeves Drawing\nThis is confirming RFI. Please confirm that the UG sleeves for B1 are acceptable. Note that the elevation are taken \nfrom project 0'-0\".",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Nov 2, 2022, 5:40 PM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSouthline B1 Transmittal 002.A (UG Sleeves for Approval).pdf\nSLP1 - RFI-0082 - B1 UG Plumbing Sleeves Layout_DESstruc_resp.pdf",
+          "trade": "structural, plumbing",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0082",
+          "question_text": "Ref: P4.00A B1 UG Plumbing Sleeves Drawing This is confirming RFI. Please confirm that the UG sleeves for B1 are acceptable. Note that the elevation are taken from project 0'-0\".",
+          "normalized_text": "b1 ug plumbing sleeves layout ref: p4.00a b1 ug plumbing sleeves drawing this is confirming request for information. please confirm that the ug sleeves for b1 are acceptable. note that the elevation are taken from project 0'-0\".",
+          "raw_text": "B1 UG Plumbing Sleeves Layout\n\nRef: P4.00A B1 UG Plumbing Sleeves Drawing\nThis is confirming RFI. Please confirm that the UG sleeves for B1 are acceptable. Note that the elevation are taken \nfrom project 0'-0\".",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Nov 2, 2022, 5:40 PM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSouthline B1 Transmittal 002.A (UG Sleeves for Approval).pdf\nSLP1 - RFI-0082 - B1 UG Plumbing Sleeves Layout_DESstruc_resp.pdf",
+          "trade": "structural, plumbing",
+          "phase": null
+        }
+      },
+      {
+        "query": {
+          "id": "a865992c-c464-45a8-9b3f-2d1336a86588",
+          "project": "Southline Office",
+          "ref": "RFI-0259.1",
+          "text": "Ref: M0.02, M2.01, M2.03, M2.05 (PSD PCR #2 dated 01.24.23), Cut Sheet for Aspen Daikin Condensate Pump This is a revision to RFI0259. The added pump at Fire Pump Room 112 is no longer required as the FCU has been moved to the north wall and placed at a higher elevation. Beside, we would like to use Aspen Daikin Condensate Pump which works better than the Little Giant Pump as it can be wired directly to FCU. Please confirm that this change is acceptable.",
+          "trade": "electrical, plumbing, mechanical",
+          "phase": "mep_rough_in"
+        },
+        "candidate": {
+          "id": "cb2f0ec9-ad6f-400e-9674-4a8f1caf3a22",
+          "project": "Southline Office",
+          "ref": "RFI-0259",
+          "text": "Ref: M0.02, M2.01, M2.03, M2.05, P2.01, P2.03, P2.05 (PSD PCR #2 dated 01.24.23), Cut Sheet for Little Giant Pump The allowable penetration of the beam for condensate line is at the center of the beam. Therefore, it will place the condensate line higher than the FCU and a little giant pump needs to be added to provide sufficient water pressure for the condensate line to discharge the condensate. Moreover, a dedicated power outlet needs to be provided for each little giant pump. Please confirm that this change is acceptable.",
+          "trade": "electrical, plumbing, mechanical",
+          "phase": "structure",
+          "resolution": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Mar 8, 2023, 4:49 PM PST\n\u2022\nReferences\nFiles (1)\nSLP1 - RFI-0259 - PSD Add Pump for FCU.pdf"
+        },
+        "reasoning": "The new observation directly addresses the need for a condensate pump in the same context as the historical issue, with the resolution regarding the Little Giant Pump being replaced by the Aspen Daikin Condensate Pump, indicating a fundamental change in the same system.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0259.1",
+          "question_text": "Ref: M0.02, M2.01, M2.03, M2.05 (PSD PCR #2 dated 01.24.23), Cut Sheet for Aspen Daikin Condensate Pump This is a revision to RFI0259. The added pump at Fire Pump Room 112 is no longer required as the FCU has been moved to the north wall and placed at a higher elevation. Beside, we would like to use Aspen Daikin Condensate Pump which works better than the Little Giant Pump as it can be wired directly to FCU. Please confirm that this change is acceptable.",
+          "normalized_text": "psd add pump for fan coil unit r1 ref: m0.02, m2.01, m2.03, m2.05 (psd pcr #2 dated 01.24.23), cut sheet for aspen daikin condensate pump this is a revision to rfi0259. the added pump at fire pump room 112 is no longer required as the fan coil unit has been moved to the north wall and placed at a higher elevation. beside, we would like to use aspen daikin condensate pump which works better than the little giant pump as it can be wired directly to fan coil unit. please confirm that this change is acceptable.",
+          "raw_text": "PSD Add Pump for FCU R1\n\nRef: M0.02, M2.01, M2.03, M2.05 (PSD PCR #2 dated 01.24.23), Cut Sheet for Aspen Daikin Condensate Pump\nThis is a revision to RFI0259.\nThe added pump at Fire Pump Room 112 is no longer required as the FCU has been moved to the north wall and \nplaced at a higher elevation. Beside, we would like to use Aspen Daikin Condensate Pump which works better \nthan the Little Giant Pump as it can be wired directly to FCU.\nPlease confirm that this change is acceptable.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Apr 14, 2023, 2:11 PM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI-0259.1 - PSD Add Pump for FCU R1.pdf\nRFI0259.1.pdf",
+          "trade": "electrical, plumbing, mechanical",
+          "phase": "mep_rough_in"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0259",
+          "question_text": "Ref: M0.02, M2.01, M2.03, M2.05, P2.01, P2.03, P2.05 (PSD PCR #2 dated 01.24.23), Cut Sheet for Little Giant Pump The allowable penetration of the beam for condensate line is at the center of the beam. Therefore, it will place the condensate line higher than the FCU and a little giant pump needs to be added to provide sufficient water pressure for the condensate line to discharge the condensate. Moreover, a dedicated power outlet needs to be provided for each little giant pump. Please confirm that this change is acceptable.",
+          "normalized_text": "psd add pump for fan coil unit ref: m0.02, m2.01, m2.03, m2.05, p2.01, p2.03, p2.05 (psd pcr #2 dated 01.24.23), cut sheet for little giant pump the allowable penetration of the structural steel for condensate line is at the center of the structural steel. therefore, it will place the condensate line higher than the fan coil unit and a little giant pump needs to be added to provide sufficient water pressure for the condensate line to discharge the condensate. moreover, a dedicated power outlet needs to be provided for each little giant pump. please confirm that this change is acceptable.",
+          "raw_text": "PSD Add Pump for FCU\n\nRef: M0.02, M2.01, M2.03, M2.05, P2.01, P2.03, P2.05 (PSD PCR #2 dated 01.24.23), Cut Sheet for Little Giant Pump\nThe allowable penetration of the beam for condensate line is at the center of the beam. Therefore, it will place the \ncondensate line higher than the FCU and a little giant pump needs to be added to provide sufficient water \npressure for the condensate line to discharge the condensate. Moreover, a dedicated power outlet needs to be \nprovided for each little giant pump.\nPlease confirm that this change is acceptable.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Mar 8, 2023, 4:49 PM PST\n\u2022\nReferences\nFiles (1)\nSLP1 - RFI-0259 - PSD Add Pump for FCU.pdf",
+          "trade": "electrical, plumbing, mechanical",
+          "phase": "structure"
+        }
+      },
+      {
+        "query": {
+          "id": "0c6077e4-cd55-4dd7-97fb-944397c23c5a",
+          "project": "Southline Office",
+          "ref": "RFI-0139",
+          "text": "B1 L6 Beam Penetration for Plumbing",
+          "trade": "plumbing, structural",
+          "phase": "structure"
+        },
+        "candidate": {
+          "id": "feac6a7f-c761-4666-8e59-fb1fdaa9b227",
+          "project": "Southline Office",
+          "ref": "RFI-0139.2",
+          "text": "B1 L6 Beam Penetration for Plumbing (Final)",
+          "trade": "plumbing, structural",
+          "phase": "structure",
+          "resolution": ""
+        },
+        "reasoning": "The historical issue directly addresses the same beam penetration for plumbing, indicating that the resolution would be applicable to the new observation.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0139",
+          "question_text": "B1 L6 Beam Penetration for Plumbing",
+          "normalized_text": "b1 l6 structural steel penetration for plumbing ref: p4.06 (dated 11.22.22) please see the attached drawing showing plumbing penetrations through the beams of level 6 on building 1. please confirm these penetration locations are acceptable.",
+          "raw_text": "B1 L6 Beam Penetration for Plumbing\n\nRef: P4.06 (dated 11.22.22)\nPlease see the attached drawing showing plumbing penetrations through the beams of level 6 on building 1.\nPlease confirm these penetration locations are acceptable.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Dec 16, 2022, 7:45 PM PST\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI-0139 - B1 L6 Beam Penetration for Plumbing_Resp.pdf\nSouthline - RFI 006 B1 L6 Beam Penetration.pdf",
+          "trade": "plumbing, structural",
+          "phase": "structure"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0139.2",
+          "question_text": "B1 L6 Beam Penetration for Plumbing (Final)",
+          "normalized_text": "b1 l6 structural steel penetration for plumbing (final) ref: p4.06c (dated 02.06.23), s2.07 (dated 01.10.23); email correspondence with jonathan chen/des dated 02.09.23 this is confirming request for information based on correspondence with jonathan/des dated 02.09.23. please see attached updated drawing which address the comments on rfi0139.1. 1. all the elevations are relative to level 6. 2. detail 6 & 7: the spacing of the sleeves are revised so that they are 6\u201d center-to-center apart. 3. detail 7: the penetrations location is updated based on the latest member size w14x22. please confirm these penetration locations are acceptable. suggested answer please see attached.",
+          "raw_text": "B1 L6 Beam Penetration for Plumbing (Final)\n\nRef: P4.06C (dated 02.06.23), S2.07 (dated 01.10.23); Email Correspondence with Jonathan Chen/DES dated \n02.09.23\nThis is confirming RFI based on correspondence with Jonathan/DES dated 02.09.23.\nPlease see attached updated drawing which address the comments on RFI0139.1. \n1. All the elevations are relative to Level 6. \n2. Detail 6 & 7: The spacing of the sleeves are revised so that they are 6\u201d center-to-center apart. \n3. Detail 7: The penetrations location is updated based on the latest member size W14x22.\nPlease confirm these penetration locations are acceptable.\nSuggested answer\nPlease see attached.",
+          "resolution_text": null,
+          "trade": "plumbing, structural",
+          "phase": "structure"
+        }
+      },
+      {
+        "query": {
+          "id": "276458cd-d3a4-4858-846f-37681aa3b297",
+          "project": "Southline Office",
+          "ref": "RFI-2046",
+          "text": "PSD Tier 1 Elevator Lobby Trench Drain Confirmation 01 Mark up PSD Tier 1 Lobby Pictures Site Drawing C4.2 At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the sta",
+          "trade": "architectural, plumbing, other",
+          "phase": null
+        },
+        "candidate": {
+          "id": "f61d77a1-a90d-4e64-80ec-8eb7df7f1996",
+          "project": "Southline Office",
+          "ref": "RFI-2046.1",
+          "text": "At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the North access of the tower. With the high wind forces, the water starts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits. All the slopes have been installed per the drawings and verified in the field, per heat map included in RFI attachment. Per meeting on 3.14 with DES, Broadway, DPR, and PMA, it is proposed to install a trench drain parallel with the elevator fronts (see attached markup) with perpendicular legs at either end. Drain would feed back into the hub drain located at the fire riser. This method aligns with the walk with ownership on 3.4.25. 1. DES - Please confirm extent of drain shown in the attached markup is acceptable. If not, please define desired extents. 2. DES - Please confirm the trench drain product attached is acceptable. Please confirm grate finish selection. 3. GPLA - Please note that demo of elevator lobby SOG will be necessary as part of this RFI. Please provide structural considerations necessary for this demo and pour back details.",
+          "trade": "architectural, plumbing, other",
+          "phase": "foundation",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "The historical issue describes a similar problem of water accumulation at the elevator lobby during heavy rain, and the proposed solution of installing a trench drain directly addresses the new observation.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-2046",
+          "question_text": "PSD Tier 1 Elevator Lobby Trench Drain Confirmation 01 Mark up PSD Tier 1 Lobby Pictures Site Drawing C4.2 At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the sta",
+          "normalized_text": "- psd tier 1 elevator lobby trench drain confirmation created by luis teran with autodesk\u00ae construction cloud\u2122 on dec 6, 2024 at 9:55 am pst page 1 of 2 request for information detail #2046 psd tier 1 elevator lobby trench drain confirmation reference: - slp1 - request for information 2046 - psd tier 1 elevator lobby trench drain confirmation - a7.01 mark up - psd tier 1 lobby pictures - site drawing c4.2 at the elevator lobby on tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the north access of the tower. with the high wind forces, the water starts to flow towards the elevator fronts. this causes the water to start flowing into the elevator pits due to the slight slope at these locations. all the slopes have been installed per the drawings and verified in the field, see attached as-built. dpr proposes to install a trench drain at the location shown, which can tie-in to the existing storm drain line just north of the elevator tower. please advise.",
+          "raw_text": "- PSD Tier 1 Elevator Lobby Trench Drain Confirmation Created by Luis Teran with Autodesk\u00ae Construction Cloud\u2122 on Dec 6, 2024 at 9:55 AM PST Page 1 of 2 RFI detail #2046 PSD Tier 1 Elevator Lobby Trench Drain  Confirmation\n\nReference:\n- SLP1 - RFI 2046 - PSD Tier 1 Elevator Lobby Trench Drain Confirmation\n- A7.01 Mark up\n- PSD Tier 1 Lobby Pictures\n- Site Drawing C4.2\nAt the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate \nunder the stair landings, traveling through the North access of the tower. With the high wind forces, the water \nstarts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits due to the \nslight slope at these locations. All the slopes have been installed per the drawings and verified in the field, see \nattached as-built. \nDPR proposes to install a trench drain at the location shown, which can tie-in to the existing storm drain line just \nnorth of the elevator tower. Please advise.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural, plumbing, other",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-2046.1",
+          "question_text": "At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the North access of the tower. With the high wind forces, the water starts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits. All the slopes have been installed per the drawings and verified in the field, per heat map included in RFI attachment. Per meeting on 3.14 with DES, Broadway, DPR, and PMA, it is proposed to install a trench drain parallel with the elevator fronts (see attached markup) with perpendicular legs at either end. Drain would feed back into the hub drain located at the fire riser. This method aligns with the walk with ownership on 3.4.25. 1. DES - Please confirm extent of drain shown in the attached markup is acceptable. If not, please define desired extents. 2. DES - Please confirm the trench drain product attached is acceptable. Please confirm grate finish selection. 3. GPLA - Please note that demo of elevator lobby SOG will be necessary as part of this RFI. Please provide structural considerations necessary for this demo and pour back details.",
+          "normalized_text": "- psd tier 1 elevator lobby trench drain - water remediation request for information detail #2046.1 psd tier 1 elevator lobby trench drain - water remediation at the elevator lobby on tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the north access of the tower. with the high wind forces, the water starts to flow towards the elevator fronts. this causes the water to start flowing into the elevator pits. all the slopes have been installed per the drawings and verified in the field, per heat map included in request for information attachment. per meeting on 3.14 with des, broadway, dpr, and pma, it is proposed to install a trench drain parallel with the elevator fronts (see attached markup) with perpendicular legs at either end. drain would feed back into the hub drain located at the fire riser. this method aligns with the walk with ownership on 3.4.25. 1. des - please confirm extent of drain shown in the attached markup is acceptable. if not, please define desired extents. 2. des - please confirm the trench drain product attached is acceptable. please confirm grate finish selection. 3. gpla - please note that demo of elevator lobby sog will be necessary as part of this request for information. please provide structural considerations necessary for this demo and concrete back details.",
+          "raw_text": "- PSD Tier 1 Elevator Lobby Trench Drain - Water Remediation RFI detail #2046.1 PSD Tier 1 Elevator Lobby Trench Drain - Water  Remediation\n\nAt the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate \nunder the stair landings, traveling through the North access of the tower. With the high wind forces, the water \nstarts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits. All the \nslopes have been installed per the drawings and verified in the field, per heat map included in RFI attachment.\nPer meeting on 3.14 with DES, Broadway, DPR, and PMA, it is proposed to install a trench drain parallel with the \nelevator fronts (see attached markup) with perpendicular legs at either end. Drain would feed back into the hub \ndrain located at the fire riser. This method aligns with the walk with ownership on 3.4.25.\n1. DES - Please confirm extent of drain shown in the attached markup is acceptable. If not, please define desired \nextents.\n2. DES - Please confirm the trench drain product attached is acceptable. Please confirm grate finish selection.\n3. GPLA - Please note that demo of elevator lobby SOG will be necessary as part of this RFI. Please provide \nstructural considerations necessary for this demo and pour back details.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural, plumbing, other",
+          "phase": "foundation"
+        }
+      },
+      {
+        "query": {
+          "id": "6fcb62ca-e32f-49fc-8475-f1cb10148508",
+          "project": "Southline Office",
+          "ref": "RFI-1636.2",
+          "text": "Confirming RFI per updated correspondence between DPR and South San Francisco Fire Department. Please see attached email exchange.",
+          "trade": "fire_protection",
+          "phase": null
+        },
+        "candidate": {
+          "id": "d3866bc6-dc6f-4aef-b110-70ca35805359",
+          "project": "Southline Office",
+          "ref": "RFI-1636",
+          "text": "Confirming RFI per correspondence between DPR and South San Francisco Fire Department, the fire marshal indicated that knox boxes shall be 4-6ft above finished grade. Please see attached email exchange.",
+          "trade": "fire_protection",
+          "phase": null,
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "Both RFIs pertain to fire protection and involve correspondence with the South San Francisco Fire Department, indicating they are addressing similar regulatory concerns regarding fire safety requirements.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1636.2",
+          "question_text": "Confirming RFI per updated correspondence between DPR and South San Francisco Fire Department. Please see attached email exchange.",
+          "normalized_text": "- b2 knox box fire department comments r2 created by andy johnson with autodesk\u00ae construction cloud\u2122 on jun 5, 2024 at 8:31 am pdt page 1 of 2 request for information detail #1636.2 b2 knox box fire department comments r2 confirming request for information per updated correspondence between dpr and south san francisco fire department. please see attached email exchange.",
+          "raw_text": "- B2 Knox Box Fire Department Comments R2 Created by Andy Johnson with Autodesk\u00ae Construction Cloud\u2122 on Jun 5, 2024 at 8:31 AM PDT Page 1 of 2 RFI detail #1636.2 B2 Knox Box Fire Department Comments R2\n\nConfirming RFI per updated correspondence between DPR and South San Francisco Fire Department. Please see \nattached email exchange.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "fire_protection",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1636",
+          "question_text": "Confirming RFI per correspondence between DPR and South San Francisco Fire Department, the fire marshal indicated that knox boxes shall be 4-6ft above finished grade. Please see attached email exchange.",
+          "normalized_text": "- b2 knox box fire department comments created by sakshi tidke with autodesk\u00ae construction cloud\u2122 on may 8, 2024 at 11:58 project manager pdt page 1 of 2 request for information detail #1636 b2 knox box fire department comments confirming request for information per correspondence between dpr and south san francisco fire department, the fire marshal indicated that knox boxes shall be 4-6ft above finished grade. please see attached email exchange.",
+          "raw_text": "- B2 Knox Box Fire Department Comments Created by Sakshi Tidke with Autodesk\u00ae Construction Cloud\u2122 on May 8, 2024 at 11:58 PM PDT Page 1 of 2 RFI detail #1636 B2 Knox Box Fire Department Comments\n\nConfirming RFI per correspondence between DPR and South San Francisco Fire Department, the fire marshal \nindicated that knox boxes shall be 4-6ft above finished grade. Please see attached email exchange.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "fire_protection",
+          "phase": null
+        }
+      },
+      {
+        "query": {
+          "id": "a6b5fa79-472e-4d38-8fcb-de3cd0a0e56f",
+          "project": "Southline Office",
+          "ref": "RFI-1628.2",
+          "text": "Ref: RFI 1628, RFI 1628.1, TC2.01, QF301 The requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub out over cold storage as opposed to stubbing out to Vestibule. 3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the Severy to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in north wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "trade": "cabling, food service, pathways",
+          "phase": "mep_rough_in"
+        },
+        "candidate": {
+          "id": "7838a72e-bb49-4af5-8c83-172233d5c997",
+          "project": "Southline Office",
+          "ref": "RFI-1628.2",
+          "text": "Ref: RFI 1628, RFI 1628.1, TC2.01, QF301 The requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub out over cold storage as opposed to stubbing out to Vestibule. 3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the Severy to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in north wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "trade": "cabling, food service, pathways",
+          "phase": "mep_rough_in",
+          "resolution": ""
+        },
+        "reasoning": "The new field observation and the historical issue are identical, addressing the same requests for conduit pathways and data cabling in the same project context, making the resolution directly applicable.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1628.2",
+          "question_text": "Ref: RFI 1628, RFI 1628.1, TC2.01, QF301 The requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub out over cold storage as opposed to stubbing out to Vestibule. 3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the Severy to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in north wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "normalized_text": "- b2 additional data pathways for printers created by sakshi tidke with autodesk\u00ae construction cloud\u2122 on jun 5, 2024 at 11:21 project manager pdt page 1 of 2 request for information detail #1628.2 b2 additional data pathways for printers ref: request for information 1628, request for information 1628.1, tc2.01, qf301 the requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) please confirm it is acceptable to add (1) 2\" conduit overhead in office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in office 126 to stub out over cold storage as opposed to stubbing out to vestibule. 3) please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the severy to feed the added (2) 2x cat6 data drops. the spare conduit pathway goes underground and stubs up in north wall of the kitchen and then stubs out into overhead space of kitchen. please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "raw_text": "- B2 Additional Data Pathways for Printers Created by Sakshi Tidke with Autodesk\u00ae Construction Cloud\u2122 on Jun 5, 2024 at 11:21 PM PDT Page 1 of 2 RFI detail #1628.2 B2 Additional Data Pathways for Printers\n\nRef: RFI 1628, RFI 1628.1, TC2.01, QF301\nThe requested additional data drops needed for the restaurant will require additional conduit pathways for the \nadded data cabling. \n1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing \nmarkup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" \nconduit will be surface mounted on the south wall to get down to data rack. \n2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub \nout over cold storage as opposed to stubbing out to Vestibule.\n3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the \nSevery to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in \nnorth wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will \nfill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "cabling, food service, pathways",
+          "phase": "mep_rough_in"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1628.2",
+          "question_text": "Ref: RFI 1628, RFI 1628.1, TC2.01, QF301 The requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub out over cold storage as opposed to stubbing out to Vestibule. 3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the Severy to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in north wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "normalized_text": "- b2 additional data pathways for printers created by edgar fennie with autodesk\u00ae construction cloud\u2122 on may 17, 2024 at 2:29 project manager pdt page 1 of 2 request for information detail #1628.2 b2 additional data pathways for printers ref: request for information 1628, request for information 1628.1, tc2.01, qf301 the requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) please confirm it is acceptable to add (1) 2\" conduit overhead in office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in office 126 to stub out over cold storage as opposed to stubbing out to vestibule. 3) please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the severy to feed the added (2) 2x cat6 data drops. the spare conduit pathway goes underground and stubs up in north wall of the kitchen and then stubs out into overhead space of kitchen. please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "raw_text": "- B2 Additional Data Pathways for Printers Created by Edgar Fennie with Autodesk\u00ae Construction Cloud\u2122 on May 17, 2024 at 2:29 PM PDT Page 1 of 2 RFI detail #1628.2 B2 Additional Data Pathways for Printers\n\nRef: RFI 1628, RFI 1628.1, TC2.01, QF301\nThe requested additional data drops needed for the restaurant will require additional conduit pathways for the \nadded data cabling. \n1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing \nmarkup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" \nconduit will be surface mounted on the south wall to get down to data rack. \n2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub \nout over cold storage as opposed to stubbing out to Vestibule.\n3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the \nSevery to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in \nnorth wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will \nfill the conduit and there will be no space to add additional cables in this pathway in future.",
+          "resolution_text": null,
+          "trade": "cabling, food service, pathways",
+          "phase": "mep_rough_in"
+        }
+      },
+      {
+        "query": {
+          "id": "80a9d6a6-e09a-42d9-b792-41f7bb8b0e3c",
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-23",
+          "text": "Need to finish T-bar grid install Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "trade": "flooring",
+          "phase": "preconstruction"
+        },
+        "candidate": {
+          "id": "0224989c-2536-4e6d-98db-92cbaf7be515",
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-53",
+          "text": "Need to fix and finish installation of ACT Grid per approved DFOW. Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "trade": "flooring",
+          "phase": "preconstruction",
+          "resolution": ""
+        },
+        "reasoning": "Both issues pertain to the installation of the T-bar grid and ACT grid on the same drawing, indicating they are fundamentally similar problems, and the resolution from the historical issue would directly assist in addressing the new observation.",
+        "query_full": {
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-23",
+          "question_text": "Need to finish T-bar grid install Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "normalized_text": "need to finish t-bar grid install drawing: a2.2.2 (2nd floor - reflected ceiling plan)",
+          "raw_text": "Need to finish T-bar grid install\nDrawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "resolution_text": null,
+          "trade": "flooring",
+          "phase": "preconstruction"
+        },
+        "candidate_full": {
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-53",
+          "question_text": "Need to fix and finish installation of ACT Grid per approved DFOW. Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "normalized_text": "need to fix and finish installation of acoustical ceiling tile grid per approved dfow. drawing: a2.2.2 (2nd floor - reflected ceiling plan)",
+          "raw_text": "Need to fix and finish installation of ACT Grid per approved DFOW.\nDrawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "resolution_text": null,
+          "trade": "flooring",
+          "phase": "preconstruction"
+        }
+      }
+    ],
+    "somewhat_relevant": [
+      {
+        "query": {
+          "id": "13e6b1e7-8531-41ef-a5d9-72006cf43e63",
+          "project": "Southline Office",
+          "ref": "RFI-1452",
+          "text": "REF: Site - Onsite Current Set PSD-E8.01 , Detail #7 POST: Site - Onsite Current Set PSD-E8.01, Detail #7 Please review the attached file. Detail 7/PSD-E8.01 shows a cylindrical concrete base at a height of 24\" for vehicular area light poles. However, no detail is specified for light poles E1 and E3 in pedestrian or landscape areas. Please confirm if the E1 and E3 poles are to match detail 7/PSD-E8.01, and if not, please provide a detail.",
+          "trade": "architectural, concrete, landscaping, electrical",
+          "phase": null
+        },
+        "candidate": {
+          "id": "1899d7f4-b5eb-4aee-88cc-66e193654283",
+          "project": "Southline Office",
+          "ref": "RFI-0867",
+          "text": "Onsite - Concrete Seatwall with Linear Light Detail",
+          "trade": "architectural, concrete, landscaping, electrical",
+          "phase": null,
+          "resolution": "Please see attached."
+        },
+        "reasoning": "While both RFIs involve lighting details and concrete elements, the historical issue pertains specifically to a concrete seatwall with linear light detail, which may not directly address the specific concerns regarding the light poles E1 and E3 in the new observation.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1452",
+          "question_text": "REF: Site - Onsite Current Set PSD-E8.01 , Detail #7 POST: Site - Onsite Current Set PSD-E8.01, Detail #7 Please review the attached file. Detail 7/PSD-E8.01 shows a cylindrical concrete base at a height of 24\" for vehicular area light poles. However, no detail is specified for light poles E1 and E3 in pedestrian or landscape areas. Please confirm if the E1 and E3 poles are to match detail 7/PSD-E8.01, and if not, please provide a detail.",
+          "normalized_text": "- onsite - e1 and e3 light pole base details created by kyle tokiwa with autodesk\u00ae construction cloud\u2122 on mar 11, 2024 at 4:25 project manager pdt page 1 of 2 request for information detail #1452 onsite - e1 and e3 light pole base details ref: site - onsite current set psd-e8.01 , detail #7 post: site - onsite current set psd-e8.01, detail #7 please review the attached file. detail 7/psd-e8.01 shows a cylindrical concrete base at a height of 24\" for vehicular area light poles. however, no detail is specified for light poles e1 and e3 in pedestrian or landscape areas. please confirm if the e1 and e3 poles are to match detail 7/psd-e8.01, and if not, please provide a detail.",
+          "raw_text": "- Onsite - E1 and E3 Light Pole Base Details Created by Kyle Tokiwa with Autodesk\u00ae Construction Cloud\u2122 on Mar 11, 2024 at 4:25 PM PDT Page 1 of 2 RFI detail #1452 Onsite - E1 and E3 Light Pole Base Details\n\nREF: Site - Onsite Current Set PSD-E8.01 , Detail #7\nPOST: Site - Onsite Current Set PSD-E8.01, Detail #7\nPlease review the attached file. Detail 7/PSD-E8.01 shows a cylindrical concrete base at a height of 24\" for \nvehicular area light poles. However, no detail is specified for light poles E1 and E3 in pedestrian or landscape \nareas. \nPlease confirm if the E1 and E3 poles are to match detail 7/PSD-E8.01, and if not, please provide a detail.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural, concrete, landscaping, electrical",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0867",
+          "question_text": "Onsite - Concrete Seatwall with Linear Light Detail",
+          "normalized_text": "onsite - concrete seatwall with linear light detail ref: bldgsite-l1.21a, bldgsite-l8.02 post to: bldgsite-l8.02 sheet bldsite-l1.21a shows a concrete seatwall exterior of b1 with in-ground linear leds on both sides and references 6/l8.02. however, this detail shows no leds. per dpr discussion with des/bkf on 8/16/23, des will provide a section detail for the concrete seatwall with the leds included on both sides. please confirm.",
+          "raw_text": "Onsite - Concrete Seatwall with Linear Light Detail\n\nREF: BLDGSITE-L1.21A, BLDGSITE-L8.02\nPOST TO: BLDGSITE-L8.02\nSheet BLDSITE-L1.21A shows a concrete seatwall exterior of B1 with in-ground linear LEDs on both sides and \nreferences 6/L8.02. However, this detail shows no LEDs. \nPer DPR discussion with DES/BKF on 8/16/23, DES will provide a section detail for the concrete seatwall with the \nLEDs included on both sides. Please confirm.",
+          "resolution_text": "Please see attached.",
+          "trade": "architectural, concrete, landscaping, electrical",
+          "phase": null
+        }
+      },
+      {
+        "query": {
+          "id": "1c78ed6e-5f78-4560-8d8e-d1a829785234",
+          "project": "CoreSite Data Center",
+          "ref": "RFI-114.1",
+          "text": "Per RFI #114: Confirmed to leave 1 3/8\" corner exposed at the existing shaft wall. Only from the column at grid line E to the edge of the wall needs to be aligned, resulting in the corridor clearance between the North and the South corridor walls to be at 9\u2019- 1/8\" at that specific location. To achieve alignment with the North wall East corner and provide clearance for the K-brace, DPR proposes adding one layer of 1/2\" drywall and one layer of 5/8\" gypsum board. This additional drywall will be installed up to ceiling height only and will not extend above the ceiling. Suggested answer Corgan, please confirm: 1) Only the small section of the North wall in corridor 260 requires alignment. 2) The proposed addition of 1/2\" drywall and 5/8\" gypsum board to clear the K-brace is acceptable. 3) Additional drywall to be installed up to ceiling height only.",
+          "trade": "architectural",
+          "phase": "preconstruction"
+        },
+        "candidate": {
+          "id": "5c9f6f31-ee53-453c-ae56-390f21efd7f8",
+          "project": "Intuitive Surgical MOB",
+          "ref": "RFI-88",
+          "text": "Existing Rated Wall Assembly Clarification Existing Rated Wall Assembly Clarification Reference: Floor 1 Floor Plan/A2.11 Question: Drawings show an existing 2-hour rated partition between Trash 1033 and Exit Passageway 1032. In the field, existing wall is not full height. Please confirm existing wall separating Trash 1033 from Exit Passageway 1032 is to be a full height - 2 hour rated partition.",
+          "trade": "architectural",
+          "phase": "mep_trim_out",
+          "resolution": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW: The ceiling over the exit corridor is rated. \nExtend the gyp\nboard on the trash room side to ensure there is no smell transfer.\nNo additional rated construction is needed at this location.\nH.Travis 08.25.25"
+        },
+        "reasoning": "While both issues involve architectural wall assemblies and drywall considerations, they address different specific conditions and requirements, making the historical issue potentially informative but not directly applicable to the new observation.",
+        "query_full": {
+          "project": "CoreSite Data Center",
+          "ref": "RFI-114.1",
+          "question_text": "Per RFI #114: Confirmed to leave 1 3/8\" corner exposed at the existing shaft wall. Only from the column at grid line E to the edge of the wall needs to be aligned, resulting in the corridor clearance between the North and the South corridor walls to be at 9\u2019- 1/8\" at that specific location. To achieve alignment with the North wall East corner and provide clearance for the K-brace, DPR proposes adding one layer of 1/2\" drywall and one layer of 5/8\" gypsum board. This additional drywall will be installed up to ceiling height only and will not extend above the ceiling. Suggested answer Corgan, please confirm: 1) Only the small section of the North wall in corridor 260 requires alignment. 2) The proposed addition of 1/2\" drywall and 5/8\" gypsum board to clear the K-brace is acceptable. 3) Additional drywall to be installed up to ceiling height only.",
+          "normalized_text": "- corridor 260, misalignment with existing shaft wall rev.1 request for information detail #114.1 corridor 260, misalignment with existing shaft wall rev.1 per request for information #114: confirmed to leave 1 3/8\" corner exposed at the existing shaft wall. only from the structural steel at grid line e to the edge of the wall needs to be aligned, resulting in the corridor clearance between the north and the south corridor walls to be at 9\u2019- 1/8\" at that specific location. to achieve alignment with the north wall east corner and provide clearance for the k-brace, dpr proposes adding one layer of 1/2\" gypsum wall board and one layer of 5/8\" gypsum board. this additional gypsum wall board will be installed up to ceiling height only and will not extend above the ceiling. suggested answer corgan, please confirm: 1) only the small section of the north wall in corridor 260 requires alignment. 2) the proposed addition of 1/2\" gypsum wall board and 5/8\" gypsum board to clear the k-brace is acceptable. 3) additional gypsum wall board to be installed up to ceiling height only.",
+          "raw_text": "- Corridor 260, Misalignment with existing shaft wall Rev.1 RFI detail #114.1 Corridor 260, Misalignment with existing shaft  wall Rev.1\n\nPer RFI #114:\nConfirmed to leave 1 3/8\" corner exposed at the existing shaft wall.\nOnly from the column at grid line E to the edge of the wall needs to be aligned, resulting in the corridor clearance \nbetween the North and the South corridor walls to be at 9\u2019- 1/8\" at that specific location.\nTo achieve alignment with the North wall East corner and provide clearance for the K-brace, DPR proposes adding \none layer of 1/2\" drywall and one layer of 5/8\" gypsum board. This additional drywall will be installed up to ceiling \nheight only and will not extend above the ceiling.\nSuggested answer\nCorgan, please confirm:\n1) Only the small section of the North wall in corridor 260 requires alignment.\n2) The proposed addition of 1/2\" drywall and 5/8\" gypsum board to clear the K-brace is acceptable.\n3) Additional drywall to be installed up to ceiling height only.",
+          "resolution_text": "Ashley Hill (Corgan - 10059759): 1. Confirmed.\n2. Confirmed. GC to confirm computer room's side of the wall remains aligned.\n3. Additional drywall to go to deck, not ceiling height.\nGC to maintain the 2HR rating at the horizontal exit wall.\nCS - CORGAN - 10.27.25",
+          "trade": "architectural",
+          "phase": "preconstruction"
+        },
+        "candidate_full": {
+          "project": "Intuitive Surgical MOB",
+          "ref": "RFI-88",
+          "question_text": "Existing Rated Wall Assembly Clarification Existing Rated Wall Assembly Clarification Reference: Floor 1 Floor Plan/A2.11 Question: Drawings show an existing 2-hour rated partition between Trash 1033 and Exit Passageway 1032. In the field, existing wall is not full height. Please confirm existing wall separating Trash 1033 from Exit Passageway 1032 is to be a full height - 2 hour rated partition.",
+          "normalized_text": "- existing rated wall assembly clarification request for information detail #88 existing rated wall assembly clarification reference: -floor 1 floor plan/a2.11 question: drawings show an existing 2-hour rated partition between trash 1033 and exit passageway 1032. in the field, existing wall is not full height. please confirm existing wall separating trash 1033 from exit passageway 1032 is to be a full height - 2 hour rated partition.",
+          "raw_text": "- Existing Rated Wall Assembly Clarification RFI detail #88 Existing Rated Wall Assembly Clarification\n\nReference:\n-Floor 1 Floor Plan/A2.11\nQuestion:\nDrawings show an existing 2-hour rated partition between Trash 1033 and Exit Passageway 1032. In the field, \nexisting wall is not full height.\nPlease confirm existing wall separating Trash 1033 from Exit Passageway 1032 is to be a full height - 2 hour rated \npartition.",
+          "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW: The ceiling over the exit corridor is rated. \nExtend the gyp\nboard on the trash room side to ensure there is no smell transfer.\nNo additional rated construction is needed at this location.\nH.Travis 08.25.25",
+          "trade": "architectural",
+          "phase": "mep_trim_out"
+        }
+      },
+      {
+        "query": {
+          "id": "26fb3cc8-7c3c-402d-b14b-c84f16f6aa6f",
+          "project": "Southline Office",
+          "ref": "RFI-0916",
+          "text": "B1 Electrical Circuit for Added BMS Panel",
+          "trade": "electrical, mechanical",
+          "phase": "mep_trim_out"
+        },
+        "candidate": {
+          "id": "10dc2142-d0bb-48c7-ace2-ba43641aac15",
+          "project": "CoreSite Data Center",
+          "ref": "RFI-151",
+          "text": "The IFC Mechanical and Electrical drawings do not indicate line voltage thermostats. Per scope responsibilities, low voltage thermostats are installed by Division 23, while line voltage thermostats are installed by Division 26. Suggested answer Please confirm whether all mechanical thermostats on this project are intended to be low voltage or line voltage. If line voltage thermostats are required, please provide drawings identifying the locations of these thermostats for use in field installation.",
+          "trade": "electrical, mechanical",
+          "phase": "preconstruction",
+          "resolution": "Abdul Mohi Mohammed (KW Engineering - 10059720): All mechanical thermostats on this project are intended to \nbe low voltage. Line voltage thermostats are not installed.\nAshley Hill (Corgan - 10059759): GC to refer to KW.\nCS - CORGAN - 9.22.25"
+        },
+        "reasoning": "While both issues involve electrical and mechanical systems, the historical issue focuses on thermostat voltage types, whereas the new observation pertains to an electrical circuit for a BMS panel, indicating a related but not directly applicable concern.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0916",
+          "question_text": "B1 Electrical Circuit for Added BMS Panel",
+          "normalized_text": "b1 electrical circuit for added bms panel ref: m2.01, m2.07, e6.03 (b1 si-05 dated 07.14.23); e3.01, e3.02, e3.03, e3.04, e3.05, e3.06, e3.07 and e5.05 (progress set); email correspondence with pavit/cmi dated 08.22.23 post: m2.01, m2.07, e6.03, e3.01, e3.02, e3.03, e3.04, e3.05, e3.06, e3.07 and e5.05 (b1 si-05 dated 07.14.23) this is confirming request for information based on coordination done between cmi and sprig. see m2.01, m2.07 and e6.03 for the location of the bms panels and the electrical requirement, marked up in yellow. bms panels are added to all the south electrical room at all level. the updates are clouded in red on the electrical drawing (e3.01, e3.02, e3.03, e3.04, e3.05, e3.06, e3.07 and e5.05) to meet the requirement noted on m2.01, m2.07 and e6.03. all the bms panels will be on the e-power which would provide flexibility in the future. please confirm the changes are acceptable.",
+          "raw_text": "B1 Electrical Circuit for Added BMS Panel\n\nRef: M2.01, M2.07, E6.03 (B1 SI-05 dated 07.14.23); E3.01, E3.02, E3.03, E3.04, E3.05, E3.06, E3.07 and E5.05 \n(Progress set); Email Correspondence with Pavit/CMI dated 08.22.23\nPost: M2.01, M2.07, E6.03, E3.01, E3.02, E3.03, E3.04, E3.05, E3.06, E3.07 and E5.05 (B1 SI-05 dated 07.14.23)\nThis is confirming RFI based on coordination done between CMI and Sprig.\nSee M2.01, M2.07 and E6.03 for the location of the BMS panels and the electrical requirement, marked up in \nyellow. BMS panels are added to all the south electrical room at all level.\nThe updates are clouded in red on the electrical drawing (E3.01, E3.02, E3.03, E3.04, E3.05, E3.06, E3.07 and E5.05) \nto meet the requirement noted on M2.01, M2.07 and E6.03. All the BMS panels will be on the e-power which \nwould provide flexibility in the future.\nPlease confirm the changes are acceptable.",
+          "resolution_text": "Please see attached.",
+          "trade": "electrical, mechanical",
+          "phase": "mep_trim_out"
+        },
+        "candidate_full": {
+          "project": "CoreSite Data Center",
+          "ref": "RFI-151",
+          "question_text": "The IFC Mechanical and Electrical drawings do not indicate line voltage thermostats. Per scope responsibilities, low voltage thermostats are installed by Division 23, while line voltage thermostats are installed by Division 26. Suggested answer Please confirm whether all mechanical thermostats on this project are intended to be low voltage or line voltage. If line voltage thermostats are required, please provide drawings identifying the locations of these thermostats for use in field installation.",
+          "normalized_text": "- thermostat scope clarification request for information detail #151 thermostat scope clarification the ifc mechanical and electrical drawings do not indicate line voltage thermostats. per scope responsibilities, low voltage thermostats are installed by division 23, while line voltage thermostats are installed by division 26. suggested answer please confirm whether all mechanical thermostats on this project are intended to be low voltage or line voltage. if line voltage thermostats are required, please provide drawings identifying the locations of these thermostats for use in field installation.",
+          "raw_text": "- Thermostat Scope Clarification RFI detail #151 Thermostat Scope Clarification\n\nThe IFC Mechanical and Electrical drawings do not indicate line voltage thermostats. Per scope responsibilities, \nlow voltage thermostats are installed by Division 23, while line voltage thermostats are installed by Division 26.\nSuggested answer\nPlease confirm whether all mechanical thermostats on this project are intended to be low voltage or line voltage. \nIf line voltage thermostats are required, please provide drawings identifying the locations of these thermostats \nfor use in field installation.",
+          "resolution_text": "Abdul Mohi Mohammed (KW Engineering - 10059720): All mechanical thermostats on this project are intended to \nbe low voltage. Line voltage thermostats are not installed.\nAshley Hill (Corgan - 10059759): GC to refer to KW.\nCS - CORGAN - 9.22.25",
+          "trade": "electrical, mechanical",
+          "phase": "preconstruction"
+        }
+      },
+      {
+        "query": {
+          "id": "e02d0d52-9daf-4d0e-9c01-a32e5adaf871",
+          "project": "Southline Office",
+          "ref": "RFI-0854",
+          "text": "B2 Penetration Locations at Splines",
+          "trade": "structural",
+          "phase": "structure"
+        },
+        "candidate": {
+          "id": "c25308b5-c8c9-431b-8c85-13b43aa3b65e",
+          "project": "Southline Office",
+          "ref": "RFI-1142",
+          "text": "B2 GS Roof Framing - HSS Kickers 2, RFI 906 Question: Grid D HSS Kickers 1. Please clarify dimension from Grid D to set-out HSS Kicker where it intersects with CLT Panel. 2. Please clarify set-out angle of HSS Kicker. 3. Please clarify connection details for HSS Kicker back to exterior cladding. Grid 16 HSS Kic",
+          "trade": "structural",
+          "phase": "envelope",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "While both issues pertain to structural elements and framing details, the specific focus on penetration locations in the new observation differs from the connection and dimension clarifications requested in the historical issue, suggesting some related lessons but not a direct application.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0854",
+          "question_text": "B2 Penetration Locations at Splines",
+          "normalized_text": "b2 penetration locations at splines reference: -submittal 4234-061543-0 b2 mass timber shop drawings -email correspondence attached question: penetration locations shown in the mass timber shop drawings are encroaching on the spline. these locations were not annotated in the returned submittal response. per attached coordination with holmes, structural takes no exceptions to penetrations being at the splines, provided the nearest nails are at a minimum of 1\" away from the edge of the hole. please confirm penetration locations at the spline per attached markup are acceptable.",
+          "raw_text": "B2 Penetration Locations at Splines\n\nReference:\n-Submittal 4234-061543-0 B2 Mass Timber Shop Drawings\n-Email Correspondence Attached\nQuestion:\nPenetration locations shown in the mass timber shop drawings are encroaching on the spline. These locations \nwere not annotated in the returned submittal response. Per attached coordination with Holmes, structural takes \nno exceptions to penetrations being at the splines, provided the nearest nails are at a minimum of 1\" away from \nthe edge of the hole. \nPlease confirm penetration locations at the spline per attached markup are acceptable.",
+          "resolution_text": "Please see attached.",
+          "trade": "structural",
+          "phase": "structure"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1142",
+          "question_text": "B2 GS Roof Framing - HSS Kickers 2, RFI 906 Question: Grid D HSS Kickers 1. Please clarify dimension from Grid D to set-out HSS Kicker where it intersects with CLT Panel. 2. Please clarify set-out angle of HSS Kicker. 3. Please clarify connection details for HSS Kicker back to exterior cladding. Grid 16 HSS Kic",
+          "normalized_text": "- b2 gs roof framing - hss kickers created by yarely sanchez with autodesk\u00ae construction cloud\u2122 on jan 10, 2024 at 5:07 project manager pst page 1 of 2 request for information detail #1142 b2 gs roof framing - hss kickers referenced attachments: s2.2, request for information 906 question: grid d hss kickers 1. please clarify dimension from grid d to set-out hss kicker where it intersects with clt panel. 2. please clarify set-out angle of hss kicker. 3. please clarify connection details for hss kicker back to exterior cladding. grid 16 hss kickers 4. please clarify dimension from grid 16 to set-out hss kicker where it intersects with clt panel. 5. please clarify set-out angle of hss kicker. 6. please clarify connection details for hss kicker back to exterior cladding. canopy hss kickers 7. please clarify connection details for hss kicker back to exterior cladding. please see question clarifications in blue",
+          "raw_text": "- B2 GS Roof Framing - HSS Kickers Created by Yarely Sanchez with Autodesk\u00ae Construction Cloud\u2122 on Jan 10, 2024 at 5:07 PM PST Page 1 of 2 RFI detail #1142 B2 GS Roof Framing - HSS Kickers\n\nReferenced Attachments: S2.2, RFI 906\nQuestion: \nGrid D HSS Kickers\n1. Please clarify dimension from Grid D to set-out HSS Kicker where it intersects with CLT Panel. \n2. Please clarify set-out angle of HSS Kicker. \n3. Please clarify connection details for HSS Kicker back to exterior cladding. \nGrid 16 HSS Kickers \n4. Please clarify dimension from Grid 16 to set-out HSS Kicker where it intersects with CLT Panel. \n5. Please clarify set-out angle of HSS Kicker. \n6. Please clarify connection details for HSS Kicker back to exterior cladding. \nCanopy HSS Kickers \n7. Please clarify connection details for HSS Kicker back to exterior cladding.\nPlease see question clarifications in blue",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "structural",
+          "phase": "envelope"
+        }
+      },
+      {
+        "query": {
+          "id": "ff9f0ef9-c509-4c21-8143-4b3d7d05d627",
+          "project": "Southline Office",
+          "ref": "RFI-0480",
+          "text": "B1 Metal Deck Side Laps Over Field Beams",
+          "trade": "structural",
+          "phase": null
+        },
+        "candidate": {
+          "id": "d25acbe7-b12f-4bb0-8910-af5d2c7891f0",
+          "project": "Southline Office",
+          "ref": "RFI-1183",
+          "text": "B2 - EWH-1-6 Housekeeping Pad 01, S5.2, P2.01D, BMC Shop Drawing PL.2.L1.HK Please advise on details required for attaching the proposed housekeeping pad (refer to sheet PL.2.L1.HK) for EWH-1-6 to the slab in Janitor 112.",
+          "trade": "structural",
+          "phase": null,
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "While both issues pertain to structural elements within the Southline Office project, the specific focus on metal deck side laps in the new observation and the housekeeping pad attachment in the historical issue suggests they are related but not directly applicable to each other.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0480",
+          "question_text": "B1 Metal Deck Side Laps Over Field Beams",
+          "normalized_text": "b1 metal deck side laps over field beams ref: asc delta grip side laps over field beams and girders please confirm it is acceptable to eliminate side lap connections over field beams and girders where arc spot weld or shear studs occur at low flute of each sheet. please see attached for more information.",
+          "raw_text": "B1 Metal Deck Side Laps Over Field Beams\n\nRef: ASC Delta Grip Side Laps Over Field Beams and Girders\nPlease confirm it is acceptable to eliminate side lap connections over field beams and girders where arc spot weld \nor shear studs occur at low flute of each sheet. \nPlease see attached for more information.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - May 2, 2023, 9:45 AM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI-0480 - B1 Metal Deck Side Laps Over Field Beams.pdf\nSLP1 - RFI-0480 - B1 Metal Deck Side Laps Over Field Beams_Resp.pdf",
+          "trade": "structural",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1183",
+          "question_text": "B2 - EWH-1-6 Housekeeping Pad 01, S5.2, P2.01D, BMC Shop Drawing PL.2.L1.HK Please advise on details required for attaching the proposed housekeeping pad (refer to sheet PL.2.L1.HK) for EWH-1-6 to the slab in Janitor 112.",
+          "normalized_text": "- b2 - ewh-1-6 housekeeping pad created by doyoon lee with autodesk\u00ae construction cloud\u2122 on dec 19, 2023 at 4:16 project manager pst page 1 of 2 request for information detail #1183 b2 - ewh-1-6 housekeeping pad reference: bldg2 a2.01, s5.2, p2.01d, bmc shop drawing pl.2.l1.hk please advise on details required for attaching the proposed housekeeping pad (refer to sheet pl.2.l1.hk) for ewh-1-6 to the concrete in janitor 112.",
+          "raw_text": "- B2 - EWH-1-6 Housekeeping Pad Created by Doyoon Lee with Autodesk\u00ae Construction Cloud\u2122 on Dec 19, 2023 at 4:16 PM PST Page 1 of 2 RFI detail #1183 B2 - EWH-1-6 Housekeeping Pad\n\nReference: BLDG2 A2.01, S5.2, P2.01D, BMC Shop Drawing PL.2.L1.HK\nPlease advise on details required for attaching the proposed housekeeping pad (refer to sheet PL.2.L1.HK) for \nEWH-1-6 to the slab in Janitor 112.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "structural",
+          "phase": null
+        }
+      },
+      {
+        "query": {
+          "id": "f091c757-16b2-42db-a683-4d43004b46b0",
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-26",
+          "text": "Finish t-bar install Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "trade": "flooring",
+          "phase": "preconstruction"
+        },
+        "candidate": {
+          "id": "c78da5dd-e669-4d47-81dc-cadfc7cbf523",
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-17",
+          "text": "Straighten up T-bar Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "trade": "flooring",
+          "phase": "preconstruction",
+          "resolution": ""
+        },
+        "reasoning": "Both issues pertain to the installation of T-bar in the same area, suggesting that lessons learned from straightening the T-bar could inform the finish installation, though they are not identical problems.",
+        "query_full": {
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-26",
+          "question_text": "Finish t-bar install Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "normalized_text": "finish t-bar install drawing: a2.2.2 (2nd floor - reflected ceiling plan)",
+          "raw_text": "Finish t-bar install\nDrawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "resolution_text": null,
+          "trade": "flooring",
+          "phase": "preconstruction"
+        },
+        "candidate_full": {
+          "project": "Abbott Alameda Office TI",
+          "ref": "ISSUE-17",
+          "question_text": "Straighten up T-bar Drawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "normalized_text": "straighten up t-bar drawing: a2.2.2 (2nd floor - reflected ceiling plan)",
+          "raw_text": "Straighten up T-bar\nDrawing: A2.2.2 (2ND FLOOR - REFLECTED CEILING PLAN)",
+          "resolution_text": null,
+          "trade": "flooring",
+          "phase": "preconstruction"
+        }
+      },
+      {
+        "query": {
+          "id": "ff3aa494-6b3d-446a-a47c-52df64c69b63",
+          "project": "Silicon Valley Office",
+          "ref": "RFI-347",
+          "text": "Trash Enclosure Base Plates at Gate",
+          "trade": "concrete",
+          "phase": "mep_trim_out"
+        },
+        "candidate": {
+          "id": "4e1fbb43-dccb-49d6-9ca6-24213947d8b0",
+          "project": "Southline Office",
+          "ref": "RFI-0297",
+          "text": "Per the attached sheets, Camblin proposes the use of displacing contract bars in the SOG as support. The displaced bar would support the bottom layer and sit on top of a concrete dobie that would allow proper clearance to the main reinforcing. The proposal would only displace a contract bar for support at a minimum spacing @ 48\" O.C. Any displacement will fall within the overall tolerances per ACI 318-08 Section 7.5.2. 1 and concrete clearances to main reinforcing will be maintained. Please confirm this is acceptable.",
+          "trade": "concrete",
+          "phase": "foundation",
+          "resolution": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Mar 13, 2023, 10:24 AM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI 0297 - B1 Displace contract bars in the slab on grade as support confirmation.pdf\nSLP1 - RFI-0297 - B1 Displace contract bars in the slab on grade as support confirmation_Resp.pdf"
+        },
+        "reasoning": "While both issues involve concrete and structural support, the specific contexts and details differ, making the historical resolution potentially useful but not directly applicable to the new observation.",
+        "query_full": {
+          "project": "Silicon Valley Office",
+          "ref": "RFI-347",
+          "question_text": "Trash Enclosure Base Plates at Gate",
+          "normalized_text": "trash enclosure base plates at gate ref: attached request for information-347 markup; at marked locations, (2) anchor bolts are currently landing in asphalt. please confirm revised anchor bolts locations are acceptable. refer to markup proposed on next pages. gpla, please confirm acceptable to abandon holes marked 'x' and add new holes as dimensioned.",
+          "raw_text": "Trash Enclosure Base Plates at Gate\n\nRef: Attached RFI-347 Markup;\nAt marked locations, (2) anchor bolts are currently landing in asphalt. Please confirm revised anchor bolts \nlocations are acceptable. Refer to markup proposed on next pages.\nGPLA, please confirm acceptable to abandon holes marked 'X' and add new holes as dimensioned.",
+          "resolution_text": "Ranjitha Manohar (GPLA Structural Engineers): See attached for response to the RFI.",
+          "trade": "concrete",
+          "phase": "mep_trim_out"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0297",
+          "question_text": "Per the attached sheets, Camblin proposes the use of displacing contract bars in the SOG as support. The displaced bar would support the bottom layer and sit on top of a concrete dobie that would allow proper clearance to the main reinforcing. The proposal would only displace a contract bar for support at a minimum spacing @ 48\" O.C. Any displacement will fall within the overall tolerances per ACI 318-08 Section 7.5.2. 1 and concrete clearances to main reinforcing will be maintained. Please confirm this is acceptable.",
+          "normalized_text": "b1 displace contract bars in the concrete on grade as support confirmation reference: -slp1 - request for information 0297 - b1 displace contract bars in the concrete on grade as support confirmation - dpr request for information 0043 - b1 mat foundation bury contract bar for support q1: per the attached sheets, camblin proposes the use of displacing contract bars in the sog as support. the displaced bar would support the bottom layer and sit on top of a concrete dobie that would allow proper clearance to the main reinforcing. the proposal would only displace a contract bar for support at a minimum spacing @ 48\" o.c. any displacement will fall within the overall tolerances per aci 318-08 section 7.5.2. 1 and concrete clearances to main reinforcing will be maintained. please confirm this is acceptable.",
+          "raw_text": "B1 Displace contract bars in the slab on grade as  support confirmation\n\nReference:\n-SLP1 - RFI 0297 - B1 Displace contract bars in the slab on grade as support confirmation \n- DPR RFI 0043 - B1 Mat foundation bury contract bar for support \nQ1: Per the attached sheets, Camblin proposes the use of displacing contract bars in the SOG as support. The \ndisplaced bar would support the bottom layer and sit on top of a concrete dobie that would allow proper \nclearance to the main reinforcing. The proposal would only displace a contract bar for support at a minimum \nspacing @ 48\" O.C. Any displacement will fall within the overall tolerances per ACI 318-08 Section 7.5.2. 1 and \nconcrete clearances to main reinforcing will be maintained. Please confirm this is acceptable.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Mar 13, 2023, 10:24 AM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI 0297 - B1 Displace contract bars in the slab on grade as support confirmation.pdf\nSLP1 - RFI-0297 - B1 Displace contract bars in the slab on grade as support confirmation_Resp.pdf",
+          "trade": "concrete",
+          "phase": "foundation"
+        }
+      },
+      {
+        "query": {
+          "id": "5f9975ef-373c-4494-9725-4dab7febff45",
+          "project": "Southline Office",
+          "ref": "RFI-0994",
+          "text": "B2 - Receptacle Relocation on Shear Walls",
+          "trade": "electrical",
+          "phase": null
+        },
+        "candidate": {
+          "id": "f5962205-fca2-4b26-85c1-4d3a03294eb9",
+          "project": "Southline Office",
+          "ref": "RFI-0600",
+          "text": "B2 Interstitial Panel Relocation",
+          "trade": "electrical",
+          "phase": null,
+          "resolution": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jun 6, 2023, 2:45 PM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nRFI#18 - B2 Interstitial Panel Relocation.pdf\nSLP1 - RFI-0600 - B2 Interstitial Panel Relocation.pdf"
+        },
+        "reasoning": "While both issues involve electrical work related to relocations, the specific contexts of receptacle relocation on shear walls and interstitial panel relocation suggest they are related but not directly applicable to each other.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0994",
+          "question_text": "B2 - Receptacle Relocation on Shear Walls",
+          "normalized_text": "b2 - receptacle relocation on shear walls per coordination with dnk (des), please advise if receptacles located in kitchen 132 on gl-c shear wall and in fitness area 107 on gl-b shear wall need to be adjusted/changed.",
+          "raw_text": "B2 - Receptacle Relocation on Shear Walls\n\nPer coordination with DNK (DES), please advise if receptacles located in Kitchen 132 on GL-C shear wall and in \nFitness Area 107 on GL-B shear wall need to be adjusted/changed.",
+          "resolution_text": "Please see attached.",
+          "trade": "electrical",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0600",
+          "question_text": "B2 Interstitial Panel Relocation",
+          "normalized_text": "b2 interstitial panel relocation reference: -e3.01 -e3.02 post: e3.01/e3.02 question: due to panel clashes in interstitial space, please confirm the following relocations are acceptable: 1. panel 2l-1b can be flush-mounted to new wall located outside office 117. please note this will take away approx. 12\" from office 117. 2. panel 2h-1d to be mounted on windscreen between gl 8/9",
+          "raw_text": "B2 Interstitial Panel Relocation\n\nReference:\n-E3.01\n-E3.02\nPost: E3.01/E3.02\nQuestion:\nDue to panel clashes in interstitial space, please confirm the following relocations are acceptable:\n1. Panel 2L-1B can be flush-mounted to new wall located outside Office 117. Please note this will take away \napprox. 12\" from Office 117. \n2. Panel 2H-1D to be mounted on windscreen between GL 8/9",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jun 6, 2023, 2:45 PM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nRFI#18 - B2 Interstitial Panel Relocation.pdf\nSLP1 - RFI-0600 - B2 Interstitial Panel Relocation.pdf",
+          "trade": "electrical",
+          "phase": null
+        }
+      },
+      {
+        "query": {
+          "id": "ad0bce15-c296-4ab7-8e51-35e2ccb7f901",
+          "project": "Southline Office",
+          "ref": "RFI-0639",
+          "text": "B2 Bike Enclosure Door Clarification",
+          "trade": "architectural",
+          "phase": "interior_finishes"
+        },
+        "candidate": {
+          "id": "ee211da4-3d29-4bd0-bbc9-51176ee17dfb",
+          "project": "Southline Office",
+          "ref": "RFI-1446.1",
+          "text": "B2 VGS Screws Drifting Out of Face of GL 12 Beam 1 B2 VGS Screws Drifting Out of Face of GL 12 Beam Referenced Documents: A2.01, S2.2 Question: Please provide repair detail for the (5) VGS screws that drifted out of Face of GL 12 Beam.",
+          "trade": "architectural",
+          "phase": "structure",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "While both issues pertain to the architectural trade and involve structural components, the specific concerns of the bike enclosure door and the drifting screws are distinct, though lessons regarding structural integrity and repair might be applicable.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0639",
+          "question_text": "B2 Bike Enclosure Door Clarification",
+          "normalized_text": "b2 bike enclosure door clarification reference: -a2.11 -a9.20/door hardware schedule post: a9.20 question: information for bike enclosure door (e118) is not provided on the door hardware schedule per a9.20. please confirm required door, frame and hardware information for bike enclosure door e118.",
+          "raw_text": "B2 Bike Enclosure Door Clarification\n\nReference:\n-A2.11\n-A9.20/Door Hardware Schedule\nPost: A9.20\nQuestion:\nInformation for Bike Enclosure Door (E118) is not provided on the Door Hardware Schedule per A9.20.\nPlease confirm required door, frame and hardware information for Bike Enclosure Door E118.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jun 20, 2023, 9:54 AM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nB2 Bike Enclosure Door Clarification.pdf\nSLP1 - RFI-0639 - B2 Bike Enclosure Door Clarification.pdf",
+          "trade": "architectural",
+          "phase": "interior_finishes"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1446.1",
+          "question_text": "B2 VGS Screws Drifting Out of Face of GL 12 Beam 1 B2 VGS Screws Drifting Out of Face of GL 12 Beam Referenced Documents: A2.01, S2.2 Question: Please provide repair detail for the (5) VGS screws that drifted out of Face of GL 12 Beam.",
+          "normalized_text": "- b2 vgs screws drifting out of face of gl 12 structural steel created by yarely sanchez with autodesk\u00ae construction cloud\u2122 on apr 17, 2024 at 10:14 am pdt page 1 of 2 request for information detail #1446.1 b2 vgs screws drifting out of face of gl 12 structural steel referenced documents: a2.01, s2.2 question: please provide repair detail for the (5) vgs screws that drifted out of face of gl 12 structural steel.",
+          "raw_text": "- B2 VGS Screws Drifting Out of Face of GL 12 Beam Created by Yarely Sanchez with Autodesk\u00ae Construction Cloud\u2122 on Apr 17, 2024 at 10:14 AM PDT Page 1 of 2 RFI detail #1446.1 B2 VGS Screws Drifting Out of Face of GL 12  Beam\n\nReferenced Documents: A2.01, S2.2\nQuestion:\nPlease provide repair detail for the (5) VGS screws that drifted out of Face of GL 12 Beam.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural",
+          "phase": "structure"
+        }
+      },
+      {
+        "query": {
+          "id": "a51bd14b-13fa-497e-b4af-45a40ce0436d",
+          "project": "Southline Office",
+          "ref": "RFI-0879",
+          "text": "B2 Post-Installed Anchor Clarification",
+          "trade": "structural",
+          "phase": null
+        },
+        "candidate": {
+          "id": "4667bbc1-f8ef-476b-812c-7745c644bc54",
+          "project": "Southline Office",
+          "ref": "RFI-1119",
+          "text": "on GC RFI #0906 notes \"Stud wall position by facade designer and/or architect\". No further information was provided. Please verify angle of kicker is acceptable or advise otherwise. 6 - Please verify end of box from CLT panel is acceptable or advise otherwise. 7 - Please verify stub profile is acceptable or advise correct profile. 8 - Please verify location of HSS outriggers is correct or advise otherwise. (6\" from column to first fixing Det S6.3/7) 9 - As HBS plate fixings finish proud of collector plates, this causes a clash between HSS outriggers and HBS fixings. Please clarify adjustments required. 10 - As per 6/\non GC RFI #0906 notes \"Connection between plate and stud wall by facade contractor\". No detail is yet to be provided. Please liaise with facade contractor and supply required connection detail. 12 - Due HSS outrigger positioned parallel to main roof slope, this results in a 2\"3/8 gap between the flat CLT panel and underside of HSS. Please verify whether we are to increase the angle to L5x3x1/4 at this end condition D0-A20007-00 LPSC Phase 1 #1119 - B2 GS Roof Canopy Framing Clarifications 13 - Please verify fixings are to run full length of flat CLT panel as shown (15 no. fixings) or advise otherwise.",
+          "trade": "structural",
+          "phase": "structure",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "While both RFIs pertain to structural concerns within the same project, the specific issues addressed in RFI-1119 do not directly relate to the post-installed anchor clarification in RFI-0879, but some lessons regarding structural connections may still apply.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0879",
+          "question_text": "B2 Post-Installed Anchor Clarification",
+          "normalized_text": "b2 post-installed anchor clarification reference: -detail k/a9.10 question: please confirm if post-installed anchors can be installed in lieu of embeds shown per detail k/a9.10.",
+          "raw_text": "B2 Post-Installed Anchor Clarification\n\nReference:\n-Detail K/A9.10\nQuestion:\nPlease confirm if post-installed anchors can be installed in lieu of embeds shown per Detail K/A9.10.",
+          "resolution_text": "Please see attached.",
+          "trade": "structural",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1119",
+          "question_text": "on GC RFI #0906 notes \"Stud wall position by facade designer and/or architect\". No further information was provided. Please verify angle of kicker is acceptable or advise otherwise. 6 - Please verify end of box from CLT panel is acceptable or advise otherwise. 7 - Please verify stub profile is acceptable or advise correct profile. 8 - Please verify location of HSS outriggers is correct or advise otherwise. (6\" from column to first fixing Det S6.3/7) 9 - As HBS plate fixings finish proud of collector plates, this causes a clash between HSS outriggers and HBS fixings. Please clarify adjustments required. 10 - As per 6/\non GC RFI #0906 notes \"Connection between plate and stud wall by facade contractor\". No detail is yet to be provided. Please liaise with facade contractor and supply required connection detail. 12 - Due HSS outrigger positioned parallel to main roof slope, this results in a 2\"3/8 gap between the flat CLT panel and underside of HSS. Please verify whether we are to increase the angle to L5x3x1/4 at this end condition D0-A20007-00 LPSC Phase 1 #1119 - B2 GS Roof Canopy Framing Clarifications 13 - Please verify fixings are to run full length of flat CLT panel as shown (15 no. fixings) or advise otherwise.",
+          "normalized_text": "- b2 gs roof canopy framing clarifications created by yarely sanchez with autodesk\u00ae construction cloud\u2122 on nov 27, 2023 at 8:00 am pst page 1 of 2 request for information detail #1119 b2 gs roof canopy framing clarifications referenced attachments: a4.20, s6.3 question: please see attached \"sk-mc-025\" for queries noted below. please note attached \"general contractor request for information #0906 - ref only - sk-mc-020\" is for reference only. 1 - please verify positions of hss outriggers are acceptable or advise otherwise. 2 - design drawings locate hss8x8 stubs central on glulam beams, however as shown on snip image this will clash with collector splice plate. please verify it is acceptable move hss stub 1'-0\" off gl 9 as shown or advise otherwise. 3 - if relocating stub is acceptable, please verify we are to use \"hbs plate 0.32\u00f8 x 5 1/2\"lg\" in lieu of fixings noted on det s6.3/7. 4 - as per architectural and structural details, it would suggest that the orientation of hss strongback would be 10\" horiz. however connection detail 4/s8.1 noted on detail 6/s6.3 would suggest the orientation to be 8\" horiz. please verify orientation is to be 8\" horiz. unless advised otherwise. 5 - response to q2 on general contractor request for information #0906 notes \"stud wall position by facade designer and/or architect\". no further information was provided. please verify angle of kicker is acceptable or advise otherwise. 6 - please verify end of box from clt panel is acceptable or advise otherwise. 7 - please verify stub profile is acceptable or advise correct profile. 8 - please verify location of hss outriggers is correct or advise otherwise. (6\" from structural steel to first fixing det s6.3/7) 9 - as hbs plate fixings finish proud of collector plates, this causes a clash between hss outriggers and hbs fixings. please clarify adjustments required. 10 - as per 6/a4.20, hss outrigger is orientated that 10\" side is horiz, where as structural detail 6/s6.3 indicates 10\" vertical. please verify we are to follow the structural details or advise otherwise. 11 - response to q4 on general contractor request for information #0906 notes \"connection between plate and stud wall by facade contractor\". no detail is yet to be provided. please liaise with facade contractor and supply required connection detail. 12 - due hss outrigger positioned parallel to main roof slope, this results in a 2\"3/8 gap between the flat clt panel and underside of hss. please verify whether we are to increase the angle to l5x3x1/4 at this end condition d0-a20007-00 lpsc phase 1 #1119 - b2 gs roof canopy framing clarifications created by yarely sanchez with autodesk\u00ae construction cloud\u2122 on nov 27, 2023 at 8:00 am pst page 2 of 2 or advise otherwise. 13 - please verify fixings are to run full length of flat clt panel as shown (15 no. fixings) or advise otherwise.",
+          "raw_text": "- B2 GS Roof Canopy Framing Clarifications Created by Yarely Sanchez with Autodesk\u00ae Construction Cloud\u2122 on Nov 27, 2023 at 8:00 AM PST Page 1 of 2 RFI detail #1119 B2 GS Roof Canopy Framing Clarifications\n\nReferenced Attachments: A4.20, S6.3\nQuestion:\nPlease see attached \"SK-MC-025\" for queries noted below. \nPlease note attached \"GC RFI #0906 - REF ONLY - SK-MC-020\" is for reference only. \n1 - Please verify positions of HSS outriggers are acceptable or advise otherwise. \n2 - Design drawings locate HSS8x8 stubs central on glulam beams, however as shown on snip image this will clash \nwith collector \nsplice plate. Please verify it is acceptable move HSS stub 1'-0\" off GL 9 as shown or advise otherwise. \n3 - If relocating stub is acceptable, please verify we are to use \"HBS Plate 0.32\u00d8 x 5 1/2\"Lg\" in lieu of fixings noted \non Det S6.3/7. \n4 - As per architectural and structural details, it would suggest that the orientation of HSS strongback would be \n10\" horiz. However connection detail 4/S8.1 noted on detail 6/S6.3 would suggest the orientation to be 8\" horiz. \nPlease verify orientation is to be 8\" horiz. unless advised otherwise. \n5 - Response to Q2 on GC RFI #0906 notes \"Stud wall position by facade designer and/or architect\". No further \ninformation was provided. Please verify angle of kicker is acceptable or advise otherwise. \n6 - Please verify end of box from CLT panel is acceptable or advise otherwise. \n7 - Please verify stub profile is acceptable or advise correct profile. \n8 - Please verify location of HSS outriggers is correct or advise otherwise. \n(6\" from column to first fixing Det S6.3/7) \n9 - As HBS plate fixings finish proud of collector plates, this causes a clash between HSS outriggers and HBS \nfixings. Please clarify adjustments required. \n10 - As per 6/A4.20, HSS outrigger is orientated that 10\" side is horiz, where as structural detail 6/S6.3 indicates \n10\" vertical. Please verify we are to follow the structural details or advise otherwise. \n11 - Response to Q4 on GC RFI #0906 notes \"Connection between plate and stud wall by facade contractor\". No \ndetail is yet to be \nprovided. Please liaise with facade contractor and supply required connection detail. \n12 - Due HSS outrigger positioned parallel to main roof slope, this results in a 2\"3/8 gap between the flat CLT \npanel and underside of HSS. Please verify whether we are to increase the angle to L5x3x1/4 at this end condition \n\nD0-A20007-00 LPSC Phase 1\n#1119 - B2 GS Roof Canopy Framing Clarifications\nCreated by Yarely Sanchez with Autodesk\u00ae Construction Cloud\u2122 on Nov 27, 2023 at 8:00 AM PST\nPage 2 of 2\nor advise otherwise.\n13 - Please verify fixings are to run full length of flat CLT panel as shown (15 no. fixings) or advise otherwise.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "structural",
+          "phase": "structure"
+        }
+      }
+    ],
+    "not_relevant": [
+      {
+        "query": {
+          "id": "7b1b94fd-3bd7-42fc-98f5-48de1d711878",
+          "project": "Southline Office",
+          "ref": "RFI-1243",
+          "text": "B2 - Roof Receptor Elevation 2.RF.B.DL, Architectural Sheets A2.02 - Floor Plan - Roof and A2.02S - Deck Plan - Roof Please advise on elevation from top of roof receptor to roof deck as noted on the attached drawings.",
+          "trade": "plumbing",
+          "phase": null
+        },
+        "candidate": {
+          "id": "2ba1c17f-c34c-4b28-abf5-0e45c9e30559",
+          "project": "Southline Office",
+          "ref": "RFI-1696",
+          "text": "The plumbing waste connection at mop sink #63 (ref sheet QF401) is roughed in for a no-hub connection whereas the mop sink is fabricated for a caulk joint (oakum and lead). Please advise which connection type should be used.",
+          "trade": "plumbing",
+          "phase": null,
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "The new observation pertains to roof receptor elevation, while the historical issue concerns a specific plumbing connection type for a mop sink, indicating they address different aspects of plumbing work.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1243",
+          "question_text": "B2 - Roof Receptor Elevation 2.RF.B.DL, Architectural Sheets A2.02 - Floor Plan - Roof and A2.02S - Deck Plan - Roof Please advise on elevation from top of roof receptor to roof deck as noted on the attached drawings.",
+          "normalized_text": "- b2 - roof receptor elevation created by doyoon lee with autodesk\u00ae construction cloud\u2122 on feb 5, 2024 at 6:54 am pst page 1 of 2 request for information detail #1243 b2 - roof receptor elevation reference: bmc shop drawings sheet pl.2.rf.b.dl, architectural sheets a2.02 - floor plan - roof and a2.02s - deck plan - roof please advise on elevation from top of roof receptor to roof deck as noted on the attached drawings.",
+          "raw_text": "- B2 - Roof Receptor Elevation Created by Doyoon Lee with Autodesk\u00ae Construction Cloud\u2122 on Feb 5, 2024 at 6:54 AM PST Page 1 of 2 RFI detail #1243 B2 - Roof Receptor Elevation\n\nReference: BMC Shop Drawings Sheet PL.2.RF.B.DL, Architectural Sheets A2.02 - Floor Plan - Roof and A2.02S - \nDeck Plan - Roof\nPlease advise on elevation from top of roof receptor to roof deck as noted on the attached drawings.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "plumbing",
+          "phase": null
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1696",
+          "question_text": "The plumbing waste connection at mop sink #63 (ref sheet QF401) is roughed in for a no-hub connection whereas the mop sink is fabricated for a caulk joint (oakum and lead). Please advise which connection type should be used.",
+          "normalized_text": "- b2 plumbing waste connection at mop sink created by revan palla with autodesk\u00ae construction cloud\u2122 on jun 2, 2024 at 11:30 project manager pdt page 1 of 2 request for information detail #1696 b2 plumbing waste connection at mop sink the plumbing waste connection at mop sink #63 (ref sheet qf401) is roughed in for a no-hub connection whereas the mop sink is fabricated for a caulk joint (oakum and lead). please advise which connection type should be used.",
+          "raw_text": "- B2 Plumbing Waste Connection at Mop Sink Created by Revan Palla with Autodesk\u00ae Construction Cloud\u2122 on Jun 2, 2024 at 11:30 PM PDT Page 1 of 2 RFI detail #1696 B2 Plumbing Waste Connection at Mop Sink\n\nThe plumbing waste connection at mop sink #63 (ref sheet QF401) is roughed in for a no-hub connection whereas \nthe mop sink is fabricated for a caulk joint (oakum and lead). Please advise which connection type should be used.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "plumbing",
+          "phase": null
+        }
+      },
+      {
+        "query": {
+          "id": "ba43f797-c9f3-4856-89fc-05d283bfaa47",
+          "project": "Southline Office",
+          "ref": "RFI-0488",
+          "text": "Please provide location of W8X35 anchorage steel for davit support as shown clouded on the attached detail 3/S7.00.",
+          "trade": "structural",
+          "phase": "structure"
+        },
+        "candidate": {
+          "id": "4131c16b-e32d-410f-81ce-c77b37a031c4",
+          "project": "Southline Office",
+          "ref": "RFI-0973.3",
+          "text": "required, if so please advise?",
+          "trade": "structural",
+          "phase": "structure",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "The historical RFI does not provide any specific information or resolution related to the anchorage steel for davit support, making it unrelated to the new observation.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0488",
+          "question_text": "Please provide location of W8X35 anchorage steel for davit support as shown clouded on the attached detail 3/S7.00.",
+          "normalized_text": "psd location of anchorage structural steel for davit support clarifications reference: - slp1 - rfi0488 - psd location of anchorage structural steel for davit support clarifications q1: please provide location of w8x35 anchorage structural steel for davit support as shown clouded on the attached detail 3/s7.00.",
+          "raw_text": "PSD Location of Anchorage Steel for Davit Support  Clarifications\n\nReference:\n- SLP1 - RFI0488 - PSD Location of Anchorage Steel for Davit Support Clarifications\nQ1: Please provide location of W8X35 anchorage steel for davit support as shown clouded on the attached detail \n3/S7.00.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jun 20, 2023, 8:00 PM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI0488 - PSD Location of Anchorage Steel for Davit Support Clarifications.pdf\nSLP1 - RFI-0488 - PSD Location of Anchorage Steel for Davit Support Clarifications.pdf",
+          "trade": "structural",
+          "phase": "structure"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0973.3",
+          "question_text": "required, if so please advise?",
+          "normalized_text": "- b2 gs long screws required at attached glulam structural steel locations created by yarely sanchez with autodesk\u00ae construction cloud\u2122 on nov 13, 2023 at 1:28 project manager pst page 1 of 2 request for information detail #0973.3 b2 gs long screws required at attached glulam structural steel locations referenced documents: request for information 0973, request for information 09732.1, request for information 0973.2, s6.2 question: included in the response to dpr request for information-0973 was sketch ssk-032. this shows revised long screw locations for collector chords over glulam beams on grids 5, 9 & 12. there are also collector chords over glulam beams on grids 1, 14 & 16. are the long screws on these grids to still be applied to suit detail 3/s6.2? or is updated set-out required, if so please advise?",
+          "raw_text": "- B2 GS Long Screws Required at Attached Glulam Beam Locations Created by Yarely Sanchez with Autodesk\u00ae Construction Cloud\u2122 on Nov 13, 2023 at 1:28 PM PST Page 1 of 2 RFI detail #0973.3 B2 GS Long Screws Required at Attached Glulam  Beam Locations\n\nReferenced Documents: RFI 0973, RFI 09732.1, RFI 0973.2, S6.2\nQuestion:\nIncluded in the response to DPR RFI-0973 was sketch SSK-032. This shows revised Long Screw locations for \nCollector Chords over Glulam Beams on Grids 5, 9 & 12. There are also Collector Chords over Glulam Beams on \nGrids 1, 14 & 16. Are the Long Screws on these Grids to still be applied to suit Detail 3/S6.2? Or is updated set-out \nrequired, if so please advise?",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "structural",
+          "phase": "structure"
+        }
+      },
+      {
+        "query": {
+          "id": "bad3d831-5241-4e4d-b0ac-4d7642b76e44",
+          "project": "Intuitive Surgical MOB",
+          "ref": "RFI-5.1",
+          "text": "Level 3 Full Height Wall Clash with Ductwork Tie-in Rev 1",
+          "trade": "architectural",
+          "phase": "preconstruction"
+        },
+        "candidate": {
+          "id": "cb3b8288-5697-481c-b4b3-95c90495b304",
+          "project": "Southline Office",
+          "ref": "RFI-1816",
+          "text": "B2 Outside Corner Schluter for Column at Toilet Room 124 2, A3.01 Question: We currently do not have a specified Schluter type, color, or finish for the outside corner of the Glu-lam column in Toilet Room 124. Please provide specifications for Schluter type, color, and finish.",
+          "trade": "architectural",
+          "phase": "structure",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "The historical issue pertains to a specific detail about a Schluter corner finish, while the new observation involves a clash with ductwork, indicating fundamentally different problems with no useful connection.",
+        "query_full": {
+          "project": "Intuitive Surgical MOB",
+          "ref": "RFI-5.1",
+          "question_text": "Level 3 Full Height Wall Clash with Ductwork Tie-in Rev 1",
+          "normalized_text": "level 3 full height wall clash with ductwork tie-in rev 1 reference dpr request for information #5. floor 03 duct tie-in clashes with the full height wall and king stud between phone room 3052 and lactation room 3053. based on the response to request for information 5, the design intent is to retain the room layout. to retain the room layout, dpr proposes offsetting the wall around the ductwork. offsetting the wall is more cost effective than rerouting the ductwork in the shaft. please provide an offset framing detail for 5' clearance. see attached sketch.",
+          "raw_text": "Level 3 Full Height Wall Clash with Ductwork Tie-in  Rev 1\n\nReference DPR RFI #5. Floor 03 duct tie-in clashes with the full height wall and king stud between Phone Room \n3052 and Lactation Room 3053. Based on the response to RFI 5, the design intent is to retain the room layout. To \nretain the room layout, DPR proposes offsetting the wall around the ductwork. Offsetting the wall is more cost \neffective than rerouting the ductwork in the shaft.\nPlease provide an offset framing detail for 5' clearance. See attached sketch.",
+          "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): SEI RESPONSE: SEE MARKUP OF SKETCH ON \nNEXT PAGE.\nRMW RESPONSE:\nSEI mark ups are included in this review. The increase in stud size means we should shift the rooms down to \nmaintain the 7'-0\" room width (PHONE 3052) and 10'-8\" (LACTATION 3053). The additional width can be taken \nfrom the +/- 11'-11\" at the Wellness Room.\nM. Thomas, RMW, 07.17.24",
+          "trade": "architectural",
+          "phase": "preconstruction"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1816",
+          "question_text": "B2 Outside Corner Schluter for Column at Toilet Room 124 2, A3.01 Question: We currently do not have a specified Schluter type, color, or finish for the outside corner of the Glu-lam column in Toilet Room 124. Please provide specifications for Schluter type, color, and finish.",
+          "normalized_text": "- b2 outside corner schluter for structural steel at toilet room 124 created by yarely sanchez with autodesk\u00ae construction cloud\u2122 on jul 25, 2024 at 10:50 am pdt page 1 of 2 request for information detail #1816 b2 outside corner schluter for structural steel at toilet room 124 referenced documents: request for information 1655.2, a3.01 question: we currently do not have a specified schluter type, color, or finish for the outside corner of the glu-lam structural steel in toilet room 124. please provide specifications for schluter type, color, and finish.",
+          "raw_text": "- B2 Outside Corner Schluter for Column at Toilet Room 124 Created by Yarely Sanchez with Autodesk\u00ae Construction Cloud\u2122 on Jul 25, 2024 at 10:50 AM PDT Page 1 of 2 RFI detail #1816 B2 Outside Corner Schluter for Column at Toilet  Room 124\n\nReferenced Documents: RFI 1655.2, A3.01\nQuestion: \nWe currently do not have a specified Schluter type, color, or finish for the outside corner of the Glu-lam column in \nToilet Room 124.\nPlease provide specifications for Schluter type, color, and finish.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural",
+          "phase": "structure"
+        }
+      },
+      {
+        "query": {
+          "id": "a01b4164-0be8-45c8-8aeb-2226739279e3",
+          "project": "Southline Office",
+          "ref": "RFI-1778",
+          "text": "PSD Exposed Horizontal Rebar at Slabs Remediation Confirmation",
+          "trade": "concrete",
+          "phase": "interior_finishes"
+        },
+        "candidate": {
+          "id": "f6fd5c61-5519-4b3a-b770-6dc6831f2ec7",
+          "project": "Southline Office",
+          "ref": "RFI-0742",
+          "text": "Per conversations with Meg/DES on 07.20.23, please confirm it is acceptable to extend the CMU wall to the face of elevator wall to allow for drywall framing.\nPlease confirm it is acceptable to terminate the CMU Wall at the column encasement elevation on Gridline T.\nPlease confirm it is acceptable to terminate CMU Wall at face of fireproofed column on Grid U/18.3.",
+          "trade": "concrete",
+          "phase": "structure",
+          "resolution": ""
+        },
+        "reasoning": "The historical issue pertains to the termination of CMU walls and drywall framing, which does not directly relate to the remediation of exposed horizontal rebar at slabs.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1778",
+          "question_text": "PSD Exposed Horizontal Rebar at Slabs Remediation Confirmation",
+          "normalized_text": "- psd exposed horizontal rebar at slabs remediation confirmation created by luis teran with autodesk\u00ae construction cloud\u2122 on jul 18, 2024 at 4:11 project manager pdt page 1 of 2 request for information detail #1778 psd exposed horizontal rebar at slabs remediation confirmation reference: - slp1 - request for information 1778 - psd exposed horizontal rebar at slabs remediation confirmation - email correspondence between gpla and dprc background: during the dry finish rcl walk between des and dpr it was noticed that there was exposed rebar at the pt slabs on tier 5 area 3 and tier 4 area 3. question: please confirm if the attached remediation plan for horizontal rebar exposed in the deck proposed by gpla is acceptable. please see dprc's response to the highlighted question page 2.",
+          "raw_text": "- PSD Exposed Horizontal Rebar at Slabs Remediation Confirmation Created by Luis Teran with Autodesk\u00ae Construction Cloud\u2122 on Jul 18, 2024 at 4:11 PM PDT Page 1 of 2 RFI detail #1778 PSD Exposed Horizontal Rebar at Slabs  Remediation Confirmation\n\nReference: \n- SLP1 - RFI 1778 - PSD Exposed Horizontal Rebar at Slabs Remediation Confirmation \n- Email Correspondence between GPLA and DPRC\nBackground: During the dry finish RCL Walk between DES and DPR it was noticed that there was exposed rebar at \nthe PT slabs on Tier 5 Area 3 and Tier 4 Area 3. \nQuestion: Please confirm if the attached remediation plan for horizontal rebar exposed in the deck proposed by \nGPLA is acceptable. Please see DPRC's response to the highlighted question page 2.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "concrete",
+          "phase": "interior_finishes"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0742",
+          "question_text": "Per conversations with Meg/DES on 07.20.23, please confirm it is acceptable to extend the CMU wall to the face of elevator wall to allow for drywall framing.\nPlease confirm it is acceptable to terminate the CMU Wall at the column encasement elevation on Gridline T.\nPlease confirm it is acceptable to terminate CMU Wall at face of fireproofed column on Grid U/18.3.",
+          "normalized_text": "b1 loading dock concrete masonry unit wall layout confirmations reference: - slp1 - rfi0742 - b1 loading dock concrete masonry unit wall layout confirmations post on: sheet a4.20 and detail 13/a9.13 q1: per conversations with meg/des on 07.20.23, please confirm it is acceptable to extend the concrete masonry unit wall to the face of elevator wall to allow for gypsum wall board framing. q2: please confirm it is acceptable to terminate the concrete masonry unit wall at the structural steel encasement elevation on gridline t. q3: please confirm it is acceptable to terminate concrete masonry unit wall at face of fireproofed structural steel on grid u/18.3.",
+          "raw_text": "B1 Loading Dock CMU Wall Layout Confirmations\n\nReference:\n- SLP1 - RFI0742 - B1 Loading Dock CMU Wall Layout Confirmations\nPost on: Sheet A4.20 and detail 13/A9.13\nQ1: Per conversations with Meg/DES on 07.20.23, please confirm it is acceptable to extend the CMU wall to the \nface of elevator wall to allow for drywall framing.\nQ2: Please confirm it is acceptable to terminate the CMU Wall at the column encasement elevation on Gridline T.\nQ3: Please confirm it is acceptable to terminate CMU Wall at face of fireproofed column on Grid U/18.3.",
+          "resolution_text": null,
+          "trade": "concrete",
+          "phase": "structure"
+        }
+      },
+      {
+        "query": {
+          "id": "d26b784c-f2ed-4404-9b5d-425169e0ea99",
+          "project": "CoreSite Data Center",
+          "ref": "RFI-127",
+          "text": "Please confirm if the use of condulets is acceptable for branch, lighting, and grounding circuits. In certain locations, the use of condulets are necessary to maintain compliance with NEC bend limitations and to provide safe access for future inspection and maintenance without requiring disassembly of other conduit runs. Installing condulets at these specific points will ensure the system remains code-compliant while also allowing for easier servicing in the future. Suggested answer Please confirm that condulets are acceptable for use on branch circuits, lighting circuits, and grounding conductors.",
+          "trade": "electrical",
+          "phase": "preconstruction"
+        },
+        "candidate": {
+          "id": "788f63d5-1327-41c9-a224-b8852fe6adbb",
+          "project": "Southline Office",
+          "ref": "RFI-1388.1",
+          "text": "Offsite - R20 Dollar/Linden PG&E Ductbank Conflict 1 Offsite - R20 Dollar/Linden PG&E Ductbank Conflict Reference: R20 DL JT4.0 PG&E inspector on site said that instead of going under the high voltage(HV) duct bank, they would prefer to have the conduits cross-over the HV duct bank and then gradually taper to the depth where the conduits are supposed to be. Based on the on-s",
+          "trade": "electrical",
+          "phase": "mep_rough_in",
+          "resolution": ""
+        },
+        "reasoning": "The historical issue pertains to a conflict with ductbank installation and does not address the use or acceptance of condulets for branch circuits, lighting, and grounding circuits as requested in the new observation.",
+        "query_full": {
+          "project": "CoreSite Data Center",
+          "ref": "RFI-127",
+          "question_text": "Please confirm if the use of condulets is acceptable for branch, lighting, and grounding circuits. In certain locations, the use of condulets are necessary to maintain compliance with NEC bend limitations and to provide safe access for future inspection and maintenance without requiring disassembly of other conduit runs. Installing condulets at these specific points will ensure the system remains code-compliant while also allowing for easier servicing in the future. Suggested answer Please confirm that condulets are acceptable for use on branch circuits, lighting circuits, and grounding conductors.",
+          "normalized_text": "- use of condulet bodies request for information detail #127 use of condulet bodies please confirm if the use of condulets is acceptable for branch, lighting, and grounding circuits. in certain locations, the use of condulets are necessary to maintain compliance with nec bend limitations and to provide safe access for future inspection and maintenance without requiring disassembly of other conduit runs. installing condulets at these specific points will ensure the system remains code-compliant while also allowing for easier servicing in the future. suggested answer please confirm that condulets are acceptable for use on branch circuits, lighting circuits, and grounding conductors.",
+          "raw_text": "- Use of Condulet Bodies RFI detail #127 Use of Condulet Bodies\n\nPlease confirm if the use of condulets is acceptable for branch, lighting, and grounding circuits. In certain \nlocations, the use of condulets are necessary to maintain compliance with NEC bend limitations and to provide \nsafe access for future inspection and maintenance without requiring disassembly of other conduit runs. Installing \ncondulets at these specific points will ensure the system remains code-compliant while also allowing for easier \nservicing in the future.\nSuggested answer\nPlease confirm that condulets are acceptable for use on branch circuits, lighting circuits, and grounding \nconductors.",
+          "resolution_text": "Garret Gross (KW Engineering - 10059720): KW Response\n1. KW takes no exceptions to use of conduit bodies where required to maintain compliance with NEC for non \ncritical\nbranch circuits, lighting, and grounding. UPS backed circuits shall not utilize conduit bodies. Provide product data \nfor\nreview and approval.\nAshley Hill (Corgan - 10059759): GC to refer to KW. Provide PD for design team review.\nCS - CORGAN - 9.8.25",
+          "trade": "electrical",
+          "phase": "preconstruction"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1388.1",
+          "question_text": "Offsite - R20 Dollar/Linden PG&E Ductbank Conflict 1 Offsite - R20 Dollar/Linden PG&E Ductbank Conflict Reference: R20 DL JT4.0 PG&E inspector on site said that instead of going under the high voltage(HV) duct bank, they would prefer to have the conduits cross-over the HV duct bank and then gradually taper to the depth where the conduits are supposed to be. Based on the on-s",
+          "normalized_text": "- offsite - r20 dollar/linden pg&e ductbank conflict created by benny ng with autodesk\u00ae construction cloud\u2122 on feb 14, 2024 at 2:39 project manager pst page 1 of 2 request for information detail #1388.1 offsite - r20 dollar/linden pg&e ductbank conflict reference: r20 dl jt4.0 pg&e inspector on site said that instead of going under the high voltage(hv) duct bank, they would prefer to have the conduits cross-over the hv duct bank and then gradually taper to the depth where the conduits are supposed to be. based on the on-site discussion, the cross-section at the hv duct bank would be as shown in image 1 in the attached. after crossing the ductbank the conduits would gradually lower till the cross-section is shown in image 2. please confirm the revised conduit layout is acceptable.",
+          "raw_text": "- Offsite - R20 Dollar/Linden PG&E Ductbank Conflict Created by Benny Ng with Autodesk\u00ae Construction Cloud\u2122 on Feb 14, 2024 at 2:39 PM PST Page 1 of 2 RFI detail #1388.1 Offsite - R20 Dollar/Linden PG&E Ductbank  Conflict\n\nReference: R20 DL JT4.0 \nPG&E inspector on site said that instead of going under the high voltage(HV) duct bank, they would prefer to have \nthe conduits cross-over the HV duct bank and then gradually taper to the depth where the conduits are supposed \nto be. \nBased on the on-site discussion, the cross-section at the HV duct bank would be as shown in Image 1 in the \nattached. After crossing the ductbank the conduits would gradually lower till the cross-section is shown in Image \n2. \nPlease confirm the revised conduit layout is acceptable.",
+          "resolution_text": null,
+          "trade": "electrical",
+          "phase": "mep_rough_in"
+        }
+      },
+      {
+        "query": {
+          "id": "f75ead8a-871c-4bfd-abc0-ce1fd9109cdc",
+          "project": "Southline Office",
+          "ref": "RFI-0576.4",
+          "text": "PSD Steel Beam Electrical Penetration Clarifications_R4 4 PSD Steel Beam Electrical Penetration Clarifications_R4 Reference: SLP1 - RFI 0576.4 - PSD Steel Beam Electrical Penetration Clarifications_R4 Background: After the submittal review for the PSD elevator and stair tower, Glazier Steel had follow-up questions. To avoid any delays in material procurement, DPR started a",
+          "trade": "structural",
+          "phase": "structure"
+        },
+        "candidate": {
+          "id": "b1c3644c-2478-4a53-85fa-db8d5f085900",
+          "project": "Silicon Valley Office",
+          "ref": "RFI-48",
+          "text": "New Beam Connection at GL 5-C (Lee's RFI 015)",
+          "trade": "structural",
+          "phase": "structure",
+          "resolution": "Jason Hsia (GPLA Structural Engineers): The new connection plate with studs is to be welded on the existing \ncolumn cap plate to the sloped plate. The connection plate would be approximately 6 1/2\" south from the location \nshown in details. The weld remains the same to the existing beam top flange and to the existing beams/plates."
+        },
+        "reasoning": null,
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0576.4",
+          "question_text": "PSD Steel Beam Electrical Penetration Clarifications_R4 4 PSD Steel Beam Electrical Penetration Clarifications_R4 Reference: SLP1 - RFI 0576.4 - PSD Steel Beam Electrical Penetration Clarifications_R4 Background: After the submittal review for the PSD elevator and stair tower, Glazier Steel had follow-up questions. To avoid any delays in material procurement, DPR started a",
+          "normalized_text": "- psd structural steel structural steel electrical penetration clarifications_r4 created by luis teran with autodesk\u00ae construction cloud\u2122 on apr 29, 2024 at 8:10 am pdt page 1 of 2 request for information detail #0576.4 psd structural steel structural steel electrical penetration clarifications_r4 reference: - slp1 - request for information 0576.4 - psd structural steel structural steel electrical penetration clarifications_r4 background: after the submittal review for the psd elevator and stair tower, glazier structural steel had follow-up questions. to avoid any delays in material procurement, dpr started a live bluebeam session in which gpla, des, and dpr can work on the follow-up rfis that glazier had post submittal review. once the material was ordered, dpr general contractor was to submit these rfis as confirming rfis. the rfis in this package include only items pertaining to penetrations in the structural steel beams for mepf conduits. question: this is confirming request for information. please confirm that all the responses provided by gpla are still acceptable.",
+          "raw_text": "- PSD Steel Beam Electrical Penetration Clarifications_R4 Created by Luis Teran with Autodesk\u00ae Construction Cloud\u2122 on Apr 29, 2024 at 8:10 AM PDT Page 1 of 2 RFI detail #0576.4 PSD Steel Beam Electrical Penetration  Clarifications_R4\n\nReference:\n- SLP1 - RFI 0576.4 - PSD Steel Beam Electrical Penetration Clarifications_R4\nBackground: After the submittal review for the PSD elevator and stair tower, Glazier Steel had follow-up \nquestions. To avoid any delays in material procurement, DPR started a live bluebeam session in which GPLA, DES, \nand DPR can work on the follow-up RFIs that Glazier had post submittal review. Once the material was ordered, \nDPR GC was to submit these RFIs as confirming RFIs. The RFIs in this package include only items pertaining to \npenetrations in the steel beams for MEPF conduits.\nQuestion: This is confirming RFI. Please confirm that all the responses provided by GPLA are still acceptable.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "structural",
+          "phase": "structure"
+        },
+        "candidate_full": {
+          "project": "Silicon Valley Office",
+          "ref": "RFI-48",
+          "question_text": "New Beam Connection at GL 5-C (Lee's RFI 015)",
+          "normalized_text": "new structural steel connection at gl 5-c (lee's request for information 015) refer to the new structural steel connection 17/e1603 (see attached). if the sloped plate (shown in red) is removed to the structural steel flange, there will be an approx. 1-1/2\u201d gap in between the sloped plate and flat plate (shown in blue) per attached markup. suggested answer please confirm if the new connection stud plate is to be welded to the existing flat plate (shown in blue in the attachment). if not, please provide filler details for the groove weld.",
+          "raw_text": "New Beam Connection at GL 5-C (Lee's RFI 015)\n\nRefer to the new beam connection 17/E1603 (see attached). If the sloped plate (shown in red) is removed to the \ncolumn flange, there will be an approx. 1-1/2\u201d gap in between the sloped plate and flat plate (shown in blue) per \nattached markup.\nSuggested answer\nPlease confirm if the new connection stud plate is to be welded to the existing flat plate (shown in blue in the \nattachment). If not, please provide filler details for the groove weld.",
+          "resolution_text": "Jason Hsia (GPLA Structural Engineers): The new connection plate with studs is to be welded on the existing \ncolumn cap plate to the sloped plate. The connection plate would be approximately 6 1/2\" south from the location \nshown in details. The weld remains the same to the existing beam top flange and to the existing beams/plates.",
+          "trade": "structural",
+          "phase": "structure"
+        }
+      },
+      {
+        "query": {
+          "id": "2d3f9084-6e99-410e-aed7-6e9f11a44310",
+          "project": "Southline Office",
+          "ref": "RFI-1048",
+          "text": "Ref: A4.01 (B1 SI-05 dated 07.14.23), SC2.01 (B1 SI-06 dated 10.12.23) See SC2.01, we need three pull boxes at the lobby area for future security devices. Please confirm that it is acceptable to have 2' x 1.5' removable panel at the wood slat ceiling to access the pull boxes. The size of the pull box is 12\" x 12\".",
+          "trade": "architectural, electrical",
+          "phase": "mep_trim_out"
+        },
+        "candidate": {
+          "id": "016ecd12-624f-4ae9-9d0b-7632075da4e4",
+          "project": "Intuitive Surgical MOB",
+          "ref": "RFI-56",
+          "text": "Dimensions to Exit Signs in Open Ceilings",
+          "trade": "architectural, electrical",
+          "phase": "mep_trim_out",
+          "resolution": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW: Align to light fixtures and mount with a \nminimum 4\" clear off any adjacent\nfixture. Center in hallway or over door where possible, locate in full view of hallway\nwhere not possible to center.\nH.Travis 09.03.24"
+        },
+        "reasoning": "The historical issue pertains to the placement of exit signs in ceilings, while the new observation focuses on the installation of pull boxes for security devices, making them fundamentally different issues with no useful connection.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1048",
+          "question_text": "Ref: A4.01 (B1 SI-05 dated 07.14.23), SC2.01 (B1 SI-06 dated 10.12.23) See SC2.01, we need three pull boxes at the lobby area for future security devices. Please confirm that it is acceptable to have 2' x 1.5' removable panel at the wood slat ceiling to access the pull boxes. The size of the pull box is 12\" x 12\".",
+          "normalized_text": "- b1 removable panel at lobby wood slat ceiling created by pey mun shum with autodesk\u00ae construction cloud\u2122 on nov 15, 2023 at 12:58 project manager pst page 1 of 2 request for information detail #1048 b1 removable panel at lobby wood slat ceiling ref: a4.01 (b1 si-05 dated 07.14.23), sc2.01 (b1 si-06 dated 10.12.23) see sc2.01, we need three pull boxes at the lobby area for future security devices. please confirm that it is acceptable to have 2' x 1.5' removable panel at the wood slat ceiling to access the pull boxes. the size of the pull box is 12\" x 12\".",
+          "raw_text": "- B1 Removable Panel at Lobby Wood Slat Ceiling Created by Pey Mun Shum with Autodesk\u00ae Construction Cloud\u2122 on Nov 15, 2023 at 12:58 PM PST Page 1 of 2 RFI detail #1048 B1 Removable Panel at Lobby Wood Slat Ceiling\n\nRef: A4.01 (B1 SI-05 dated 07.14.23), SC2.01 (B1 SI-06 dated 10.12.23)\nSee SC2.01, we need three pull boxes at the lobby area for future security devices. Please confirm that it is \nacceptable to have 2' x 1.5' removable panel at the wood slat ceiling to access the pull boxes. The size of the pull \nbox is 12\" x 12\".",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural, electrical",
+          "phase": "mep_trim_out"
+        },
+        "candidate_full": {
+          "project": "Intuitive Surgical MOB",
+          "ref": "RFI-56",
+          "question_text": "Dimensions to Exit Signs in Open Ceilings",
+          "normalized_text": "dimensions to exit signs in open ceilings please provide dimensions to exit signs in open ceilings.",
+          "raw_text": "Dimensions to Exit Signs in Open Ceilings\n\nPlease provide dimensions to exit signs in open ceilings.",
+          "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW: Align to light fixtures and mount with a \nminimum 4\" clear off any adjacent\nfixture. Center in hallway or over door where possible, locate in full view of hallway\nwhere not possible to center.\nH.Travis 09.03.24",
+          "trade": "architectural, electrical",
+          "phase": "mep_trim_out"
+        }
+      },
+      {
+        "query": {
+          "id": "43855a6e-4655-4fcc-8dc5-272244f92ad1",
+          "project": "Abbott Alameda Office TI",
+          "ref": "RFI-105",
+          "text": "Abbott Alameda 1420 HBP - Grease Shaft Steel Supports Clash Clarification",
+          "trade": "structural",
+          "phase": "closeout"
+        },
+        "candidate": {
+          "id": "eec859b9-d6f9-4eb6-be31-c84437d56e61",
+          "project": "Southline Office",
+          "ref": "RFI-0551",
+          "text": "Please confirm the vertical DBA bar is to be field welded to the top angle.\nPlease confirm the length of the angle is to be 16\".\nPlease confirm top angle is to be an L6X6X1/2. Also confirm that angle is not galvanized as it will be inside waterproofing.\nDBA to be field welded to bottom bent plate and stub up 8\" with a coupler on top to connect with DBA welded to embed. Please confirm this is acceptable.",
+          "trade": "structural",
+          "phase": "envelope",
+          "resolution": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - May 26, 2023, 11:35 AM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI0551 - B1 L3 Balcony Embed Detail Confirmation.pdf\nSLP1 - RFI-0551 - B1 L3 Balcony Embed Detail Confirmation_Resp.pdf"
+        },
+        "reasoning": "The historical issue pertains to specific details about vertical DBA bar connections and angles, while the new observation involves a clash related to grease shaft steel supports, indicating fundamentally different structural concerns.",
+        "query_full": {
+          "project": "Abbott Alameda Office TI",
+          "ref": "RFI-105",
+          "question_text": "Abbott Alameda 1420 HBP - Grease Shaft Steel Supports Clash Clarification",
+          "normalized_text": "abbott alameda 1420 hbp - grease shaft structural steel supports clash clarification reference: - request for information 105 - abbott alameda 1420 hbp - grease shaft structural steel supports clash clarification - request for information 55 - abbott alameda 1420 hbp - grease duct framing clarifications - attached picture and markup - mas metals request for information 003 following up on request for information#055, it appears that the (n) hss3x2x1/4 will clash with the owsj bridging. dpr/mas metals proposes to cut the bridging where the (n) hss is to be installed, and then weld the bridging back to the hss as shown below. please advise if the proposed detail is acceptable.",
+          "raw_text": "Abbott Alameda 1420 HBP - Grease Shaft Steel  Supports Clash Clarification\n\nReference:\n- RFI 105 - Abbott Alameda 1420 HBP - Grease Shaft Steel Supports Clash Clarification\n- RFI 55 - Abbott Alameda 1420 HBP - Grease Duct Framing Clarifications\n- Attached Picture and Markup\n- MAS Metals RFI 003\nFollowing up on RFI#055, it appears that the (N) HSS3X2X1/4 will clash with the OWSJ bridging. DPR/MAS Metals \nproposes to cut the bridging where the (N) HSS is to be installed, and then weld the bridging back to the HSS as \nshown below. Please advise if the proposed detail is acceptable.",
+          "resolution_text": "Ava Ghiassi (FORGE - 10049724): Please see attached response from Tipping.",
+          "trade": "structural",
+          "phase": "closeout"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0551",
+          "question_text": "Please confirm the vertical DBA bar is to be field welded to the top angle.\nPlease confirm the length of the angle is to be 16\".\nPlease confirm top angle is to be an L6X6X1/2. Also confirm that angle is not galvanized as it will be inside waterproofing.\nDBA to be field welded to bottom bent plate and stub up 8\" with a coupler on top to connect with DBA welded to embed. Please confirm this is acceptable.",
+          "normalized_text": "b1 l3 balcony embed detail confirmation reference: - slp1 - rfi0551 - b1 l3 balcony embed detail confirmation q1: please confirm the vertical dba bar is to be field welded to the top angle. q2: please confirm the length of the angle is to be 16\". q3: please confirm top angle is to be an l6x6x1/2. also confirm that angle is not galvanized as it will be inside waterproofing. q4: dba to be field welded to bottom bent plate and stub up 8\" with a coupler on top to connect with dba welded to embed. please confirm this is acceptable.",
+          "raw_text": "B1 L3 Balcony Embed Detail Confirmation\n\nReference:\n- SLP1 - RFI0551 - B1 L3 Balcony Embed Detail Confirmation\nQ1: Please confirm the vertical DBA bar is to be field welded to the top angle.\nQ2: Please confirm the length of the angle is to be 16\".\nQ3: Please confirm top angle is to be an L6X6X1/2. Also confirm that angle is not galvanized as it will be inside \nwaterproofing.\nQ4: DBA to be field welded to bottom bent plate and stub up 8\" with a coupler on top to connect with DBA welded \nto embed. Please confirm this is acceptable.",
+          "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - May 26, 2023, 11:35 AM PDT\n\u2022\n\u2022\nReferences\nFiles (2)\nSLP1 - RFI0551 - B1 L3 Balcony Embed Detail Confirmation.pdf\nSLP1 - RFI-0551 - B1 L3 Balcony Embed Detail Confirmation_Resp.pdf",
+          "trade": "structural",
+          "phase": "envelope"
+        }
+      },
+      {
+        "query": {
+          "id": "bbde1240-2b22-4fe3-8889-def24f8064c0",
+          "project": "CoreSite Data Center",
+          "ref": "RFI-112.1",
+          "text": "Per RFI #112: Confirmed, gap from the top of framing assembly to the bottom of the RAF floor should not be present. To maintain fire rating at raised elevator sill pony wall, DPR proposes the referenced framing detail markup. Please note, the HSS sheet metal had to shift down by 2 3/4\" in lieu of 2\". Suggested answer Corgan, please confirm the proposed framing detail per the referenced markup is acceptable.",
+          "trade": "architectural",
+          "phase": "preconstruction"
+        },
+        "candidate": {
+          "id": "69fd9440-74eb-4892-81f8-2ea3c33bbbef",
+          "project": "Southline Office",
+          "ref": "RFI-1531",
+          "text": "PSD Loading Dock Paint Confirmation 05 Marked Up Picture in Sheet A4.05 Background: The current design did not clarify any paint to be installed in the loading dock. Question 1: Please confirm the extents of the additional paint in the loading dock as shown in t",
+          "trade": "architectural",
+          "phase": "interior_finishes",
+          "resolution": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached."
+        },
+        "reasoning": "The historical issue pertains to paint confirmation in a loading dock, which does not relate to the framing and fire rating concerns of the new observation regarding the CoreSite Data Center.",
+        "query_full": {
+          "project": "CoreSite Data Center",
+          "ref": "RFI-112.1",
+          "question_text": "Per RFI #112: Confirmed, gap from the top of framing assembly to the bottom of the RAF floor should not be present. To maintain fire rating at raised elevator sill pony wall, DPR proposes the referenced framing detail markup. Please note, the HSS sheet metal had to shift down by 2 3/4\" in lieu of 2\". Suggested answer Corgan, please confirm the proposed framing detail per the referenced markup is acceptable.",
+          "normalized_text": "- elevator pony wall - framing detail - rev.1 request for information detail #112.1 elevator pony wall - framing detail - rev.1 per request for information #112: confirmed, gap from the top of framing assembly to the bottom of the raf floor should not be present. to maintain fire rating at raised elevator sill pony wall, dpr proposes the referenced framing detail markup. please note, the hss ductwork had to shift down by 2 3/4\" in lieu of 2\". suggested answer corgan, please confirm the proposed framing detail per the referenced markup is acceptable.",
+          "raw_text": "- Elevator Pony Wall - Framing Detail - Rev.1 RFI detail #112.1 Elevator Pony Wall - Framing Detail - Rev.1\n\nPer RFI #112:\nConfirmed, gap from the top of framing assembly to the bottom of the RAF floor should not be present.\nTo maintain fire rating at raised elevator sill pony wall, DPR proposes the referenced framing detail markup. \nPlease note, the HSS sheet metal had to shift down by 2 3/4\" in lieu of 2\".\nSuggested answer\nCorgan, please confirm the proposed framing detail per the referenced markup is acceptable.",
+          "resolution_text": "Daniel Showalter (Peoples Associates Structural Engineers, Inc. - 10040833): The proposed detail is structurally \nacceptable.\nAshley Hill (Corgan - 10059759): GC to refer to PASE. Refer to previous REV0 comments - elevator hoistway to \nremain rated with D type partition and no gap. GC to\ncoordinate a UL listed through penetration at fire rated walls or slabs.\nCS - CORGAN - 10.22.25",
+          "trade": "architectural",
+          "phase": "preconstruction"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1531",
+          "question_text": "PSD Loading Dock Paint Confirmation 05 Marked Up Picture in Sheet A4.05 Background: The current design did not clarify any paint to be installed in the loading dock. Question 1: Please confirm the extents of the additional paint in the loading dock as shown in t",
+          "normalized_text": "- psd loading dock paint confirmation created by luis teran with autodesk\u00ae construction cloud\u2122 on apr 18, 2024 at 8:10 am pdt page 1 of 2 request for information detail #1531 psd loading dock paint confirmation reference: - slp1 - request for information 1531 - psd loading dock paint confirmation - sheet a4.05 - marked up picture in sheet a4.05 background: the current design did not clarify any paint to be installed in the loading dock. question 1: please confirm the extents of the additional paint in the loading dock as shown in the mark up. question 2: please confirm this is to be texcote and clarify the color.",
+          "raw_text": "- PSD Loading Dock Paint Confirmation Created by Luis Teran with Autodesk\u00ae Construction Cloud\u2122 on Apr 18, 2024 at 8:10 AM PDT Page 1 of 2 RFI detail #1531 PSD Loading Dock Paint Confirmation\n\nReference:\n- SLP1 - RFI 1531 - PSD Loading Dock Paint Confirmation\n- Sheet A4.05 \n- Marked Up Picture in Sheet A4.05\nBackground: The current design did not clarify any paint to be installed in the loading dock. \nQuestion 1: Please confirm the extents of the additional paint in the loading dock as shown in the mark up.\nQuestion 2: Please confirm this is to be texcote and clarify the color.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural",
+          "phase": "interior_finishes"
+        }
+      },
+      {
+        "query": {
+          "id": "9d20d453-1523-489a-84e4-6576f6c5b79d",
+          "project": "Southline Office",
+          "ref": "RFI-1123.1",
+          "text": "PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1 1 PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1 Reference: SLP1 - RFI1123.1 - PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1 SLP1 - RFI1123 - PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation Post on: A2.05 Background: Per discussions with Cable Moore and the DPR General Te",
+          "trade": "architectural, structural",
+          "phase": "structure"
+        },
+        "candidate": {
+          "id": "7190aa12-4b49-4632-ad0d-d721c72d4811",
+          "project": "Southline Office",
+          "ref": "RFI-0733",
+          "text": "B1 Air Handler Room Floating Slab",
+          "trade": "architectural, structural",
+          "phase": "structure",
+          "resolution": "Please see attached."
+        },
+        "reasoning": "The historical issue regarding the air handler room floating slab does not address the vehicle barrier cable rail layout confirmation, indicating a lack of relevant connection between the two issues.",
+        "query_full": {
+          "project": "Southline Office",
+          "ref": "RFI-1123.1",
+          "question_text": "PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1 1 PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1 Reference: SLP1 - RFI1123.1 - PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1 SLP1 - RFI1123 - PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation Post on: A2.05 Background: Per discussions with Cable Moore and the DPR General Te",
+          "normalized_text": "- psd tier 5 vehicle barrier cable rail layout confirmation_r1 created by luis teran with autodesk\u00ae construction cloud\u2122 on feb 14, 2024 at 3:11 project manager pst page 1 of 2 request for information detail #1123.1 psd tier 5 vehicle barrier cable rail layout confirmation_r1 reference: - slp1 - rfi1123.1 - psd tier 5 vehicle barrier cable rail layout confirmation_r1 - slp1 - rfi1123 - psd tier 5 vehicle barrier cable rail layout confirmation - post on: a2.05 background: per discussions with cable moore and the dpr general team, vehicular cable rail embeds are no longer needed on the ramp between tiers 5 and 4 with the exception of one location (see attached sketch). a vehicular cable rail will be needed on the ramp side of gb between g13 and g14 where a concrete opening occurs. these embeds were not originally shown in request for information 1123. at this location, the shear wall is already poured up to the tier 5 concrete and there are pt tendons terminate within the center of the g13 structural steel. question 1: please confirm it is acceptable to use a post installed anchor in lieu of an embed at the location shown. question 2: please confirm it is acceptable to shift this embed plan west 1'3\" to avoid pt tendons that terminate within structural steel. this embed would be installed after the shear wall is poured.",
+          "raw_text": "- PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1 Created by Luis Teran with Autodesk\u00ae Construction Cloud\u2122 on Feb 14, 2024 at 3:11 PM PST Page 1 of 2 RFI detail #1123.1 PSD Tier 5 Vehicle Barrier Cable Rail Layout  Confirmation_R1\n\nReference: \n- SLP1 - RFI1123.1 - PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation_R1\n- SLP1 - RFI1123 - PSD Tier 5 Vehicle Barrier Cable Rail Layout Confirmation\n- Post on: A2.05\nBackground: Per discussions with Cable Moore and the DPR General Team, vehicular cable rail embeds are no \nlonger needed on the ramp between tiers 5 and 4 with the exception of one location (see attached sketch). A \nvehicular cable rail will be needed on the ramp side of GB between G13 and G14 where a slab opening occurs. \nThese embeds were not originally shown in RFI 1123. At this location, the shear wall is already poured up to the \ntier 5 slab and there are PT tendons terminate within the center of the G13 column. \nQuestion 1: Please confirm it is acceptable to use a post installed anchor in lieu of an embed at the location \nshown.\nQuestion 2: Please confirm it is acceptable to shift this embed plan west 1'3\" to avoid PT tendons that terminate \nwithin column. This embed would be installed after the shear wall is poured.",
+          "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+          "trade": "architectural, structural",
+          "phase": "structure"
+        },
+        "candidate_full": {
+          "project": "Southline Office",
+          "ref": "RFI-0733",
+          "question_text": "B1 Air Handler Room Floating Slab",
+          "normalized_text": "b1 air handler room floating concrete ref: a4.12, a2.07s, 16/s5.51, \"building 1 & building 7 updated acoustic heating ventilation and air conditioning review\" dated 4/7/2022 the saulter's acoustic report dated 4/7/2022 recommends using a kinetics rim floating floor system with 2-inch pads and 4-inch concrete concrete for the air handler room for sound and vibration mitigation. detail 16/s5.51 was added in si-04 dated 04/19/2023, first calls out the isolated concrete in the drawings. please advise on all of the following: 1) please provide a specification for the required products. 2) the roof structural steel is currently sloped. after consulting with the local kinetics representatives, the product is required to be on a flat and level surface. please advise on a solution to provide the vibration and sound mitigation needs per the acoustic report, and meeting the already installed structure.",
+          "raw_text": "B1 Air Handler Room Floating Slab\n\nREF: A4.12, A2.07S, 16/S5.51, \"Building 1 & Building 7 Updated Acoustic HVAC Review\" dated 4/7/2022\nThe Saulter's Acoustic report dated 4/7/2022 recommends using a Kinetics RIM floating floor system with 2-inch \npads and 4-inch concrete slab for the Air Handler Room for sound and vibration mitigation. Detail 16/S5.51 was \nadded in SI-04 dated 04/19/2023, first calls out the isolated slab in the drawings. Please advise on all of the \nfollowing:\n1) Please provide a specification for the required products.\n2) The roof steel is currently sloped. After consulting with the local Kinetics representatives, the product is \nrequired to be on a flat and level surface. Please advise on a solution to provide the vibration and sound \nmitigation needs per the Acoustic report, and meeting the already installed structure.",
+          "resolution_text": "Please see attached.",
+          "trade": "architectural, structural",
+          "phase": "structure"
+        }
+      }
+    ]
+  }
+}

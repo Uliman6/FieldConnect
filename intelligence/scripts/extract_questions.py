@@ -27,29 +27,47 @@ def extract_question_from_rfi_text(raw_text: str) -> str:
     """
     Extract the actual question/issue from messy RFI text.
 
-    RFI text typically contains:
-    - Header/title
-    - "Created by X with Autodesk..." metadata
-    - Reference drawings/docs
-    - The actual QUESTION
+    RFI PDFs from Autodesk Construction Cloud have this structure:
+    - Autodesk header/metadata
+    - "RFI detail #XXX Title"
+    - Status, Created on, etc.
+    - **Question** section header (this is what we want - EVERYTHING under it)
     - Official response
+    - Impact section
 
-    We want to extract the actual question/issue.
+    We want to extract EVERYTHING under the "Question" section header,
+    including references, background, context, and the actual question.
+    The "Question:" marker inside is user-typed and inconsistent.
     """
     if not raw_text:
         return ""
 
-    # Strategy 1: Look for "Question" section marker
-    question_match = re.search(
-        r'Question\s*\n(.*?)(?=Official response|References|Impact|Attachments|\Z)',
+    # Strategy 1: Find "Question" section header and grab EVERYTHING until
+    # "Official response" or "Impact" or end of text.
+    # This captures all content: references, background, context, and the actual question.
+    question_section_match = re.search(
+        r'\bQuestion\s*\n(.*?)(?=\n\s*Official response|\n\s*Impact\s*\n|\n\s*Cost impact|\Z)',
         raw_text,
         re.DOTALL | re.IGNORECASE
     )
-    if question_match:
-        question = question_match.group(1).strip()
-        # Clean up the question text
+    if question_section_match:
+        question = question_section_match.group(1).strip()
         question = clean_extracted_text(question)
-        if len(question) > 20:
+        if len(question) > 30:
+            return question
+
+    # Strategy 1B: Fallback for database raw_text that may not have "Question" header
+    # Look for content after title that starts with Reference/Background/REF patterns
+    # These indicate the question section content
+    content_start_match = re.search(
+        r'(?:^|\n\n)((?:Reference|Referenced|REF|Background|Post on|Question:)[\s\S]*?)(?=\n\s*Official response|\n\s*Impact\s*\n|\n\s*Cost impact|\Z)',
+        raw_text,
+        re.IGNORECASE
+    )
+    if content_start_match:
+        question = content_start_match.group(1).strip()
+        question = clean_extracted_text(question)
+        if len(question) > 50:
             return question
 
     # Strategy 2: Look for Q1:, Q2:, etc. markers (common in multi-part RFIs)
@@ -162,12 +180,14 @@ async def main():
     except Exception as e:
         print(f"  Note: {e}")
 
-    # Step 2: Get all items that need question extraction
+    # Step 2: Get all RFI items that need question extraction
+    # Re-process ALL RFIs to ensure we have full question section content
     print("\nFetching items to process...")
     items = await conn.fetch("""
-        SELECT id, source_type, raw_text
+        SELECT id, source_type, raw_text, question_text
         FROM intelligence.items
-        WHERE question_text IS NULL OR question_text = ''
+        WHERE source_type = 'rfi'
+          AND raw_text IS NOT NULL
     """)
     print(f"  Found {len(items)} items to process")
 

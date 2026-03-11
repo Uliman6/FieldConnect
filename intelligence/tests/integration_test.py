@@ -22,6 +22,27 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 load_dotenv()
 
+
+def get_best_text(item: dict, max_len: int = 500) -> str:
+    """
+    Get the best text representation of an item.
+    Prefers normalized_text when question_text is just a short title.
+    """
+    question = item.get('question_text') or ''
+    normalized = item.get('normalized_text') or ''
+    raw = item.get('raw_text') or ''
+
+    # If question_text is short (likely just a title), prefer normalized_text
+    if len(question) < 60 and len(normalized) > len(question):
+        return normalized[:max_len]
+    elif question:
+        return question[:max_len]
+    elif normalized:
+        return normalized[:max_len]
+    else:
+        return raw[:max_len]
+
+
 # ============================================================
 # CONFIGURATION — Update these before running
 # ============================================================
@@ -76,6 +97,20 @@ TEST_OBSERVATIONS = [
         "expected_trades": ["mechanical piping"],
         "expected_entities": ["plumbing", "structural drawings"],
         "notes": "Should match coordination issues between trades"
+    },
+    {
+        "text": "Please provide updated furniture drawings to coordinate power pole location",
+        "phase": "mep_rough_in",
+        "expected_trades": ["electrical, furniture"],
+        "expected_entities": ["electrical", "furniture"],
+        "notes": "Any furniture related scope"
+    },
+    {
+        "text": "IMP metal facade penals have been dented. Please advise a fix",
+        "phase": "exterior_skin",
+        "expected_trades": ["facade, exterior"],
+        "expected_entities": ["facade", "exterior","structure"],
+        "notes": "Any facade related scope"
     },
     # -------------------------------------------------------
     # ADD YOUR OWN TEST OBSERVATIONS BELOW
@@ -198,6 +233,7 @@ async def run_tests():
         from extraction.regex_patterns import extract_all_regex_entities
         from similarity.embeddings import generate_embedding, generate_embedding_async, build_embedding_input
         from similarity.search import search_similar, search_and_rank, get_candidates_with_embeddings
+        from similarity.tiered_search import tiered_search_and_rank
         from similarity.ranking import rank_candidates, calculate_phase_score, PHASE_ORDER
     except ImportError as e:
         print(f"Import error: {e}")
@@ -325,7 +361,7 @@ async def run_tests():
         content += f"""
 <div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
     <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">{item['source_type']} | Phase: {item['project_phase'] or 'unknown'} | Trade: {item['trade_category'] or 'unknown'}</div>
-    <div style="margin-bottom:8px;">{(item.get('question_text') or item['raw_text'])[:300]}{'...' if len(item.get('question_text') or item['raw_text'] or '') > 300 else ''}</div>
+    <div style="margin-bottom:8px;">{get_best_text(item, 300)}{'...' if len(get_best_text(item, 300)) >= 300 else ''}</div>
     <div><strong>Entities ({len(entities)}):</strong> {entity_tags if entity_tags else '<em>None extracted</em>'}</div>
 </div>"""
 
@@ -422,7 +458,8 @@ async def run_tests():
             for i, r in enumerate(results):
                 sim = r.get('semantic_score', 0)
                 score_class = "score-high" if sim > 0.7 else "score-medium" if sim > 0.5 else "score-low"
-                text_preview = (r.get('question_text') or r.get('raw_text') or '')[:120] + ('...' if len(r.get('question_text') or r.get('raw_text') or '') > 120 else '')
+                best_text = get_best_text(r, 120)
+                text_preview = best_text + ('...' if len(best_text) >= 120 else '')
                 content += f"""
         <tr>
             <td>{i+1}</td>
@@ -460,25 +497,30 @@ async def run_tests():
                 if matches:
                     query_entities[etype] = {m.get("value", "").lower() for m in matches}
 
+            # Also get AI-extracted entities for trade info
+            ai_entities = await extract_entities_with_ai(normalized)
+            query_trade = ai_entities.get("primary_trade") if ai_entities else None
+
             # Build embedding
             embedding_input = build_embedding_input(normalized, project_phase=obs.get("phase"))
             embedding = await generate_embedding_async(embedding_input)
 
-            # Use our search_and_rank function with keyword matching
-            ranked = await search_and_rank(
+            ranked = await tiered_search_and_rank(
                 query_embedding=embedding,
                 company_id=COMPANY_ID,
-                query_text=normalized,  # Pass text for keyword extraction
+                query_text=normalized,
+                query_trade=query_trade,
                 top_k=5,
-                min_semantic_score=0.2,
                 min_final_score=0.2,
                 query_phase=obs.get("phase"),
-                query_entities=query_entities
+                query_entities=query_entities,
+                debug=True
             )
 
+            trade_display = f'<span class="tag" style="background:#fef3c7;color:#92400e;">{query_trade}</span>' if query_trade else ''
             content += f"""
 <div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
-    <div style="margin-bottom:12px;">🎤 <strong>"{obs['text']}"</strong> <span class="tag tag-phase">{obs['phase']}</span></div>
+    <div style="margin-bottom:12px;">🎤 <strong>"{obs['text']}"</strong> <span class="tag tag-phase">{obs['phase']}</span> {trade_display}</div>
 """
             for i, r in enumerate(ranked[:5]):
                 final = r.get('final_score', 0)
@@ -492,10 +534,16 @@ async def run_tests():
                 tier = "🔴 HIGH" if final > 0.80 else "🟡 MEDIUM" if final > 0.60 else "🔵 LOW" if final > 0.40 else "⚪ BELOW THRESHOLD"
                 kw_display = ", ".join(matched_keywords[:3]) if matched_keywords else "none"
 
+                # Get tier info if available
+                result_tier = r.get('tier', '?')
+                tier_boost = r.get('tier_boost', 0)
+                tier_label = f"T{result_tier}" if result_tier != '?' else "?"
+
                 content += f"""
     <div class="alert-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <span class="score {score_class}">{final:.3f}</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier {tier_label} (+{tier_boost:.2f})</span>
             <span style="font-size:12px;">{tier}</span>
         </div>
         <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
@@ -507,7 +555,7 @@ async def run_tests():
         <div style="font-size:12px;color:#6b7280;margin:2px 0;">
             Project Phase: {r.get('project_phase', '—')} | Trade: {r.get('trade_category', '—')} | Type: {r.get('source_type', '—')}
         </div>
-        <div style="margin:8px 0;font-size:14px;">{(r.get('question_text') or r.get('normalized_text') or r.get('raw_text') or '')[:200]}{'...' if len(r.get('question_text') or r.get('normalized_text') or r.get('raw_text') or '') > 200 else ''}</div>
+        <div style="margin:8px 0;font-size:14px;">{get_best_text(r)[:200]}{'...' if len(get_best_text(r)) > 200 else ''}</div>
         {f"<div style='font-size:12px;color:#dc2626;margin-top:4px;'>Cost impact: ${r['cost_impact']:,.0f}</div>" if r.get('cost_impact') else ""}
         {f"<div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>" if r.get('resulted_in_co') else ""}
     </div>"""
@@ -587,7 +635,7 @@ async def run_tests():
     if orphan_items:
         content += "<h3>Items With Zero Entities (first 5)</h3><p>These items had nothing extracted. Check if the text is too short or if extraction missed them.</p>"
         for item in orphan_items:
-            content += f'<div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[{item["source_type"]}] {(item.get("question_text") or item.get("raw_text") or "")[:200]}</div>'
+            content += f'<div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[{item["source_type"]}] {get_best_text(item, 200)}</div>'
 
     report.add_section("8. Entity Coverage Analysis", content, "review")
 

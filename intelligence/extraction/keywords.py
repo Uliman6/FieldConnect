@@ -1,157 +1,102 @@
 """
 Keyword extraction for construction text.
 
-Extracts domain-specific keywords that are critical for matching:
-- Trade keywords (curtainwall, plumbing, electrical, concrete, etc.)
-- Material keywords (drywall, rebar, mullion, ductwork, etc.)
-- Issue keywords (conflict, leak, crack, damage, missing, etc.)
-- System keywords (smoke detector, fire alarm, sprinkler, HVAC, etc.)
+Keywords are extracted from the actual database content using build_keyword_index.py.
+This ensures we match on terms that actually appear in the data, not a manually
+curated list that will always be incomplete.
+
+The keyword index is loaded from data/keyword_index.json which is built by
+analyzing all RFI/punch list text in the database.
 """
 
+import json
 import re
+from pathlib import Path
 from typing import Optional
 
-# Trade keywords - these are critical for matching
-TRADE_KEYWORDS = {
-    # Envelope/Glazing
-    "curtainwall", "curtain wall", "glazing", "glass", "mullion", "storefront",
-    "window", "fenestration", "spandrel", "vision glass", "IGU",
-
-    # Concrete
-    "concrete", "rebar", "reinforcement", "slab", "foundation", "footing",
-    "grade beam", "CMU", "masonry", "shotcrete", "pour", "formwork",
-    "retaining wall", "shear wall",
-
-    # Structural
-    "structural steel", "steel beam", "column", "joist", "decking",
-    "HSS", "W-beam", "connection", "embed", "anchor",
-
-    # MEP - Mechanical
-    "HVAC", "ductwork", "duct", "VAV", "AHU", "diffuser", "grille",
-    "mechanical", "chiller", "boiler", "RTU", "exhaust fan",
-
-    # MEP - Electrical
-    "electrical", "conduit", "panel", "switchgear", "transformer",
-    "lighting", "receptacle", "junction box", "wire", "circuit",
-
-    # MEP - Plumbing
-    "plumbing", "pipe", "drain", "waste", "vent", "water",
-    "sanitary", "storm", "domestic water", "hot water", "cold water",
-    "hose bibb", "floor drain", "roof drain", "piping",
-
-    # Fire Protection
-    "fire protection", "sprinkler", "fire alarm", "smoke detector",
-    "fire damper", "fire caulk", "firestopping", "fire rating",
-    "fire marshal", "fire department", "smoke control",
-
-    # Finishes
-    "drywall", "gypsum", "GWB", "paint", "flooring", "tile",
-    "ceiling", "ACT", "carpet", "VCT", "epoxy", "millwork",
-    "casework", "countertop",
-
-    # Roofing/Waterproofing
-    "roofing", "membrane", "flashing", "waterproofing", "caulking",
-    "sealant", "expansion joint", "roof drain",
-
-    # Doors/Hardware
-    "door", "hardware", "frame", "closer", "lockset", "hinges",
-    "automatic door", "overhead door", "rolling door",
-
-    # Conveying
-    "elevator", "escalator", "lift", "hoist",
-}
-
-# Material keywords
-MATERIAL_KEYWORDS = {
-    "rebar", "steel", "concrete", "glass", "aluminum", "copper",
-    "PVC", "cast iron", "galvanized", "stainless", "brass",
-    "wood", "plywood", "MDF", "laminate", "granite", "marble",
-    "ceramic", "porcelain", "rubber", "EPDM", "TPO", "adhesive",
-    "grout", "mortar", "insulation", "fiberglass", "foam",
-    "gypsum board", "cement board", "metal panel", "ACM",
-}
-
-# Issue/problem keywords - critical for understanding the nature of the issue
-ISSUE_KEYWORDS = {
-    "conflict", "clash", "interference", "coordination",
-    "missing", "omitted", "not shown", "unclear",
-    "damage", "damaged", "defect", "defective",
-    "leak", "leaking", "water intrusion", "moisture",
-    "crack", "cracking", "spalling",
-    "alignment", "tolerance", "out of plumb", "out of level",
-    "incorrect", "wrong", "error", "discrepancy",
-    "RFI", "clarification", "confirmation",
-    "change", "revision", "modification",
-}
-
-# Location keywords - help match by area
-LOCATION_KEYWORDS = {
-    # Levels/Floors
-    "level", "floor", "tier", "roof", "basement", "penthouse",
-    "rooftop", "mezzanine", "ground floor",
-    # Areas/Rooms
-    "lobby", "corridor", "hallway", "stairwell", "stair",
-    "elevator", "shaft", "mechanical room", "electrical room",
-    "restroom", "bathroom", "kitchen", "break room",
-    "office", "conference room", "storage", "closet",
-    "entryway", "entrance", "entry", "exit", "loading dock",
-    # Directions
-    "exterior", "interior", "north", "south", "east", "west",
-    "northeast", "northwest", "southeast", "southwest",
-    "north side", "south side", "east side", "west side",
-    # Building elements
-    "wing", "tower", "atrium", "courtyard",
-    # Parking
-    "parking", "garage", "parking structure",
-}
-
-# System/Equipment keywords
-SYSTEM_KEYWORDS = {
-    "smoke detector", "fire alarm", "sprinkler head", "fire extinguisher",
-    "exit sign", "emergency light", "security camera", "access control",
-    "thermostat", "sensor", "damper", "valve", "pump",
-    "generator", "UPS", "switchboard", "panelboard",
-    "ceiling tile", "light fixture", "diffuser",
-}
-
-# Compile all keywords into categories
-ALL_KEYWORD_SETS = {
-    "trade": TRADE_KEYWORDS,
-    "material": MATERIAL_KEYWORDS,
-    "issue": ISSUE_KEYWORDS,
-    "location": LOCATION_KEYWORDS,
-    "system": SYSTEM_KEYWORDS,
-}
+# Load keyword index from data file
+_KEYWORD_INDEX = None
 
 
-def extract_keywords(text: str) -> dict[str, list[str]]:
+def _load_keyword_index() -> dict:
+    """Load keyword index from JSON file."""
+    global _KEYWORD_INDEX
+    if _KEYWORD_INDEX is not None:
+        return _KEYWORD_INDEX
+
+    index_path = Path(__file__).parent.parent / "data" / "keyword_index.json"
+    if index_path.exists():
+        with open(index_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            _KEYWORD_INDEX = {
+                "unigrams": set(data.get("unigrams", {}).keys()),
+                "bigrams": set(data.get("bigrams", {}).keys()),
+                "trigrams": set(data.get("trigrams", {}).keys()),
+                "all_keywords": set(data.get("all_keywords", [])),
+            }
+    else:
+        # Fallback to empty index if file doesn't exist
+        _KEYWORD_INDEX = {
+            "unigrams": set(),
+            "bigrams": set(),
+            "trigrams": set(),
+            "all_keywords": set(),
+        }
+
+    return _KEYWORD_INDEX
+
+
+def get_keyword_index() -> dict:
+    """Get the loaded keyword index."""
+    return _load_keyword_index()
+
+
+def tokenize(text: str) -> list[str]:
+    """Tokenize text into lowercase words."""
+    if not text:
+        return []
+    # Remove special characters, keep alphanumeric and spaces
+    text = re.sub(r'[^\w\s\-/]', ' ', text.lower())
+    # Split on whitespace
+    tokens = text.split()
+    return [t for t in tokens if len(t) > 1]
+
+
+def extract_ngrams(tokens: list[str], n: int) -> list[str]:
+    """Extract n-grams from token list."""
+    if len(tokens) < n:
+        return []
+    return [" ".join(tokens[i:i+n]) for i in range(len(tokens) - n + 1)]
+
+
+def extract_keywords(text: str) -> set[str]:
     """
-    Extract construction keywords from text.
+    Extract keywords from text using the data-driven keyword index.
 
     Returns:
-        Dict with categories as keys and lists of found keywords as values
+        Set of keywords found in the text
     """
     if not text:
-        return {}
+        return set()
 
-    text_lower = text.lower()
-    found = {}
+    index = _load_keyword_index()
+    tokens = tokenize(text)
+    found = set()
 
-    for category, keywords in ALL_KEYWORD_SETS.items():
-        matches = []
-        for keyword in keywords:
-            # Use word boundary matching for single words
-            # For multi-word phrases, just check if they're in the text
-            if " " in keyword:
-                if keyword in text_lower:
-                    matches.append(keyword)
-            else:
-                pattern = rf'\b{re.escape(keyword)}\b'
-                if re.search(pattern, text_lower):
-                    matches.append(keyword)
+    # Check unigrams
+    for token in tokens:
+        if token in index["unigrams"]:
+            found.add(token)
 
-        if matches:
-            found[category] = matches
+    # Check bigrams
+    for bigram in extract_ngrams(tokens, 2):
+        if bigram in index["bigrams"]:
+            found.add(bigram)
+
+    # Check trigrams
+    for trigram in extract_ngrams(tokens, 3):
+        if trigram in index["trigrams"]:
+            found.add(trigram)
 
     return found
 
@@ -159,12 +104,9 @@ def extract_keywords(text: str) -> dict[str, list[str]]:
 def extract_all_keywords_flat(text: str) -> set[str]:
     """
     Extract all keywords as a flat set.
+    Alias for extract_keywords for backward compatibility.
     """
-    keywords = extract_keywords(text)
-    result = set()
-    for category_keywords in keywords.values():
-        result.update(category_keywords)
-    return result
+    return extract_keywords(text)
 
 
 def calculate_keyword_overlap(
@@ -189,7 +131,7 @@ def calculate_keyword_overlap(
             "score": 0.0
         }
 
-    candidate_keywords = extract_all_keywords_flat(candidate_text)
+    candidate_keywords = extract_keywords(candidate_text)
 
     matched = query_keywords & candidate_keywords
 
@@ -197,7 +139,7 @@ def calculate_keyword_overlap(
     query_coverage = match_count / len(query_keywords) if query_keywords else 0
 
     # Score: emphasize having multiple matches
-    # 1 match = 0.3, 2 matches = 0.6, 3+ matches = 0.8+
+    # 1 match = 0.4, 2 matches = 0.7, 3+ matches = 0.85+
     if match_count == 0:
         score = 0.0
     elif match_count == 1:
@@ -205,7 +147,7 @@ def calculate_keyword_overlap(
     elif match_count == 2:
         score = 0.7
     else:
-        score = min(1.0, 0.8 + (match_count - 3) * 0.1)
+        score = min(1.0, 0.85 + (match_count - 3) * 0.05)
 
     return {
         "matched_keywords": list(matched),
@@ -218,33 +160,13 @@ def calculate_keyword_overlap(
 def get_primary_trade(text: str) -> Optional[str]:
     """
     Determine the primary trade from text.
-    Returns the most specific trade keyword found.
+    Returns the first significant keyword found.
     """
     keywords = extract_keywords(text)
-    trade_keywords = keywords.get("trade", [])
-
-    if not trade_keywords:
+    if not keywords:
         return None
-
-    # Prioritize more specific terms
-    priority_order = [
-        "curtainwall", "curtain wall", "glazing",
-        "fire protection", "sprinkler", "fire alarm", "smoke detector",
-        "plumbing", "piping",
-        "electrical", "conduit",
-        "HVAC", "ductwork", "mechanical",
-        "concrete", "rebar", "foundation", "grade beam",
-        "structural steel", "steel beam",
-        "drywall", "gypsum",
-        "roofing", "waterproofing",
-        "elevator",
-    ]
-
-    for term in priority_order:
-        if term in trade_keywords:
-            return term
-
-    return trade_keywords[0] if trade_keywords else None
+    # Return shortest keyword (likely most specific)
+    return min(keywords, key=len)
 
 
 # Quick test
@@ -255,10 +177,13 @@ if __name__ == "__main__":
         "Rebar placement in the foundation wall doesn't match the structural drawings",
         "Plumbing rough-in locations don't match the architectural reflected ceiling plan",
         "Grade beam conflicts with the plumbing routes",
+        "Please provide updated furniture drawings to coordinate power pole location",
+        "IMP metal facade panels have been dented. Please advise a fix",
     ]
 
+    print("Testing keyword extraction with data-driven index:\n")
     for text in test_texts:
-        print(f"\nText: {text}")
         keywords = extract_keywords(text)
+        print(f"Text: {text}")
         print(f"Keywords: {keywords}")
-        print(f"Primary trade: {get_primary_trade(text)}")
+        print()

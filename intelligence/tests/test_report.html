@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Intelligence Layer Test Report</title>
+<style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h1 { color: #1a1a1a; border-bottom: 3px solid #2d6a4f; padding-bottom: 10px; }
+    h2 { color: #2d6a4f; margin-top: 40px; }
+    .section { background: white; border-radius: 8px; padding: 24px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .review { border-left: 4px solid #f59e0b; }
+    .auto { border-left: 4px solid #3b82f6; }
+    .info { border-left: 4px solid #6b7280; }
+    .verdict { margin-top: 16px; padding: 12px; background: #f0f0f0; border-radius: 4px; }
+    .verdict label { font-weight: bold; margin-right: 16px; cursor: pointer; }
+    pre { background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin: 2px; }
+    .tag-trade { background: #dbeafe; color: #1e40af; }
+    .tag-entity { background: #dcfce7; color: #166534; }
+    .tag-phase { background: #fef3c7; color: #92400e; }
+    .score { font-size: 24px; font-weight: bold; }
+    .score-high { color: #16a34a; }
+    .score-medium { color: #f59e0b; }
+    .score-low { color: #dc2626; }
+    .alert-card { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin: 8px 0; }
+    .match-reason { color: #6b7280; font-style: italic; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; }
+    .stat { display: inline-block; text-align: center; padding: 12px 24px; margin: 4px; background: #f9fafb; border-radius: 6px; }
+    .stat-number { font-size: 28px; font-weight: bold; color: #2d6a4f; }
+    .stat-label { font-size: 12px; color: #6b7280; }
+    .notes { background: #fffbeb; padding: 12px; border-radius: 4px; margin-top: 8px; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>Intelligence Layer Test Report</h1>
+<p>Generated: March 09, 2026 at 09:03 PM<br>
+Runtime: 54.0 seconds</p>
+
+<div class="section info">
+<h2>1. Database Health Check</h2>
+
+<div style="display:flex;flex-wrap:wrap;gap:8px;">
+    <div class="stat"><div class="stat-number">3561</div><div class="stat-label">Total Items</div></div>
+    <div class="stat"><div class="stat-number">3561</div><div class="stat-label">With Embeddings</div></div>
+    <div class="stat"><div class="stat-number">8930</div><div class="stat-label">Entities Extracted</div></div>
+    <div class="stat"><div class="stat-number">6</div><div class="stat-label">Projects</div></div>
+    <div class="stat"><div class="stat-number">982</div><div class="stat-label">Schedule Phases</div></div>
+</div>
+<h3>Items by Phase</h3>
+<table><tr><th>Phase</th><th>Count</th></tr>
+<tr><td>structure</td><td>636</td></tr><tr><td>preconstruction</td><td>600</td></tr><tr><td>interior_finishes</td><td>416</td></tr><tr><td>mep_trim_out</td><td>260</td></tr><tr><td>envelope</td><td>216</td></tr><tr><td>foundation</td><td>174</td></tr><tr><td>mep_rough_in</td><td>142</td></tr><tr><td>closeout</td><td>92</td></tr><tr><td>commissioning</td><td>18</td></tr>
+</table>
+<h3>Items by Source Type</h3>
+<table><tr><th>Type</th><th>Count</th></tr>
+<tr><td>rfi</td><td>3412</td></tr><tr><td>punch_list</td><td>149</td></tr>
+</table>
+<h3>Entities by Type</h3>
+<table><tr><th>Entity Type</th><th>Count</th></tr>
+<tr><td>drawing_ref</td><td>5701</td></tr><tr><td>measurement</td><td>1090</td></tr><tr><td>location</td><td>532</td></tr><tr><td>rfi_ref</td><td>408</td></tr><tr><td>material</td><td>317</td></tr><tr><td>trade</td><td>248</td></tr><tr><td>submittal_ref</td><td>214</td></tr><tr><td>spec_section</td><td>123</td></tr><tr><td>company</td><td>110</td></tr><tr><td>brand</td><td>94</td></tr><tr><td>person</td><td>93</td></tr>
+</table>
+
+</div>
+<div class="section review">
+<h2>2. Normalizer Quality</h2>
+<p>Testing normalization of construction terminology. Check that abbreviations expand correctly and trade slang is standardized.</p>
+<div style="margin:12px 0;padding:12px;background:#f9fafb;border-radius:4px;">
+    <strong>Input:</strong> The GC told us the GWB install on Level 3 is behind schedule<br>
+    <strong>Normalized:</strong> the general contractor told us the gypsum wall board install on level 3 is behind schedule<br>
+    <strong>Replacements:</strong> [{'type': 'abbreviation', 'original': 'GWB', 'normalized': 'gypsum wall board', 'count': 1}, {'type': 'abbreviation', 'original': 'GC', 'normalized': 'general contractor', 'count': 1}]<br>
+    <span style="color:#6b7280;font-size:13px;">Expected: should expand GC and GWB</span>
+</div>
+<div style="margin:12px 0;padding:12px;background:#f9fafb;border-radius:4px;">
+    <strong>Input:</strong> Sparkies haven't finished the rough-in on the MEP floor<br>
+    <strong>Normalized:</strong> electrical haven't finished the rough-in on the mechanical electrical plumbing floor<br>
+    <strong>Replacements:</strong> [{'type': 'abbreviation', 'original': 'MEP', 'normalized': 'mechanical electrical plumbing', 'count': 1}, {'type': 'trade', 'original': 'sparkies', 'normalized': 'electrical', 'count': 1}]<br>
+    <span style="color:#6b7280;font-size:13px;">Expected: should normalize sparkies → electrical, expand MEP</span>
+</div>
+<div style="margin:12px 0;padding:12px;background:#f9fafb;border-radius:4px;">
+    <strong>Input:</strong> Hilti anchors failed the pull test at grid C-7<br>
+    <strong>Normalized:</strong> hilti anchors failed the pull test at grid c-7<br>
+    <strong>Replacements:</strong> []<br>
+    <span style="color:#6b7280;font-size:13px;">Expected: should tag Hilti as brand, keep grid reference</span>
+</div>
+<div style="margin:12px 0;padding:12px;background:#f9fafb;border-radius:4px;">
+    <strong>Input:</strong> The painters left Tyvek exposed on the north elevation<br>
+    <strong>Normalized:</strong> the painting and coatings left tyvek exposed on the north elevation<br>
+    <strong>Replacements:</strong> [{'type': 'trade', 'original': 'painters', 'normalized': 'painting and coatings', 'count': 1}]<br>
+    <span style="color:#6b7280;font-size:13px;">Expected: should tag Tyvek as weather resistant barrier</span>
+</div>
+<div style="margin:12px 0;padding:12px;background:#f9fafb;border-radius:4px;">
+    <strong>Input:</strong> CO #12 for the curtainwall mullion redesign was $45K<br>
+    <strong>Normalized:</strong> change order #12 for the curtainwall curtainwall redesign was $45k<br>
+    <strong>Replacements:</strong> [{'type': 'abbreviation', 'original': 'CO', 'normalized': 'change order', 'count': 1}, {'type': 'material', 'original': 'mullion', 'normalized': 'curtainwall', 'count': 1}]<br>
+    <span style="color:#6b7280;font-size:13px;">Expected: should expand CO, keep dollar amount</span>
+</div>
+
+<div class="verdict">
+    <strong>Your verdict:</strong>
+    <label><input type="radio" name="2. Normalizer Quality" value="pass"> ✅ Looks right</label>
+    <label><input type="radio" name="2. Normalizer Quality" value="partial"> ⚠️ Partially right</label>
+    <label><input type="radio" name="2. Normalizer Quality" value="fail"> ❌ Wrong</label>
+    <br><br>
+    <textarea placeholder="Notes on what's wrong or missing..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;" ></textarea>
+</div>
+</div>
+<div class="section review">
+<h2>3. Entity Extraction — Random Sample</h2>
+<p>10 random items from your database with their extracted entities. Check that entities look correct for each item.</p>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: unknown | Trade: unknown</div>
+    <div style="margin-bottom:8px;">Should the "Patient" rooms be called "FT Exam" to match existing room names?
+the room name for "Check-in"?
+Where is "ZL" located?</div>
+    <div><strong>Entities (0):</strong> <em>None extracted</em></div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: mep_rough_in | Trade: electrical</div>
+    <div style="margin-bottom:8px;">Offsite - R20 DL Pole quadrant clarification 0 Please provide the pole quadrants for the poles that are highlighted in the attached file. Please note that for the pole being replaced highlighted as Pole #1 in the attached file already has multiple risers at the base (as shown in image 1 below), and ...</div>
+    <div><strong>Entities (4):</strong> <span class="tag tag-entity">brand: Autodesk</span> <span class="tag tag-entity">material: conduit</span> <span class="tag tag-entity">person: Benny Ng</span> <span class="tag tag-trade">trade: electrical</span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: mep_rough_in | Trade: unknown</div>
+    <div style="margin-bottom:8px;">b1 revised ug conduit penetration layout ref: e9-05.ug (plot date 01.11.23); e9-05.ug (request for information 0102 response) please see cloud in blue for changes made from rfi0102. 1. added (3) 3" conduits on the west side of the building for construction temp power, see detail 6 2. added (1) 3" co...</div>
+    <div><strong>Entities (2):</strong> <span class="tag tag-entity">drawing_ref: e9</span> <span class="tag tag-entity">rfi_ref: rfi0102</span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: unknown | Trade: unknown</div>
+    <div style="margin-bottom:8px;">All Two-Way Comm Panels are shown with an access panel covering them per 16/G1.01. 1. Please confirm the L5 Stairwell Comm Panels do not require access panels covering them. 2. Please provide updated detail for these panels.</div>
+    <div><strong>Entities (2):</strong> <span class="tag tag-entity">drawing_ref: g1.01</span> <span class="tag tag-entity">drawing_ref: l5</span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: structure | Trade: unknown</div>
+    <div style="margin-bottom:8px;">Onsite - B2 Slot Drain Cleanout and RIM clarification 10B On drawing B2 Site drawing L2.00, note states that cleanout is needed every 100' or per manufacturer. B2 slot drain system is around 420LF. On drawing L2.10B, there is only 2 call out for cleanouts. Please provide updated L2.10B sheet with cl...</div>
+    <div><strong>Entities (3):</strong> <span class="tag tag-entity">drawing_ref: l2.</span> <span class="tag tag-entity">drawing_ref: l2.00</span> <span class="tag tag-entity">measurement: 100' </span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: foundation | Trade: unknown</div>
+    <div style="margin-bottom:8px;">Offsite - BART Sheet pile conflict with wet utilities 1 & C6.2 Currently there are existing sheet piles in the ground that conflicts with the Storm Drain, Sanitary Sewer, and fire water line installation. From previous encounter the top of the sheet piles are about 3' below existing pavement(at Elev...</div>
+    <div><strong>Entities (11):</strong> <span class="tag tag-entity">drawing_ref: c6.2</span> <span class="tag tag-entity">drawing_ref: c6.1</span> <span class="tag tag-entity">measurement: 4' </span> <span class="tag tag-entity">measurement: 3' </span> <span class="tag tag-entity">measurement: 8' </span> <span class="tag tag-entity">measurement: 2' </span> <span class="tag tag-entity">measurement: 7' </span> <span class="tag tag-entity">measurement: 4' </span> <span class="tag tag-entity">measurement: 4' </span> <span class="tag tag-entity">measurement: 2' </span> <span class="tag tag-entity">measurement: 8' </span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: unknown | Trade: concrete, masonry, structural</div>
+    <div style="margin-bottom:8px;">Per conversations with DES/Sean Lim, please confirm it is acceptable to layout the NB shotcrete wall on the outside of the ramp as shown on detail 1/S3.41.</div>
+    <div><strong>Entities (3):</strong> <span class="tag tag-entity">drawing_ref: s3.41</span> <span class="tag tag-entity">drawing_ref: detail 1/s3.41</span> <span class="tag tag-entity">rfi_ref: rfi0341</span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: interior_finishes | Trade: unknown</div>
+    <div style="margin-bottom:8px;">abbott alameda 1420 hbp - em lighting clarifications reference: - request for information 54 - abbott alameda 1420 hbp - em lighting clarifications - cbf request for information 2 - sheets e3.3, e3.4, a2.2.2 the rcp on e3.3 and e3.4 do not show any emergency lights in the space. approved light fixtu...</div>
+    <div><strong>Entities (3):</strong> <span class="tag tag-entity">drawing_ref: e3.4</span> <span class="tag tag-entity">drawing_ref: e3.3</span> <span class="tag tag-entity">drawing_ref: a2.2</span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: structure | Trade: unknown</div>
+    <div style="margin-bottom:8px;">psd added cantilevered c12x25 detail clarification reference: - slp1 - rfi0965 - psd added cantilevered c12x25 detail clarification - rfi0965 sk-1 - slp1 - rfi0576 - psd pt structural steel electrical penetration post on: 11/s7.03, 1/s7.01 background: per comments provided by armando/gpla on submitt...</div>
+    <div><strong>Entities (6):</strong> <span class="tag tag-entity">drawing_ref: sk-1</span> <span class="tag tag-entity">drawing_ref: s7.01</span> <span class="tag tag-entity">drawing_ref: detail 11/s7.03</span> <span class="tag tag-entity">drawing_ref: s7.03</span> <span class="tag tag-entity">rfi_ref: rfi0965</span> <span class="tag tag-entity">rfi_ref: rfi0576</span> </div>
+</div>
+<div style="margin:12px 0;padding:16px;background:#f9fafb;border-radius:6px;border-left:3px solid #2d6a4f;">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">rfi | Phase: preconstruction | Trade: architectural</div>
+    <div style="margin-bottom:8px;">Please see attached floor plan for level 3 and 4 and provide or confirm dimensional information.</div>
+    <div><strong>Entities (1):</strong> <span class="tag tag-entity">location: level 3</span> </div>
+</div>
+
+<div class="verdict">
+    <strong>Your verdict:</strong>
+    <label><input type="radio" name="3. Entity Extraction — Random Sample" value="pass"> ✅ Looks right</label>
+    <label><input type="radio" name="3. Entity Extraction — Random Sample" value="partial"> ⚠️ Partially right</label>
+    <label><input type="radio" name="3. Entity Extraction — Random Sample" value="fail"> ❌ Wrong</label>
+    <br><br>
+    <textarea placeholder="Notes on what's wrong or missing..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;" ></textarea>
+</div>
+</div>
+<div class="section review">
+<h2>4. Entity Extraction — Live Test Observations</h2>
+<p>Running entity extraction on your test observations in real time. Check that the right trades, materials, and people are detected.</p>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"The curtainwall installer is asking about mullion alignment tolerances at Level 3 north side"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">envelope</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">the curtainwall installer is asking about curtainwall alignment tolerances at level 3 north side</td></tr>
+        <tr><td>Regex patterns</td><td><span class="tag tag-phase">location: Level 3</span> <span class="tag tag-phase">location: north side</span> </td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: curtainwall</span> <span class="tag tag-trade">issue: design_clarification</span> <span class="tag tag-trade">primary: curtainwall</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">curtainwall</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">mullion</span></td></tr>
+    </table>
+    <div class="notes">Should match any past curtainwall/glazing issues</div>
+</div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"City fire marshal wants additional smoke detectors in the electrical rooms on every floor"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">mep_trim_out</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">city fire marshal wants additional smoke detectors in the electrical rooms on every floor</td></tr>
+        <tr><td>Regex patterns</td><td><em>None</em></td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: electrical</span> <span class="tag tag-entity">trades: fire_protection</span> <span class="tag tag-entity">materials: smoke detectors</span> <span class="tag tag-trade">issue: code_compliance</span> <span class="tag tag-trade">primary: electrical</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">fire protection</span> <span class="tag tag-trade">electrical</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">fire marshal</span> <span class="tag tag-entity">smoke detector</span> <span class="tag tag-entity">electrical room</span></td></tr>
+    </table>
+    <div class="notes">Should match inspector-related items</div>
+</div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"Rebar placement in the foundation wall doesn't match the structural drawings"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">foundation</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">rebar placement in the foundation wall doesn't match the structural drawings</td></tr>
+        <tr><td>Regex patterns</td><td><em>None</em></td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: concrete</span> <span class="tag tag-entity">trades: structural_steel</span> <span class="tag tag-entity">materials: rebar</span> <span class="tag tag-trade">issue: design_clarification</span> <span class="tag tag-trade">primary: concrete</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">structural steel</span> <span class="tag tag-trade">concrete</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">rebar</span> <span class="tag tag-entity">foundation wall</span> <span class="tag tag-entity">structural drawings</span></td></tr>
+    </table>
+    <div class="notes">Should match RFIs about rebar/foundation coordination</div>
+</div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"The painters used a protective adhesive on the metal panels that left residue we can't remove"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">interior_finishes</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">the painting and coatings used a protective adhesive on the metal panels that left residue we can't remove</td></tr>
+        <tr><td>Regex patterns</td><td><em>None</em></td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: painting</span> <span class="tag tag-entity">trades: metal</span> <span class="tag tag-entity">materials: adhesive</span> <span class="tag tag-entity">materials: metal panels</span> <span class="tag tag-trade">issue: workmanship</span> <span class="tag tag-trade">primary: painting</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">painting and coatings</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">adhesive</span> <span class="tag tag-entity">metal panels</span> <span class="tag tag-entity">residue</span></td></tr>
+    </table>
+    <div class="notes">Should match material damage/workmanship issues</div>
+</div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"Plumbing rough-in locations don't match the architectural reflected ceiling plan"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">mep_rough_in</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">plumbing rough-in locations don't match the architectural reflected ceiling plan</td></tr>
+        <tr><td>Regex patterns</td><td><em>None</em></td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: plumbing</span> <span class="tag tag-entity">trades: drywall</span> <span class="tag tag-trade">issue: coordination</span> <span class="tag tag-trade">primary: plumbing</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">mechanical piping</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">plumbing</span> <span class="tag tag-entity">reflected ceiling plan</span></td></tr>
+    </table>
+    <div class="notes">Should match coordination issues between trades</div>
+</div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"Grade beam conflicts with the plumbing routes"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">underground_utilities</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">grade structural steel conflicts with the plumbing routes</td></tr>
+        <tr><td>Regex patterns</td><td><em>None</em></td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: concrete</span> <span class="tag tag-entity">trades: plumbing</span> <span class="tag tag-entity">trades: structural_steel</span> <span class="tag tag-trade">issue: coordination</span> <span class="tag tag-trade">primary: plumbing</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">mechanical piping</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">plumbing</span> <span class="tag tag-entity">structural drawings</span></td></tr>
+    </table>
+    <div class="notes">Should match coordination issues between trades</div>
+</div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"Please provide updated furniture drawings to coordinate power pole location"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">mep_rough_in</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">please provide updated furniture drawings to coordinate power pole location</td></tr>
+        <tr><td>Regex patterns</td><td><em>None</em></td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: electrical</span> <span class="tag tag-trade">issue: coordination</span> <span class="tag tag-trade">primary: electrical</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">electrical, furniture</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">electrical</span> <span class="tag tag-entity">furniture</span></td></tr>
+    </table>
+    <div class="notes">Any furniture related scope</div>
+</div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="font-size:14px;margin-bottom:8px;">🎤 <strong>"IMP metal facade penals have been dented. Please advise a fix"</strong></div>
+    <div style="font-size:12px;color:#6b7280;">Phase: <span class="tag tag-phase">exterior_skin</span></div>
+    <table style="margin-top:8px;">
+        <tr><th style="width:150px;">Layer</th><th>Results</th></tr>
+        <tr><td>Normalized text</td><td style="font-size:13px;">imp metal facade penals have been dented. please advise a fix</td></tr>
+        <tr><td>Regex patterns</td><td><em>None</em></td></tr>
+        <tr><td>LLM extraction</td><td><span class="tag tag-entity">trades: curtainwall</span> <span class="tag tag-entity">materials: metal</span> <span class="tag tag-trade">issue: workmanship</span> <span class="tag tag-trade">primary: curtainwall</span> </td></tr>
+        <tr><td>Expected trades</td><td><span class="tag tag-trade">facade, exterior</span></td></tr>
+        <tr><td>Expected entities</td><td><span class="tag tag-entity">facade</span> <span class="tag tag-entity">exterior</span> <span class="tag tag-entity">structure</span></td></tr>
+    </table>
+    <div class="notes">Any facade related scope</div>
+</div>
+
+<div class="verdict">
+    <strong>Your verdict:</strong>
+    <label><input type="radio" name="4. Entity Extraction — Live Test Observations" value="pass"> ✅ Looks right</label>
+    <label><input type="radio" name="4. Entity Extraction — Live Test Observations" value="partial"> ⚠️ Partially right</label>
+    <label><input type="radio" name="4. Entity Extraction — Live Test Observations" value="fail"> ❌ Wrong</label>
+    <br><br>
+    <textarea placeholder="Notes on what's wrong or missing..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;" ></textarea>
+</div>
+</div>
+<div class="section review">
+<h2>5. Raw Similarity — Semantic Only</h2>
+<p>For each test observation, these are the top 5 results from embedding cosine similarity ONLY (no re-ranking). This shows whether the embeddings are capturing the right semantic meaning.</p>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"The curtainwall installer is asking about mullion alignment tolerances at Level 3 north side"</strong> <span class="tag tag-phase">envelope</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-medium">0.588</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>concrete</td>
+            <td style="font-size:13px;">Please confirm if the edge of the curb from G2 to G3 should align with the face of curb from G3 to G5 or if both of them...</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-medium">0.574</span></td>
+            <td>rfi</td>
+            <td>envelope</td>
+            <td>—</td>
+            <td style="font-size:13px;">There are a couple of exposed flashing conditions at level 3 balconies. 1. RFI 598 added curbs at the Level 3 balconies ...</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-medium">0.565</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>—</td>
+            <td style="font-size:13px;">Please confirm if acceptable to pour an additional "L" section monolithically with the seat wall to meet the existing ex...</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-medium">0.559</span></td>
+            <td>rfi</td>
+            <td>—</td>
+            <td>architectural, concrete, landscaping</td>
+            <td style="font-size:13px;">REF: Site - B2 Current Set: L1.11A POST TO: Site - B2 Current Set: L1.11A Due to a seat wall elevation change of 30.26' ...</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-medium">0.558</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>structural</td>
+            <td style="font-size:13px;">b1 missing structural steel locating dimensions reference: -herrick_sk_31a 1. referencing sheet s2.02 near the passenger...</td>
+        </tr></table><div class="notes">Should match any past curtainwall/glazing issues</div></div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"City fire marshal wants additional smoke detectors in the electrical rooms on every floor"</strong> <span class="tag tag-phase">mep_trim_out</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-medium">0.569</span></td>
+            <td>rfi</td>
+            <td>preconstruction</td>
+            <td>—</td>
+            <td style="font-size:13px;">fire smoke damper circuit changes ref: attached electrical drawing mark-ups titled 'fsd circuit' sheet e2.1 (demolition)...</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-medium">0.541</span></td>
+            <td>rfi</td>
+            <td>—</td>
+            <td>—</td>
+            <td style="font-size:13px;">fire smoke damper association with air handling unit morrow meadows: due to the specific sequence of operations at this ...</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-medium">0.523</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>—</td>
+            <td style="font-size:13px;">Finish Details at the New Fire Partition at the On- Call Room 1145</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-medium">0.520</span></td>
+            <td>rfi</td>
+            <td>mep_trim_out</td>
+            <td>—</td>
+            <td style="font-size:13px;">conduits to accessible overhead space in lieu of how it is shown in ACD #05?</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-medium">0.517</span></td>
+            <td>rfi</td>
+            <td>mep_rough_in</td>
+            <td>—</td>
+            <td style="font-size:13px;">(mechanical subducting) and option #5 (elimination of office return air pathway), as shown on the attached A3 decision m...</td>
+        </tr></table><div class="notes">Should match inspector-related items</div></div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Rebar placement in the foundation wall doesn't match the structural drawings"</strong> <span class="tag tag-phase">foundation</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-medium">0.602</span></td>
+            <td>rfi</td>
+            <td>foundation</td>
+            <td>—</td>
+            <td style="font-size:13px;">During pour #3 the concrete pushed the rebar up slightly, resulting in only having an 1" of clearance. If hooked bars ar...</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-medium">0.591</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>—</td>
+            <td style="font-size:13px;">is acceptable, Please confirm the same weld can be applied for stiffener to base plate in Detail-8/S5.43, as the stiffen...</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-medium">0.572</span></td>
+            <td>rfi</td>
+            <td>foundation</td>
+            <td>—</td>
+            <td style="font-size:13px;">REF: Site - Onsite Current Set: L1.20A, 6/L8.05 POST TO: Site - Onsite Current Set: L1.20A, 6/L8.05 Please review the at...</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-medium">0.563</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>architectural, structural</td>
+            <td style="font-size:13px;">Per discussions with Peter/DES and Jason/GPLA on 08/24, please confirm if it is acceptable to drill and epoxy Horz. Bars...</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-medium">0.556</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>concrete, electrical</td>
+            <td style="font-size:13px;">REF: Site - B2 Current Set: 5/L8.02 POST TO: Site - B2 Current Set: 5/L8.02 Please review the attached file. Detail 5/L8...</td>
+        </tr></table><div class="notes">Should match RFIs about rebar/foundation coordination</div></div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"The painters used a protective adhesive on the metal panels that left residue we can't remove"</strong> <span class="tag tag-phase">interior_finishes</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-medium">0.515</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>architectural</td>
+            <td style="font-size:13px;">B2 FWP-5 Trim Accent Paint Clarification 74, Submittal 5021 Question: Per returned submittal 5021 for the FWP Trim Accen...</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-low">0.494</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>architectural</td>
+            <td style="font-size:13px;">PSD Bike Enclosure Interior Walls Paint and Finish Confirmation_R1 1 PSD Bike Enclosure Interior Walls Paint and Finish ...</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-low">0.483</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>architectural</td>
+            <td style="font-size:13px;">REF: Site - Onsite Current Set: L8.02 POST TO: Site - Onsite Current Set: L8.02 Please review the attached file. Detail ...</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-low">0.481</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>—</td>
+            <td style="font-size:13px;">PSD Paint Finishes Clarifications 00 and A9.20 Background: Finish Schedule on sheet A10.00 shows P-8 paint but is shown ...</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-low">0.476</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>—</td>
+            <td style="font-size:13px;">Finish Details for L-1 (Plastic Laminate) and L-2 (Solid Surface)</td>
+        </tr></table><div class="notes">Should match material damage/workmanship issues</div></div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Plumbing rough-in locations don't match the architectural reflected ceiling plan"</strong> <span class="tag tag-phase">mep_rough_in</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-medium">0.612</span></td>
+            <td>rfi</td>
+            <td>mep_trim_out</td>
+            <td>—</td>
+            <td style="font-size:13px;">architectural vs. electrical lighting rcp reference: a3.2, e5.1, attachment per attached email from yasmine dudum (dpr) ...</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-medium">0.557</span></td>
+            <td>rfi</td>
+            <td>mep_trim_out</td>
+            <td>architectural</td>
+            <td style="font-size:13px;">B2 AGR 134 & 135 Vanity Dimension Clarifications 01 Question: Currently, if we are to maintain the 18" minimum ADA requi...</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-medium">0.553</span></td>
+            <td>rfi</td>
+            <td>—</td>
+            <td>drywall</td>
+            <td style="font-size:13px;">soffit and drain pipe clash in area 1160 ref: marked up drawing and the image attached below. as indicated in the attach...</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-medium">0.552</span></td>
+            <td>rfi</td>
+            <td>mep_trim_out</td>
+            <td>—</td>
+            <td style="font-size:13px;">conduits to accessible overhead space in lieu of how it is shown in ACD #05?</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-medium">0.540</span></td>
+            <td>rfi</td>
+            <td>envelope</td>
+            <td>—</td>
+            <td style="font-size:13px;">Ceiling Termination at (E) Window Niche in Waiting Room 1160</td>
+        </tr></table><div class="notes">Should match coordination issues between trades</div></div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Grade beam conflicts with the plumbing routes"</strong> <span class="tag tag-phase">underground_utilities</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-medium">0.627</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>—</td>
+            <td style="font-size:13px;">Vertical Cast Iron Pipe Conflicts with Rated Wall at the Gift Shop</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-medium">0.599</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>—</td>
+            <td style="font-size:13px;">Offsite - Huntington 24" Sanitary conflict with unknown 6" pipe 6 During excavation for the new 24" SS, A&B crew encount...</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-medium">0.561</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>—</td>
+            <td style="font-size:13px;">is acceptable, Please confirm the same weld can be applied for stiffener to base plate in Detail-8/S5.43, as the stiffen...</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-medium">0.558</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>—</td>
+            <td style="font-size:13px;">b1 missing structural steel, connection detail, and structural steel elevation clarification reference: -herrick_sk#24 (...</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-medium">0.556</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>—</td>
+            <td style="font-size:13px;">B1 Lavatory Counter Supports Alt. Configuration to Accommodate MEP Confirmation Configuration to Accommodate MEP Confirm...</td>
+        </tr></table><div class="notes">Should match coordination issues between trades</div></div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Please provide updated furniture drawings to coordinate power pole location"</strong> <span class="tag tag-phase">mep_rough_in</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-medium">0.580</span></td>
+            <td>rfi</td>
+            <td>mep_rough_in</td>
+            <td>—</td>
+            <td style="font-size:13px;">Offsite - R20 Dollar linden Comm Riser pole quadrant confirmation 0 For the marked comm riser pole on South Linden, plea...</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-medium">0.573</span></td>
+            <td>rfi</td>
+            <td>—</td>
+            <td>—</td>
+            <td style="font-size:13px;">REF: B1 Current Set: E1.02 POST TO: B1 Current Set: E1.02 Please review the attached file. Per discussions with PMA, DES...</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-medium">0.566</span></td>
+            <td>rfi</td>
+            <td>mep_rough_in</td>
+            <td>—</td>
+            <td style="font-size:13px;">working days date created: 05/25/2022 days open: 1 architectural pete samaras answered by: agency review required reason...</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-medium">0.563</span></td>
+            <td>rfi</td>
+            <td>mep_rough_in</td>
+            <td>—</td>
+            <td style="font-size:13px;">EV charger stub ups on tiers 2 and 3 do not match location off grid shown in RFI 283.1. See attached for the existing lo...</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-medium">0.561</span></td>
+            <td>rfi</td>
+            <td>mep_trim_out</td>
+            <td>electrical</td>
+            <td style="font-size:13px;">As discussed during punch walks, there were some revisions in lighting layout from SI-07 drawings. Please see attached a...</td>
+        </tr></table><div class="notes">Any furniture related scope</div></div>
+<div style="margin:16px 0;padding:16px;background:#f9fafb;border-radius:6px;">
+    <div style="margin-bottom:12px;">🎤 <strong>"IMP metal facade penals have been dented. Please advise a fix"</strong> <span class="tag tag-phase">exterior_skin</span></div>
+    <table>
+        <tr><th>#</th><th>Similarity</th><th>Type</th><th>Phase</th><th>Trade</th><th>Text (preview)</th></tr>
+
+        <tr>
+            <td>1</td>
+            <td><span class="score-low">0.482</span></td>
+            <td>rfi</td>
+            <td>mep_trim_out</td>
+            <td>—</td>
+            <td style="font-size:13px;">PSD Stair 2 Concrete Landing Cracking Remediation Confirmation PSD Stair 2 Concrete Landing Cracking Remediation Confirm...</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="score-low">0.477</span></td>
+            <td>rfi</td>
+            <td>envelope</td>
+            <td>concrete</td>
+            <td style="font-size:13px;">PSD Conflict Between Drip Edge and Metal Panel Embeds on Tier 2 Clarifications</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="score-low">0.465</span></td>
+            <td>rfi</td>
+            <td>interior_finishes</td>
+            <td>architectural</td>
+            <td style="font-size:13px;">PSD Bike Enclosure Interior Walls Paint and Finish Confirmation_R1 1 PSD Bike Enclosure Interior Walls Paint and Finish ...</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="score-low">0.457</span></td>
+            <td>rfi</td>
+            <td>structure</td>
+            <td>—</td>
+            <td style="font-size:13px;">b1 roof missing structural steel and post profile reference: -herrick_sk038 1. reference s2.07a and s2.08. please furnis...</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="score-low">0.456</span></td>
+            <td>rfi</td>
+            <td>envelope</td>
+            <td>—</td>
+            <td style="font-size:13px;">PSD Lobby Plaster Flashing Paint Confirmation 01 ACC Punch Item #5474 Per punch walk on 10.11.2024, please confirm if ex...</td>
+        </tr></table><div class="notes">Any facade related scope</div></div>
+
+<div class="verdict">
+    <strong>Your verdict:</strong>
+    <label><input type="radio" name="5. Raw Similarity — Semantic Only" value="pass"> ✅ Looks right</label>
+    <label><input type="radio" name="5. Raw Similarity — Semantic Only" value="partial"> ⚠️ Partially right</label>
+    <label><input type="radio" name="5. Raw Similarity — Semantic Only" value="fail"> ❌ Wrong</label>
+    <br><br>
+    <textarea placeholder="Notes on what's wrong or missing..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;" ></textarea>
+</div>
+</div>
+<div class="section review">
+<h2>6. Full Ranked Results — All Signals</h2>
+<p>Full multi-signal ranking: semantic similarity + entity overlap + phase proximity + severity/outcome. This is what users would actually see.</p>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"The curtainwall installer is asking about mullion alignment tolerances at Level 3 north side"</strong> <span class="tag tag-phase">envelope</span> <span class="tag" style="background:#fef3c7;color:#92400e;">curtainwall</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.720</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: level, north, curtainwall
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.553 | Phase: 1.00 | Entity: 0.50 | Outcome: 0.00
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: envelope | Trade: None | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">@ 12" O.C. E.W. NOTES: 1. FOR ADDITIONAL SLAB REINF. INFO. NOT SHOWN, SEE 2 S2.02 2. PROVIDE TRIM BARS AROUND ALL LARGE OPENINGS. "Z" BAR, MATCH SIZE & # OF EDGE BARS C.8 C.2 BLDG. DES ARCHITECTS ENGI...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.704</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: level, north, curtainwall
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.556 | Phase: 1.00 | Entity: 0.33 | Outcome: 0.00
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: envelope | Trade: None | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">@ 12" O.C. E.W. NOTES: 1. FOR ADDITIONAL SLAB REINF. INFO. NOT SHOWN, SEE 2 S2.02 2. PROVIDE TRIM BARS AROUND ALL LARGE OPENINGS. "Z" BAR, MATCH SIZE & # OF EDGE BARS C.8 C.2 BLDG. DES ARCHITECTS ENGI...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.694</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: level, north
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.574 | Phase: 1.00 | Entity: 0.50 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: envelope | Trade: None | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">There are a couple of exposed flashing conditions at level 3 balconies. 1. RFI 598 added curbs at the Level 3 balconies to provide a surface for applying the hot rubberized waterproofing at the column...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.686</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: north, north side, side
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.544 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: envelope | Trade: exterior_envelope, architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">B1 Waterproofing Detail at Loading Dock and CMU Wall Intersection Confirmation 20 Markup</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.676</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: level, north, curtainwall
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.544 | Phase: 0.85 | Entity: 0.14 | Outcome: 0.00
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: structure | Trade: None | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">OR 18 BARS ............................................... 1 1/2" #11 OR SMALLER ............................................. 3/4" BEAMS (STIRRUPS AND MAIN REINF) ........... 1 1/2" 4. AT CONCRETE CO...</div>
+        
+        
+    </div><div class="notes">Should match any past curtainwall/glazing issues</div></div>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"City fire marshal wants additional smoke detectors in the electrical rooms on every floor"</strong> <span class="tag tag-phase">mep_trim_out</span> <span class="tag" style="background:#fef3c7;color:#92400e;">electrical</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.768</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: fire, additional, electrical
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.732 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: electrical, mechanical, architectural, roofing | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">Ref: A2.01, A2.02, M2.01, FP1.01, Detail 6/S6.1 With the addition of the 2 hour rated enclosure for the lighting inverter in Electrical Rm 128, additional MEP changes are required to account for the p...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.757</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: additional, rooms, electrical rooms
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.719 | Phase: 0.85 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: interior_finishes | Trade: architectural, electrical | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">b1 l1 additional doors for electrical gear installation ref: e3.01, a2.01, a9.20 (b1 pcr #2 dated 01.10.23) the walls for the electrical rooms need to be completed prior to the electrical main gear in...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.728</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T2 (+0.10)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: additional, rooms, electrical
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.596 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: electrical | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">RFI 021 provided new furniture plans with power (atatched). Please confirm: 1. The (3) power pole feeds on Level 2 can change to base feeds as shown in the attached to remove the poles from being in f...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.725</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: fire, fire marshal, marshal
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.590 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">FEC's Lock Per Spec FEC's Lock Per Spec Reference: Attached document Question: Fire extinguisher cabinets call out for a cam lock. Per fire marshal feedback on previous jobs in this jurisdiction, the ...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.699</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T2 (+0.10)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: additional, floor, rooms
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.590 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: electrical, architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">Code Required Floor Boxes in XL Conference Rooms 2003 and 3003</div>
+        
+        
+    </div><div class="notes">Should match inspector-related items</div></div>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Rebar placement in the foundation wall doesn't match the structural drawings"</strong> <span class="tag tag-phase">foundation</span> <span class="tag" style="background:#fef3c7;color:#92400e;">concrete</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.774</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: rebar, wall, foundation
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.756 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: foundation | Trade: concrete, lighting, electrical | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">REF: B1 Current Set: E1.02, Site - Onsite Current Set: C2.2, L1.20A, 8/L8.06. POST TO: B1 Current Set: E1.02, Site - Onsite Current Set: C2.2, L1.20A, 8/L8.06. Please review the attached file. Per con...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.771</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: drawings, rebar, wall
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.843 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: foundation | Trade: concrete, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">B2 GL 9B Drill and Epoxy Missing Anchor Bolts Hitting Rebar 1, SLP1 - 4171-055000-0 B2 Anchor Bolt and Template Shop Drawings Question: Per - RFI-0999 - B2 Drill and Epoxy GL9B Shear Wall Footing Anch...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.765</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: drawings, rebar, foundation
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.719 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: foundation | Trade: concrete, landscaping, lighting | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">REF: B2 Current Set: E8.01, Site - Onsite Current Set: L8.04 POST TO: B2 Current Set: E8.01, Site - Onsite Current Set: L8.04 Please review the attached file. Per detail 14/L8.04, LED bollard are to h...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.742</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: drawings, wall, foundation
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.744 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: foundation | Trade: concrete, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">B2 Drill and Epoxy GL 9B Shear Wall Footing Anchor Bolts 1, 4/S5.2, 4171-05-5000-0 B2Anchor Bolt Shop Drawings The anchor bolts within the north side of the GL9/GLB shear wall footing were not install...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.731</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T2 (+0.10)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: structural, rebar, foundation
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.709 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: foundation | Trade: concrete, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">psd rebar conversion request confirmation reference: - slp1 - rfi0328 - psd rebar conversion request confirmation please see attached request for information 002 from camblin. 1. please confirm it str...</div>
+        
+        
+    </div><div class="notes">Should match RFIs about rebar/foundation coordination</div></div>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"The painters used a protective adhesive on the metal panels that left residue we can't remove"</strong> <span class="tag tag-phase">interior_finishes</span> <span class="tag" style="background:#fef3c7;color:#92400e;">painting</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.697</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: metal panels, panels, metal
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.494 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: interior_finishes | Trade: architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">PSD Bike Enclosure Interior Walls Paint and Finish Confirmation_R1 1 PSD Bike Enclosure Interior Walls Paint and Finish Confirmation_R1 Reference: SLP1 - RFI 1443.1 - PSD Bike Enclosure Interior Walls...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.596</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: metal panels, panels, metal
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.502 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: envelope | Trade: architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">PSD Metal Panel/Greenscreen Caulking Confirmation 00 and 14/A8.00 Background: During the job walk of 06/06, it was discussed between DES and DPR that the caulking at the metal panels and greenscreens ...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.540</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.50 | Matched: painting
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.497 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: interior_finishes | Trade: architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">PSD Shear Wall Paint Confirmation 01, A2.02, A2.03, A2.04, A2.05 Marked up pictures Background: Due to the sequence of the construction of the shear walls in relation to the slabs, the quality of the ...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.522</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.50 | Matched: panels
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.426 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: interior_finishes | Trade: architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">B2 RipTrack Paint Color in Group Ex and Fitness Area 01, A10.00 Question: Per email coordination between DPR/DES, Riptrack in Group Exercise Room and Fitness area should be painted P-8 to match the Fa...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.520</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.50 | Matched: remove
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.527 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: interior_finishes | Trade: architectural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">B2 SI-06 Paint Clarifications 00, A10.01, A9.71, A9.76, A9.78, A9.81 Question: SI-06 does not currently capture all of the paint submittals requested and approved per the interior redesign/ MAWD finis...</div>
+        
+        
+    </div><div class="notes">Should match material damage/workmanship issues</div></div>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Plumbing rough-in locations don't match the architectural reflected ceiling plan"</strong> <span class="tag tag-phase">mep_rough_in</span> <span class="tag" style="background:#fef3c7;color:#92400e;">plumbing</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.725</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: architectural, plumbing, plan
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.730 | Phase: 0.70 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: interior_finishes | Trade: architectural, interior_finishes, plumbing | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">dcw clash with shaft wall at east entrance southland request for information - all directional nomenclature is in regard to plan-orientation and not true-orientation. e.g. plan- north versus true-nort...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.708</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: plumbing, locations
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.708 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_rough_in | Trade: plumbing | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">psd - obtrusions in parking spaces protection requirements plumbing / piping are located inside some of the parking stalls on all floors of psd. see attached as built of locations showing measured pro...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.692</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: plumbing, locations, plan
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.722 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: architectural, plumbing | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">4 inch Waste with Core between Wall of Lactation 2025 and Copy 2026</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.689</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: plumbing, locations
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.743 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_rough_in | Trade: plumbing | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">B2 - Plumbing BOD Clarification - PEX Piping 1; South San Francisco, California Municipal Code Title 15 Chapter 15.12 California Plumbing Code; BMC B2 Plumbing BOD; BLDG 2 P0.03, P2.00, P2.00A, P2.00B...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.681</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: match, plan
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.623 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_rough_in | Trade: electrical | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">onsite - rule 16 conflict at #7 vault per the provided plan pages e 2.0 and jt 4.0 for the r16 psd work, the conduits coming from the #7 vault clouded in the attached plan page do not line up with the...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div><div class="notes">Should match coordination issues between trades</div></div>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Grade beam conflicts with the plumbing routes"</strong> <span class="tag tag-phase">underground_utilities</span> <span class="tag" style="background:#fef3c7;color:#92400e;">plumbing</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.724</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: structural, steel, structural steel
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.830 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: plumbing, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">structural steel penetration for waste line in basement new 4" waste line in the garage level, which is collecting the first floor restroom fixtures, is below posted ceiling clearances within the gara...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.708</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: structural, plumbing, steel
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.824 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: structure | Trade: plumbing, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">b1 l6 structural steel penetration for plumbing ref: p4.06 (dated 11.22.22) please see the attached drawing showing plumbing penetrations through the beams of level 6 on building 1. please confirm the...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.708</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: structural, plumbing, steel
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.822 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: structure | Trade: plumbing, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">b1 revised l6 structural steel penetration for plumbing ref: p4.06c (dated 01.17.23), s2.07 (dated 01.10.23) please see the attached drawing showing plumbing penetrations through the beams of level 6 ...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.701</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: structural, plumbing, steel
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.800 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: structure | Trade: plumbing, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">b1 l6 structural steel penetration for plumbing (final) ref: p4.06c (dated 02.06.23), s2.07 (dated 01.10.23); email correspondence with jonathan chen/des dated 02.09.23 this is confirming request for ...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.691</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: structural, plumbing, steel
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.768 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: structure | Trade: concrete, plumbing, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">psd pt structural steel and concrete masonry unit wall plumbing penetration ref: pl.2.l1.sl.a, pl2.l1.sl.b, pl2.l1.sl.c (dated 04.10.23) please review all the penetrations through the pt structural st...</div>
+        
+        
+    </div><div class="notes">Should match coordination issues between trades</div></div>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"Please provide updated furniture drawings to coordinate power pole location"</strong> <span class="tag tag-phase">mep_rough_in</span> <span class="tag" style="background:#fef3c7;color:#92400e;">electrical</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.783</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: power, location, furniture
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.788 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_rough_in | Trade: electrical | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">Ref Marked Up MAWD Concept Design Furniture Sheet, AV2.01, 1,2/A6.01, 1/A6.04, E2.01: This is a confirming RFI to update documentation based on the 10/4/23 MAWD Redesign meeting. All work has proceede...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.748</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: power, pole, location
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.855 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: electrical | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">RFI 021 provided new furniture plans with power (atatched). Please confirm: 1. The (3) power pole feeds on Level 2 can change to base feeds as shown in the attached to remove the poles from being in f...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-high">0.714</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.95 | Matched: drawings, pole, location
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.809 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_trim_out | Trade: electrical | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">B2 - Exterior Light Pole and Low Voltage Device Coordination 01, E1.00, proposed product data for security cameras, site speakers/WAPs, and christy boxes Per coordination with DES, Sprig, WBE, and DPR...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.691</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T4 (+0.00)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 1.00 | Matched: drawings, power, pole
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.566 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.00
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_rough_in | Trade: None | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">working days date created: 05/25/2022 days open: 1 architectural pete samaras answered by: agency review required reason the documentation has been updated as part of the 95% cd and permit application...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.685</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🟡 MEDIUM</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: drawings, power
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.801 | Phase: 1.00 | Entity: 0.00 | Outcome: 0.00
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: mep_rough_in | Trade: architectural, electrical, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">1. Based on coordination meetings held between DES & Power System Design discussing PG&E's requirements for the transformer room, please advise if the design of the transformer room is different than ...</div>
+        
+        
+    </div><div class="notes">Any furniture related scope</div></div>
+<div style="margin:16px 0;padding:16px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+    <div style="margin-bottom:12px;">🎤 <strong>"IMP metal facade penals have been dented. Please advise a fix"</strong> <span class="tag tag-phase">exterior_skin</span> <span class="tag" style="background:#fef3c7;color:#92400e;">curtainwall</span></div>
+
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.544</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: advise, metal
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.511 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: interior_finishes | Trade: structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">b2 gs roof screenwall framing gl 7-11 referenced documents: a5.12, s2.2 question: please see attached "sk-mc-008" for queries 1-4. 1 - please verify roof screenwall framing arrangement dimensions are ...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.534</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: facade, fix
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.477 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: None | Trade: architectural, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">Is it possible to fix to top of Collector Chord Plate?
+what would happen at Collector Chord Splice locations?</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-medium">0.528</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.80 | Matched: advise, metal
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.528 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.00
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: envelope | Trade: architectural, structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">Ref: Detail 13/A8.23, 9/A8.23, 5/A8.11 Per detail 5/A8.11 face of roof screen metal panel is to align with face of horizontal louver blades however, per details 9/A8.23 and 13/A8.23, different dimensi...</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-low">0.469</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T1 (+0.20)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.50 | Matched: imp
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.585 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.30
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: preconstruction | Trade: curtainwall | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">Waterproofing Detail Between North CW Drip and IMP Caulk Joint</div>
+        
+        
+    </div>
+    <div class="alert-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="score score-low">0.465</span>
+            <span style="font-size:12px;background:#e0f2fe;padding:2px 6px;border-radius:4px;">Tier T3 (+0.05)</span>
+            <span style="font-size:12px;">🔵 LOW</span>
+        </div>
+        <div style="font-size:12px;color:#166534;margin:4px 0;font-weight:bold;">
+            KEYWORDS: 0.50 | Matched: metal
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:4px 0;">
+            Semantic: 0.497 | Phase: 0.50 | Entity: 0.00 | Outcome: 0.70
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">
+            Project Phase: preconstruction | Trade: structural | Type: rfi
+        </div>
+        <div style="margin:8px 0;font-size:14px;">concrete and deck infill at roof ref: a2.0.2, s1.4a, s1.4b, attached rev1 file under references; questions: 1) the architectural edge-of-concrete drawings, pk2-a2.0.2, call out the shaded areas at the...</div>
+        
+        <div style='font-size:12px;color:#dc2626;'>Resulted in CO</div>
+    </div><div class="notes">Any facade related scope</div></div>
+
+<div class="verdict">
+    <strong>Your verdict:</strong>
+    <label><input type="radio" name="6. Full Ranked Results — All Signals" value="pass"> ✅ Looks right</label>
+    <label><input type="radio" name="6. Full Ranked Results — All Signals" value="partial"> ⚠️ Partially right</label>
+    <label><input type="radio" name="6. Full Ranked Results — All Signals" value="fail"> ❌ Wrong</label>
+    <br><br>
+    <textarea placeholder="Notes on what's wrong or missing..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;" ></textarea>
+</div>
+</div>
+<div class="section review">
+<h2>7. Phase Scoring Matrix</h2>
+<p>Phase proximity scores for every combination. Verify the diagonal is 1.0, adjacent phases are ~0.7-0.8, and distant phases are low.</p><table><tr><th>Current ↓ / Historical →</th><th style='font-size:11px;'>preconst</th><th style='font-size:11px;'>sitework</th><th style='font-size:11px;'>foundati</th><th style='font-size:11px;'>structur</th><th style='font-size:11px;'>envelope</th><th style='font-size:11px;'>mep_roug</th><th style='font-size:11px;'>interior</th><th style='font-size:11px;'>interior</th><th style='font-size:11px;'>mep_trim</th><th style='font-size:11px;'>commissi</th><th style='font-size:11px;'>closeout</th></tr><tr><td style='font-size:12px;font-weight:bold;'>preconstruction</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td></tr><tr><td style='font-size:12px;font-weight:bold;'>sitework</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td></tr><tr><td style='font-size:12px;font-weight:bold;'>foundation</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td></tr><tr><td style='font-size:12px;font-weight:bold;'>structure</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td></tr><tr><td style='font-size:12px;font-weight:bold;'>envelope</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td></tr><tr><td style='font-size:12px;font-weight:bold;'>mep_rough_in</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td></tr><tr><td style='font-size:12px;font-weight:bold;'>interior_framing</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td></tr><tr><td style='font-size:12px;font-weight:bold;'>interior_finishes</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td></tr><tr><td style='font-size:12px;font-weight:bold;'>mep_trim_out</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td></tr><tr><td style='font-size:12px;font-weight:bold;'>commissioning</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td></tr><tr><td style='font-size:12px;font-weight:bold;'>closeout</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.2);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.25);color:black;font-size:12px;">0.2</td><td style="text-align:center;background:rgba(45,106,79,0.4);color:black;font-size:12px;">0.4</td><td style="text-align:center;background:rgba(45,106,79,0.5);color:black;font-size:12px;">0.5</td><td style="text-align:center;background:rgba(45,106,79,0.7);color:white;font-size:12px;">0.7</td><td style="text-align:center;background:rgba(45,106,79,0.85);color:white;font-size:12px;">0.8</td><td style="text-align:center;background:rgba(45,106,79,1.0);color:white;font-size:12px;">1.0</td></tr></table><div class="notes">Key question: does the "next phase" bonus (0.8) make sense? Items from the phase you're about to enter should rank higher than items from phases you've already completed.</div>
+
+<div class="verdict">
+    <strong>Your verdict:</strong>
+    <label><input type="radio" name="7. Phase Scoring Matrix" value="pass"> ✅ Looks right</label>
+    <label><input type="radio" name="7. Phase Scoring Matrix" value="partial"> ⚠️ Partially right</label>
+    <label><input type="radio" name="7. Phase Scoring Matrix" value="fail"> ❌ Wrong</label>
+    <br><br>
+    <textarea placeholder="Notes on what's wrong or missing..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;" ></textarea>
+</div>
+</div>
+<div class="section review">
+<h2>8. Entity Coverage Analysis</h2>
+
+<div style="display:flex;gap:8px;margin-bottom:16px;">
+    <div class="stat"><div class="stat-number">2999</div><div class="stat-label">Items WITH entities</div></div>
+    <div class="stat"><div class="stat-number">562</div><div class="stat-label">Items WITHOUT entities</div></div>
+    <div class="stat"><div class="stat-number">84%</div><div class="stat-label">Coverage</div></div>
+</div>
+<h3>Top 30 Most Common Entities</h3>
+<table><tr><th>Type</th><th>Value</th><th>Occurrences</th></tr>
+<tr><td>drawing_ref</td><td>A2.01</td><td>147</td></tr><tr><td>drawing_ref</td><td>L-1</td><td>137</td></tr><tr><td>drawing_ref</td><td>A2.1</td><td>122</td></tr><tr><td>drawing_ref</td><td>A-2</td><td>98</td></tr><tr><td>location</td><td>Level 2</td><td>87</td></tr><tr><td>measurement</td><td>2'-0"</td><td>81</td></tr><tr><td>drawing_ref</td><td>D-0</td><td>76</td></tr><tr><td>measurement</td><td>4'-0"</td><td>72</td></tr><tr><td>location</td><td>Level 1</td><td>70</td></tr><tr><td>drawing_ref</td><td>A200.07</td><td>69</td></tr><tr><td>measurement</td><td>18'-0"</td><td>68</td></tr><tr><td>drawing_ref</td><td>L-2</td><td>65</td></tr><tr><td>drawing_ref</td><td>S-2</td><td>62</td></tr><tr><td>drawing_ref</td><td>P-3</td><td>55</td></tr><tr><td>location</td><td>Level 3</td><td>54</td></tr><tr><td>measurement</td><td>5'-0"</td><td>53</td></tr><tr><td>brand</td><td>Autodesk</td><td>52</td></tr><tr><td>drawing_ref</td><td>S2.02</td><td>52</td></tr><tr><td>measurement</td><td>3'-0"</td><td>51</td></tr><tr><td>company</td><td>DPR Construction</td><td>51</td></tr><tr><td>drawing_ref</td><td>A2.02</td><td>50</td></tr><tr><td>measurement</td><td>1'-0"</td><td>49</td></tr><tr><td>drawing_ref</td><td>A2.2</td><td>46</td></tr><tr><td>drawing_ref</td><td>A4.01</td><td>43</td></tr><tr><td>trade</td><td>concrete</td><td>42</td></tr><tr><td>trade</td><td>electrical</td><td>42</td></tr><tr><td>drawing_ref</td><td>A2.07</td><td>42</td></tr><tr><td>trade</td><td>structural_steel</td><td>42</td></tr><tr><td>drawing_ref</td><td>S2.01</td><td>41</td></tr><tr><td>drawing_ref</td><td>S2.03</td><td>41</td></tr>
+</table>
+<h3>Items With Zero Entities (first 5)</h3><p>These items had nothing extracted. Check if the text is too short or if extraction missed them.</p><div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[rfi] Per 3/8/24 Door functionality meeting with DPR, PMA, & DES, please provide direction on the following Door Functionality: 1. Openings 136A, 136B, 137: please confirm these openings are to be prepped f</div><div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[rfi] Mechanical Hold Open at Door 1141.2</div><div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[rfi] PSD Tier 2 East and South Elevations Spandrel Tex-Cote Color Confirmation</div><div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[rfi] B1 PSD Elevator Shaft Sprinkler Requirement</div><div style="padding:8px;background:#fef2f2;margin:4px 0;border-radius:4px;font-size:13px;">[rfi] REF: BLDGOFF-TS-4 POST TO: BLDOFF-TS-4 While potholing, WBE discovered that the location of street light pole at the southwest intersection of Southline and B1/B7 Driveway conflicts with the utility j</div>
+
+<div class="verdict">
+    <strong>Your verdict:</strong>
+    <label><input type="radio" name="8. Entity Coverage Analysis" value="pass"> ✅ Looks right</label>
+    <label><input type="radio" name="8. Entity Coverage Analysis" value="partial"> ⚠️ Partially right</label>
+    <label><input type="radio" name="8. Entity Coverage Analysis" value="fail"> ❌ Wrong</label>
+    <br><br>
+    <textarea placeholder="Notes on what's wrong or missing..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;" ></textarea>
+</div>
+</div>
+<div class="section info">
+<h2>Summary — What to Fix</h2>
+<p>Scroll back through your verdicts. For anything marked ⚠️ or ❌:</p>
+<ol>
+<li><strong>Normalizer issues</strong> → Add terms to <code>data/construction_terms.yaml</code></li>
+<li><strong>Entity extraction misses</strong> → Adjust the extraction prompt in <code>extraction/entity_extractor.py</code> or add regex patterns in <code>extraction/patterns.py</code></li>
+<li><strong>Phase mapping wrong</strong> → Check your project schedule data and the activity-to-phase mappings in <code>data/phase_definitions.yaml</code></li>
+<li><strong>Similarity results off</strong> → Check the embedding input construction in <code>similarity/embeddings.py</code> (are entities being included?)</li>
+<li><strong>Ranking order wrong</strong> → Adjust weights in <code>similarity/ranker.py</code> (WEIGHTS dict)</li>
+<li><strong>Good matches but ranked too low</strong> → Lower the score thresholds or adjust signal weights</li>
+</ol>
+</div>
+</body></html>
