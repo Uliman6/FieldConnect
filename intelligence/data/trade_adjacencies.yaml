@@ -1,0 +1,210 @@
+# Trade Adjacency Map
+# For each trade, lists related trades that commonly interact on construction projects.
+# Used for tiered retrieval - Tier 3 searches related trades.
+# NOTE: Use underscores, not spaces (fire_protection, not "fire protection")
+
+# Envelope & Facade
+curtainwall:
+  - structural_steel
+  - structural
+  - waterproofing
+  - glazing
+  - exterior_envelope
+  - architectural
+  - painting
+
+glazing:
+  - curtainwall
+  - architectural
+  - exterior_envelope
+  - waterproofing
+
+exterior_envelope:
+  - curtainwall
+  - waterproofing
+  - roofing
+  - architectural
+  - structural
+  - glazing
+
+# Structural
+structural:
+  - concrete
+  - structural_steel
+  - architectural
+  - mechanical
+  - electrical
+
+structural_steel:
+  - structural
+  - concrete
+  - curtainwall
+  - roofing
+  - metal_fabrication
+
+concrete:
+  - structural
+  - structural_steel
+  - waterproofing
+  - plumbing
+  - electrical
+  - rebar
+  - masonry
+
+rebar:
+  - concrete
+  - structural
+
+masonry:
+  - concrete
+  - structural
+  - architectural
+  - waterproofing
+
+# MEP (Mechanical, Electrical, Plumbing)
+electrical:
+  - mechanical
+  - plumbing
+  - fire_protection
+  - low_voltage
+  - lighting
+  - audio_visual
+  - security
+  - cabling
+
+mechanical:
+  - electrical
+  - plumbing
+  - fire_protection
+  - architectural
+  - structural
+  - controls
+  - hvac
+
+plumbing:
+  - mechanical
+  - fire_protection
+  - electrical
+  - civil_site
+  - concrete
+
+fire_protection:
+  - mechanical
+  - electrical
+  - plumbing
+  - architectural
+  - structural
+
+# Low Voltage / Technology
+audio_visual:
+  - electrical
+  - cabling
+  - security
+  - low_voltage
+
+security:
+  - electrical
+  - cabling
+  - audio_visual
+  - low_voltage
+
+cabling:
+  - electrical
+  - audio_visual
+  - security
+  - low_voltage
+
+lighting:
+  - electrical
+  - architectural
+  - landscaping
+
+# Interior Finishes
+drywall:
+  - painting
+  - framing
+  - electrical
+  - mechanical
+  - fire_protection
+  - fire protection
+  - architectural
+  - interior_finishes
+
+painting:
+  - drywall
+  - architectural
+  - interior_finishes
+  - curtainwall
+
+framing:
+  - drywall
+  - electrical
+  - mechanical
+  - architectural
+
+interior_finishes:
+  - architectural
+  - drywall
+  - painting
+  - flooring
+  - millwork
+
+flooring:
+  - architectural
+  - interior_finishes
+  - concrete
+
+millwork:
+  - architectural
+  - interior_finishes
+
+# Roofing & Waterproofing
+roofing:
+  - waterproofing
+  - structural
+  - structural_steel
+  - architectural
+  - sheet_metal
+
+waterproofing:
+  - roofing
+  - concrete
+  - exterior envelope
+  - curtainwall
+  - masonry
+
+# Sitework
+civil/site:
+  - landscaping
+  - concrete
+  - plumbing
+  - electrical
+  - earthwork
+  - drainage
+
+landscaping:
+  - civil/site
+  - architectural
+  - lighting
+  - irrigation
+  - concrete
+
+# Architectural (broad category)
+architectural:
+  - structural
+  - mechanical
+  - electrical
+  - plumbing
+  - interior_finishes
+  - exterior envelope
+  - drywall
+
+# Metal & Fabrication
+metal_fabrication:
+  - structural_steel
+  - structural
+  - architectural
+
+signage:
+  - electrical
+  - architectural

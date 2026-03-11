@@ -18,6 +18,14 @@ from similarity.search import (
     get_entities_for_candidates
 )
 
+from similarity.tiered_search import (
+    tiered_search_and_rank,
+    extract_search_keywords,
+    get_related_trades,
+    load_trade_adjacencies,
+    TIER_BOOSTS
+)
+
 from similarity.ranking import (
     calculate_phase_score,
     calculate_entity_overlap_score,
@@ -50,6 +58,12 @@ __all__ = [
     "search_and_rank",
     "get_candidates_with_embeddings",
     "get_entities_for_candidates",
+    # Tiered search
+    "tiered_search_and_rank",
+    "extract_search_keywords",
+    "get_related_trades",
+    "load_trade_adjacencies",
+    "TIER_BOOSTS",
     # Ranking
     "calculate_phase_score",
     "calculate_entity_overlap_score",

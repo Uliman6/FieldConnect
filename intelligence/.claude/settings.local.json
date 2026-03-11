@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(Autodesk Construction Cloud...\". This adds a question_text column \nthat extracts just the actual question/issue content:\n\n- Add question_text column to schema\n- Update parsers to store question_text when parsing RFIs/punch lists\n- Update ranking to prioritize question_text for keyword matching\n- Update search to fetch question_text from database\n- Update test report display to show question_text instead of raw_text\n- Add extract_questions.py script to backfill existing data\n\nThe question extraction strategies:\n1. Look for \"Question\" section marker in RFI PDFs\n2. Look for Q1:, Q2: numbered question markers\n3. Look for lines ending with \"?\" \n4. Fall back to first substantive paragraph after metadata removal\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\sitespeak\\\\Backend\\\\intelligence\\\\tests\\\\test_report.html'' | Select-String -Pattern ''KEYWORDS:'' -Context 2,5 | Select-Object -First 5\")",
+      "Bash(powershell -Command:*)"
+    ]
+  }
+}
