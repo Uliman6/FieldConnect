@@ -18,15 +18,17 @@ from datetime import date, timedelta
 logger = logging.getLogger(__name__)
 
 # Default weights for ranking factors
-# IMPORTANT: Keyword matching is weighted heavily because domain-specific
-# keyword matches are more reliable than semantic similarity alone
+# IMPORTANT: With abstracted summaries, we can rely more on semantic similarity
+# since embeddings are now based on clean, focused scope summaries
 DEFAULT_WEIGHTS = {
-    "keyword": 0.35,       # Keyword matches are CRITICAL
-    "semantic": 0.30,      # Base embedding similarity
-    "phase": 0.15,         # Phase proximity
-    "entity": 0.10,        # Entity overlap (from extraction)
-    "outcome": 0.07,       # Cost/schedule impact significance
+    "semantic": 0.30,      # Embedding similarity (now from abstracted scope)
+    "key_terms": 0.25,     # Abstracted key terms matching
+    "issue_type": 0.15,    # Same issue type boost
+    "phase": 0.12,         # Phase proximity
+    "entity": 0.08,        # Entity overlap (from extraction)
+    "outcome": 0.05,       # Cost/schedule impact significance
     "recency": 0.03,       # Recent items slightly boosted
+    "keyword": 0.02,       # Legacy raw keyword matching (fallback)
 }
 
 # Construction phases in chronological order
@@ -297,6 +299,173 @@ def calculate_recency_score(
         return 1.0 - (days_old / (decay_days * 4))
 
 
+def calculate_key_terms_score(
+    query_terms: list[str],
+    candidate_abstraction: Optional[dict]
+) -> dict:
+    """
+    Calculate key terms matching score between query and candidate abstraction.
+
+    This compares abstracted key terms (extracted by LLM) for semantic matching.
+    Key terms are technical construction terms like "splice plate", "fillet weld", etc.
+
+    Args:
+        query_terms: Key terms from query abstraction
+        candidate_abstraction: Abstracted summary dict from candidate item
+
+    Returns:
+        Dict with score and matched terms info
+    """
+    if not query_terms:
+        return {
+            "score": 0.0,
+            "matched_terms": [],
+            "match_count": 0,
+            "query_coverage": 0.0
+        }
+
+    if not candidate_abstraction:
+        return {
+            "score": 0.0,
+            "matched_terms": [],
+            "match_count": 0,
+            "query_coverage": 0.0
+        }
+
+    candidate_terms = candidate_abstraction.get("key_terms", [])
+    if not candidate_terms:
+        return {
+            "score": 0.0,
+            "matched_terms": [],
+            "match_count": 0,
+            "query_coverage": 0.0
+        }
+
+    # Normalize terms for comparison
+    query_set = {t.lower().strip() for t in query_terms}
+    candidate_set = {t.lower().strip() for t in candidate_terms}
+
+    # Find exact matches
+    exact_matches = query_set & candidate_set
+
+    # Find partial matches (one term contains the other)
+    partial_matches = []
+    for qt in query_set:
+        if qt in exact_matches:
+            continue
+        for ct in candidate_set:
+            if ct in exact_matches:
+                continue
+            # Check if one contains the other
+            if qt in ct or ct in qt:
+                partial_matches.append((qt, ct))
+                break
+
+    total_matches = len(exact_matches) + len(partial_matches) * 0.7
+    query_coverage = total_matches / len(query_set) if query_set else 0
+
+    # Scoring: reward multiple term matches
+    # 0 matches = 0.0
+    # 1 match = 0.5
+    # 2 matches = 0.75
+    # 3+ matches = 0.9+
+    if total_matches == 0:
+        score = 0.0
+    elif total_matches < 1:
+        score = 0.35  # Partial match only
+    elif total_matches < 2:
+        score = 0.5
+    elif total_matches < 3:
+        score = 0.75
+    else:
+        score = min(1.0, 0.85 + (total_matches - 3) * 0.05)
+
+    matched = list(exact_matches) + [f"{p[0]}~{p[1]}" for p in partial_matches[:2]]
+
+    return {
+        "score": score,
+        "matched_terms": matched,
+        "match_count": total_matches,
+        "query_coverage": query_coverage
+    }
+
+
+def calculate_issue_type_score(
+    query_issue_type: Optional[str],
+    candidate_abstraction: Optional[dict]
+) -> float:
+    """
+    Calculate issue type matching score.
+
+    Issue types are categories like: dimension, material, detail_conflict,
+    coordination, missing_info, confirmation, remediation, installation.
+
+    Same type = 1.0
+    Related types = 0.6-0.8
+    Different types = 0.3
+
+    Args:
+        query_issue_type: Issue type from query
+        candidate_abstraction: Abstracted summary dict from candidate
+
+    Returns:
+        Score from 0.3 to 1.0
+    """
+    if not query_issue_type:
+        return 0.5  # Neutral when unknown
+
+    if not candidate_abstraction:
+        return 0.5
+
+    candidate_type = candidate_abstraction.get("issue_type", "general")
+    if not candidate_type:
+        return 0.5
+
+    query_type = query_issue_type.lower().strip()
+    candidate_type = candidate_type.lower().strip()
+
+    # Exact match
+    if query_type == candidate_type:
+        return 1.0
+
+    # Define related issue type groups
+    RELATED_TYPES = {
+        # Design/documentation issues
+        "dimension": ["dimension_clarification", "missing_information", "missing_info", "detail_conflict"],
+        "dimension_clarification": ["dimension", "missing_information", "missing_info", "detail_conflict"],
+        "missing_information": ["dimension", "dimension_clarification", "missing_info", "detail_conflict"],
+        "missing_info": ["dimension", "dimension_clarification", "missing_information", "detail_conflict"],
+        "detail_conflict": ["dimension", "missing_information", "coordination"],
+
+        # Installation/execution issues
+        "material": ["material_substitution", "installation_method", "installation"],
+        "material_substitution": ["material", "installation_method", "installation"],
+        "installation_method": ["material", "coordination", "installation"],
+        "installation": ["installation_method", "material", "coordination"],
+
+        # Coordination issues
+        "coordination": ["detail_conflict", "installation_method", "installation"],
+
+        # Remediation
+        "remediation": ["detail_conflict", "coordination"],
+
+        # Confirmation (related to many)
+        "confirmation": ["dimension", "material", "installation_method"],
+    }
+
+    related = RELATED_TYPES.get(query_type, [])
+    if candidate_type in related:
+        return 0.7
+
+    # Check reverse relationship
+    candidate_related = RELATED_TYPES.get(candidate_type, [])
+    if query_type in candidate_related:
+        return 0.7
+
+    # Unrelated but both known
+    return 0.3
+
+
 def compute_ranking_score(
     candidate: dict,
     semantic_score: float,
@@ -304,18 +473,22 @@ def compute_ranking_score(
     query_entities: Optional[dict[str, set[str]]] = None,
     candidate_entities: Optional[list[dict]] = None,
     query_keywords: Optional[set[str]] = None,
+    query_key_terms: Optional[list[str]] = None,
+    query_issue_type: Optional[str] = None,
     weights: Optional[dict[str, float]] = None
 ) -> dict:
     """
     Compute the combined ranking score for a candidate.
 
     Args:
-        candidate: The candidate item dict
+        candidate: The candidate item dict (includes abstracted_summary if available)
         semantic_score: Pre-computed semantic similarity score
         query_phase: Phase of the query/observation
         query_entities: Extracted entities from query
         candidate_entities: Entities linked to candidate item
-        query_keywords: Keywords extracted from query (CRITICAL for matching)
+        query_keywords: Keywords extracted from query (legacy, fallback)
+        query_key_terms: Abstracted key terms from query (preferred)
+        query_issue_type: Issue type from query abstraction
         weights: Custom weights for ranking factors
 
     Returns:
@@ -328,11 +501,33 @@ def compute_ranking_score(
     if total_weight != 1.0:
         w = {k: v / total_weight for k, v in w.items()}
 
-    # Calculate KEYWORD score (CRITICAL)
-    # Pass the full candidate dict - it will prioritize question_text
+    # Get candidate abstraction if available
+    candidate_abstraction = candidate.get("abstracted_summary")
+    if isinstance(candidate_abstraction, str):
+        try:
+            import json
+            candidate_abstraction = json.loads(candidate_abstraction)
+        except (json.JSONDecodeError, TypeError):
+            candidate_abstraction = None
+
+    # Calculate KEY TERMS score (from abstraction - preferred)
+    key_terms_result = calculate_key_terms_score(
+        query_key_terms or [],
+        candidate_abstraction
+    )
+    key_terms_score = key_terms_result["score"]
+    matched_terms = key_terms_result["matched_terms"]
+
+    # Calculate ISSUE TYPE score (from abstraction)
+    issue_type_score = calculate_issue_type_score(
+        query_issue_type,
+        candidate_abstraction
+    )
+
+    # Calculate legacy KEYWORD score (fallback for items without abstraction)
     keyword_result = calculate_keyword_score(
         query_keywords or set(),
-        candidate  # Now passes full dict, prioritizes question_text
+        candidate
     )
     keyword_score = keyword_result["score"]
     matched_keywords = keyword_result["matched_keywords"]
@@ -354,17 +549,22 @@ def compute_ranking_score(
         candidate.get("item_date")
     )
 
-    # Compute weighted final score
+    # Compute weighted final score using new abstraction-based weights
     final_score = (
-        w.get("keyword", 0.35) * keyword_score +
         w.get("semantic", 0.30) * semantic_score +
-        w.get("phase", 0.15) * phase_score +
-        w.get("entity", 0.10) * entity_score +
-        w.get("outcome", 0.07) * outcome_score +
-        w.get("recency", 0.03) * recency_score
+        w.get("key_terms", 0.25) * key_terms_score +
+        w.get("issue_type", 0.15) * issue_type_score +
+        w.get("phase", 0.12) * phase_score +
+        w.get("entity", 0.08) * entity_score +
+        w.get("outcome", 0.05) * outcome_score +
+        w.get("recency", 0.03) * recency_score +
+        w.get("keyword", 0.02) * keyword_score  # Legacy fallback
     )
 
     return {
+        "key_terms_score": round(key_terms_score, 4),
+        "matched_terms": matched_terms,
+        "issue_type_score": round(issue_type_score, 4),
         "keyword_score": round(keyword_score, 4),
         "matched_keywords": matched_keywords,
         "semantic_score": round(semantic_score, 4),
@@ -383,6 +583,8 @@ def rank_candidates(
     query_entities: Optional[dict[str, set[str]]] = None,
     entities_by_item: Optional[dict[str, list[dict]]] = None,
     query_keywords: Optional[set[str]] = None,
+    query_key_terms: Optional[list[str]] = None,
+    query_issue_type: Optional[str] = None,
     weights: Optional[dict[str, float]] = None,
     top_k: int = 20,
     min_final_score: float = 0.25
@@ -395,7 +597,9 @@ def rank_candidates(
         query_phase: Phase of the query
         query_entities: Entities from query, dict of type -> set of values
         entities_by_item: Pre-loaded entities, dict of item_id -> list of entities
-        query_keywords: Keywords extracted from query (CRITICAL for matching)
+        query_keywords: Keywords extracted from query (legacy fallback)
+        query_key_terms: Abstracted key terms from query (preferred)
+        query_issue_type: Issue type from query abstraction
         weights: Custom ranking weights
         top_k: Number of results to return
         min_final_score: Minimum combined score threshold
@@ -420,6 +624,8 @@ def rank_candidates(
             query_entities=query_entities,
             candidate_entities=candidate_entities,
             query_keywords=query_keywords,
+            query_key_terms=query_key_terms,
+            query_issue_type=query_issue_type,
             weights=weights
         )
 
@@ -441,22 +647,38 @@ def explain_ranking(result: dict) -> str:
     """
     explanations = []
 
-    # Keyword matches are CRITICAL - list them first
-    matched_keywords = result.get("matched_keywords", [])
-    keyword_score = result.get("keyword_score", 0)
-    if matched_keywords:
-        kw_str = ", ".join(matched_keywords[:3])  # Show up to 3
-        if len(matched_keywords) > 3:
-            kw_str += f" +{len(matched_keywords) - 3} more"
-        explanations.append(f"Matched keywords: {kw_str}")
-    elif keyword_score == 0:
-        explanations.append("No keyword matches")
+    # Key terms matches (from abstraction) - most important
+    matched_terms = result.get("matched_terms", [])
+    key_terms_score = result.get("key_terms_score", 0)
+    if matched_terms:
+        terms_str = ", ".join(matched_terms[:3])
+        if len(matched_terms) > 3:
+            terms_str += f" +{len(matched_terms) - 3} more"
+        explanations.append(f"Matched terms: {terms_str}")
+    elif key_terms_score > 0:
+        explanations.append(f"Partial term match ({key_terms_score:.0%})")
 
+    # Issue type match (from abstraction)
+    issue_type_score = result.get("issue_type_score", 0)
+    if issue_type_score >= 1.0:
+        explanations.append("Same issue type")
+    elif issue_type_score >= 0.7:
+        explanations.append("Related issue type")
+
+    # Semantic match
     semantic = result.get("semantic_score", 0)
     if semantic >= 0.5:
         explanations.append(f"Strong semantic match ({semantic:.0%})")
     elif semantic >= 0.35:
         explanations.append(f"Moderate semantic match ({semantic:.0%})")
+
+    # Legacy keyword matches (fallback)
+    matched_keywords = result.get("matched_keywords", [])
+    if matched_keywords and not matched_terms:  # Only show if no term matches
+        kw_str = ", ".join(matched_keywords[:3])
+        if len(matched_keywords) > 3:
+            kw_str += f" +{len(matched_keywords) - 3} more"
+        explanations.append(f"Matched keywords: {kw_str}")
 
     phase = result.get("phase_score", 0)
     if phase >= 0.85:
