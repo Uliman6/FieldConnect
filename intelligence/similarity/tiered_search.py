@@ -14,12 +14,14 @@ Results are merged, deduped, and boosted by tier before final ranking.
 """
 
 import yaml
+import json
 import numpy as np
 from pathlib import Path
 from typing import Optional
 import db
 from similarity.ranking import rank_candidates
 from extraction.keywords import extract_all_keywords_flat
+from extraction.abstraction import abstract_rule_based, classify_issue_type
 
 
 # Tier boost values
@@ -139,6 +141,27 @@ def extract_search_keywords(text: str, max_keywords: int = 5) -> list[str]:
 
     # Return top N (first occurrence = likely more important)
     return unique_keywords[:max_keywords]
+
+
+def extract_query_abstraction(text: str) -> tuple[list[str], str]:
+    """
+    Extract key terms and issue type from query text using rule-based approach.
+
+    This is fast (no LLM) and suitable for real-time search queries.
+
+    Args:
+        text: The query/observation text
+
+    Returns:
+        Tuple of (key_terms, issue_type)
+    """
+    if not text:
+        return [], "general"
+
+    # Use rule-based abstraction
+    abstraction = abstract_rule_based(text)
+
+    return abstraction.key_terms, abstraction.issue_type
 
 
 def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
@@ -429,6 +452,8 @@ async def tiered_search_and_rank(
     min_final_score: float = 0.25,
     query_phase: Optional[str] = None,
     query_entities: Optional[dict[str, set[str]]] = None,
+    query_key_terms: Optional[list[str]] = None,
+    query_issue_type: Optional[str] = None,
     weights: Optional[dict[str, float]] = None,
     debug: bool = False
 ) -> list[dict]:
@@ -444,6 +469,8 @@ async def tiered_search_and_rank(
         min_final_score: Minimum score threshold
         query_phase: Construction phase
         query_entities: Extracted entities
+        query_key_terms: Pre-computed key terms (from LLM abstraction)
+        query_issue_type: Pre-computed issue type (from LLM abstraction)
         weights: Custom ranking weights
         debug: Include tier info in results
 
@@ -452,8 +479,15 @@ async def tiered_search_and_rank(
     """
     # Extract keywords for FTS
     keywords = extract_search_keywords(query_text) if query_text else []
-    # Also extract for ranking
+    # Also extract for ranking (legacy)
     query_keywords = extract_all_keywords_flat(query_text) if query_text else set()
+
+    # Extract key terms and issue type if not provided
+    # Uses fast rule-based approach for real-time queries
+    if query_text and not query_key_terms:
+        query_key_terms, extracted_issue_type = extract_query_abstraction(query_text)
+        if not query_issue_type:
+            query_issue_type = extracted_issue_type
 
     # Determine trade for search
     trade = query_trade.split(",")[0].strip() if query_trade else None
@@ -535,13 +569,15 @@ async def tiered_search_and_rank(
         (item, item["boosted_semantic_score"]) for item in all_results
     ]
 
-    # Apply full ranking
+    # Apply full ranking with abstraction-based scoring
     ranked = rank_candidates(
         candidates_with_semantic=candidates_with_semantic,
         query_phase=query_phase,
         query_entities=query_entities,
         entities_by_item=entities_by_item,
         query_keywords=query_keywords,
+        query_key_terms=query_key_terms,
+        query_issue_type=query_issue_type,
         weights=weights,
         top_k=top_k,
         min_final_score=min_final_score
@@ -555,6 +591,8 @@ async def tiered_search_and_rank(
                 "tier_boost": item.get("tier_boost", 0),
                 "raw_semantic": item.get("semantic_score", 0),
                 "keywords_used": keywords,
+                "query_key_terms": query_key_terms,
+                "query_issue_type": query_issue_type,
                 "trade_searched": trade,
                 "related_trades": related_trades,
             }
