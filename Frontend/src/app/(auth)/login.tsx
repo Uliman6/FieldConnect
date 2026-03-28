@@ -33,7 +33,8 @@ export default function LoginScreen() {
       await login(email, password);
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert('Login Failed', error || 'Please check your credentials');
+      const message = err instanceof Error ? err.message : 'Please check your credentials';
+      Alert.alert('Login Failed', message);
     }
   };
 

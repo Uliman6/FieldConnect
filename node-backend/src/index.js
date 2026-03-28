@@ -44,7 +44,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // CORS configuration - allow multiple origins for development
-// CORS_ORIGIN can be a single URL or comma-separated list
+// CORS_ORIGIN can be a single URL or comma-separated list of URLs
 const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
   : [];

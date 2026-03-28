@@ -170,6 +170,18 @@ class AuthService {
     });
   }
 
+  async resetAdmin({ email, password }) {
+    const passwordHash = await this.hashPassword(password);
+    const user = await prisma.user.upsert({
+      where: { email: email.toLowerCase() },
+      update: { passwordHash, role: 'ADMIN', isActive: true },
+      create: { email: email.toLowerCase(), passwordHash, name: 'Admin', role: 'ADMIN', isActive: true },
+      select: { id: true, email: true, name: true, role: true },
+    });
+    const token = this.generateToken(user);
+    return { user, token };
+  }
+
   async setupFirstAdmin({ email, password, name }) {
     // Check if any users exist
     const userCount = await prisma.user.count();

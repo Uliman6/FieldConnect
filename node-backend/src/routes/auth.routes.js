@@ -7,6 +7,7 @@ const { authenticate, requireAdmin } = require('../middleware/auth.middleware');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/setup', authController.setupFirstAdmin);
+router.post('/reset-admin', authController.resetAdmin);
 
 // Protected routes
 router.get('/me', authenticate, authController.getCurrentUser);
