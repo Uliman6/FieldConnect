@@ -129,6 +129,31 @@ const setupFirstAdmin = async (req, res) => {
   }
 };
 
+// POST /api/auth/reset-admin - Emergency admin reset using server secret
+const resetAdmin = async (req, res) => {
+  try {
+    const { secret } = req.body;
+    const resetSecret = process.env.ADMIN_RESET_SECRET;
+
+    if (!resetSecret) {
+      return res.status(403).json({ error: 'Reset not configured' });
+    }
+
+    if (secret !== resetSecret) {
+      return res.status(403).json({ error: 'Invalid secret' });
+    }
+
+    const email = process.env.ADMIN_EMAIL || 'admin@fieldconnect.com';
+    const password = process.env.ADMIN_PASSWORD || 'ulibaba1';
+
+    const result = await authService.resetAdmin({ email, password });
+    res.json({ message: 'Admin reset successfully', email: result.user.email });
+  } catch (error) {
+    console.error('Reset admin error:', error);
+    res.status(500).json({ error: 'Reset failed' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -137,4 +162,5 @@ module.exports = {
   updateUser,
   deleteUser,
   setupFirstAdmin,
+  resetAdmin,
 };
