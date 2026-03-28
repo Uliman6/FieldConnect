@@ -74,6 +74,9 @@ model User {
   invitationsSent     ProjectInvitation[] @relation("InvitationsSent")
   invitationsAccepted ProjectInvitation[] @relation("InvitationsAccepted")
 
+  // Maintenance visits
+  maintenanceVisits   MaintenanceVisit[]
+
   @@index([email])
   @@index([role])
   @@index([companyId])
@@ -1001,4 +1004,159 @@ model VoiceListItem {
   @@index([sectionId])
   @@index([orderIndex])
   @@map("voice_list_items")
+}
+
+// ============================================
+// MAINTENANCE FORMS (Pump Service System)
+// ============================================
+// Standalone maintenance form system for pump technicians
+
+enum VisitType {
+  BAKIM                   // Maintenance (Bakım)
+  SERVIS_SUPERVISORLUK    // Service & Supervision (Servis & Süpervizörlük)
+  DEVREYE_ALIM            // Commissioning (Devreye Alım)
+}
+
+enum PumpCategory {
+  MAIN
+  JOCKEY
+}
+
+enum PumpModel {
+  VERTICAL
+  HORIZONTAL
+}
+
+enum PumpType {
+  ELEKTRIKLI    // Electric
+  DIZEL         // Diesel
+}
+
+// Maintenance Visit - captures a single site visit
+model MaintenanceVisit {
+  id             String      @id @default(uuid())
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  // User who created the visit
+  userId         String      @map("user_id")
+  user           User        @relation(fields: [userId], references: [id])
+
+  // Company info (captured first)
+  companyName    String?     @map("company_name")    // Firma Adı
+  address        String?     @db.Text                // Adres
+
+  // Visit metadata
+  visitType      VisitType?  @map("visit_type")      // Selected after company info
+  notes          String?     @db.Text
+
+  // Status tracking
+  status         String      @default("draft")   // draft, in_progress, completed
+  completedAt    DateTime?   @map("completed_at")
+
+  // Relations
+  pumps          MaintenancePump[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([visitType])
+  @@index([createdAt])
+  @@map("maintenance_visits")
+}
+
+// Maintenance Pump - each pump added to a visit
+model MaintenancePump {
+  id            String        @id @default(uuid())
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // Parent visit
+  visitId       String        @map("visit_id")
+  visit         MaintenanceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  // Pump classification
+  pumpCategory  PumpCategory  @map("pump_category")
+  pumpModel     PumpModel?    @map("pump_model")     // VERTICAL, HORIZONTAL (for main pumps)
+  pumpType      PumpType?     @map("pump_type")      // ELEKTRIKLI, DIZEL (for main pumps)
+
+  // Pump identification details
+  brand         String?                              // Marka
+  modelNumber   String?       @map("model_number")   // Model
+  serialNumber  String?       @map("serial_number")  // Seri No
+  photoUrl      String?       @map("photo_url")
+
+  // Ordering
+  sortOrder     Int           @default(0) @map("sort_order")
+
+  // Relations
+  forms         MaintenancePumpForm[]
+  components    MaintenancePumpComponent[]
+
+  @@index([visitId])
+  @@index([pumpCategory])
+  @@map("maintenance_pumps")
+}
+
+// Maintenance Pump Component - each pump has multiple components (e.g., 3)
+model MaintenancePumpComponent {
+  id            String        @id @default(uuid())
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // Parent pump
+  pumpId        String        @map("pump_id")
+  pump          MaintenancePump @relation(fields: [pumpId], references: [id], onDelete: Cascade)
+
+  // Component identification
+  componentType String        @map("component_type")  // e.g., "MOTOR", "CONTROLLER", "PUMP_HEAD"
+  componentName String?       @map("component_name")
+
+  // ERP integration
+  erpTag        String?       @map("erp_tag")         // Tag from ERP system
+  erpData       Json?         @map("erp_data")        // Data pulled from ERP
+
+  // Manual entry fields (fallback if no ERP)
+  brand         String?
+  modelNumber   String?       @map("model_number")
+  serialNumber  String?       @map("serial_number")
+
+  // Component-specific data as JSON (flexible for different component types)
+  componentData Json?         @map("component_data") @default("{}")
+
+  // Ordering
+  sortOrder     Int           @default(0) @map("sort_order")
+
+  @@index([pumpId])
+  @@index([componentType])
+  @@map("maintenance_pump_components")
+}
+
+// Maintenance Pump Form - form instances linked to pumps
+model MaintenancePumpForm {
+  id             String    @id @default(uuid())
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Parent pump
+  pumpId         String    @map("pump_id")
+  pump           MaintenancePump @relation(fields: [pumpId], references: [id], onDelete: Cascade)
+
+  // Form type (extensible for different checklists)
+  formType       String    @map("form_type")  // DIESEL_CHECKLIST, ELECTRIC_CHECKLIST, JOCKEY_CHECKLIST, etc.
+
+  // Form data as JSON (flexible field storage)
+  formData       Json?     @map("form_data") @default("{}")
+
+  // Status tracking
+  status         String    @default("pending")  // pending, in_progress, completed
+  completedAt    DateTime? @map("completed_at")
+
+  // Generated PDF
+  generatedPdfPath String?  @map("generated_pdf_path")
+  pdfGeneratedAt   DateTime? @map("pdf_generated_at")
+
+  @@index([pumpId])
+  @@index([formType])
+  @@index([status])
+  @@map("maintenance_pump_forms")
 }
