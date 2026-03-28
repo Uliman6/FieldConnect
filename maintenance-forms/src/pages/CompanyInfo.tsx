@@ -14,6 +14,7 @@ interface PriorCompany {
 export default function CompanyInfo() {
   const [companyName, setCompanyName] = useState('');
   const [location, setLocation] = useState('');
+  const [isAddingNewLocation, setIsAddingNewLocation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [priorCompanies, setPriorCompanies] = useState<PriorCompany[]>([]);
@@ -72,6 +73,7 @@ export default function CompanyInfo() {
   const handleSelectCompany = (company: PriorCompany) => {
     setCompanyName(company.companyName);
     setSelectedCompany(company);
+    setIsAddingNewLocation(false);
     // If only one location, auto-select it
     if (company.locations.length === 1) {
       setLocation(company.locations[0]);
@@ -210,8 +212,8 @@ export default function CompanyInfo() {
           />
         </div>
 
-        {/* Location Selection - show dropdown if company has multiple locations */}
-        {selectedCompany && selectedCompany.locations.length > 1 ? (
+        {/* Location Selection - show dropdown if company has multiple locations and not adding new */}
+        {selectedCompany && selectedCompany.locations.length > 1 && !isAddingNewLocation ? (
           <div>
             <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
               Konum Sec
@@ -219,7 +221,14 @@ export default function CompanyInfo() {
             <select
               id="location"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value === '__new__') {
+                  setIsAddingNewLocation(true);
+                  setLocation('');
+                } else {
+                  setLocation(e.target.value);
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">-- Konum seciniz --</option>
@@ -231,15 +240,27 @@ export default function CompanyInfo() {
           </div>
         ) : null}
 
-        {/* New location input - show if no company selected, company has no locations, or new location selected */}
-        {(!selectedCompany || selectedCompany.locations.length === 0 || location === '__new__') && (
+        {/* New location input - show if no company selected, company has no locations, or adding new location */}
+        {(!selectedCompany || selectedCompany.locations.length === 0 || isAddingNewLocation) && (
           <div>
             <label htmlFor="locationInput" className="block text-sm font-medium text-gray-700 mb-1">
               Konum / Adres
+              {isAddingNewLocation && selectedCompany && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingNewLocation(false);
+                    setLocation('');
+                  }}
+                  className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+                >
+                  (Mevcut konumlara don)
+                </button>
+              )}
             </label>
             <textarea
               id="locationInput"
-              value={location === '__new__' ? '' : location}
+              value={location}
               onChange={(e) => setLocation(e.target.value)}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

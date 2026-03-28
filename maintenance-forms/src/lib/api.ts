@@ -181,7 +181,7 @@ class ApiClient {
   }
 
   async uploadPhoto(imageBase64: string): Promise<{ url: string }> {
-    const response = await this.client.post<{ url: string }>('/forms/photos/upload', { imageBase64 });
+    const response = await this.client.post<{ url: string }>('/forms/upload-photo', { imageBase64 });
     return response.data;
   }
 

@@ -447,6 +447,7 @@ export default function ServisForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState<Record<string, unknown>>({});
 
   // Load visit data
@@ -458,15 +459,29 @@ export default function ServisForm() {
         const data = await api.getVisit(visitId);
         setVisit(data);
 
-        // Pre-fill project info from visit
-        setFormData((prev) => ({
-          ...prev,
+        // Try to load existing form data from visit notes
+        let existingFormData: Record<string, unknown> = {};
+        if (data.notes) {
+          try {
+            const notesData = JSON.parse(data.notes);
+            if (notesData.SERVIS_RAPORU?.formData) {
+              existingFormData = notesData.SERVIS_RAPORU.formData;
+            }
+          } catch {
+            // Notes is not JSON or doesn't have form data
+          }
+        }
+
+        // Merge existing data with defaults
+        setFormData({
+          // Default values
           firma_adi: data.companyName || '',
           adres: data.address || '',
-          // Set default arrival date/time to now
           varis_tarihi: new Date().toISOString().split('T')[0],
           varis_saati: new Date().toTimeString().slice(0, 5),
-        }));
+          // Override with existing saved data
+          ...existingFormData,
+        });
       } catch {
         setError('Ziyaret yüklenemedi');
       } finally {
@@ -505,6 +520,7 @@ export default function ServisForm() {
 
     setIsSaving(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       // Combine all voice note transcriptions into notes_text
@@ -528,14 +544,20 @@ export default function ServisForm() {
         status: complete ? 'completed' : 'in_progress',
       });
 
+      // Refresh visit data to confirm save
+      const refreshedData = await api.getVisit(visitId);
+      setVisit(refreshedData);
+
       if (complete) {
         await api.updateVisit(visitId, { status: 'completed' });
-        alert('Servis raporu tamamlandı!');
-        navigate('/');
+        setSuccessMessage('Servis raporu tamamlandı!');
+        setTimeout(() => navigate('/'), 1500);
       } else {
-        alert('Kaydedildi!');
+        setSuccessMessage('Kaydedildi!');
+        setTimeout(() => setSuccessMessage(''), 3000);
       }
-    } catch {
+    } catch (err) {
+      console.error('Save error:', err);
       setError('Form kaydedilemedi. Lutfen tekrar deneyin.');
     } finally {
       setIsSaving(false);
@@ -548,8 +570,31 @@ export default function ServisForm() {
 
     setIsGeneratingPdf(true);
     setError('');
+    setSuccessMessage('');
 
     try {
+      // Auto-save form data before generating PDF to ensure latest data
+      const voiceNotes = (formData.voice_notes as VoiceNote[]) || [];
+      const transcriptions = voiceNotes
+        .filter(n => n.transcription)
+        .map(n => n.transcription)
+        .join('\n\n');
+
+      const finalFormData = {
+        ...formData,
+        combined_notes: [
+          formData.notes_text || '',
+          transcriptions,
+        ].filter(Boolean).join('\n\n---\n\n'),
+      };
+
+      await api.createOrUpdateVisitForm(visitId, {
+        formType: 'SERVIS_RAPORU',
+        formData: finalFormData,
+        status: 'in_progress',
+      });
+
+      // Generate and download PDF
       const blob = await api.downloadPdf(visitId);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -559,7 +604,8 @@ export default function ServisForm() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch {
+    } catch (err) {
+      console.error('PDF error:', err);
       setError('PDF olusturulamadi. Lutfen tekrar deneyin.');
     } finally {
       setIsGeneratingPdf(false);
@@ -601,6 +647,12 @@ export default function ServisForm() {
       {error && (
         <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
           {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="bg-green-50 text-green-600 p-3 rounded-md text-sm font-medium">
+          {successMessage}
         </div>
       )}
 

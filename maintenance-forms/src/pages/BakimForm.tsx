@@ -472,6 +472,7 @@ export default function BakimForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [activePumpIndex, setActivePumpIndex] = useState(0);
 
   // Form data for each pump (keyed by pump id)
@@ -535,11 +536,12 @@ export default function BakimForm() {
   };
 
   // Save form data for current pump
-  const handleSavePump = async () => {
+  const handleSavePump = async (moveToNext: boolean = false) => {
     if (!visitId || !currentPump) return;
 
     setIsSaving(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       // Save form data via API
@@ -549,13 +551,28 @@ export default function BakimForm() {
         status: 'in_progress',
       });
 
-      // Move to next pump if available
-      if (activePumpIndex < pumps.length - 1) {
-        setActivePumpIndex(activePumpIndex + 1);
-      } else {
-        alert('Tüm pompalar için form kaydedildi!');
+      // Refresh data from server to confirm save
+      const refreshedData = await api.getVisit(visitId);
+      setVisit(refreshedData);
+
+      // Update form data state with refreshed data
+      const refreshedFormData: Record<string, Record<string, unknown>> = {};
+      for (const pump of refreshedData.pumps || []) {
+        const existingForm = pump.forms?.find((f) => f.formType === 'BAKIM');
+        refreshedFormData[pump.id] = (existingForm?.formData as Record<string, unknown>) || formDataByPump[pump.id] || {};
       }
-    } catch {
+      setFormDataByPump(refreshedFormData);
+
+      // Show success message
+      setSuccessMessage('Kaydedildi!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+
+      // Move to next pump if requested and available
+      if (moveToNext && activePumpIndex < pumps.length - 1) {
+        setActivePumpIndex(activePumpIndex + 1);
+      }
+    } catch (err) {
+      console.error('Save error:', err);
       setError('Form kaydedilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsSaving(false);
@@ -568,6 +585,7 @@ export default function BakimForm() {
 
     setIsSaving(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       // Save all pump forms
@@ -582,9 +600,10 @@ export default function BakimForm() {
       // Update visit status to completed
       await api.updateVisit(visitId, { status: 'completed' });
 
-      alert('Bakım raporu tamamlandı!');
-      navigate('/');
-    } catch {
+      setSuccessMessage('Bakım raporu tamamlandı!');
+      setTimeout(() => navigate('/'), 1500);
+    } catch (err) {
+      console.error('Save all error:', err);
       setError('Form kaydedilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsSaving(false);
@@ -597,8 +616,19 @@ export default function BakimForm() {
 
     setIsGeneratingPdf(true);
     setError('');
+    setSuccessMessage('');
 
     try {
+      // Auto-save all pump forms before generating PDF to ensure latest data
+      for (const pump of pumps) {
+        await api.createOrUpdatePumpForm(pump.id, {
+          formType: 'BAKIM',
+          formData: formDataByPump[pump.id] || {},
+          status: 'in_progress',
+        });
+      }
+
+      // Generate and download PDF
       const blob = await api.downloadPdf(visitId);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -608,7 +638,8 @@ export default function BakimForm() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch {
+    } catch (err) {
+      console.error('PDF error:', err);
       setError('PDF olusturulamadi. Lutfen tekrar deneyin.');
     } finally {
       setIsGeneratingPdf(false);
@@ -669,6 +700,12 @@ export default function BakimForm() {
         </div>
       )}
 
+      {successMessage && (
+        <div className="bg-green-50 text-green-600 p-3 rounded-md text-sm font-medium">
+          {successMessage}
+        </div>
+      )}
+
       {/* Pump Tabs */}
       <div className="flex gap-1 overflow-x-auto pb-2">
         {pumps.map((pump, index) => (
@@ -711,12 +748,21 @@ export default function BakimForm() {
 
       {/* Action Buttons */}
       <div className="space-y-3 pt-4">
-        {/* Save current pump and continue */}
+        {/* Save current pump */}
+        <button
+          onClick={() => handleSavePump(false)}
+          disabled={isSaving}
+          className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+        >
+          {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+        </button>
+
+        {/* Save and move to next pump */}
         {activePumpIndex < pumps.length - 1 && (
           <button
-            onClick={handleSavePump}
+            onClick={() => handleSavePump(true)}
             disabled={isSaving}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
             {isSaving ? 'Kaydediliyor...' : 'Kaydet ve Sonraki Pompa →'}
           </button>
