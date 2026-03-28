@@ -34,6 +34,7 @@ const photosRoutes = require('./routes/photos.routes');
 const formsRoutes = require('./routes/forms.routes');
 const projectInvitationsRoutes = require('./routes/project-invitations.routes');
 const voiceListsRoutes = require('./routes/voice-lists.routes');
+const maintenanceRoutes = require('./routes/maintenance.routes');
 
 // Import middleware
 const errorHandler = require('./middleware/error-handler.middleware');
@@ -43,12 +44,19 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // CORS configuration - allow multiple origins for development
+// CORS_ORIGIN can be a single URL or comma-separated list
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+  : [];
+
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:8081',
   'http://127.0.0.1:8081',
   'http://localhost:19006',
-  process.env.CORS_ORIGIN?.trim()
+  'http://localhost:5173',  // Vite dev server (maintenance-forms)
+  'http://localhost:4173',  // Vite preview server
+  ...corsOrigins
 ].filter(Boolean);
 
 console.log('[CORS] Allowed origins:', allowedOrigins);
@@ -100,6 +108,7 @@ app.use('/api/document-schemas', documentSchemaRoutes); // Auth handled in route
 app.use('/api/photos', authenticate, photosRoutes);
 app.use('/api/forms', formsRoutes); // Auth handled in route file
 app.use('/api/voice-lists', voiceListsRoutes); // Auth handled in route file
+app.use('/api/maintenance', maintenanceRoutes); // Auth handled in route file
 app.use('/api', projectInvitationsRoutes); // Auth handled in route file
 
 // 404 handler
