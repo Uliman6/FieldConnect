@@ -114,13 +114,19 @@ function OCRCaptureButton({
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[OCR] handleFileChange triggered');
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('[OCR] No file selected');
+      return;
+    }
+    console.log('[OCR] File selected:', file.name, file.size, 'bytes');
 
     setStatus('processing');
     setError(null);
 
     try {
+      console.log('[OCR] Converting to base64...');
       // Convert to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
