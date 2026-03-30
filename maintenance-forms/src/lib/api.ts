@@ -176,8 +176,22 @@ class ApiClient {
     equipmentType?: string;
     fieldsToExtract?: string[];
   }): Promise<OcrResponse> {
-    const response = await this.client.post<OcrResponse>('/forms/ocr/nameplate', data);
-    return response.data;
+    try {
+      const response = await this.client.post<OcrResponse>('/forms/ocr/nameplate', data);
+      return response.data;
+    } catch (error: unknown) {
+      // Extract error message from axios error
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { error?: string } } };
+        const serverError = axiosError.response?.data?.error;
+        if (serverError) {
+          return { success: false, extractedData: {}, formFields: {}, error: serverError };
+        }
+      }
+      // Re-throw with more info
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, extractedData: {}, formFields: {}, error: errorMsg };
+    }
   }
 
   async uploadPhoto(imageBase64: string): Promise<{ url: string }> {
@@ -243,6 +257,7 @@ export interface OcrResponse {
   extractedData: Record<string, string | null>;
   formFields: Record<string, string>;
   rawResponse?: string;
+  error?: string;
 }
 
 // Transcription Response type
