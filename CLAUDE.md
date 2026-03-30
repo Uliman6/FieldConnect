@@ -18,9 +18,22 @@ FieldConnect (formerly SiteSpeak) is a construction daily log application for fi
 - **Stack**: Express, Prisma ORM, JWT authentication
 - **Database**: PostgreSQL on Railway
 
+### Maintenance Forms (Separate Vite/React App)
+- **Location**: `maintenance-forms/`
+- **Deployed on**: Vercel as SEPARATE PROJECT (NOT fieldconnect)
+- **Vercel Project Name**: `maintenance-forms` (different from main FieldConnect frontend)
+- **URL**: Check Vercel dashboard for actual URL
+- **Stack**: Vite, React, TypeScript, Tailwind CSS
+- **Build**: `npm run build`
+- **API**: Uses same Render backend at https://fieldconnect.onrender.com
+
+**IMPORTANT**: The maintenance-forms app is a SEPARATE Vercel project from the main FieldConnect frontend. Do NOT deploy it under the fieldconnect Vercel project. They are two independent frontends sharing the same backend.
+
 ### Key Configuration Files
 - `Frontend/vercel.json` - Vercel build config with legacy-peer-deps
 - `Frontend/.env.production` - Contains `EXPO_PUBLIC_API_URL` pointing to Render backend
+- `maintenance-forms/vercel.json` - Vercel config for maintenance-forms (separate project)
+- `maintenance-forms/.env.production` - Contains `VITE_API_URL` pointing to Render backend
 - `node-backend/Dockerfile` - Multi-stage build using node:20-slim (not Alpine, due to OpenSSL compatibility)
 - `node-backend/prisma/schema.prisma` - Database schema with `debian-openssl-3.0.x` binary target
 
@@ -73,23 +86,30 @@ FieldConnect (formerly SiteSpeak) is a construction daily log application for fi
 ## File Structure
 ```
 Backend/
-├── Frontend/           # Expo web frontend
+├── Frontend/              # Expo web frontend (FieldConnect main app)
 │   ├── src/
-│   │   ├── app/       # Expo Router routes
-│   │   ├── components/# UI components (including .web.tsx variants)
-│   │   └── lib/       # Utilities, stores, transcription service
+│   │   ├── app/          # Expo Router routes
+│   │   ├── components/   # UI components (including .web.tsx variants)
+│   │   └── lib/          # Utilities, stores, transcription service
 │   ├── vercel.json
 │   └── .env.production
-├── node-backend/       # Express backend
+├── maintenance-forms/     # Vite/React app (SEPARATE Vercel project!)
 │   ├── src/
-│   │   ├── controllers/
-│   │   ├── routes/
-│   │   ├── services/  # Including transcription.service.js
+│   │   ├── pages/        # React pages (Login, PumpSetup, BakimForm, etc.)
+│   │   ├── components/   # Shared components
+│   │   └── lib/          # API client, types, form definitions
+│   ├── vercel.json
+│   └── .env.production
+├── node-backend/          # Express backend (shared by both frontends)
+│   ├── src/
+│   │   ├── controllers/  # Including maintenance.controller.js
+│   │   ├── routes/       # Including maintenance.routes.js
+│   │   ├── services/     # Including ocr.service.js, maintenance-pdf.service.js
 │   │   └── middleware/
 │   ├── prisma/
 │   │   └── schema.prisma
 │   └── Dockerfile
-└── CLAUDE.md          # This file
+└── CLAUDE.md             # This file
 ```
 
 ## Common Issues & Solutions
