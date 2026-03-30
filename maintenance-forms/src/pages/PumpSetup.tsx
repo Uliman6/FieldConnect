@@ -141,11 +141,13 @@ function OCRCaptureButton({
       }
 
       // Call OCR API
+      console.log('[OCR] Sending request, image size:', base64.length, 'chars');
       const result = await api.extractNameplateOcr({
         imageBase64: base64,
         equipmentType,
         fieldsToExtract,
       });
+      console.log('[OCR] Response:', result);
 
       if (result.success && result.extractedData) {
         // Map extracted data to our field keys
@@ -162,12 +164,15 @@ function OCRCaptureButton({
         onFill(mappedData, photoWithPrefix);
         setStatus('done');
       } else {
-        setError('Etiket okunamadı. Manuel giriş yapabilirsiniz.');
+        const errorMsg = result.error || 'Etiket okunamadı';
+        console.error('[OCR] Failed:', errorMsg);
+        setError(`${errorMsg}. Manuel giriş yapabilirsiniz.`);
         setStatus('error');
       }
-    } catch (err) {
-      console.error('OCR error:', err);
-      setError('OCR hatası. Lütfen tekrar deneyin.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      console.error('[OCR] Exception:', err);
+      setError(`OCR hatası: ${errorMessage}`);
       setStatus('error');
     }
 
