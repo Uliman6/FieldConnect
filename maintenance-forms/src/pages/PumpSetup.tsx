@@ -90,6 +90,59 @@ function CollapsibleSection({
   );
 }
 
+// Photo source picker modal - lets mobile users choose camera or gallery
+function PhotoSourcePicker({
+  isOpen,
+  onClose,
+  onCamera,
+  onGallery,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onCamera: () => void;
+  onGallery: () => void;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-40"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-t-2xl w-full max-w-sm p-4 pb-8 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+        <p className="text-center text-sm font-medium text-gray-600 mb-4">Fotoğraf Kaynağı Seç</p>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => { onCamera(); onClose(); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm font-medium"
+          >
+            <span className="text-xl">📷</span> Kamera ile Çek
+          </button>
+          <button
+            type="button"
+            onClick={() => { onGallery(); onClose(); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors text-sm font-medium"
+          >
+            <span className="text-xl">🖼️</span> Galeriden / Dosyadan Seç
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full mt-3 px-4 py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          İptal
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // OCR Status type
 type OcrStatus = 'idle' | 'capturing' | 'processing' | 'done' | 'error';
 
@@ -107,10 +160,12 @@ function OCRCaptureButton({
 }) {
   const [status, setStatus] = useState<OcrStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleCapture = () => {
-    fileInputRef.current?.click();
+    setShowPicker(true);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,11 +286,24 @@ function OCRCaptureButton({
 
   return (
     <div className="space-y-2">
+      <PhotoSourcePicker
+        isOpen={showPicker}
+        onClose={() => setShowPicker(false)}
+        onCamera={() => cameraInputRef.current?.click()}
+        onGallery={() => galleryInputRef.current?.click()}
+      />
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
         type="file"
         accept="image/*"
         capture="environment"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -404,7 +472,9 @@ function ComponentSection({
 }) {
   const [isExpanded, setIsExpanded] = useState(isFirst);
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; title: string } | null>(null);
-  const labelInputRef = useRef<HTMLInputElement>(null);
+  const [showLabelPicker, setShowLabelPicker] = useState(false);
+  const labelCameraInputRef = useRef<HTMLInputElement>(null);
+  const labelGalleryInputRef = useRef<HTMLInputElement>(null);
   const definition = COMPONENT_DEFINITIONS[componentType];
   void showValidation; // Reserved for future validation
 
@@ -438,8 +508,11 @@ function ComponentSection({
 
     onLabelPhotosChange([...labelPhotos, base64]);
 
-    if (labelInputRef.current) {
-      labelInputRef.current.value = '';
+    if (labelCameraInputRef.current) {
+      labelCameraInputRef.current.value = '';
+    }
+    if (labelGalleryInputRef.current) {
+      labelGalleryInputRef.current.value = '';
     }
   };
 
@@ -499,21 +572,34 @@ function ComponentSection({
           {/* Separate Label Photos Section */}
           {onLabelPhotosChange && (
             <div className="border-t border-gray-200 pt-4 mt-4">
+              <PhotoSourcePicker
+                isOpen={showLabelPicker}
+                onClose={() => setShowLabelPicker(false)}
+                onCamera={() => labelCameraInputRef.current?.click()}
+                onGallery={() => labelGalleryInputRef.current?.click()}
+              />
+              <input
+                ref={labelCameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleLabelPhotoCapture}
+                className="hidden"
+              />
+              <input
+                ref={labelGalleryInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLabelPhotoCapture}
+                className="hidden"
+              />
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-600">
                   Etiket Fotoğrafları
                 </label>
-                <input
-                  ref={labelInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleLabelPhotoCapture}
-                  className="hidden"
-                />
                 <button
                   type="button"
-                  onClick={() => labelInputRef.current?.click()}
+                  onClick={() => setShowLabelPicker(true)}
                   className="text-sm bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-200 flex items-center gap-1"
                 >
                   <span>📷</span> Fotoğraf Ekle
