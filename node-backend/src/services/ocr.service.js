@@ -31,27 +31,84 @@ async function extractNameplateData(imageBase64, fieldsToExtract = [], equipment
 
     // Build equipment-specific prompt
     let equipmentPrompt = '';
-    if (equipmentType === 'fire pump controller' || equipmentType === 'controller') {
+    if (equipmentType === 'fire_pump_controller' || equipmentType === 'fire pump controller' || equipmentType === 'controller') {
       equipmentPrompt = `You are an expert at reading fire pump controller and electrical panel nameplates.
 
 Analyze this controller nameplate/data plate image and extract the following information:
-${fieldDescriptions}
 
-IMPORTANT GUIDELINES FOR CONTROLLER PANELS:
-- Look for the brand/manufacturer name prominently displayed (e.g., EATON, Firetrol, Metron, Tornatech)
-- CAT. NO. or CATALOG NO. contains the catalog/model number
-- H.P. is horsepower rating
-- PHASE indicates single (1) or three phase (3)
-- HERTZ is the frequency (50 or 60 Hz)
-- VOLTS is the main voltage rating
-- CONTROL CIRCUIT VOLTS is the control voltage (often 120V or 24V)
-- SERIAL NO. is the serial number
-- ENCL. TYPE is the enclosure type rating
-- SCCR or "AMPERES R.M.S. SYMMETRICAL" is the short circuit current rating
-- Look for "MADE IN" followed by country name
-- Read ALL text carefully, including small print and certification marks
-- If a field is not visible, return null for that field
-- Return ONLY valid JSON, no markdown formatting`;
+CRITICAL FIELD LOCATIONS FOR CONTROLLERS:
+- BRAND/MANUFACTURER: Look at the TOP of the label for brand name (e.g., EATON, Firetrol, Metron, Tornatech, Master Control Systems)
+- MODEL: Look for "CAT. NO." or "CATALOG NO." - the value next to it is the model (e.g., FD120-L1)
+- SERIAL NUMBER: Look for "SERIAL NO." - the value next to it is the serial number (e.g., 16BR671D)
+- MANUFACTURING YEAR: Look for date codes or "MFD" with year
+
+Return a JSON object with these exact keys:
+{
+  "brand": "The manufacturer name from top of label",
+  "model": "The CAT. NO. or catalog number value",
+  "serial_number": "The SERIAL NO. value",
+  "manufacturing_year": "Year if visible, otherwise null"
+}
+
+IMPORTANT: Return ONLY the JSON object, no markdown formatting. If a field is not visible, use null.`;
+    } else if (equipmentType === 'fire_pump' || equipmentType === 'pump') {
+      equipmentPrompt = `You are an expert at reading fire pump nameplates and data plates.
+
+IMPORTANT: The image may be rotated 90 degrees. Read ALL text regardless of orientation.
+
+Analyze this pump nameplate image and extract the following information:
+
+CRITICAL FIELD LOCATIONS FOR PUMPS:
+- BRAND/MANUFACTURER: Look for the company name - often appears as large text like "Fairbanks Morse", "Aurora", "Peerless", "Patterson", "Pentair". May also show parent company (e.g., "Pentair Pump Group"). Return the main brand name.
+- MODEL/TYPE: Look for "TYPE" followed by an alphanumeric code (e.g., 1824BF, 8x6x13)
+- SERIAL NUMBER: Look for "NO." followed by a number (e.g., 12-2178178-2)
+- GPM/CAPACITY: Look for "G.P.M." or "GPM" followed by a number. This is the flow capacity. Examples: "G.P.M. 2500" means 2500, or "G.P.M. 2000 AT 125 P.S.I." means 2000.
+- RPM: Look for "R.P.M." or "RPM" followed by a number (e.g., 2100, 1770)
+- HEAD: Look for "HEAD" followed by a number and "FEET" (e.g., "HEAD 323 FEET" means 323)
+
+PRESSURE VALUES (if present):
+- PRESSURE AT 0% (shutoff): Look for "MAX. PRESS" or "MAX PRESS" value
+- PRESSURE AT 100% (rated): Look for PSI value after "AT" in "G.P.M. X AT Y P.S.I."
+- PRESSURE AT 150% (overload): Look for "P.S.I. AT 150%" value
+
+Return a JSON object with these exact keys:
+{
+  "brand": "The manufacturer/brand name (e.g., Fairbanks Morse)",
+  "model": "The TYPE value (alphanumeric code)",
+  "serial_number": "The NO. value",
+  "capacity_gpm": "The G.P.M. number (digits only)",
+  "rpm": "The R.P.M. number (digits only)",
+  "pressure_0": "MAX. PRESS value if present, otherwise null",
+  "pressure_100": "Rated PSI value if present, otherwise null",
+  "pressure_150": "150% PSI value if present, otherwise null",
+  "manufacturing_year": "Year if visible, otherwise null"
+}
+
+IMPORTANT: Return ONLY the JSON object, no markdown formatting. If a field is not visible, use null.`;
+    } else if (equipmentType === 'diesel_engine' || equipmentType === 'engine' || equipmentType === 'driver') {
+      equipmentPrompt = `You are an expert at reading diesel engine and driver nameplates for fire pumps.
+
+Analyze this engine/driver nameplate image and extract the following information:
+
+CRITICAL FIELD LOCATIONS FOR ENGINES/DRIVERS:
+- BRAND/MANUFACTURER: Look for "manufactured by" or the company name at TOP of label (e.g., Clarke, Cummins, John Deere, Doosan)
+- MODEL: Look for "MODEL" - the value next to it is the model number (e.g., DQ6H-UFAA50)
+- SERIAL NUMBER: Look for "MFG. S/N" or "MFG S/N" or "SERIAL NO." - this is the manufacturer serial number (e.g., LDIPA105934)
+- HORSEPOWER: Look for "BHP" - often shown as "FROM ___ BHP @ ___ RPM" or "UP TO ___ BHP" (e.g., 340)
+- RPM: Look for the RPM value associated with BHP rating (e.g., 2100)
+- MANUFACTURING YEAR: Look for "MFD." with "MO." and "YEAR" fields at bottom
+
+Return a JSON object with these exact keys:
+{
+  "brand": "The manufacturer name",
+  "model": "The MODEL value",
+  "serial_number": "The MFG. S/N value",
+  "horsepower": "The BHP value (number only)",
+  "rpm": "The RPM value (number only)",
+  "manufacturing_year": "Year if visible, otherwise null"
+}
+
+IMPORTANT: Return ONLY the JSON object, no markdown formatting. If a field is not visible, use null.`;
     } else {
       equipmentPrompt = `You are an expert at reading industrial equipment nameplates and data plates.
 
@@ -59,6 +116,7 @@ Analyze this ${equipmentType} nameplate image and extract the following informat
 ${fieldDescriptions}
 
 IMPORTANT GUIDELINES:
+- BRAND: Usually at the TOP of the label, often the largest text
 - Read the text carefully, including any stamped or engraved numbers
 - For serial numbers, include all characters exactly as shown
 - For model numbers, preserve exact formatting including dashes and spaces
@@ -69,22 +127,8 @@ IMPORTANT GUIDELINES:
 - Return ONLY valid JSON, no markdown formatting`;
     }
 
-    const prompt = `${equipmentPrompt}
-
-Return a JSON object with the extracted values. Example format:
-{
-  "brand": "Eaton",
-  "catalog_no": "FDJP-2C-T",
-  "serial_number": "16BR671J",
-  "hp": "2",
-  "phase": "3",
-  "hertz": "50",
-  "volts": "380",
-  "control_volts": "120",
-  "enclosure_type": "2",
-  "sccr": "100000",
-  "country": "Canada"
-}`;
+    // Use the equipment-specific prompt directly (it already includes the JSON format)
+    const prompt = equipmentPrompt;
 
     const response = await fetch(OPENAI_VISION_ENDPOINT, {
       method: 'POST',
