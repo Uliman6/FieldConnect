@@ -217,11 +217,13 @@ function OCRCaptureButton({
           if (value) {
             // Convert API field names to our field keys
             const fieldKey = mapOcrFieldToKey(key);
+            console.log('[OCR] Mapping:', key, '->', fieldKey, '=', value);
             if (fieldKey) {
-              mappedData[fieldKey] = value;
+              mappedData[fieldKey] = String(value);
             }
           }
         });
+        console.log('[OCR] Final mapped data:', mappedData);
         onFill(mappedData, photoWithPrefix);
         setStatus('done');
       } else {
@@ -491,7 +493,9 @@ function ComponentSection({
 
   // Handler for OCR fill - populates multiple fields at once and stores photo
   const handleOCRFill = (ocrData: Record<string, string>, photo?: string) => {
+    console.log('[OCR] handleOCRFill called with:', ocrData);
     onBulkChange(ocrData);
+    console.log('[OCR] onBulkChange called');
     if (photo && onOcrPhotoChange) {
       onOcrPhotoChange(photo);
     }
