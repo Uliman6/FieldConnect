@@ -1537,15 +1537,17 @@ export default function PumpSetup() {
           <div className="space-y-4">
             {pumps.map((pump, index) => (
               <PumpCard
-                key={index}
+                key={pump.id || `pump-${index}`}
                 index={index}
                 data={pump}
                 onChange={(newData) => {
                   console.log('[OCR] Parent onChange - newData.components.pompa:', newData.components?.pompa);
-                  const newPumps = [...pumps];
-                  newPumps[index] = newData;
-                  console.log('[OCR] Parent onChange - calling setPumps');
-                  setPumps(newPumps);
+                  setPumps(prevPumps => {
+                    const newPumps = [...prevPumps];
+                    newPumps[index] = newData;
+                    console.log('[OCR] Parent onChange - setPumps callback, new pompa:', newPumps[index].components?.pompa);
+                    return newPumps;
+                  });
                 }}
                 onRemove={() => {
                   setPumps(pumps.filter((_, i) => i !== index));
@@ -1617,13 +1619,16 @@ export default function PumpSetup() {
               <div className="space-y-3">
                 {jockeyPumps.map((pump, index) => (
                   <JockeyPumpCard
-                    key={index}
+                    key={pump.id || `jockey-${index}`}
                     index={index}
                     data={pump}
                     onChange={(newData) => {
-                      const newPumps = [...jockeyPumps];
-                      newPumps[index] = newData;
-                      setJockeyPumps(newPumps);
+                      console.log('[OCR] Jockey Parent onChange - newData.pompa:', newData.pompa);
+                      setJockeyPumps(prevPumps => {
+                        const newPumps = [...prevPumps];
+                        newPumps[index] = newData;
+                        return newPumps;
+                      });
                     }}
                     onRemove={() => {
                       setJockeyPumps(jockeyPumps.filter((_, i) => i !== index));
