@@ -164,24 +164,28 @@ function OCRCaptureButton({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  // Use refs to avoid stale closure in async callback
+  const onFillRef = useRef(onFill);
+  const onPhotoCaptureRef = useRef(onPhotoCapture);
+  useEffect(() => {
+    onFillRef.current = onFill;
+    onPhotoCaptureRef.current = onPhotoCapture;
+  });
+
   const handleCapture = () => {
     setShowPicker(true);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('[OCR] handleFileChange triggered');
     const file = e.target.files?.[0];
     if (!file) {
-      console.log('[OCR] No file selected');
       return;
     }
-    console.log('[OCR] File selected:', file.name, file.size, 'bytes');
 
     setStatus('processing');
     setError(null);
 
     try {
-      console.log('[OCR] Converting to base64...');
       // Convert to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -197,8 +201,8 @@ function OCRCaptureButton({
 
       // Store photo with data URI prefix for display
       const photoWithPrefix = `data:image/jpeg;base64,${base64}`;
-      if (onPhotoCapture) {
-        onPhotoCapture(photoWithPrefix);
+      if (onPhotoCaptureRef.current) {
+        onPhotoCaptureRef.current(photoWithPrefix);
       }
 
       // Call OCR API
@@ -224,7 +228,7 @@ function OCRCaptureButton({
           }
         });
         console.log('[OCR] Final mapped data:', mappedData);
-        onFill(mappedData, photoWithPrefix);
+        onFillRef.current(mappedData, photoWithPrefix);
         setStatus('done');
       } else {
         const errorMsg = result.error || 'Etiket okunamadı';
