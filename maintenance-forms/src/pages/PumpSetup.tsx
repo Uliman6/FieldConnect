@@ -153,7 +153,7 @@ function OCRCaptureButton({
   fieldsToExtract,
   onPhotoCapture,
 }: {
-  onFill: (data: Record<string, string>, photo?: string) => void;
+  onFill: (data: Record<string, string>) => void;
   equipmentType: EquipmentType;
   fieldsToExtract: string[];
   onPhotoCapture?: (photo: string | null) => void;
@@ -228,7 +228,7 @@ function OCRCaptureButton({
           }
         });
         console.log('[OCR] Final mapped data:', mappedData);
-        onFillRef.current(mappedData, photoWithPrefix);
+        onFillRef.current(mappedData);
         setStatus('done');
       } else {
         const errorMsg = result.error || 'Etiket okunamadı';
@@ -498,14 +498,12 @@ function ComponentSection({
   ).length;
   const badge = filledRequiredCount > 0 ? `${filledRequiredCount}/${requiredCount}` : undefined;
 
-  // Handler for OCR fill - populates multiple fields at once and stores photo
-  const handleOCRFill = (ocrData: Record<string, string>, photo?: string) => {
+  // Handler for OCR fill - populates multiple fields at once
+  // Note: Photo is already saved by onPhotoCapture in OCRCaptureButton before this is called
+  const handleOCRFill = (ocrData: Record<string, string>) => {
     console.log('[OCR] handleOCRFill called with:', ocrData);
     onBulkChange(ocrData);
     console.log('[OCR] onBulkChange called');
-    if (photo && onOcrPhotoChange) {
-      onOcrPhotoChange(photo);
-    }
   };
 
   // Handle adding label photos
