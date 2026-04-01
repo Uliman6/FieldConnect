@@ -361,6 +361,9 @@ function ComponentFieldsForm({
 }) {
   const definition = COMPONENT_DEFINITIONS[componentType];
 
+  // Debug: log what data the form receives
+  console.log('[OCR] ComponentFieldsForm render - componentType:', componentType, 'data:', data);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {definition.fields.map((field) => {
@@ -755,13 +758,17 @@ function PumpCard({
               });
             }}
             onBulkChange={(updates) => {
-              onChange({
+              console.log('[OCR] PumpCard onBulkChange - updates:', updates);
+              console.log('[OCR] PumpCard onBulkChange - current data.components.pompa:', data.components.pompa);
+              const newData = {
                 ...data,
                 components: {
                   ...data.components,
                   pompa: { ...data.components.pompa, ...updates },
                 },
-              });
+              };
+              console.log('[OCR] PumpCard onBulkChange - newData.components.pompa:', newData.components.pompa);
+              onChange(newData);
             }}
             isFirst={true}
             showValidation={showValidation}
@@ -964,10 +971,13 @@ function JockeyPumpCard({
               });
             }}
             onBulkChange={(updates) => {
-              onChange({
+              console.log('[OCR] JockeyCard onBulkChange - updates:', updates);
+              const newData = {
                 ...data,
                 pompa: { ...data.pompa, ...updates },
-              });
+              };
+              console.log('[OCR] JockeyCard onBulkChange - newData.pompa:', newData.pompa);
+              onChange(newData);
             }}
             isFirst={true}
             showValidation={showValidation}
@@ -1531,8 +1541,10 @@ export default function PumpSetup() {
                 index={index}
                 data={pump}
                 onChange={(newData) => {
+                  console.log('[OCR] Parent onChange - newData.components.pompa:', newData.components?.pompa);
                   const newPumps = [...pumps];
                   newPumps[index] = newData;
+                  console.log('[OCR] Parent onChange - calling setPumps');
                   setPumps(newPumps);
                 }}
                 onRemove={() => {
