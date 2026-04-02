@@ -94,9 +94,20 @@ async function generateBakimPdf(visit, pumps, formDataByPump) {
       const headerBg = '#1E40AF'; // Blue
       const sectionBg = '#DBEAFE'; // Light blue
 
+      // Filter out pumps that have no component data and no form data (avoid blank pages)
+      const pumpsWithData = pumps.filter(pump => {
+        const hasComponents = (pump.components || []).some(c => {
+          const d = c.componentData || {};
+          return Object.entries(d).some(([k, v]) => !PHOTO_KEYS.has(k) && v);
+        });
+        const hasForm = Object.keys(formDataByPump[pump.id] || {}).length > 0;
+        return hasComponents || hasForm;
+      });
+      const activePumps = pumpsWithData.length > 0 ? pumpsWithData : pumps.slice(0, 1);
+
       // For each pump, generate a form page
-      for (let pumpIndex = 0; pumpIndex < pumps.length; pumpIndex++) {
-        const pump = pumps[pumpIndex];
+      for (let pumpIndex = 0; pumpIndex < activePumps.length; pumpIndex++) {
+        const pump = activePumps[pumpIndex];
         const formData = formDataByPump[pump.id] || {};
 
         if (pumpIndex > 0) {
@@ -118,13 +129,13 @@ async function generateBakimPdf(visit, pumps, formDataByPump) {
         doc.fontSize(9).font(FONT_BOLD);
 
         doc.text('Firma:', 35, infoY + 5);
-        doc.font(FONT_REGULAR).text(visit.customerName || '-', 80, infoY + 5);
+        doc.font(FONT_REGULAR).text(visit.companyName || '-', 80, infoY + 5);
 
         doc.font(FONT_BOLD).text('Tarih:', 300, infoY + 5);
         doc.font(FONT_REGULAR).text(new Date(visit.createdAt).toLocaleDateString('tr-TR'), 340, infoY + 5);
 
         doc.font(FONT_BOLD).text('Konum:', 35, infoY + 20);
-        doc.font(FONT_REGULAR).text(visit.location || '-', 80, infoY + 20);
+        doc.font(FONT_REGULAR).text(visit.address || '-', 80, infoY + 20);
 
         doc.font(FONT_BOLD).text('Pompa:', 300, infoY + 20);
         doc.font(FONT_REGULAR).text(`${pumpIndex + 1}/${pumps.length} - ${pump.pumpCategory === 'JOCKEY' ? 'Jockey' : 'Ana'} Pompa`, 345, infoY + 20);
@@ -133,7 +144,8 @@ async function generateBakimPdf(visit, pumps, formDataByPump) {
         doc.font(FONT_REGULAR).text(`${pump.pumpModel || '-'} / ${pump.pumpType || '-'}`, 95, infoY + 35);
 
         doc.font(FONT_BOLD).text('Marka:', 300, infoY + 35);
-        doc.font(FONT_REGULAR).text(pump.brand || '-', 340, infoY + 35);
+        const pompaBrand = (pump.components || []).find(c => c.componentType === 'pompa')?.brand || pump.brand || '-';
+        doc.font(FONT_REGULAR).text(pompaBrand, 340, infoY + 35);
 
         doc.y = infoY + 70;
 
@@ -193,9 +205,9 @@ async function generateServisPdf(visit, formData) {
       drawSectionHeader(doc, 'Proje Bilgileri / Project Information', sectionBg);
 
       const projectFields = [
-        { label: 'Isin Adi / Project Name', value: formData.isin_adi || visit.customerName || '-' },
-        { label: 'Firma Adi / Company', value: formData.firma_adi || '-' },
-        { label: 'Adres / Address', value: formData.adres || visit.location || '-' },
+        { label: 'Isin Adi / Project Name', value: formData.isin_adi || visit.companyName || '-' },
+        { label: 'Firma Adi / Company', value: formData.firma_adi || visit.companyName || '-' },
+        { label: 'Adres / Address', value: formData.adres || visit.address || '-' },
         { label: 'Il / City', value: formData.il || '-' },
         { label: 'Ilce / District', value: formData.ilce || '-' },
       ];
@@ -431,29 +443,58 @@ async function drawPhotos(doc, photos) {
   doc.y = startY + maxHeight + 20;
 }
 
+const COMPONENT_LABELS = {
+  pompa: 'Pompa',
+  kontrolPaneli: 'Kontrol Paneli',
+  surucu: 'Sürücü',
+};
+
+const FIELD_LABELS = {
+  brand: 'Marka / Brand',
+  model: 'Model',
+  serialNumber: 'Seri No / Serial',
+  manufacturingYear: 'İmalat Yılı',
+  capacity: 'Kapasite (%100 GPM)',
+  rpm: 'Devir / RPM',
+  pressure0: 'Etiket Basıncı %0 (PSI)',
+  pressure100: 'Etiket Basıncı %100 (PSI)',
+  pressure150: 'Etiket Basıncı %150 (PSI)',
+  power: 'Sürücü Gücü',
+};
+
+const PHOTO_KEYS = new Set(['ocrPhoto', 'labelPhotos']);
+
 async function drawPumpComponentSection(doc, title, pump, bgColor) {
   drawSectionHeader(doc, title, bgColor);
 
-  // Get components from pump
   const components = pump.components || [];
 
-  // Pump info
-  drawTextField(doc, 'Marka / Brand', pump.brand || '-');
-  drawTextField(doc, 'Model', pump.modelNumber || '-');
-  drawTextField(doc, 'Seri No / Serial', pump.serialNumber || '-');
-
-  // Component details
   for (const comp of components) {
-    if (comp.componentType && comp.componentData) {
-      doc.moveDown(0.3);
-      doc.fontSize(9).font(FONT_BOLD).text(`${comp.componentType}:`, 35);
+    if (!comp.componentType || !comp.componentData) continue;
 
-      const data = comp.componentData;
-      for (const [key, value] of Object.entries(data)) {
-        if (value) {
-          drawTextField(doc, key, String(value));
-        }
-      }
+    const label = COMPONENT_LABELS[comp.componentType] || comp.componentType;
+    doc.moveDown(0.3);
+    doc.fontSize(9).font(FONT_BOLD).fillColor('black').text(label + ':', 35);
+
+    const data = comp.componentData;
+    // Draw text fields (skip photo keys)
+    for (const [key, value] of Object.entries(data)) {
+      if (PHOTO_KEYS.has(key) || !value || (Array.isArray(value) && value.length === 0)) continue;
+      const fieldLabel = FIELD_LABELS[key] || key;
+      drawTextField(doc, fieldLabel, String(value));
+    }
+
+    // Draw OCR photo + label photos
+    const allPhotos = [];
+    if (data.ocrPhoto) allPhotos.push({ url: data.ocrPhoto, caption: 'OCR Fotoğrafı' });
+    if (Array.isArray(data.labelPhotos)) {
+      data.labelPhotos.forEach((p, i) => allPhotos.push({ url: p, caption: `Etiket #${i + 1}` }));
+    }
+
+    if (allPhotos.length > 0) {
+      if (doc.y > 600) doc.addPage();
+      drawSectionHeader(doc, `${label} - Fotoğraflar`, bgColor);
+      await drawPhotos(doc, allPhotos);
     }
   }
 }
