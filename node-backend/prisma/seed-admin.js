@@ -51,9 +51,42 @@ async function seedAdmin() {
   } catch (error) {
     console.error('Error seeding admin:', error);
     process.exit(1);
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
-seedAdmin();
+async function seedUsers() {
+  const additionalUsers = [
+    { email: 'alidegirmenci', password: 'ali123', name: 'Ali Degirmenci', role: 'EDITOR' },
+  ];
+
+  for (const user of additionalUsers) {
+    try {
+      const existing = await prisma.user.findUnique({ where: { email: user.email } });
+      if (!existing) {
+        const passwordHash = await bcrypt.hash(user.password, 12);
+        await prisma.user.create({
+          data: {
+            email: user.email,
+            passwordHash,
+            name: user.name,
+            role: user.role,
+            isActive: true,
+          },
+        });
+        console.log(`Created user: ${user.email}`);
+      } else {
+        console.log(`User already exists: ${user.email}`);
+      }
+    } catch (err) {
+      console.error(`Failed to seed user ${user.email}:`, err.message);
+    }
+  }
+}
+
+async function main() {
+  await seedAdmin();
+  await seedUsers();
+  await prisma.$disconnect();
+}
+
+main();
