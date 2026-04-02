@@ -1297,6 +1297,8 @@ export default function PumpSetup() {
           pumpType: pump.pumpType || undefined,
         });
 
+        const pumpPhotos = pump.photos || createEmptyPhotos();
+
         // Save pompa component
         if (Object.keys(pump.components.pompa).length > 0) {
           await api.upsertPumpComponent(savedPump.id, {
@@ -1304,7 +1306,11 @@ export default function PumpSetup() {
             brand: pump.components.pompa.brand || undefined,
             modelNumber: pump.components.pompa.model || undefined,
             serialNumber: pump.components.pompa.serialNumber || undefined,
-            componentData: pump.components.pompa,
+            componentData: {
+              ...pump.components.pompa,
+              ocrPhoto: pumpPhotos.pompa.ocrPhoto || null,
+              labelPhotos: pumpPhotos.pompa.labelPhotos || [],
+            },
           });
         }
 
@@ -1315,7 +1321,11 @@ export default function PumpSetup() {
             brand: pump.components.kontrolPaneli.brand || undefined,
             modelNumber: pump.components.kontrolPaneli.model || undefined,
             serialNumber: pump.components.kontrolPaneli.serialNumber || undefined,
-            componentData: pump.components.kontrolPaneli,
+            componentData: {
+              ...pump.components.kontrolPaneli,
+              ocrPhoto: pumpPhotos.kontrolPaneli.ocrPhoto || null,
+              labelPhotos: pumpPhotos.kontrolPaneli.labelPhotos || [],
+            },
           });
         }
 
@@ -1325,7 +1335,11 @@ export default function PumpSetup() {
             componentType: 'surucu',
             modelNumber: pump.components.surucu.model || undefined,
             serialNumber: pump.components.surucu.serialNumber || undefined,
-            componentData: pump.components.surucu,
+            componentData: {
+              ...pump.components.surucu,
+              ocrPhoto: pumpPhotos.surucu.ocrPhoto || null,
+              labelPhotos: pumpPhotos.surucu.labelPhotos || [],
+            },
           });
         }
 
