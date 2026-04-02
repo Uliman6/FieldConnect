@@ -56,7 +56,7 @@ async function seedAdmin() {
 
 async function seedUsers() {
   const additionalUsers = [
-    { email: 'alidegirmenci', password: 'ali123', name: 'Ali Degirmenci', role: 'EDITOR' },
+    { email: 'alidegirmenci@fieldconnect.com', password: 'ali123', name: 'Ali Degirmenci', role: 'EDITOR' },
   ];
 
   for (const user of additionalUsers) {
