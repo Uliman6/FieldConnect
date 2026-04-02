@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
-import type { VisitType } from '../lib/types';
+import type { VisitType, MaintenanceVisit } from '../lib/types';
 
 const visitTypes: { type: VisitType; label: string; description: string }[] = [
   {
@@ -21,11 +21,56 @@ const visitTypes: { type: VisitType; label: string; description: string }[] = [
   },
 ];
 
+const STATUS_LABELS: Record<MaintenanceVisit['status'], { label: string; className: string }> = {
+  completed: { label: 'Tamamlandı', className: 'bg-green-100 text-green-700' },
+  in_progress: { label: 'Devam Ediyor', className: 'bg-yellow-100 text-yellow-700' },
+  draft: { label: 'Taslak', className: 'bg-gray-100 text-gray-500' },
+};
+
 export default function VisitTypeSelect() {
   const { visitId } = useParams<{ visitId: string }>();
+  const { state } = useLocation() as { state?: { companyName?: string; address?: string } };
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Map from visitType → most recent prior visit status for this company
+  const [priorStatuses, setPriorStatuses] = useState<Partial<Record<VisitType, MaintenanceVisit['status']>>>({});
+
+  useEffect(() => {
+    async function loadPriorVisits() {
+      try {
+        // Get companyName: prefer nav state, fallback to fetching the visit
+        let companyName = state?.companyName;
+        if (!companyName && visitId) {
+          const visit = await api.getVisit(visitId);
+          companyName = visit.companyName || undefined;
+        }
+        if (!companyName) return;
+
+        const allVisits = await api.listVisits({ limit: 100 });
+        // Prior visits for same company, excluding the current new visit
+        const sameCompany = allVisits.filter(
+          v => v.companyName === companyName && v.id !== visitId && v.visitType
+        );
+
+        // For each visit type, find most recent visit and take its status
+        const map: Partial<Record<VisitType, MaintenanceVisit['status']>> = {};
+        for (const v of sameCompany) {
+          if (!v.visitType) continue;
+          const existing = map[v.visitType];
+          if (!existing) {
+            map[v.visitType] = v.status;
+          }
+          // listVisits returns sorted by most recent first, so first match wins
+        }
+        setPriorStatuses(map);
+      } catch {
+        // Non-critical — silently ignore
+      }
+    }
+    loadPriorVisits();
+  }, [visitId, state?.companyName]);
 
   const handleSelectType = async (visitType: VisitType) => {
     if (!visitId) return;
@@ -34,15 +79,11 @@ export default function VisitTypeSelect() {
     setError('');
 
     try {
-      // Update the visit with the selected type
       await api.updateVisit(visitId, { visitType });
 
-      // Navigate based on visit type
       if (visitType === 'SERVIS_SUPERVISORLUK') {
-        // Servis visits go directly to Servis Raporu form (no pump setup)
         navigate(`/visit/${visitId}/servis`);
       } else {
-        // Bakım and Devreye Alım go to pump setup first
         navigate(`/visit/${visitId}/pumps`);
       }
     } catch (err) {
@@ -73,17 +114,28 @@ export default function VisitTypeSelect() {
       )}
 
       <div className="space-y-3">
-        {visitTypes.map((item) => (
-          <button
-            key={item.type}
-            onClick={() => handleSelectType(item.type)}
-            disabled={isLoading}
-            className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-left hover:border-blue-500 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="font-semibold text-gray-800">{item.label}</div>
-            <div className="text-sm text-gray-600 mt-1">{item.description}</div>
-          </button>
-        ))}
+        {visitTypes.map((item) => {
+          const prior = priorStatuses[item.type];
+          const statusInfo = prior ? STATUS_LABELS[prior] : null;
+          return (
+            <button
+              key={item.type}
+              onClick={() => handleSelectType(item.type)}
+              disabled={isLoading}
+              className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-left hover:border-blue-500 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center justify-between">
+                <div className="font-semibold text-gray-800">{item.label}</div>
+                {statusInfo && (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusInfo.className}`}>
+                    {statusInfo.label}
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">{item.description}</div>
+            </button>
+          );
+        })}
       </div>
 
       {isLoading && (

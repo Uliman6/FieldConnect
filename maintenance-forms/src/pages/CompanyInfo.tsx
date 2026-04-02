@@ -116,7 +116,7 @@ export default function CompanyInfo() {
         address: location.trim() || undefined,
       });
       // Navigate to visit type selection
-      navigate(`/visit/${visit.id}/type`);
+      navigate(`/visit/${visit.id}/type`, { state: { companyName: companyName.trim(), address: location.trim() } });
     } catch (err) {
       setError('Ziyaret olusturulamadi. Lutfen tekrar deneyin.');
       setIsLoading(false);
