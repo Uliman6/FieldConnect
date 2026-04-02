@@ -48,4 +48,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "fetch('http://localhost:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
 # Start command - run migrations, seed admin, then start server
-CMD ["sh", "-c", "npx prisma db push --skip-generate --accept-data-loss && node prisma/seed-admin.js && npm start"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node prisma/seed-admin.js && npm start"]
