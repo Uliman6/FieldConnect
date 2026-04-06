@@ -68,6 +68,10 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+    // Allow Vercel preview deployments (*.vercel.app)
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
     // In development, allow all localhost origins
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       return callback(null, true);
