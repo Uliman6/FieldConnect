@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
-import { ClipboardList, Building2, History, Radio, Lightbulb, Settings, FileText } from 'lucide-react-native';
+import { Building2, History, Lightbulb, Settings, LayoutGrid } from 'lucide-react-native';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useClientOnlyValue } from '@/lib/useClientOnlyValue';
@@ -29,18 +29,22 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}
     >
+      {/* ── Tab 1: Work (Daily Log + Observations + Forms) ── */}
       <Tabs.Screen
         name="index"
         options={{
-          title: t('tabs.dailyLog'),
-          tabBarIcon: ({ color, size }) => <ClipboardList size={size} color={color} />,
+          title: t('tabs.work'),
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <LayoutGrid size={size} color={color} />,
         }}
       />
+
+      {/* ── Tab 2: History (+ Insights button) ── */}
       <Tabs.Screen
-        name="events"
+        name="history"
         options={{
-          title: t('tabs.events'),
-          tabBarIcon: ({ color, size }) => <Radio size={size} color={color} />,
+          title: t('tabs.history'),
+          tabBarIcon: ({ color, size }) => <History size={size} color={color} />,
           headerRight: () => (
             <Pressable
               onPress={() => router.push('/insights')}
@@ -51,34 +55,36 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="forms"
-        options={{
-          title: t('tabs.forms'),
-          tabBarIcon: ({ color, size }) => <FileText size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: t('tabs.history'),
-          tabBarIcon: ({ color, size }) => <History size={size} color={color} />,
-        }}
-      />
+
+      {/* ── Tab 3: Projects (+ Settings gear) ── */}
       <Tabs.Screen
         name="projects"
         options={{
           title: t('tabs.projects'),
           tabBarIcon: ({ color, size }) => <Building2 size={size} color={color} />,
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/(tabs)/settings')}
+              className="mr-4 p-2"
+            >
+              <Settings size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
+            </Pressable>
+          ),
         }}
+      />
+
+      {/* ── Hidden screens (navigable but not in tab bar) ── */}
+      <Tabs.Screen
+        name="events"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="forms"
+        options={{ href: null }}
       />
       <Tabs.Screen
         name="settings"
-        options={{
-          title: t('tabs.settings'),
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
-          headerShown: false,
-        }}
+        options={{ href: null, headerShown: false }}
       />
     </Tabs>
   );

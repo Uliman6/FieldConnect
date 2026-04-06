@@ -33,6 +33,7 @@ export default {
 
   // Navigation / Tabs
   tabs: {
+    work: 'Is',
     dailyLog: 'Gunluk Kayit',
     events: 'Gözlemler',
     forms: 'Formlar',
