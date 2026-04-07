@@ -33,6 +33,7 @@ export default {
 
   // Navigation / Tabs
   tabs: {
+    work: 'Registrar',
     dailyLog: 'Registro Diario',
     events: 'Observaciones',
     forms: 'Formularios',
