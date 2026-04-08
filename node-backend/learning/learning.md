@@ -369,6 +369,178 @@ grep -n "CATEGORIES" node-backend/src/services/voice-diary.service.js
 
 ---
 
+## 2026-04-07: Voice Diary Multi-User & Project Support
+
+### Summary
+Enhanced Voice Diary with project selection, delete/re-record functionality, and per-user/per-project data filtering.
+
+### Files Changed
+- `Frontend/src/app/(voice-diary)/index.tsx` - Added project selector, delete/re-record buttons
+- `Frontend/src/app/(voice-diary)/dashboard.tsx` - Added project filtering, empty state
+- `Frontend/src/lib/voice-diary-store.ts` - Added project/user context tracking
+
+---
+
+### Concept 1: Zustand Store with Multiple Contexts
+
+**The Pattern:**
+```typescript
+// LEARNING: Data is now scoped to both project AND user
+interface VoiceNote {
+  id: string;
+  projectId: string;  // Required: which project this note belongs to
+  userId?: string;    // Optional: who recorded it (for per-user filtering)
+  // ...
+}
+
+// Functions now accept optional filters
+getVoiceNotesForDate: (date: string, projectId?: string) => VoiceNote[];
+getDailySummary: (date: string, projectId: string, userId?: string) => DailySummary;
+```
+
+**Why it matters:**
+- **Multi-tenancy**: Different projects have separate data
+- **Per-user tracking**: Each foreman sees their own summary
+- **Aggregation ready**: Can build project-level summaries from individual user data
+
+**Documentation:**
+- Zustand: [Selectors](https://docs.pmnd.rs/zustand/guides/auto-generating-selectors)
+
+---
+
+### Concept 2: Version Tracking for Re-Recordings
+
+**The Code:**
+```typescript
+// LEARNING: Re-recording creates a NEW note linked to the original
+// This preserves history while allowing corrections
+reRecordVoiceNote: (originalId, newAudioUri, newDuration) => {
+  const original = get().voiceNotes.find((n) => n.id === originalId);
+  const newNote: VoiceNote = {
+    id: generateId(),
+    version: original.version + 1,    // Increment version
+    previousVersionId: originalId,     // Link to original
+    // ... copy other fields from original
+  };
+  // Clear old snippets since we're replacing the content
+  set((state) => ({
+    voiceNotes: [newNote, ...state.voiceNotes],
+    categorizedSnippets: state.categorizedSnippets.filter(
+      (s) => s.voiceNoteId !== originalId
+    ),
+  }));
+};
+```
+
+**Key Insight:**
+Instead of updating in place (which loses history), we create new versions:
+- v1 → Original recording
+- v2 → First re-record (linked via `previousVersionId`)
+- v3 → Second re-record, etc.
+
+This is similar to how Google Docs tracks version history.
+
+---
+
+### Concept 3: Early Return Pattern for Conditional UI
+
+**The Code:**
+```typescript
+// LEARNING: Early return prevents deeply nested JSX
+export default function DashboardScreen() {
+  // ...setup code...
+
+  // Handle empty state FIRST
+  if (!currentProjectId) {
+    return (
+      <SafeAreaView>
+        <Text>No Project Selected</Text>
+        <Text>Select a project on the Record tab</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // Main content - only reached if project is selected
+  return (
+    <SafeAreaView>
+      {/* Complex dashboard UI */}
+    </SafeAreaView>
+  );
+}
+```
+
+**Why it's better:**
+```javascript
+// BAD: Deeply nested conditionals
+return (
+  <SafeAreaView>
+    {currentProjectId ? (
+      <ComplexDashboard />
+    ) : (
+      <EmptyState />
+    )}
+  </SafeAreaView>
+);
+
+// GOOD: Early return
+if (!currentProjectId) return <EmptyState />;
+return <ComplexDashboard />;
+```
+
+**Documentation:**
+- [Guard Clauses](https://refactoring.guru/replace-nested-conditional-with-guard-clauses)
+
+---
+
+### Concept 4: React Native Alert API
+
+**The Code:**
+```typescript
+// LEARNING: Alert.alert() shows a native dialog on mobile
+// On web, it uses a browser-style modal
+const handleDeleteNote = (noteId: string) => {
+  Alert.alert(
+    'Delete Recording',                    // Title
+    'Are you sure you want to delete?',    // Message
+    [
+      { text: 'Cancel', style: 'cancel' }, // Dismisses without action
+      {
+        text: 'Delete',
+        style: 'destructive',              // Red text on iOS
+        onPress: () => deleteVoiceNote(noteId),
+      },
+    ]
+  );
+};
+```
+
+**Button Styles:**
+- `'default'` - Standard button
+- `'cancel'` - Usually displayed separately (iOS)
+- `'destructive'` - Red text, indicates danger
+
+**Documentation:**
+- React Native: [Alert](https://reactnative.dev/docs/alert)
+
+---
+
+### Mini Exercise: Multi-User Features
+
+**Exercise 1: Add User Display**
+Currently notes don't show who recorded them. Add a user badge:
+1. Import user info from auth store
+2. Show initials badge next to each note in the list
+3. Filter by user using a toggle
+
+**Exercise 2: Debug Version Tracking**
+Add logging to see version chains:
+```typescript
+// In voice-diary-store.ts, add to reRecordVoiceNote:
+console.log(`Re-recording: ${original.id} v${original.version} → v${original.version + 1}`);
+```
+
+---
+
 ## Tips for Reading This Codebase
 
 ### Understanding the Flow
