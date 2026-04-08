@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
-import { Building2, History, Lightbulb, Settings, LayoutGrid } from 'lucide-react-native';
+import { Building2, History, Lightbulb, Settings, LayoutGrid, Mic } from 'lucide-react-native';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useClientOnlyValue } from '@/lib/useClientOnlyValue';
@@ -34,7 +34,16 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('tabs.work'),
-          headerShown: false,
+          headerShown: true,
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/(voice-diary)')}
+              className="mr-4 p-2"
+              style={{ flexDirection: 'row', alignItems: 'center' }}
+            >
+              <Mic size={22} color="#1F5C1A" />
+            </Pressable>
+          ),
           tabBarIcon: ({ color, size }) => <LayoutGrid size={size} color={color} />,
         }}
       />
