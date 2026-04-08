@@ -3174,4 +3174,88 @@ export const queryKeys = {
   // Voice lists
   voiceLists: (options?: { projectId?: string; status?: VoiceListStatus }) => ['voice-lists', options] as const,
   voiceList: (id: string) => ['voice-lists', id] as const,
+  // Voice diary
+  voiceDiaryCategories: ['voice-diary', 'categories'] as const,
 };
+
+// ============================================
+// VOICE DIARY API
+// ============================================
+
+export interface VoiceDiarySnippet {
+  category: string;
+  content: string;
+}
+
+export interface VoiceDiaryFormSuggestion {
+  formType: string;
+  formName: string;
+  reason: string;
+  snippetIds: string[];
+}
+
+export interface VoiceDiaryProcessResult {
+  success: boolean;
+  newSnippets: VoiceDiarySnippet[];
+  summary: string;
+  hasMinimumInfo: boolean;
+  formSuggestions: VoiceDiaryFormSuggestion[];
+}
+
+/**
+ * Process a voice note transcript - categorize, summarize, and match forms
+ */
+export async function processVoiceNote(
+  transcript: string,
+  existingSnippets: VoiceDiarySnippet[] = [],
+  noteCount: number = 1
+): Promise<VoiceDiaryProcessResult> {
+  return apiFetch('/api/voice-diary/process', {
+    method: 'POST',
+    body: JSON.stringify({
+      transcript,
+      existingSnippets,
+      noteCount,
+    }),
+  });
+}
+
+/**
+ * Categorize a transcript into snippets
+ */
+export async function categorizeTranscript(transcript: string): Promise<{
+  success: boolean;
+  snippets: VoiceDiarySnippet[];
+}> {
+  return apiFetch('/api/voice-diary/categorize', {
+    method: 'POST',
+    body: JSON.stringify({ transcript }),
+  });
+}
+
+/**
+ * Generate a daily summary from snippets
+ */
+export async function generateDailySummary(
+  snippets: VoiceDiarySnippet[],
+  noteCount: number
+): Promise<{
+  success: boolean;
+  summary: string;
+  hasMinimumInfo: boolean;
+}> {
+  return apiFetch('/api/voice-diary/summarize', {
+    method: 'POST',
+    body: JSON.stringify({ snippets, noteCount }),
+  });
+}
+
+/**
+ * Get available voice diary categories
+ */
+export async function getVoiceDiaryCategories(): Promise<{
+  success: boolean;
+  categories: string[];
+}> {
+  return apiFetch('/api/voice-diary/categories');
+}
