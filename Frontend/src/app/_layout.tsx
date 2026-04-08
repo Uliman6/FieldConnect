@@ -56,6 +56,9 @@ if (__DEV__) {
 const APP_MODE = process.env.EXPO_PUBLIC_APP_MODE || 'fieldconnect';
 const IS_VOICE_DIARY_MODE = APP_MODE === 'voice-diary';
 
+// Debug: Log app mode on startup (remove after confirming it works)
+console.log('[APP_MODE]', APP_MODE, '| IS_VOICE_DIARY_MODE:', IS_VOICE_DIARY_MODE);
+
 export const unstable_settings = {
   initialRouteName: IS_VOICE_DIARY_MODE ? '(voice-diary)' : '(tabs)',
 };
