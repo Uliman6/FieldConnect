@@ -1,11 +1,13 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
-import { Mic, LayoutDashboard } from 'lucide-react-native';
+import { Pressable } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { Mic, LayoutDashboard, ArrowLeft } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function VoiceDiaryLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const router = useRouter();
 
   return (
     <Tabs
@@ -30,6 +32,15 @@ export default function VoiceDiaryLayout() {
         headerTitleStyle: {
           fontWeight: '700',
         },
+        // Add back button to return to main app
+        headerLeft: () => (
+          <Pressable
+            onPress={() => router.push('/(tabs)')}
+            style={{ marginLeft: 16, padding: 4 }}
+          >
+            <ArrowLeft size={24} color={isDark ? '#FFF' : '#111'} />
+          </Pressable>
+        ),
       }}
     >
       <Tabs.Screen
