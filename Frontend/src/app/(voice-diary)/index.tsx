@@ -73,6 +73,8 @@ export default function RecordScreen() {
     setCurrentProject,
     clearSnippetsForNote,
     categorizedSnippets,
+    seedExampleData,
+    hasExampleData,
   } = useVoiceDiaryStore();
 
   // Get snippets for a specific note
@@ -253,11 +255,22 @@ export default function RecordScreen() {
 
         console.log('[voice-diary] API response:', JSON.stringify(processResult, null, 2));
 
-        if (processResult.success && processResult.newSnippets) {
+        if (processResult.success) {
+          // Update note with AI-generated title and cleaned transcript
+          const noteUpdates: any = { status: 'complete' };
+          if (processResult.title) {
+            noteUpdates.title = processResult.title;
+          }
+          if (processResult.cleanedTranscript) {
+            noteUpdates.cleanedTranscript = processResult.cleanedTranscript;
+          }
+
           // Add new snippets to store
-          console.log('[voice-diary] Adding', processResult.newSnippets.length, 'snippets');
-          for (const snippet of processResult.newSnippets) {
-            addSnippet(noteId, snippet.category as any, snippet.content);
+          if (processResult.newSnippets && processResult.newSnippets.length > 0) {
+            console.log('[voice-diary] Adding', processResult.newSnippets.length, 'snippets');
+            for (const snippet of processResult.newSnippets) {
+              addSnippet(noteId, snippet.category as any, snippet.content);
+            }
           }
 
           // Update daily summary (user-specific)
@@ -284,11 +297,12 @@ export default function RecordScreen() {
             }
           }
 
-          updateVoiceNote(noteId, { status: 'complete' });
-          addNotification('info', `Added ${processResult.newSnippets.length} items`);
+          updateVoiceNote(noteId, noteUpdates);
+          const snippetCount = processResult.newSnippets?.length || 0;
+          addNotification('info', snippetCount > 0 ? `Added ${snippetCount} items` : 'Note saved');
         } else {
-          // API returned but no snippets - still complete
-          console.log('[voice-diary] No snippets from API, marking complete');
+          // API returned but failed - still complete
+          console.log('[voice-diary] API returned no success, marking complete');
           updateVoiceNote(noteId, { status: 'complete' });
           addNotification('success', 'Note saved');
         }
@@ -596,9 +610,29 @@ export default function RecordScreen() {
                 alignItems: 'center',
               }}
             >
-              <Text style={{ color: isDark ? '#6B7280' : '#9CA3AF', fontSize: 14 }}>
+              <Text style={{ color: isDark ? '#6B7280' : '#9CA3AF', fontSize: 14, marginBottom: 12 }}>
                 No recordings yet today
               </Text>
+              {!hasExampleData() && (
+                <Pressable
+                  onPress={() => {
+                    if (currentProjectId) {
+                      seedExampleData(currentProjectId, user?.id);
+                      addNotification('success', 'Loaded 5 example recordings');
+                    }
+                  }}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: isDark ? '#FFF' : '#374151', fontSize: 13, fontWeight: '500' }}>
+                    Load Example Data
+                  </Text>
+                </Pressable>
+              )}
             </View>
           ) : (
             <ScrollView
@@ -634,7 +668,7 @@ export default function RecordScreen() {
                       >
                         {note.status === 'error'
                           ? note.errorMessage || 'Error'
-                          : generateTitle(note.transcriptText)}
+                          : note.title || generateTitle(note.transcriptText)}
                       </Text>
                       {note.version > 1 && (
                         <View
@@ -736,6 +770,20 @@ export default function RecordScreen() {
 
           {selectedNote && (
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+              {/* Title */}
+              {selectedNote.title && (
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: isDark ? '#FFF' : '#111',
+                    marginBottom: 8,
+                  }}
+                >
+                  {selectedNote.title}
+                </Text>
+              )}
+
               {/* Time and Duration */}
               <View style={{ flexDirection: 'row', marginBottom: 16 }}>
                 <Text style={{ fontSize: 14, color: isDark ? '#9CA3AF' : '#6B7280' }}>
@@ -744,36 +792,71 @@ export default function RecordScreen() {
                 </Text>
               </View>
 
-              {/* Full Transcript */}
+              {/* Cleaned Summary - Form-ready version */}
               <View
                 style={{
                   backgroundColor: isDark ? '#1F2937' : '#FFF',
                   borderRadius: 12,
                   padding: 16,
-                  marginBottom: 20,
+                  marginBottom: 16,
                 }}
               >
                 <Text
                   style={{
                     fontSize: 12,
                     fontWeight: '600',
-                    color: isDark ? '#9CA3AF' : '#6B7280',
+                    color: '#1F5C1A',
                     textTransform: 'uppercase',
                     marginBottom: 8,
                   }}
                 >
-                  Full Transcript
+                  Summary
                 </Text>
                 <Text
                   style={{
-                    fontSize: 15,
+                    fontSize: 16,
                     color: isDark ? '#E5E7EB' : '#374151',
-                    lineHeight: 22,
+                    lineHeight: 24,
                   }}
                 >
-                  {selectedNote.transcriptText || 'No transcript available'}
+                  {selectedNote.cleanedTranscript || selectedNote.transcriptText || 'No transcript available'}
                 </Text>
               </View>
+
+              {/* Raw Transcript - Show only if different from cleaned */}
+              {selectedNote.cleanedTranscript && selectedNote.transcriptText &&
+               selectedNote.cleanedTranscript !== selectedNote.transcriptText && (
+                <View
+                  style={{
+                    backgroundColor: isDark ? '#111827' : '#F3F4F6',
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 20,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: isDark ? '#6B7280' : '#9CA3AF',
+                      textTransform: 'uppercase',
+                      marginBottom: 8,
+                    }}
+                  >
+                    Original Recording
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: isDark ? '#9CA3AF' : '#6B7280',
+                      lineHeight: 20,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {selectedNote.transcriptText}
+                  </Text>
+                </View>
+              )}
 
               {/* Categorized Items */}
               {getSnippetsForNote(selectedNote.id).length > 0 && (

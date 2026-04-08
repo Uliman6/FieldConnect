@@ -23,7 +23,9 @@ export interface VoiceNote {
   projectId: string; // Which project this note belongs to
   userId?: string; // Who recorded this note
   audioUri: string;
-  transcriptText: string | null;
+  title: string | null; // AI-generated intelligent title
+  transcriptText: string | null; // Raw transcript
+  cleanedTranscript: string | null; // Form-ready cleaned version
   status: 'recording' | 'transcribing' | 'processing' | 'complete' | 'error';
   errorMessage?: string;
   createdAt: string;
@@ -120,6 +122,10 @@ interface VoiceDiaryStore {
 
   // Utilities
   getTodayDate: () => string;
+
+  // Demo data
+  seedExampleData: (projectId: string, userId?: string) => void;
+  hasExampleData: () => boolean;
 }
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -144,7 +150,9 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
           projectId,
           userId,
           audioUri,
+          title: null,
           transcriptText: null,
+          cleanedTranscript: null,
           status: 'recording',
           createdAt: now,
           updatedAt: now,
@@ -404,6 +412,123 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
       // Utilities
       getTodayDate: () => {
         return new Date().toISOString().split('T')[0];
+      },
+
+      // Demo data - seed example recordings for testing
+      hasExampleData: () => {
+        return get().voiceNotes.some((n) => n.id.startsWith('demo-'));
+      },
+
+      seedExampleData: (projectId, userId) => {
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+
+        // Example voice notes with realistic construction content
+        const exampleNotes: VoiceNote[] = [
+          {
+            id: 'demo-1',
+            projectId,
+            userId,
+            audioUri: '',
+            title: 'Concrete Pour - Section B Complete',
+            transcriptText: 'Hey so we just finished the concrete pour for section B foundation. Um, the trucks arrived on time, we had about 45 yards total. The weather held up pretty well, you know, and the crew did a great job getting it leveled out before it started setting.',
+            cleanedTranscript: 'Completed concrete pour for Section B foundation. 45 yards delivered on time. Weather conditions favorable. Crew finished leveling before initial set.',
+            status: 'complete',
+            createdAt: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+            updatedAt: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
+            duration: 28,
+            version: 1,
+          },
+          {
+            id: 'demo-2',
+            projectId,
+            userId,
+            audioUri: '',
+            title: 'Safety Issue - Missing Guardrails',
+            transcriptText: 'Found a safety issue on the third floor. The guardrails on the east side are missing, someone must have moved them for the material delivery. I already talked to Mike about it and he is getting them put back up right now. We should probably add this to the safety meeting tomorrow.',
+            cleanedTranscript: 'Safety issue identified: guardrails missing on third floor east side, removed for material delivery. Mike notified and reinstalling now. Item added for tomorrow\'s safety meeting.',
+            status: 'complete',
+            createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+            updatedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+            duration: 22,
+            version: 1,
+          },
+          {
+            id: 'demo-3',
+            projectId,
+            userId,
+            audioUri: '',
+            title: 'Electrical Rough-In Progress',
+            transcriptText: 'Electrical crew finished rough-in for units 101 through 105. They are moving on to 106 through 110 tomorrow. We had a small issue with the panel location in 103, it was like two inches off from the drawings, but we got it sorted out with the super.',
+            cleanedTranscript: 'Electrical rough-in completed for units 101-105. Crew advancing to units 106-110 tomorrow. Panel location discrepancy in unit 103 resolved with superintendent (2" offset from drawings).',
+            status: 'complete',
+            createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+            updatedAt: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+            duration: 35,
+            version: 1,
+          },
+          {
+            id: 'demo-4',
+            projectId,
+            userId,
+            audioUri: '',
+            title: 'Material Delivery Tomorrow',
+            transcriptText: 'Just got confirmation that the framing lumber delivery is coming tomorrow morning around 7am. We will need the forklift available to unload. Make sure the staging area by the south entrance is cleared out before then.',
+            cleanedTranscript: 'Framing lumber delivery confirmed for tomorrow 7am. Forklift required for unloading. South entrance staging area must be cleared beforehand.',
+            status: 'complete',
+            createdAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 min ago
+            updatedAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
+            duration: 18,
+            version: 1,
+          },
+          {
+            id: 'demo-5',
+            projectId,
+            userId,
+            audioUri: '',
+            title: 'Plumber Coordination Meeting',
+            transcriptText: 'Had a quick coordination meeting with the plumbing sub. They want to start the second floor rough-in next week but we need to make sure framing is done by then. I told them Wednesday at the earliest. They are also short one guy so they might run a day behind.',
+            cleanedTranscript: 'Plumbing coordination: second floor rough-in scheduled for Wednesday pending framing completion. Note: plumbing crew short one worker, potential one-day delay.',
+            status: 'complete',
+            createdAt: new Date(now.getTime() - 15 * 60 * 1000).toISOString(), // 15 min ago
+            updatedAt: new Date(now.getTime() - 15 * 60 * 1000).toISOString(),
+            duration: 42,
+            version: 1,
+          },
+        ];
+
+        // Example categorized snippets
+        const exampleSnippets: CategorizedSnippet[] = [
+          { id: 'demo-s1', voiceNoteId: 'demo-1', category: 'Work Completed', content: 'Concrete pour for Section B foundation completed - 45 yards.', createdAt: exampleNotes[0].createdAt },
+          { id: 'demo-s2', voiceNoteId: 'demo-1', category: 'Team', content: 'Crew performed well, finished leveling before concrete set.', createdAt: exampleNotes[0].createdAt },
+          { id: 'demo-s3', voiceNoteId: 'demo-2', category: 'Safety', content: 'Missing guardrails on 3rd floor east side - being reinstalled.', createdAt: exampleNotes[1].createdAt },
+          { id: 'demo-s4', voiceNoteId: 'demo-2', category: 'Follow-up Items', content: 'Add guardrail incident to tomorrow\'s safety meeting agenda.', createdAt: exampleNotes[1].createdAt },
+          { id: 'demo-s5', voiceNoteId: 'demo-3', category: 'Work Completed', content: 'Electrical rough-in completed for units 101-105.', createdAt: exampleNotes[2].createdAt },
+          { id: 'demo-s6', voiceNoteId: 'demo-3', category: 'Work To Be Done', content: 'Electrical rough-in for units 106-110 scheduled tomorrow.', createdAt: exampleNotes[2].createdAt },
+          { id: 'demo-s7', voiceNoteId: 'demo-3', category: 'Issues', content: 'Panel location in unit 103 was 2" off from drawings - resolved.', createdAt: exampleNotes[2].createdAt },
+          { id: 'demo-s8', voiceNoteId: 'demo-4', category: 'Logistics', content: 'Framing lumber delivery tomorrow 7am - forklift needed.', createdAt: exampleNotes[3].createdAt },
+          { id: 'demo-s9', voiceNoteId: 'demo-4', category: 'Follow-up Items', content: 'Clear south entrance staging area before lumber delivery.', createdAt: exampleNotes[3].createdAt },
+          { id: 'demo-s10', voiceNoteId: 'demo-5', category: 'Process', content: 'Plumbing rough-in start: Wednesday, pending framing completion.', createdAt: exampleNotes[4].createdAt },
+          { id: 'demo-s11', voiceNoteId: 'demo-5', category: 'Issues', content: 'Plumbing crew short one worker - potential 1-day delay.', createdAt: exampleNotes[4].createdAt },
+        ];
+
+        // Example daily summary
+        const exampleSummary: DailySummary = {
+          id: 'demo-summary',
+          date: today,
+          projectId,
+          userId,
+          summary: '**Work Done**\n• Concrete pour completed for Section B foundation (45 yards)\n• Electrical rough-in finished for units 101-105\n\n**Issues**\n• Missing guardrails on 3rd floor - being reinstalled\n• Plumbing crew short staffed - possible 1-day delay\n\n**Notes**\n• Lumber delivery arriving tomorrow 7am\n• Plumbing rough-in starts Wednesday',
+          lastUpdatedAt: now.toISOString(),
+          voiceNoteCount: 5,
+          hasMinimumInfo: true,
+        };
+
+        set((state) => ({
+          voiceNotes: [...exampleNotes, ...state.voiceNotes.filter(n => !n.id.startsWith('demo-'))],
+          categorizedSnippets: [...exampleSnippets, ...state.categorizedSnippets.filter(s => !s.id.startsWith('demo-'))],
+          dailySummaries: [exampleSummary, ...state.dailySummaries.filter(s => s.id !== 'demo-summary')],
+        }));
       },
     }),
     {

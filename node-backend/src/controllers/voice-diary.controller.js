@@ -97,7 +97,7 @@ const voiceDiaryController = {
 
   /**
    * POST /api/voice-diary/process
-   * Full processing pipeline: categorize + summarize + match forms
+   * Full processing pipeline: categorize + summarize + match forms + generate title
    */
   async process(req, res, next) {
     try {
@@ -116,20 +116,26 @@ const voiceDiaryController = {
       const newSnippets = await voiceDiaryService.categorizeTranscript(transcript);
       console.log('[voice-diary] New snippets:', newSnippets.length);
 
-      // Step 2: Combine with existing snippets
+      // Step 2: Generate intelligent title and cleaned transcript
+      const { title, cleanedTranscript } = await voiceDiaryService.generateNoteTitle(transcript, newSnippets);
+      console.log('[voice-diary] Generated title:', title);
+
+      // Step 3: Combine with existing snippets
       const allSnippets = [...existingSnippets, ...newSnippets];
 
-      // Step 3: Generate summary
+      // Step 4: Generate summary
       const summary = await voiceDiaryService.generateDailySummary(allSnippets, noteCount);
       console.log('[voice-diary] Summary generated, hasMinimumInfo:', summary.hasMinimumInfo);
 
-      // Step 4: Match form templates
+      // Step 5: Match form templates
       const formSuggestions = voiceDiaryService.matchFormTemplates(allSnippets);
       console.log('[voice-diary] Form suggestions:', formSuggestions.length);
 
       res.json({
         success: true,
         newSnippets,
+        title,
+        cleanedTranscript,
         summary: summary.summary,
         hasMinimumInfo: summary.hasMinimumInfo,
         formSuggestions,

@@ -217,30 +217,32 @@ async function generateDailySummary(snippets, noteCount) {
       grouped[s.category].push(s.content);
     });
 
-    const systemPrompt = `You are a construction site daily summary writer. Create a bullet point summary of the day's key activities.
+    const systemPrompt = `You are a construction site daily summary writer. Create a brief end-of-day summary organized into three sections.
+
+FORMAT (use exactly this structure):
+**Work Done**
+• [1-3 bullet points of completed work]
+
+**Issues**
+• [1-2 bullet points of problems or concerns, or "None" if no issues]
+
+**Notes**
+• [1-2 key observations or lessons learned, or skip if none]
 
 RULES:
-1. Output ONLY bullet points, one per line, starting with "• "
-2. Keep each bullet point to ONE short sentence
-3. Include 3-6 bullet points covering the most important items
-4. Prioritize safety concerns and issues at the top
-5. Use professional construction language
-6. Don't invent information not in the notes
-7. Don't include category names, just the key information
+1. Keep each bullet point to ONE short sentence
+2. Be brief - details are tracked elsewhere
+3. Use professional construction language
+4. Only include sections that have content
+5. Don't invent information not in the notes`;
 
-EXAMPLE OUTPUT:
-• Concrete pour completed for Section B foundation
-• Safety concern: Missing guardrails on 3rd floor - reported to super
-• Electrical crew finished rough-in for units 101-105
-• Material delivery expected tomorrow for framing`;
-
-    const userPrompt = `Create bullet point summary from these categorized notes:
+    const userPrompt = `Create a brief daily summary from these notes:
 
 ${Object.entries(grouped).map(([cat, items]) =>
   `${cat}:\n${items.map(i => `- ${i}`).join('\n')}`
 ).join('\n\n')}
 
-Output ONLY bullet points (3-6 items), no intro text.`;
+Use the Work Done / Issues / Notes format. Be brief.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -377,9 +379,141 @@ function matchFormTemplates(snippets, templates = []) {
   return suggestions;
 }
 
+/**
+ * Generate an intelligent title and cleaned summary for a voice note
+ * @param {string} transcript - Raw transcript text
+ * @param {Array} snippets - Categorized snippets from this note
+ * @returns {Promise<{title: string, cleanedTranscript: string}>}
+ */
+async function generateNoteTitle(transcript, snippets = []) {
+  if (!transcript || transcript.trim().length < 5) {
+    return { title: 'Voice Note', cleanedTranscript: transcript || '' };
+  }
+
+  // Fallback: generate title from snippets or transcript
+  const fallbackTitle = generateFallbackTitle(transcript, snippets);
+  const fallbackCleaned = cleanTranscriptBasic(transcript);
+
+  if (!OPENAI_API_KEY) {
+    return { title: fallbackTitle, cleanedTranscript: fallbackCleaned };
+  }
+
+  try {
+    const systemPrompt = `You are a construction site note editor. Given a voice transcript, you will:
+1. Create a SHORT title (3-7 words) that captures the main topic
+2. Clean up the transcript into professional, form-ready text
+
+TITLE RULES:
+- 3-7 words max
+- Focus on the main activity or topic
+- Use construction terminology
+- Examples: "Concrete Pour Section B", "Electrical Rough-In Complete", "Safety Issue - Missing Guardrails"
+
+CLEANED TRANSCRIPT RULES:
+- Remove filler words (um, uh, like, you know)
+- Fix grammar and punctuation
+- Keep it concise but preserve all key details
+- Use professional construction language
+- Format as 1-3 clear sentences
+
+OUTPUT FORMAT (JSON):
+{"title": "Short Title Here", "cleanedTranscript": "Professional cleaned text here."}`;
+
+    const userPrompt = `Voice note transcript:
+"${transcript}"
+
+${snippets.length > 0 ? `\nExtracted topics: ${snippets.map(s => s.category).join(', ')}` : ''}
+
+Return JSON with title and cleanedTranscript.`;
+
+    const response = await fetch(CHAT_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 300,
+      }),
+    });
+
+    if (!response.ok) {
+      return { title: fallbackTitle, cleanedTranscript: fallbackCleaned };
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    // Parse JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { title: fallbackTitle, cleanedTranscript: fallbackCleaned };
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
+    return {
+      title: result.title || fallbackTitle,
+      cleanedTranscript: result.cleanedTranscript || fallbackCleaned,
+    };
+
+  } catch (error) {
+    console.error('[voice-diary] Title generation error:', error);
+    return { title: fallbackTitle, cleanedTranscript: fallbackCleaned };
+  }
+}
+
+/**
+ * Generate a fallback title without AI
+ */
+function generateFallbackTitle(transcript, snippets) {
+  // Try to use category if available
+  if (snippets.length > 0) {
+    const mainCategory = snippets[0].category;
+    const words = transcript.split(' ').slice(0, 3).join(' ');
+    return `${mainCategory}: ${words}...`;
+  }
+
+  // Otherwise use first few words
+  const words = transcript.trim().split(/\s+/).slice(0, 5).join(' ');
+  return words.length > 30 ? words.substring(0, 27) + '...' : words;
+}
+
+/**
+ * Basic transcript cleanup without AI
+ */
+function cleanTranscriptBasic(transcript) {
+  if (!transcript) return '';
+
+  let cleaned = transcript;
+
+  // Remove filler words
+  cleaned = cleaned.replace(/\b(um|uh|er|ah|like|you know|basically|actually|so yeah)\b/gi, '');
+
+  // Fix multiple spaces
+  cleaned = cleaned.replace(/\s{2,}/g, ' ');
+
+  // Capitalize first letter
+  cleaned = cleaned.trim();
+  cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+
+  // Ensure ends with punctuation
+  if (!/[.!?]$/.test(cleaned)) {
+    cleaned += '.';
+  }
+
+  return cleaned;
+}
+
 module.exports = {
   categorizeTranscript,
   generateDailySummary,
+  generateNoteTitle,
   matchFormTemplates,
   VOICE_DIARY_CATEGORIES,
 };
