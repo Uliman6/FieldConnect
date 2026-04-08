@@ -208,76 +208,110 @@ export default function RecordScreen() {
 
     try {
       // Step 1: Transcribe audio
+      console.log('[voice-diary] Starting transcription...');
+      console.log('[voice-diary] API URL:', process.env.EXPO_PUBLIC_API_URL || 'NOT SET - using localhost');
+
       const result = await transcribeAudio(audioUri);
 
       if (!result.success || !result.text) {
+        const errorMsg = result.error || 'Could not transcribe audio';
+        console.error('[voice-diary] Transcription failed:', errorMsg);
         updateVoiceNote(noteId, {
           status: 'error',
-          errorMessage: result.error || 'Transcription failed',
+          errorMessage: errorMsg,
         });
-        addNotification('error', 'Could not process audio');
+        addNotification('error', errorMsg);
         return;
       }
 
+      console.log('[voice-diary] Transcription success, length:', result.text.length);
+
+      // Clean up the transcript for display
+      const cleanedText = cleanTranscript(result.text);
+      console.log('[voice-diary] Cleaned text length:', cleanedText.length);
+
       updateVoiceNote(noteId, {
-        transcriptText: result.text,
+        transcriptText: cleanedText,
         status: 'processing',
       });
 
       // Step 2: Send to backend for categorization + summarization
+      console.log('[voice-diary] Sending to API for processing...');
       const existingSnippets = getSnippetsForDate(today, currentProjectId || undefined).map((s) => ({
         category: s.category,
         content: s.content,
       }));
       const noteCount = getVoiceNotesForDate(today, currentProjectId || undefined).length;
+      console.log('[voice-diary] Existing snippets:', existingSnippets.length, 'Note count:', noteCount);
 
-      const processResult = await processVoiceNoteApi(
-        result.text,
-        existingSnippets,
-        noteCount
-      );
+      try {
+        const processResult = await processVoiceNoteApi(
+          cleanedText,
+          existingSnippets,
+          noteCount
+        );
 
-      if (processResult.success) {
-        // Add new snippets to store
-        for (const snippet of processResult.newSnippets) {
-          addSnippet(noteId, snippet.category as any, snippet.content);
+        console.log('[voice-diary] API response:', JSON.stringify(processResult, null, 2));
+
+        if (processResult.success && processResult.newSnippets) {
+          // Add new snippets to store
+          console.log('[voice-diary] Adding', processResult.newSnippets.length, 'snippets');
+          for (const snippet of processResult.newSnippets) {
+            addSnippet(noteId, snippet.category as any, snippet.content);
+          }
+
+          // Update daily summary (user-specific)
+          if (currentProjectId && processResult.summary) {
+            console.log('[voice-diary] Updating summary:', processResult.summary.substring(0, 100));
+            updateDailySummary(
+              today,
+              currentProjectId,
+              processResult.summary,
+              processResult.hasMinimumInfo || false,
+              user?.id
+            );
+          }
+
+          // Add form suggestions
+          if (processResult.formSuggestions) {
+            for (const suggestion of processResult.formSuggestions) {
+              addFormSuggestion(
+                suggestion.formType,
+                suggestion.formName,
+                suggestion.reason,
+                suggestion.snippetIds || []
+              );
+            }
+          }
+
+          updateVoiceNote(noteId, { status: 'complete' });
+          addNotification('info', `Added ${processResult.newSnippets.length} items`);
+        } else {
+          // API returned but no snippets - still complete
+          console.log('[voice-diary] No snippets from API, marking complete');
+          updateVoiceNote(noteId, { status: 'complete' });
+          addNotification('success', 'Note saved');
         }
-
-        // Update daily summary (user-specific)
-        if (currentProjectId) {
-          updateDailySummary(
-            today,
-            currentProjectId,
-            processResult.summary,
-            processResult.hasMinimumInfo,
-            user?.id
-          );
-        }
-
-        // Add form suggestions
-        for (const suggestion of processResult.formSuggestions) {
-          addFormSuggestion(
-            suggestion.formType,
-            suggestion.formName,
-            suggestion.reason,
-            suggestion.snippetIds
-          );
-        }
-
+      } catch (apiError: any) {
+        // API call failed - still save the transcript but log the error
+        console.error('[voice-diary] API processing failed:', apiError.message || apiError);
         updateVoiceNote(noteId, { status: 'complete' });
-        addNotification('info', 'Summary updated');
-      } else {
-        // Fallback: still mark as complete but without categorization
-        updateVoiceNote(noteId, { status: 'complete' });
-        addNotification('success', 'Note captured');
+        // Show more helpful message
+        if (apiError.message?.includes('401') || apiError.message?.includes('expired')) {
+          addNotification('warning', 'Session expired - please log in again');
+        } else if (apiError.message?.includes('network') || apiError.message?.includes('fetch')) {
+          addNotification('warning', 'Network error - note saved locally');
+        } else {
+          addNotification('info', 'Note saved (categorization unavailable)');
+        }
       }
     } catch (err: any) {
-      console.error('[voice-diary] Processing error:', err);
+      console.error('[voice-diary] Processing error:', err.message || err);
       updateVoiceNote(noteId, {
         status: 'error',
         errorMessage: err.message || 'Processing failed',
       });
-      addNotification('error', 'Processing failed');
+      addNotification('error', err.message || 'Processing failed');
     }
   };
 
@@ -330,6 +364,54 @@ export default function RecordScreen() {
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Clean up raw transcript to make it "form-ready" - concise and professional
+  // This removes filler words, fixes capitalization, and cleans up speech patterns
+  const cleanTranscript = (rawText: string): string => {
+    if (!rawText || rawText.trim().length === 0) return rawText || '';
+
+    let cleaned = rawText;
+
+    // Remove common filler words (case insensitive)
+    const fillerPatterns = [
+      /\b(um|uh|er|ah|like|you know|basically|actually|honestly|literally|so yeah|anyway|right)\b/gi,
+      /\b(kind of|sort of|i mean|i guess|i think)\b/gi,
+    ];
+    fillerPatterns.forEach((pattern) => {
+      cleaned = cleaned.replace(pattern, '');
+    });
+
+    // Clean up repeated words (e.g., "the the" -> "the")
+    cleaned = cleaned.replace(/\b(\w+)\s+\1\b/gi, '$1');
+
+    // Fix multiple spaces
+    cleaned = cleaned.replace(/\s{2,}/g, ' ');
+
+    // Fix spacing around punctuation
+    cleaned = cleaned.replace(/\s+([.,!?])/g, '$1');
+    cleaned = cleaned.replace(/([.,!?])(?=[A-Za-z])/g, '$1 ');
+
+    // Capitalize first letter of sentences
+    cleaned = cleaned.replace(/(^|[.!?]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
+
+    // Trim and clean up
+    cleaned = cleaned.trim();
+
+    // If cleaning removed everything meaningful, return original
+    if (cleaned.length < 3) {
+      return rawText.trim();
+    }
+
+    // Ensure first letter is capitalized
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+
+    // Ensure it ends with punctuation
+    if (cleaned && !/[.!?]$/.test(cleaned)) {
+      cleaned += '.';
+    }
+
+    return cleaned;
   };
 
   // Generate a short title from transcript (first sentence or first 50 chars)

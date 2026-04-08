@@ -221,38 +221,50 @@ export default function DashboardScreen() {
               </Text>
             </View>
           ) : displaySummary?.hasMinimumInfo ? (
-            <Text
-              style={{
-                fontSize: 15,
-                color: isDark ? '#E5E7EB' : '#374151',
-                lineHeight: 22,
-              }}
-            >
-              {displaySummary.summary}
-            </Text>
+            <View>
+              {/* Render bullet points - each line is a separate item */}
+              {displaySummary.summary.split('\n').filter(line => line.trim()).map((line, index) => (
+                <Text
+                  key={index}
+                  style={{
+                    fontSize: 15,
+                    color: isDark ? '#E5E7EB' : '#374151',
+                    lineHeight: 24,
+                    marginBottom: index < displaySummary.summary.split('\n').length - 1 ? 6 : 0,
+                  }}
+                >
+                  {line}
+                </Text>
+              ))}
+            </View>
           ) : (
             <View>
               <Text
                 style={{
-                  fontSize: 15,
+                  fontSize: 14,
                   color: isDark ? '#9CA3AF' : '#6B7280',
-                  fontStyle: 'italic',
+                  marginBottom: 12,
                 }}
               >
-                {todayNotes.length} note{todayNotes.length !== 1 ? 's' : ''} recorded.
-                Keep adding notes to build a complete summary.
+                {todayNotes.length} note{todayNotes.length !== 1 ? 's' : ''} recorded
               </Text>
               {displaySummary?.summary && (
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: isDark ? '#E5E7EB' : '#374151',
-                    marginTop: 12,
-                    lineHeight: 20,
-                  }}
-                >
-                  {displaySummary.summary}
-                </Text>
+                <View>
+                  {/* Render bullet points even for partial summaries */}
+                  {displaySummary.summary.split('\n').filter(line => line.trim()).map((line, index) => (
+                    <Text
+                      key={index}
+                      style={{
+                        fontSize: 14,
+                        color: isDark ? '#E5E7EB' : '#374151',
+                        lineHeight: 22,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {line}
+                    </Text>
+                  ))}
+                </View>
               )}
             </View>
           )}
