@@ -121,11 +121,14 @@ function useProtectedRoute() {
 
     const inAuthGroup = segments[0] === '(auth)';
 
+    // LEARNING: segments[0] contains the first route segment (e.g., '(auth)', '(tabs)', '(voice-diary)')
+    const inVoiceDiary = segments[0] === '(voice-diary)';
+
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to login if not authenticated
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to main app if authenticated
+      // Redirect to main app if authenticated (default to tabs, can also go to voice-diary)
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, isLoading, segments]);
@@ -184,6 +187,7 @@ function RootLayoutNav({ colorScheme }: { colorScheme: 'light' | 'dark' | null |
         <Stack>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(voice-diary)" options={{ headerShown: false }} />
           <Stack.Screen name="export" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="event-detail" options={{ headerShown: false }} />
           <Stack.Screen name="exports" options={{ headerShown: false }} />
