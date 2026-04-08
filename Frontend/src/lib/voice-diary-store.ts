@@ -20,12 +20,17 @@ export type VoiceDiaryCategory = typeof VOICE_DIARY_CATEGORIES[number];
 // A single voice note recording
 export interface VoiceNote {
   id: string;
+  projectId: string; // Which project this note belongs to
+  userId?: string; // Who recorded this note
   audioUri: string;
   transcriptText: string | null;
   status: 'recording' | 'transcribing' | 'processing' | 'complete' | 'error';
   errorMessage?: string;
   createdAt: string;
+  updatedAt: string;
   duration: number; // seconds
+  version: number; // For re-recording (v1, v2, etc.)
+  previousVersionId?: string; // Link to previous version if re-recorded
 }
 
 // A categorized snippet from a voice note
@@ -37,9 +42,12 @@ export interface CategorizedSnippet {
   createdAt: string;
 }
 
-// Daily summary for a specific date
+// Daily summary for a specific date (per-user, per-project)
 export interface DailySummary {
+  id: string;
   date: string; // YYYY-MM-DD
+  projectId: string;
+  userId?: string; // If set, this is a user's personal summary; if null, it's the project summary
   summary: string;
   lastUpdatedAt: string;
   voiceNoteCount: number;
@@ -74,21 +82,26 @@ interface VoiceDiaryStore {
   notifications: DiaryNotification[];
   formSuggestions: FormSuggestion[];
   currentProjectId: string | null;
+  currentUserId: string | null;
 
   // Actions - Voice Notes
-  addVoiceNote: (audioUri: string, duration: number) => VoiceNote;
+  addVoiceNote: (projectId: string, audioUri: string, duration: number, userId?: string) => VoiceNote;
   updateVoiceNote: (id: string, updates: Partial<VoiceNote>) => void;
   deleteVoiceNote: (id: string) => void;
-  getVoiceNotesForDate: (date: string) => VoiceNote[];
+  reRecordVoiceNote: (originalId: string, newAudioUri: string, newDuration: number) => VoiceNote;
+  getVoiceNotesForDate: (date: string, projectId?: string) => VoiceNote[];
+  getVoiceNotesForProject: (projectId: string) => VoiceNote[];
 
   // Actions - Snippets
   addSnippet: (voiceNoteId: string, category: VoiceDiaryCategory, content: string) => void;
-  getSnippetsForCategory: (category: VoiceDiaryCategory, date?: string) => CategorizedSnippet[];
-  getSnippetsForDate: (date: string) => CategorizedSnippet[];
+  getSnippetsForCategory: (category: VoiceDiaryCategory, date?: string, projectId?: string) => CategorizedSnippet[];
+  getSnippetsForDate: (date: string, projectId?: string) => CategorizedSnippet[];
+  clearSnippetsForNote: (voiceNoteId: string) => void;
 
   // Actions - Summary
-  updateDailySummary: (date: string, summary: string, hasMinimumInfo: boolean) => void;
-  getDailySummary: (date: string) => DailySummary | undefined;
+  updateDailySummary: (date: string, projectId: string, summary: string, hasMinimumInfo: boolean, userId?: string) => void;
+  getDailySummary: (date: string, projectId: string, userId?: string) => DailySummary | undefined;
+  getProjectSummary: (date: string, projectId: string) => DailySummary | undefined;
 
   // Actions - Notifications
   addNotification: (type: DiaryNotification['type'], message: string) => void;
@@ -101,8 +114,9 @@ interface VoiceDiaryStore {
   dismissFormSuggestion: (id: string) => void;
   getActiveFormSuggestions: () => FormSuggestion[];
 
-  // Actions - Project
+  // Actions - Project & User
   setCurrentProject: (projectId: string | null) => void;
+  setCurrentUser: (userId: string | null) => void;
 
   // Utilities
   getTodayDate: () => string;
@@ -120,16 +134,22 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
       notifications: [],
       formSuggestions: [],
       currentProjectId: null,
+      currentUserId: null,
 
       // Voice Notes
-      addVoiceNote: (audioUri, duration) => {
+      addVoiceNote: (projectId, audioUri, duration, userId) => {
+        const now = new Date().toISOString();
         const note: VoiceNote = {
           id: generateId(),
+          projectId,
+          userId,
           audioUri,
           transcriptText: null,
           status: 'recording',
-          createdAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
           duration,
+          version: 1,
         };
         set((state) => ({
           voiceNotes: [note, ...state.voiceNotes],
@@ -140,7 +160,9 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
       updateVoiceNote: (id, updates) => {
         set((state) => ({
           voiceNotes: state.voiceNotes.map((note) =>
-            note.id === id ? { ...note, ...updates } : note
+            note.id === id
+              ? { ...note, ...updates, updatedAt: new Date().toISOString() }
+              : note
           ),
         }));
       },
@@ -155,10 +177,49 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         }));
       },
 
-      getVoiceNotesForDate: (date) => {
-        return get().voiceNotes.filter((note) =>
-          note.createdAt.startsWith(date)
-        );
+      // LEARNING: Re-recording creates a new version linked to the original
+      reRecordVoiceNote: (originalId, newAudioUri, newDuration) => {
+        const original = get().voiceNotes.find((n) => n.id === originalId);
+        if (!original) {
+          throw new Error('Original voice note not found');
+        }
+
+        const now = new Date().toISOString();
+        const newNote: VoiceNote = {
+          id: generateId(),
+          projectId: original.projectId,
+          userId: original.userId,
+          audioUri: newAudioUri,
+          transcriptText: null,
+          status: 'recording',
+          createdAt: now,
+          updatedAt: now,
+          duration: newDuration,
+          version: original.version + 1,
+          previousVersionId: originalId,
+        };
+
+        set((state) => ({
+          voiceNotes: [newNote, ...state.voiceNotes],
+          // Clear snippets from original (will be replaced by new processing)
+          categorizedSnippets: state.categorizedSnippets.filter(
+            (s) => s.voiceNoteId !== originalId
+          ),
+        }));
+
+        return newNote;
+      },
+
+      getVoiceNotesForDate: (date, projectId) => {
+        return get().voiceNotes.filter((note) => {
+          const matchesDate = note.createdAt.startsWith(date);
+          const matchesProject = projectId ? note.projectId === projectId : true;
+          return matchesDate && matchesProject;
+        });
+      },
+
+      getVoiceNotesForProject: (projectId) => {
+        return get().voiceNotes.filter((note) => note.projectId === projectId);
       },
 
       // Snippets
@@ -175,33 +236,68 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         }));
       },
 
-      getSnippetsForCategory: (category, date) => {
+      getSnippetsForCategory: (category, date, projectId) => {
+        const voiceNoteIds = projectId
+          ? new Set(get().voiceNotes.filter((n) => n.projectId === projectId).map((n) => n.id))
+          : null;
+
         return get().categorizedSnippets.filter((snippet) => {
           const matchesCategory = snippet.category === category;
           const matchesDate = date ? snippet.createdAt.startsWith(date) : true;
-          return matchesCategory && matchesDate;
+          const matchesProject = voiceNoteIds ? voiceNoteIds.has(snippet.voiceNoteId) : true;
+          return matchesCategory && matchesDate && matchesProject;
         });
       },
 
-      getSnippetsForDate: (date) => {
-        return get().categorizedSnippets.filter((snippet) =>
-          snippet.createdAt.startsWith(date)
-        );
+      getSnippetsForDate: (date, projectId) => {
+        const voiceNoteIds = projectId
+          ? new Set(get().voiceNotes.filter((n) => n.projectId === projectId).map((n) => n.id))
+          : null;
+
+        return get().categorizedSnippets.filter((snippet) => {
+          const matchesDate = snippet.createdAt.startsWith(date);
+          const matchesProject = voiceNoteIds ? voiceNoteIds.has(snippet.voiceNoteId) : true;
+          return matchesDate && matchesProject;
+        });
       },
 
-      // Summary
-      updateDailySummary: (date, summary, hasMinimumInfo) => {
+      clearSnippetsForNote: (voiceNoteId) => {
+        set((state) => ({
+          categorizedSnippets: state.categorizedSnippets.filter(
+            (s) => s.voiceNoteId !== voiceNoteId
+          ),
+        }));
+      },
+
+      // Summary - now per-project and optionally per-user
+      updateDailySummary: (date, projectId, summary, hasMinimumInfo, userId) => {
         set((state) => {
-          const existing = state.dailySummaries.find((s) => s.date === date);
-          const voiceNoteCount = state.voiceNotes.filter((n) =>
-            n.createdAt.startsWith(date)
-          ).length;
+          const summaryKey = userId
+            ? `${date}-${projectId}-${userId}`
+            : `${date}-${projectId}`;
+
+          const existing = state.dailySummaries.find(
+            (s) => s.date === date && s.projectId === projectId && s.userId === userId
+          );
+
+          const voiceNoteCount = state.voiceNotes.filter((n) => {
+            const matchesDate = n.createdAt.startsWith(date);
+            const matchesProject = n.projectId === projectId;
+            const matchesUser = userId ? n.userId === userId : true;
+            return matchesDate && matchesProject && matchesUser;
+          }).length;
 
           if (existing) {
             return {
               dailySummaries: state.dailySummaries.map((s) =>
-                s.date === date
-                  ? { ...s, summary, hasMinimumInfo, lastUpdatedAt: new Date().toISOString(), voiceNoteCount }
+                s.id === existing.id
+                  ? {
+                      ...s,
+                      summary,
+                      hasMinimumInfo,
+                      lastUpdatedAt: new Date().toISOString(),
+                      voiceNoteCount,
+                    }
                   : s
               ),
             };
@@ -211,7 +307,10 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
             dailySummaries: [
               ...state.dailySummaries,
               {
+                id: generateId(),
                 date,
+                projectId,
+                userId,
                 summary,
                 lastUpdatedAt: new Date().toISOString(),
                 voiceNoteCount,
@@ -222,8 +321,17 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         });
       },
 
-      getDailySummary: (date) => {
-        return get().dailySummaries.find((s) => s.date === date);
+      getDailySummary: (date, projectId, userId) => {
+        return get().dailySummaries.find(
+          (s) => s.date === date && s.projectId === projectId && s.userId === userId
+        );
+      },
+
+      getProjectSummary: (date, projectId) => {
+        // Project summary has no userId
+        return get().dailySummaries.find(
+          (s) => s.date === date && s.projectId === projectId && !s.userId
+        );
       },
 
       // Notifications
@@ -284,9 +392,13 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         return get().formSuggestions.filter((s) => !s.dismissed);
       },
 
-      // Project
+      // Project & User
       setCurrentProject: (projectId) => {
         set({ currentProjectId: projectId });
+      },
+
+      setCurrentUser: (userId) => {
+        set({ currentUserId: userId });
       },
 
       // Utilities

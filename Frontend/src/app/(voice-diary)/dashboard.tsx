@@ -21,6 +21,8 @@ import {
   FileText,
   X,
   Clock,
+  Building2,
+  User,
 } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import {
@@ -29,6 +31,8 @@ import {
   VoiceDiaryCategory,
   CategorizedSnippet,
 } from '@/lib/voice-diary-store';
+import { useDailyLogStore } from '@/lib/store';
+import { useAuthStore } from '@/lib/auth-store';
 
 // LEARNING: We map categories to icons for visual recognition
 // This pattern is common in React - creating a lookup object for configuration
@@ -62,30 +66,41 @@ export default function DashboardScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState<VoiceDiaryCategory | null>(null);
 
+  // Get project and user context
+  const { projects } = useDailyLogStore();
+  const { user } = useAuthStore();
+
   const {
     getDailySummary,
+    getProjectSummary,
     getSnippetsForDate,
     getSnippetsForCategory,
     getVoiceNotesForDate,
     getActiveFormSuggestions,
     dismissFormSuggestion,
     getTodayDate,
+    currentProjectId,
   } = useVoiceDiaryStore();
 
   const today = getTodayDate();
-  const dailySummary = getDailySummary(today);
-  const todaySnippets = getSnippetsForDate(today);
-  const todayNotes = getVoiceNotesForDate(today);
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  // LEARNING: We now filter by project - each user sees their own summary
+  // and there's also a project-level summary combining all users
+  const userSummary = currentProjectId ? getDailySummary(today, currentProjectId, user?.id) : undefined;
+  const projectSummary = currentProjectId ? getProjectSummary(today, currentProjectId) : undefined;
+  const todaySnippets = getSnippetsForDate(today, currentProjectId || undefined);
+  const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
   const formSuggestions = getActiveFormSuggestions();
 
-  // Count snippets per category
+  // Count snippets per category (filtered by project)
   const categoryCounts = useMemo(() => {
     const counts: Record<VoiceDiaryCategory, number> = {} as any;
     VOICE_DIARY_CATEGORIES.forEach((cat) => {
-      counts[cat] = getSnippetsForCategory(cat, today).length;
+      counts[cat] = getSnippetsForCategory(cat, today, currentProjectId || undefined).length;
     });
     return counts;
-  }, [todaySnippets, today]);
+  }, [todaySnippets, today, currentProjectId]);
 
   // Categories with content
   const activeCategories = VOICE_DIARY_CATEGORIES.filter(
@@ -93,8 +108,46 @@ export default function DashboardScreen() {
   );
 
   const selectedSnippets = selectedCategory
-    ? getSnippetsForCategory(selectedCategory, today)
+    ? getSnippetsForCategory(selectedCategory, today, currentProjectId || undefined)
     : [];
+
+  // Show appropriate summary (user's if available, otherwise project)
+  const displaySummary = userSummary || projectSummary;
+
+  // If no project selected, show message
+  if (!currentProjectId) {
+    return (
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: isDark ? '#000' : '#F9FAFB' }}
+        edges={['bottom']}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+          <Building2 size={64} color={isDark ? '#374151' : '#D1D5DB'} />
+          <Text
+            style={{
+              marginTop: 20,
+              fontSize: 18,
+              fontWeight: '600',
+              color: isDark ? '#FFF' : '#111',
+              textAlign: 'center',
+            }}
+          >
+            No Project Selected
+          </Text>
+          <Text
+            style={{
+              marginTop: 8,
+              fontSize: 15,
+              color: isDark ? '#6B7280' : '#9CA3AF',
+              textAlign: 'center',
+            }}
+          >
+            Select a project on the Record tab to see your dashboard
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -102,6 +155,28 @@ export default function DashboardScreen() {
       edges={['bottom']}
     >
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+        {/* Project Header */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 16,
+            paddingHorizontal: 4,
+          }}
+        >
+          <Building2 size={18} color="#1F5C1A" />
+          <Text
+            style={{
+              marginLeft: 8,
+              fontSize: 15,
+              fontWeight: '600',
+              color: isDark ? '#FFF' : '#111',
+            }}
+          >
+            {currentProject?.name || 'Project'}
+          </Text>
+        </View>
+
         {/* Daily Summary Card */}
         <View
           style={{
@@ -117,7 +192,7 @@ export default function DashboardScreen() {
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-            <Clock size={18} color="#1F5C1A" />
+            <User size={18} color="#1F5C1A" />
             <Text
               style={{
                 fontSize: 14,
@@ -128,7 +203,7 @@ export default function DashboardScreen() {
                 letterSpacing: 0.5,
               }}
             >
-              Today's Summary
+              Your Summary
             </Text>
           </View>
 
@@ -145,7 +220,7 @@ export default function DashboardScreen() {
                 Start recording to build your summary!
               </Text>
             </View>
-          ) : dailySummary?.hasMinimumInfo ? (
+          ) : displaySummary?.hasMinimumInfo ? (
             <Text
               style={{
                 fontSize: 15,
@@ -153,7 +228,7 @@ export default function DashboardScreen() {
                 lineHeight: 22,
               }}
             >
-              {dailySummary.summary}
+              {displaySummary.summary}
             </Text>
           ) : (
             <View>
@@ -167,7 +242,7 @@ export default function DashboardScreen() {
                 {todayNotes.length} note{todayNotes.length !== 1 ? 's' : ''} recorded.
                 Keep adding notes to build a complete summary.
               </Text>
-              {dailySummary?.summary && (
+              {displaySummary?.summary && (
                 <Text
                   style={{
                     fontSize: 14,
@@ -176,13 +251,13 @@ export default function DashboardScreen() {
                     lineHeight: 20,
                   }}
                 >
-                  {dailySummary.summary}
+                  {displaySummary.summary}
                 </Text>
               )}
             </View>
           )}
 
-          {dailySummary?.lastUpdatedAt && (
+          {displaySummary?.lastUpdatedAt && (
             <Text
               style={{
                 fontSize: 12,
@@ -191,7 +266,7 @@ export default function DashboardScreen() {
               }}
             >
               Last updated:{' '}
-              {new Date(dailySummary.lastUpdatedAt).toLocaleTimeString([], {
+              {new Date(displaySummary.lastUpdatedAt).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
