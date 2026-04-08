@@ -5,8 +5,6 @@ import { Redirect } from 'expo-router';
 const APP_MODE = process.env.EXPO_PUBLIC_APP_MODE || 'fieldconnect';
 
 export default function Index() {
-  console.log('[index.tsx] APP_MODE:', APP_MODE);
-
   if (APP_MODE === 'voice-diary') {
     return <Redirect href="/(voice-diary)" />;
   }
