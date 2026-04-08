@@ -60,7 +60,8 @@ const IS_VOICE_DIARY_MODE = APP_MODE === 'voice-diary';
 console.log('[APP_MODE]', APP_MODE, '| IS_VOICE_DIARY_MODE:', IS_VOICE_DIARY_MODE);
 
 export const unstable_settings = {
-  initialRouteName: IS_VOICE_DIARY_MODE ? '(voice-diary)' : '(tabs)',
+  // The root index.tsx handles the redirect based on APP_MODE
+  initialRouteName: 'index',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -197,6 +198,7 @@ function RootLayoutNav({ colorScheme }: { colorScheme: 'light' | 'dark' | null |
       <DataProvider>
         <SyncStatusBanner />
         <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(voice-diary)" options={{ headerShown: false }} />
