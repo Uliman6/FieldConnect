@@ -5,14 +5,30 @@ import {
   Pressable,
   ScrollView,
   Animated,
-  Platform,
+  Modal,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mic, Square, Check, AlertCircle, Clock, Loader2 } from 'lucide-react-native';
+import {
+  Mic,
+  Square,
+  Check,
+  AlertCircle,
+  Clock,
+  Loader2,
+  ChevronDown,
+  Plus,
+  Trash2,
+  RefreshCw,
+  Building2,
+} from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useVoiceDiaryStore, VoiceNote } from '@/lib/voice-diary-store';
+import { useDailyLogStore } from '@/lib/store';
 import { transcribeAudio } from '@/lib/transcription';
 import { processVoiceNote as processVoiceNoteApi } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth-store';
 
 // LEARNING: We use a ref for the MediaRecorder because it doesn't trigger re-renders
 // and we need to access it in callbacks. See: https://react.dev/reference/react/useRef
@@ -23,15 +39,23 @@ export default function RecordScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showProjectPicker, setShowProjectPicker] = useState(false);
+  const [reRecordingNoteId, setReRecordingNoteId] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
+  // Get projects from main store
+  const { projects } = useDailyLogStore();
+  const { user } = useAuthStore();
+
   const {
     addVoiceNote,
     updateVoiceNote,
+    deleteVoiceNote,
+    reRecordVoiceNote,
     addNotification,
     addSnippet,
     updateDailySummary,
@@ -39,9 +63,14 @@ export default function RecordScreen() {
     getVoiceNotesForDate,
     getSnippetsForDate,
     getTodayDate,
+    currentProjectId,
+    setCurrentProject,
+    clearSnippetsForNote,
   } = useVoiceDiaryStore();
 
-  const todayNotes = getVoiceNotesForDate(getTodayDate());
+  const today = getTodayDate();
+  const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
+  const currentProject = projects.find((p) => p.id === currentProjectId);
 
   // Pulse animation while recording
   useEffect(() => {
@@ -68,6 +97,11 @@ export default function RecordScreen() {
   }, [isRecording, pulseAnim]);
 
   const startRecording = useCallback(async () => {
+    if (!currentProjectId) {
+      setError('Please select a project first');
+      return;
+    }
+
     setError(null);
     chunksRef.current = [];
 
@@ -103,15 +137,23 @@ export default function RecordScreen() {
         if (blob.size < 1000) {
           setError('No audio detected. Please try again.');
           addNotification('error', 'No voice detected');
+          setReRecordingNoteId(null);
           return;
         }
 
         const audioUrl = URL.createObjectURL(blob);
         const duration = recordingDuration;
 
-        // Add voice note to store
-        const note = addVoiceNote(audioUrl, duration);
-        addNotification('success', 'Note captured!');
+        // Check if this is a re-record or new note
+        let note: VoiceNote;
+        if (reRecordingNoteId) {
+          note = reRecordVoiceNote(reRecordingNoteId, audioUrl, duration);
+          addNotification('success', `Recording updated (v${note.version})`);
+          setReRecordingNoteId(null);
+        } else {
+          note = addVoiceNote(currentProjectId!, audioUrl, duration, user?.id);
+          addNotification('success', 'Note captured!');
+        }
 
         // Start transcription and processing
         processVoiceNoteAsync(note.id, audioUrl);
@@ -133,8 +175,9 @@ export default function RecordScreen() {
         setError('Could not start recording. Please try again.');
       }
       addNotification('error', 'Recording failed');
+      setReRecordingNoteId(null);
     }
-  }, [addVoiceNote, addNotification, recordingDuration]);
+  }, [currentProjectId, addVoiceNote, reRecordVoiceNote, addNotification, recordingDuration, reRecordingNoteId, user?.id]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -150,7 +193,6 @@ export default function RecordScreen() {
 
   const processVoiceNoteAsync = async (noteId: string, audioUri: string) => {
     updateVoiceNote(noteId, { status: 'transcribing' });
-    const today = getTodayDate();
 
     try {
       // Step 1: Transcribe audio
@@ -171,11 +213,11 @@ export default function RecordScreen() {
       });
 
       // Step 2: Send to backend for categorization + summarization
-      const existingSnippets = getSnippetsForDate(today).map(s => ({
+      const existingSnippets = getSnippetsForDate(today, currentProjectId || undefined).map((s) => ({
         category: s.category,
         content: s.content,
       }));
-      const noteCount = getVoiceNotesForDate(today).length;
+      const noteCount = getVoiceNotesForDate(today, currentProjectId || undefined).length;
 
       const processResult = await processVoiceNoteApi(
         result.text,
@@ -189,8 +231,16 @@ export default function RecordScreen() {
           addSnippet(noteId, snippet.category as any, snippet.content);
         }
 
-        // Update daily summary
-        updateDailySummary(today, processResult.summary, processResult.hasMinimumInfo);
+        // Update daily summary (user-specific)
+        if (currentProjectId) {
+          updateDailySummary(
+            today,
+            currentProjectId,
+            processResult.summary,
+            processResult.hasMinimumInfo,
+            user?.id
+          );
+        }
 
         // Add form suggestions
         for (const suggestion of processResult.formSuggestions) {
@@ -217,6 +267,32 @@ export default function RecordScreen() {
       });
       addNotification('error', 'Processing failed');
     }
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    Alert.alert(
+      'Delete Recording',
+      'Are you sure you want to delete this recording?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteVoiceNote(noteId);
+            addNotification('info', 'Recording deleted');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReRecord = (noteId: string) => {
+    setReRecordingNoteId(noteId);
+    // Clear existing snippets for this note since we're re-recording
+    clearSnippetsForNote(noteId);
+    // Start recording immediately
+    startRecording();
   };
 
   const formatDuration = (seconds: number) => {
@@ -250,6 +326,35 @@ export default function RecordScreen() {
       edges={['bottom']}
     >
       <View style={{ flex: 1, padding: 20 }}>
+        {/* Project Selector */}
+        <Pressable
+          onPress={() => setShowProjectPicker(true)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: isDark ? '#1F2937' : '#FFF',
+            borderRadius: 12,
+            padding: 14,
+            marginBottom: 20,
+            borderWidth: 1,
+            borderColor: currentProjectId ? '#1F5C1A' : (isDark ? '#374151' : '#E5E7EB'),
+          }}
+        >
+          <Building2 size={20} color={currentProjectId ? '#1F5C1A' : (isDark ? '#6B7280' : '#9CA3AF')} />
+          <Text
+            style={{
+              flex: 1,
+              marginLeft: 12,
+              fontSize: 15,
+              fontWeight: '500',
+              color: currentProject ? (isDark ? '#FFF' : '#111') : (isDark ? '#6B7280' : '#9CA3AF'),
+            }}
+          >
+            {currentProject?.name || 'Select a project...'}
+          </Text>
+          <ChevronDown size={20} color={isDark ? '#6B7280' : '#9CA3AF'} />
+        </Pressable>
+
         {/* Main Record Button */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text
@@ -260,24 +365,33 @@ export default function RecordScreen() {
               textAlign: 'center',
             }}
           >
-            {isRecording
-              ? 'Recording... Tap to stop'
+            {!currentProjectId
+              ? 'Select a project to start recording'
+              : isRecording
+              ? reRecordingNoteId
+                ? 'Re-recording... Tap to stop'
+                : 'Recording... Tap to stop'
               : 'Tap to record a voice note'}
           </Text>
 
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <Pressable
               onPress={isRecording ? stopRecording : startRecording}
+              disabled={!currentProjectId && !isRecording}
               style={{
                 width: 140,
                 height: 140,
                 borderRadius: 70,
-                backgroundColor: isRecording ? '#EF4444' : '#1F5C1A',
+                backgroundColor: !currentProjectId
+                  ? '#9CA3AF'
+                  : isRecording
+                  ? '#EF4444'
+                  : '#1F5C1A',
                 justifyContent: 'center',
                 alignItems: 'center',
                 shadowColor: isRecording ? '#EF4444' : '#1F5C1A',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
+                shadowOpacity: currentProjectId ? 0.3 : 0.1,
                 shadowRadius: 8,
                 elevation: 8,
               }}
@@ -324,7 +438,7 @@ export default function RecordScreen() {
         </View>
 
         {/* Today's Notes List */}
-        <View style={{ maxHeight: 250 }}>
+        <View style={{ maxHeight: 280 }}>
           <Text
             style={{
               fontSize: 14,
@@ -338,7 +452,20 @@ export default function RecordScreen() {
             Today's Notes ({todayNotes.length})
           </Text>
 
-          {todayNotes.length === 0 ? (
+          {!currentProjectId ? (
+            <View
+              style={{
+                padding: 20,
+                backgroundColor: isDark ? '#1F2937' : '#FFF',
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: isDark ? '#6B7280' : '#9CA3AF', fontSize: 14 }}>
+                Select a project to see recordings
+              </Text>
+            </View>
+          ) : todayNotes.length === 0 ? (
             <View
               style={{
                 padding: 20,
@@ -372,20 +499,38 @@ export default function RecordScreen() {
                 >
                   {getStatusIcon(note.status)}
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        color: isDark ? '#FFF' : '#111',
-                        fontWeight: '500',
-                      }}
-                      numberOfLines={1}
-                    >
-                      {note.transcriptText
-                        ? note.transcriptText.substring(0, 50) + (note.transcriptText.length > 50 ? '...' : '')
-                        : note.status === 'error'
-                        ? note.errorMessage || 'Error'
-                        : 'Processing...'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: isDark ? '#FFF' : '#111',
+                          fontWeight: '500',
+                          flex: 1,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {note.transcriptText
+                          ? note.transcriptText.substring(0, 40) + (note.transcriptText.length > 40 ? '...' : '')
+                          : note.status === 'error'
+                          ? note.errorMessage || 'Error'
+                          : 'Processing...'}
+                      </Text>
+                      {note.version > 1 && (
+                        <View
+                          style={{
+                            backgroundColor: '#DBEAFE',
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                            borderRadius: 4,
+                            marginLeft: 8,
+                          }}
+                        >
+                          <Text style={{ fontSize: 10, color: '#1E40AF', fontWeight: '600' }}>
+                            v{note.version}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                     <Text
                       style={{
                         fontSize: 12,
@@ -396,12 +541,131 @@ export default function RecordScreen() {
                       {formatTime(note.createdAt)} · {formatDuration(note.duration)}
                     </Text>
                   </View>
+
+                  {/* Action buttons */}
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Pressable
+                      onPress={() => handleReRecord(note.id)}
+                      disabled={isRecording}
+                      style={{
+                        padding: 8,
+                        opacity: isRecording ? 0.3 : 1,
+                      }}
+                    >
+                      <RefreshCw size={18} color="#3B82F6" />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleDeleteNote(note.id)}
+                      disabled={isRecording}
+                      style={{
+                        padding: 8,
+                        opacity: isRecording ? 0.3 : 1,
+                      }}
+                    >
+                      <Trash2 size={18} color="#EF4444" />
+                    </Pressable>
+                  </View>
                 </View>
               ))}
             </ScrollView>
           )}
         </View>
       </View>
+
+      {/* Project Picker Modal */}
+      <Modal
+        visible={showProjectPicker}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowProjectPicker(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#F9FAFB' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: isDark ? '#1F2937' : '#E5E7EB',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '700',
+                color: isDark ? '#FFF' : '#111',
+              }}
+            >
+              Select Project
+            </Text>
+            <Pressable onPress={() => setShowProjectPicker(false)}>
+              <Text style={{ color: '#1F5C1A', fontSize: 16, fontWeight: '600' }}>
+                Done
+              </Text>
+            </Pressable>
+          </View>
+
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+            {projects.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                <Building2 size={48} color={isDark ? '#374151' : '#D1D5DB'} />
+                <Text
+                  style={{
+                    marginTop: 16,
+                    fontSize: 16,
+                    color: isDark ? '#6B7280' : '#9CA3AF',
+                    textAlign: 'center',
+                  }}
+                >
+                  No projects yet.{'\n'}Create one in the main app.
+                </Text>
+              </View>
+            ) : (
+              projects.map((project) => (
+                <Pressable
+                  key={project.id}
+                  onPress={() => {
+                    setCurrentProject(project.id);
+                    setShowProjectPicker(false);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 16,
+                    backgroundColor: currentProjectId === project.id
+                      ? (isDark ? '#1F3A1C' : '#DCFCE7')
+                      : (isDark ? '#1F2937' : '#FFF'),
+                    borderRadius: 12,
+                    marginBottom: 8,
+                    borderWidth: currentProjectId === project.id ? 1 : 0,
+                    borderColor: '#1F5C1A',
+                  }}
+                >
+                  <Building2
+                    size={24}
+                    color={currentProjectId === project.id ? '#1F5C1A' : (isDark ? '#6B7280' : '#9CA3AF')}
+                  />
+                  <Text
+                    style={{
+                      flex: 1,
+                      marginLeft: 12,
+                      fontSize: 16,
+                      fontWeight: currentProjectId === project.id ? '600' : '400',
+                      color: isDark ? '#FFF' : '#111',
+                    }}
+                  >
+                    {project.name}
+                  </Text>
+                  {currentProjectId === project.id && (
+                    <Check size={20} color="#1F5C1A" />
+                  )}
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
