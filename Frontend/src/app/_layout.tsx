@@ -51,8 +51,14 @@ if (__DEV__) {
   }
 }
 
+// LEARNING: Environment-based routing allows the same codebase to be deployed
+// as different apps. Set EXPO_PUBLIC_APP_MODE=voice-diary for Voice Diary app.
+const APP_MODE = process.env.EXPO_PUBLIC_APP_MODE || 'fieldconnect';
+const IS_VOICE_DIARY_MODE = APP_MODE === 'voice-diary';
+
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  // The root index.tsx handles the redirect based on APP_MODE
+  initialRouteName: 'index',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -121,12 +127,19 @@ function useProtectedRoute() {
 
     const inAuthGroup = segments[0] === '(auth)';
 
+    // LEARNING: segments[0] contains the first route segment (e.g., '(auth)', '(tabs)', '(voice-diary)')
+    const inVoiceDiary = segments[0] === '(voice-diary)';
+
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to login if not authenticated
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to main app if authenticated
-      router.replace('/(tabs)');
+      // Redirect based on app mode after login
+      if (IS_VOICE_DIARY_MODE) {
+        router.replace('/(voice-diary)');
+      } else {
+        router.replace('/(tabs)');
+      }
     }
   }, [isAuthenticated, isLoading, segments]);
 }
@@ -182,8 +195,10 @@ function RootLayoutNav({ colorScheme }: { colorScheme: 'light' | 'dark' | null |
       <DataProvider>
         <SyncStatusBanner />
         <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(voice-diary)" options={{ headerShown: false }} />
           <Stack.Screen name="export" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="event-detail" options={{ headerShown: false }} />
           <Stack.Screen name="exports" options={{ headerShown: false }} />

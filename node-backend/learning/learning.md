@@ -216,6 +216,331 @@ grep -r "\\`.*\\\${.*?.*:.*}.*\\`" --include="*.js" --include="*.ts"
 
 ---
 
+## 2026-04-07: Voice Diary Feature (Formless Voice-First Experience)
+
+### Summary
+Built a new "formless" voice-first experience as a separate entry point. Users record voice notes throughout the day, and the system automatically categorizes and summarizes them.
+
+### Files Created
+- `Frontend/src/app/(voice-diary)/_layout.tsx` - 2-tab layout
+- `Frontend/src/app/(voice-diary)/index.tsx` - Record tab
+- `Frontend/src/app/(voice-diary)/dashboard.tsx` - Dashboard tab
+- `Frontend/src/lib/voice-diary-store.ts` - Local state management
+- `node-backend/src/services/voice-diary.service.js` - AI categorization
+- `node-backend/src/controllers/voice-diary.controller.js` - API handlers
+- `node-backend/src/routes/voice-diary.routes.js` - Route definitions
+
+---
+
+### Concept 1: Expo Router Route Groups
+
+**The Pattern:**
+```
+app/
+├── (tabs)/          ← Route group for main 6-tab app
+│   └── _layout.tsx
+├── (voice-diary)/   ← Route group for voice diary (separate entry)
+│   └── _layout.tsx
+└── _layout.tsx      ← Root layout registers both
+```
+
+**How it works:**
+- Parentheses `()` create a "route group" - organizes files without affecting URL
+- Each group can have its own `_layout.tsx` with different tab structure
+- Navigate between groups: `router.push('/(voice-diary)')`
+
+**Documentation:**
+- Expo Router: [Route Groups](https://docs.expo.dev/router/layouts/#groups)
+
+---
+
+### Concept 2: Zustand State Management
+
+**The Code:**
+```typescript
+// LEARNING: Zustand creates a store with state and actions in one place
+// Much simpler than Redux - no reducers, actions files, etc.
+export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
+  persist(
+    (set, get) => ({
+      // State
+      voiceNotes: [],
+
+      // Actions
+      addVoiceNote: (audioUri, duration) => {
+        const note = { id: generateId(), audioUri, duration, ... };
+        set((state) => ({
+          voiceNotes: [note, ...state.voiceNotes],
+        }));
+        return note;
+      },
+
+      // Selectors (using get())
+      getVoiceNotesForDate: (date) => {
+        return get().voiceNotes.filter(n => n.createdAt.startsWith(date));
+      },
+    }),
+    {
+      name: 'voice-diary-storage',  // localStorage key
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
+```
+
+**Key Concepts:**
+1. `set()` - Updates state (like setState but for store)
+2. `get()` - Reads current state (for selectors/computed values)
+3. `persist()` - Automatically saves to AsyncStorage
+
+**Documentation:**
+- Zustand: [Getting Started](https://zustand-demo.pmnd.rs/)
+- Zustand: [Persist Middleware](https://docs.pmnd.rs/zustand/integrations/persisting-store-data)
+
+---
+
+### Concept 3: AI Prompt Engineering for Categorization
+
+**The Pattern:**
+```javascript
+const systemPrompt = `You are a construction site voice note processor...
+
+CATEGORIES (use exactly these names):
+- Safety: Safety concerns, hazards, PPE, incidents...
+- Logistics: Deliveries, equipment moves, site access...
+...
+
+RULES:
+1. Extract distinct pieces of information
+2. Assign each to the MOST relevant category
+...
+
+OUTPUT FORMAT (JSON array):
+[{"category": "Category Name", "content": "Extracted info"}]`;
+```
+
+**Key Principles:**
+1. **Define exact outputs** - List valid category names
+2. **Provide examples** - Show what each category means
+3. **Set rules** - Clear instructions on what to do
+4. **Specify format** - JSON structure expected
+
+**Documentation:**
+- OpenAI: [Prompt Engineering](https://platform.openai.com/docs/guides/prompt-engineering)
+
+---
+
+### Concept 4: React useRef for Non-Rendering State
+
+**The Code:**
+```typescript
+// LEARNING: useRef holds values that DON'T trigger re-renders when changed
+const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+const chunksRef = useRef<Blob[]>([]);
+const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+```
+
+**When to use useRef vs useState:**
+| useRef | useState |
+|--------|----------|
+| MediaRecorder instance | isRecording boolean |
+| Interval/timeout IDs | recordingDuration number |
+| Accumulated data (chunks) | UI-visible error messages |
+| Animated values | List of items to display |
+
+**Documentation:**
+- React: [useRef](https://react.dev/reference/react/useRef)
+
+---
+
+### Mini Exercise: Voice Diary
+
+**Exercise 1: Add a New Category**
+Add "Weather" as a category. You'll need to update:
+1. `Frontend/src/lib/voice-diary-store.ts` - Add to `VOICE_DIARY_CATEGORIES`
+2. `node-backend/src/services/voice-diary.service.js` - Add to categories array + prompt
+3. `Frontend/src/app/(voice-diary)/dashboard.tsx` - Add icon/color
+
+**Exercise 2: Explore the Code**
+Find where the AI categorization prompt is defined and add a new rule:
+```bash
+grep -n "CATEGORIES" node-backend/src/services/voice-diary.service.js
+```
+
+---
+
+## 2026-04-07: Voice Diary Multi-User & Project Support
+
+### Summary
+Enhanced Voice Diary with project selection, delete/re-record functionality, and per-user/per-project data filtering.
+
+### Files Changed
+- `Frontend/src/app/(voice-diary)/index.tsx` - Added project selector, delete/re-record buttons
+- `Frontend/src/app/(voice-diary)/dashboard.tsx` - Added project filtering, empty state
+- `Frontend/src/lib/voice-diary-store.ts` - Added project/user context tracking
+
+---
+
+### Concept 1: Zustand Store with Multiple Contexts
+
+**The Pattern:**
+```typescript
+// LEARNING: Data is now scoped to both project AND user
+interface VoiceNote {
+  id: string;
+  projectId: string;  // Required: which project this note belongs to
+  userId?: string;    // Optional: who recorded it (for per-user filtering)
+  // ...
+}
+
+// Functions now accept optional filters
+getVoiceNotesForDate: (date: string, projectId?: string) => VoiceNote[];
+getDailySummary: (date: string, projectId: string, userId?: string) => DailySummary;
+```
+
+**Why it matters:**
+- **Multi-tenancy**: Different projects have separate data
+- **Per-user tracking**: Each foreman sees their own summary
+- **Aggregation ready**: Can build project-level summaries from individual user data
+
+**Documentation:**
+- Zustand: [Selectors](https://docs.pmnd.rs/zustand/guides/auto-generating-selectors)
+
+---
+
+### Concept 2: Version Tracking for Re-Recordings
+
+**The Code:**
+```typescript
+// LEARNING: Re-recording creates a NEW note linked to the original
+// This preserves history while allowing corrections
+reRecordVoiceNote: (originalId, newAudioUri, newDuration) => {
+  const original = get().voiceNotes.find((n) => n.id === originalId);
+  const newNote: VoiceNote = {
+    id: generateId(),
+    version: original.version + 1,    // Increment version
+    previousVersionId: originalId,     // Link to original
+    // ... copy other fields from original
+  };
+  // Clear old snippets since we're replacing the content
+  set((state) => ({
+    voiceNotes: [newNote, ...state.voiceNotes],
+    categorizedSnippets: state.categorizedSnippets.filter(
+      (s) => s.voiceNoteId !== originalId
+    ),
+  }));
+};
+```
+
+**Key Insight:**
+Instead of updating in place (which loses history), we create new versions:
+- v1 → Original recording
+- v2 → First re-record (linked via `previousVersionId`)
+- v3 → Second re-record, etc.
+
+This is similar to how Google Docs tracks version history.
+
+---
+
+### Concept 3: Early Return Pattern for Conditional UI
+
+**The Code:**
+```typescript
+// LEARNING: Early return prevents deeply nested JSX
+export default function DashboardScreen() {
+  // ...setup code...
+
+  // Handle empty state FIRST
+  if (!currentProjectId) {
+    return (
+      <SafeAreaView>
+        <Text>No Project Selected</Text>
+        <Text>Select a project on the Record tab</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // Main content - only reached if project is selected
+  return (
+    <SafeAreaView>
+      {/* Complex dashboard UI */}
+    </SafeAreaView>
+  );
+}
+```
+
+**Why it's better:**
+```javascript
+// BAD: Deeply nested conditionals
+return (
+  <SafeAreaView>
+    {currentProjectId ? (
+      <ComplexDashboard />
+    ) : (
+      <EmptyState />
+    )}
+  </SafeAreaView>
+);
+
+// GOOD: Early return
+if (!currentProjectId) return <EmptyState />;
+return <ComplexDashboard />;
+```
+
+**Documentation:**
+- [Guard Clauses](https://refactoring.guru/replace-nested-conditional-with-guard-clauses)
+
+---
+
+### Concept 4: React Native Alert API
+
+**The Code:**
+```typescript
+// LEARNING: Alert.alert() shows a native dialog on mobile
+// On web, it uses a browser-style modal
+const handleDeleteNote = (noteId: string) => {
+  Alert.alert(
+    'Delete Recording',                    // Title
+    'Are you sure you want to delete?',    // Message
+    [
+      { text: 'Cancel', style: 'cancel' }, // Dismisses without action
+      {
+        text: 'Delete',
+        style: 'destructive',              // Red text on iOS
+        onPress: () => deleteVoiceNote(noteId),
+      },
+    ]
+  );
+};
+```
+
+**Button Styles:**
+- `'default'` - Standard button
+- `'cancel'` - Usually displayed separately (iOS)
+- `'destructive'` - Red text, indicates danger
+
+**Documentation:**
+- React Native: [Alert](https://reactnative.dev/docs/alert)
+
+---
+
+### Mini Exercise: Multi-User Features
+
+**Exercise 1: Add User Display**
+Currently notes don't show who recorded them. Add a user badge:
+1. Import user info from auth store
+2. Show initials badge next to each note in the list
+3. Filter by user using a toggle
+
+**Exercise 2: Debug Version Tracking**
+Add logging to see version chains:
+```typescript
+// In voice-diary-store.ts, add to reRecordVoiceNote:
+console.log(`Re-recording: ${original.id} v${original.version} → v${original.version + 1}`);
+```
+
+---
+
 ## Tips for Reading This Codebase
 
 ### Understanding the Flow

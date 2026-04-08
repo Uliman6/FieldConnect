@@ -35,6 +35,7 @@ const formsRoutes = require('./routes/forms.routes');
 const projectInvitationsRoutes = require('./routes/project-invitations.routes');
 const voiceListsRoutes = require('./routes/voice-lists.routes');
 const maintenanceRoutes = require('./routes/maintenance.routes');
+const voiceDiaryRoutes = require('./routes/voice-diary.routes');
 
 // Import middleware
 const errorHandler = require('./middleware/error-handler.middleware');
@@ -113,6 +114,7 @@ app.use('/api/photos', authenticate, photosRoutes);
 app.use('/api/forms', formsRoutes); // Auth handled in route file
 app.use('/api/voice-lists', voiceListsRoutes); // Auth handled in route file
 app.use('/api/maintenance', maintenanceRoutes); // Auth handled in route file
+app.use('/api/voice-diary', voiceDiaryRoutes); // Auth handled in route file
 app.use('/api', projectInvitationsRoutes); // Auth handled in route file
 
 // 404 handler
