@@ -217,22 +217,30 @@ async function generateDailySummary(snippets, noteCount) {
       grouped[s.category].push(s.content);
     });
 
-    const systemPrompt = `You are a construction site daily summary writer. Create a brief, professional summary of the day's activities based on categorized notes.
+    const systemPrompt = `You are a construction site daily summary writer. Create a bullet point summary of the day's key activities.
 
 RULES:
-1. Keep it concise - 2-4 sentences max
-2. Highlight the most important items
-3. Use professional construction language
-4. Mention any safety concerns or issues prominently
-5. Don't invent information not in the notes`;
+1. Output ONLY bullet points, one per line, starting with "• "
+2. Keep each bullet point to ONE short sentence
+3. Include 3-6 bullet points covering the most important items
+4. Prioritize safety concerns and issues at the top
+5. Use professional construction language
+6. Don't invent information not in the notes
+7. Don't include category names, just the key information
 
-    const userPrompt = `Create a daily summary from these categorized notes:
+EXAMPLE OUTPUT:
+• Concrete pour completed for Section B foundation
+• Safety concern: Missing guardrails on 3rd floor - reported to super
+• Electrical crew finished rough-in for units 101-105
+• Material delivery expected tomorrow for framing`;
+
+    const userPrompt = `Create bullet point summary from these categorized notes:
 
 ${Object.entries(grouped).map(([cat, items]) =>
   `${cat}:\n${items.map(i => `- ${i}`).join('\n')}`
 ).join('\n\n')}
 
-Write a brief professional summary.`;
+Output ONLY bullet points (3-6 items), no intro text.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -267,19 +275,33 @@ Write a brief professional summary.`;
 }
 
 /**
- * Build a basic summary without AI
+ * Build a basic summary without AI - now returns bullet points
  */
 function buildBasicSummary(snippets) {
-  const counts = {};
-  snippets.forEach(s => {
-    counts[s.category] = (counts[s.category] || 0) + 1;
+  // Get unique snippets, prioritizing Safety and Issues
+  const prioritized = [...snippets].sort((a, b) => {
+    const priority = { 'Safety': 0, 'Issues': 1 };
+    const aPriority = priority[a.category] ?? 10;
+    const bPriority = priority[b.category] ?? 10;
+    return aPriority - bPriority;
   });
 
-  const parts = Object.entries(counts)
-    .map(([cat, count]) => `${count} ${cat.toLowerCase()} item${count > 1 ? 's' : ''}`)
-    .join(', ');
+  // Take up to 5 unique items and format as bullet points
+  const seen = new Set();
+  const bullets = [];
+  for (const snippet of prioritized) {
+    const key = snippet.content.substring(0, 50);
+    if (!seen.has(key) && bullets.length < 5) {
+      seen.add(key);
+      // Truncate long content
+      const content = snippet.content.length > 80
+        ? snippet.content.substring(0, 77) + '...'
+        : snippet.content;
+      bullets.push(`• ${content}`);
+    }
+  }
 
-  return `Today's notes include ${parts}.`;
+  return bullets.join('\n') || '• No notes recorded yet';
 }
 
 /**
