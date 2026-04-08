@@ -6,10 +6,10 @@
 const express = require('express');
 const router = express.Router();
 const voiceDiaryController = require('../controllers/voice-diary.controller');
-const { authenticateToken } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware');
 
 // All routes require authentication
-router.use(authenticateToken);
+router.use(authenticate);
 
 // POST /api/voice-diary/categorize - Categorize a transcript
 router.post('/categorize', (req, res, next) =>
