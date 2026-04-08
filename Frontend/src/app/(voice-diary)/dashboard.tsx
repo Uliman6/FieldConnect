@@ -321,7 +321,7 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Categories Grid */}
+        {/* Categories Grid - Always show all categories */}
         <Text
           style={{
             fontSize: 14,
@@ -332,50 +332,39 @@ export default function DashboardScreen() {
             letterSpacing: 0.5,
           }}
         >
-          Categories
+          Categories ({todaySnippets.length} items)
         </Text>
 
-        {activeCategories.length === 0 ? (
-          <View
-            style={{
-              backgroundColor: isDark ? '#1F2937' : '#FFF',
-              borderRadius: 12,
-              padding: 24,
-              alignItems: 'center',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                color: isDark ? '#6B7280' : '#9CA3AF',
-                textAlign: 'center',
-              }}
-            >
-              Categories will appear here as you record notes
-            </Text>
-          </View>
-        ) : (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {activeCategories.map((category) => (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          {VOICE_DIARY_CATEGORIES.map((category) => {
+            const count = categoryCounts[category];
+            const hasItems = count > 0;
+
+            return (
               <Pressable
                 key={category}
-                onPress={() => setSelectedCategory(category)}
+                onPress={() => hasItems && setSelectedCategory(category)}
                 style={{
-                  backgroundColor: isDark ? '#1F2937' : CATEGORY_COLORS[category],
+                  backgroundColor: hasItems
+                    ? (isDark ? '#1F2937' : CATEGORY_COLORS[category])
+                    : (isDark ? '#111827' : '#F9FAFB'),
                   borderRadius: 12,
                   padding: 14,
                   width: '48%',
                   flexDirection: 'row',
                   alignItems: 'center',
+                  opacity: hasItems ? 1 : 0.6,
+                  borderWidth: hasItems ? 0 : 1,
+                  borderColor: isDark ? '#374151' : '#E5E7EB',
                 }}
               >
                 {CATEGORY_ICONS[category]}
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <Text
                     style={{
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: '600',
-                      color: isDark ? '#FFF' : '#111',
+                      color: hasItems ? (isDark ? '#FFF' : '#111') : (isDark ? '#6B7280' : '#9CA3AF'),
                     }}
                     numberOfLines={1}
                   >
@@ -384,31 +373,82 @@ export default function DashboardScreen() {
                   <Text
                     style={{
                       fontSize: 12,
-                      color: isDark ? '#9CA3AF' : '#6B7280',
+                      color: hasItems ? (isDark ? '#9CA3AF' : '#6B7280') : (isDark ? '#4B5563' : '#D1D5DB'),
                       marginTop: 2,
                     }}
                   >
-                    {categoryCounts[category]} item{categoryCounts[category] !== 1 ? 's' : ''}
+                    {count} item{count !== 1 ? 's' : ''}
                   </Text>
                 </View>
-                <ChevronRight size={16} color={isDark ? '#6B7280' : '#9CA3AF'} />
+                {hasItems && <ChevronRight size={16} color={isDark ? '#6B7280' : '#9CA3AF'} />}
               </Pressable>
-            ))}
-          </View>
-        )}
+            );
+          })}
+        </View>
 
-        {/* All Categories (collapsed) */}
-        {activeCategories.length > 0 && activeCategories.length < VOICE_DIARY_CATEGORIES.length && (
+        {/* Recent Items - Show all snippets for quick reference */}
+        {todaySnippets.length > 0 && (
           <View style={{ marginTop: 20 }}>
             <Text
               style={{
-                fontSize: 12,
-                color: isDark ? '#6B7280' : '#9CA3AF',
-                marginBottom: 8,
+                fontSize: 14,
+                fontWeight: '600',
+                color: isDark ? '#9CA3AF' : '#6B7280',
+                marginBottom: 12,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
               }}
             >
-              Empty categories: {VOICE_DIARY_CATEGORIES.filter(c => categoryCounts[c] === 0).join(', ')}
+              Recent Items
             </Text>
+            {todaySnippets.slice(0, 5).map((snippet) => (
+              <View
+                key={snippet.id}
+                style={{
+                  backgroundColor: isDark ? '#1F2937' : '#FFF',
+                  borderRadius: 12,
+                  padding: 14,
+                  marginBottom: 8,
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: CATEGORY_COLORS[snippet.category] || '#E5E7EB',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 6,
+                    alignSelf: 'flex-start',
+                    marginBottom: 8,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#374151' }}>
+                    {snippet.category}
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: isDark ? '#E5E7EB' : '#374151',
+                    lineHeight: 20,
+                  }}
+                  numberOfLines={2}
+                >
+                  {snippet.content}
+                </Text>
+              </View>
+            ))}
+            {todaySnippets.length > 5 && (
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: isDark ? '#6B7280' : '#9CA3AF',
+                  textAlign: 'center',
+                  marginTop: 8,
+                }}
+              >
+                +{todaySnippets.length - 5} more items
+              </Text>
+            )}
           </View>
         )}
       </ScrollView>

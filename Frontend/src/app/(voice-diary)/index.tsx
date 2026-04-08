@@ -8,6 +8,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -24,7 +25,7 @@ import {
   Building2,
 } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useVoiceDiaryStore, VoiceNote } from '@/lib/voice-diary-store';
+import { useVoiceDiaryStore, VoiceNote, CategorizedSnippet } from '@/lib/voice-diary-store';
 import { useDailyLogStore } from '@/lib/store';
 import { transcribeAudio } from '@/lib/transcription';
 import { processVoiceNote as processVoiceNoteApi } from '@/lib/api';
@@ -41,6 +42,7 @@ export default function RecordScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [reRecordingNoteId, setReRecordingNoteId] = useState<string | null>(null);
+  const [selectedNote, setSelectedNote] = useState<VoiceNote | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -48,8 +50,12 @@ export default function RecordScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Get projects from main store
-  const { projects } = useDailyLogStore();
+  const { projects, addProject } = useDailyLogStore();
   const { user } = useAuthStore();
+
+  // State for creating new project
+  const [newProjectName, setNewProjectName] = useState('');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const {
     addVoiceNote,
@@ -66,7 +72,13 @@ export default function RecordScreen() {
     currentProjectId,
     setCurrentProject,
     clearSnippetsForNote,
+    categorizedSnippets,
   } = useVoiceDiaryStore();
+
+  // Get snippets for a specific note
+  const getSnippetsForNote = (noteId: string): CategorizedSnippet[] => {
+    return categorizedSnippets.filter((s) => s.voiceNoteId === noteId);
+  };
 
   const today = getTodayDate();
   const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
@@ -295,6 +307,20 @@ export default function RecordScreen() {
     startRecording();
   };
 
+  const handleCreateProject = () => {
+    if (!newProjectName.trim()) {
+      Alert.alert('Error', 'Please enter a project name');
+      return;
+    }
+
+    const newProject = addProject(newProjectName.trim(), '', '');
+    setCurrentProject(newProject.id);
+    setNewProjectName('');
+    setIsCreatingProject(false);
+    setShowProjectPicker(false);
+    addNotification('success', `Project "${newProject.name}" created`);
+  };
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -304,6 +330,20 @@ export default function RecordScreen() {
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Generate a short title from transcript (first sentence or first 50 chars)
+  const generateTitle = (transcript: string | null): string => {
+    if (!transcript) return 'Processing...';
+
+    // Try to get first sentence
+    const firstSentence = transcript.split(/[.!?]/)[0].trim();
+    if (firstSentence.length <= 50) return firstSentence;
+
+    // Otherwise truncate at word boundary
+    const truncated = transcript.substring(0, 47);
+    const lastSpace = truncated.lastIndexOf(' ');
+    return (lastSpace > 20 ? truncated.substring(0, lastSpace) : truncated) + '...';
   };
 
   const getStatusIcon = (status: VoiceNote['status']) => {
@@ -487,8 +527,9 @@ export default function RecordScreen() {
               showsVerticalScrollIndicator={false}
             >
               {todayNotes.map((note, index) => (
-                <View
+                <Pressable
                   key={note.id}
+                  onPress={() => setSelectedNote(note)}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -509,11 +550,9 @@ export default function RecordScreen() {
                         }}
                         numberOfLines={1}
                       >
-                        {note.transcriptText
-                          ? note.transcriptText.substring(0, 40) + (note.transcriptText.length > 40 ? '...' : '')
-                          : note.status === 'error'
+                        {note.status === 'error'
                           ? note.errorMessage || 'Error'
-                          : 'Processing...'}
+                          : generateTitle(note.transcriptText)}
                       </Text>
                       {note.version > 1 && (
                         <View
@@ -539,13 +578,17 @@ export default function RecordScreen() {
                       }}
                     >
                       {formatTime(note.createdAt)} · {formatDuration(note.duration)}
+                      {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
                     </Text>
                   </View>
 
                   {/* Action buttons */}
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <Pressable
-                      onPress={() => handleReRecord(note.id)}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleReRecord(note.id);
+                      }}
                       disabled={isRecording}
                       style={{
                         padding: 8,
@@ -555,7 +598,10 @@ export default function RecordScreen() {
                       <RefreshCw size={18} color="#3B82F6" />
                     </Pressable>
                     <Pressable
-                      onPress={() => handleDeleteNote(note.id)}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNote(note.id);
+                      }}
                       disabled={isRecording}
                       style={{
                         padding: 8,
@@ -565,12 +611,189 @@ export default function RecordScreen() {
                       <Trash2 size={18} color="#EF4444" />
                     </Pressable>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           )}
         </View>
       </View>
+
+      {/* Note Detail Modal */}
+      <Modal
+        visible={selectedNote !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setSelectedNote(null)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#F9FAFB' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: isDark ? '#1F2937' : '#E5E7EB',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '700',
+                color: isDark ? '#FFF' : '#111',
+              }}
+            >
+              Note Details
+            </Text>
+            <Pressable onPress={() => setSelectedNote(null)}>
+              <Text style={{ color: '#1F5C1A', fontSize: 16, fontWeight: '600' }}>
+                Done
+              </Text>
+            </Pressable>
+          </View>
+
+          {selectedNote && (
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+              {/* Time and Duration */}
+              <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+                <Text style={{ fontSize: 14, color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  {formatTime(selectedNote.createdAt)} · {formatDuration(selectedNote.duration)}
+                  {selectedNote.version > 1 && ` · Version ${selectedNote.version}`}
+                </Text>
+              </View>
+
+              {/* Full Transcript */}
+              <View
+                style={{
+                  backgroundColor: isDark ? '#1F2937' : '#FFF',
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: isDark ? '#9CA3AF' : '#6B7280',
+                    textTransform: 'uppercase',
+                    marginBottom: 8,
+                  }}
+                >
+                  Full Transcript
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: isDark ? '#E5E7EB' : '#374151',
+                    lineHeight: 22,
+                  }}
+                >
+                  {selectedNote.transcriptText || 'No transcript available'}
+                </Text>
+              </View>
+
+              {/* Categorized Items */}
+              {getSnippetsForNote(selectedNote.id).length > 0 && (
+                <View>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: isDark ? '#9CA3AF' : '#6B7280',
+                      textTransform: 'uppercase',
+                      marginBottom: 12,
+                    }}
+                  >
+                    Extracted Items ({getSnippetsForNote(selectedNote.id).length})
+                  </Text>
+                  {getSnippetsForNote(selectedNote.id).map((snippet) => (
+                    <View
+                      key={snippet.id}
+                      style={{
+                        backgroundColor: isDark ? '#1F2937' : '#FFF',
+                        borderRadius: 12,
+                        padding: 14,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: '#DCFCE7',
+                          paddingHorizontal: 8,
+                          paddingVertical: 4,
+                          borderRadius: 6,
+                          alignSelf: 'flex-start',
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: '#166534' }}>
+                          {snippet.category}
+                        </Text>
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: isDark ? '#E5E7EB' : '#374151',
+                          lineHeight: 20,
+                        }}
+                      >
+                        {snippet.content}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Actions */}
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+                <Pressable
+                  onPress={() => {
+                    setSelectedNote(null);
+                    handleReRecord(selectedNote.id);
+                  }}
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 14,
+                    backgroundColor: '#DBEAFE',
+                    borderRadius: 12,
+                    gap: 8,
+                  }}
+                >
+                  <RefreshCw size={18} color="#1E40AF" />
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: '#1E40AF' }}>
+                    Re-record
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setSelectedNote(null);
+                    handleDeleteNote(selectedNote.id);
+                  }}
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 14,
+                    backgroundColor: '#FEE2E2',
+                    borderRadius: 12,
+                    gap: 8,
+                  }}
+                >
+                  <Trash2 size={18} color="#DC2626" />
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: '#DC2626' }}>
+                    Delete
+                  </Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          )}
+        </SafeAreaView>
+      </Modal>
 
       {/* Project Picker Modal */}
       <Modal
@@ -607,18 +830,118 @@ export default function RecordScreen() {
           </View>
 
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
-            {projects.length === 0 ? (
-              <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-                <Building2 size={48} color={isDark ? '#374151' : '#D1D5DB'} />
+            {/* Create New Project Section */}
+            {isCreatingProject ? (
+              <View
+                style={{
+                  backgroundColor: isDark ? '#1F2937' : '#FFF',
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 16,
+                  borderWidth: 1,
+                  borderColor: '#1F5C1A',
+                }}
+              >
                 <Text
                   style={{
-                    marginTop: 16,
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: isDark ? '#9CA3AF' : '#6B7280',
+                    marginBottom: 8,
+                  }}
+                >
+                  New Project Name
+                </Text>
+                <TextInput
+                  value={newProjectName}
+                  onChangeText={setNewProjectName}
+                  placeholder="Enter project name..."
+                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                  autoFocus
+                  style={{
+                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                    borderRadius: 8,
+                    padding: 12,
                     fontSize: 16,
+                    color: isDark ? '#FFF' : '#111',
+                    marginBottom: 12,
+                  }}
+                />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Pressable
+                    onPress={() => {
+                      setIsCreatingProject(false);
+                      setNewProjectName('');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: 12,
+                      borderRadius: 8,
+                      backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ color: isDark ? '#FFF' : '#374151', fontWeight: '600' }}>
+                      Cancel
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleCreateProject}
+                    style={{
+                      flex: 1,
+                      padding: 12,
+                      borderRadius: 8,
+                      backgroundColor: '#1F5C1A',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ color: '#FFF', fontWeight: '600' }}>
+                      Create
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setIsCreatingProject(true)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 16,
+                  backgroundColor: isDark ? '#1F2937' : '#FFF',
+                  borderRadius: 12,
+                  marginBottom: 16,
+                  borderWidth: 1,
+                  borderColor: isDark ? '#374151' : '#E5E7EB',
+                  borderStyle: 'dashed',
+                }}
+              >
+                <Plus size={24} color="#1F5C1A" />
+                <Text
+                  style={{
+                    flex: 1,
+                    marginLeft: 12,
+                    fontSize: 16,
+                    fontWeight: '500',
+                    color: '#1F5C1A',
+                  }}
+                >
+                  Create New Project
+                </Text>
+              </Pressable>
+            )}
+
+            {/* Existing Projects */}
+            {projects.length === 0 && !isCreatingProject ? (
+              <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
                     color: isDark ? '#6B7280' : '#9CA3AF',
                     textAlign: 'center',
                   }}
                 >
-                  No projects yet.{'\n'}Create one in the main app.
+                  No projects yet. Create one above!
                 </Text>
               </View>
             ) : (
