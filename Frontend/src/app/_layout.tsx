@@ -51,8 +51,13 @@ if (__DEV__) {
   }
 }
 
+// LEARNING: Environment-based routing allows the same codebase to be deployed
+// as different apps. Set EXPO_PUBLIC_APP_MODE=voice-diary for Voice Diary app.
+const APP_MODE = process.env.EXPO_PUBLIC_APP_MODE || 'fieldconnect';
+const IS_VOICE_DIARY_MODE = APP_MODE === 'voice-diary';
+
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  initialRouteName: IS_VOICE_DIARY_MODE ? '(voice-diary)' : '(tabs)',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -128,8 +133,12 @@ function useProtectedRoute() {
       // Redirect to login if not authenticated
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to main app if authenticated (default to tabs, can also go to voice-diary)
-      router.replace('/(tabs)');
+      // Redirect based on app mode after login
+      if (IS_VOICE_DIARY_MODE) {
+        router.replace('/(voice-diary)');
+      } else {
+        router.replace('/(tabs)');
+      }
     }
   }, [isAuthenticated, isLoading, segments]);
 }
