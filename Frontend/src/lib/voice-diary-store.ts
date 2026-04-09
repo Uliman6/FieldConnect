@@ -497,28 +497,28 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
           },
         ];
 
-        // Example categorized snippets
+        // Example categorized snippets - all professional, standalone statements
         const exampleSnippets: CategorizedSnippet[] = [
-          { id: 'demo-s1', voiceNoteId: 'demo-1', category: 'Work Completed', content: 'Concrete pour for Section B foundation completed - 45 yards.', createdAt: exampleNotes[0].createdAt },
-          { id: 'demo-s2', voiceNoteId: 'demo-1', category: 'Team', content: 'Crew performed well, finished leveling before concrete set.', createdAt: exampleNotes[0].createdAt },
-          { id: 'demo-s3', voiceNoteId: 'demo-2', category: 'Safety', content: 'Missing guardrails on 3rd floor east side - being reinstalled.', createdAt: exampleNotes[1].createdAt },
-          { id: 'demo-s4', voiceNoteId: 'demo-2', category: 'Follow-up Items', content: 'Add guardrail incident to tomorrow\'s safety meeting agenda.', createdAt: exampleNotes[1].createdAt },
+          { id: 'demo-s1', voiceNoteId: 'demo-1', category: 'Work Completed', content: 'Concrete pour for Section B foundation completed (45 yards).', createdAt: exampleNotes[0].createdAt },
+          { id: 'demo-s2', voiceNoteId: 'demo-1', category: 'Team', content: 'Leveling completed before concrete initial set.', createdAt: exampleNotes[0].createdAt },
+          { id: 'demo-s3', voiceNoteId: 'demo-2', category: 'Safety', content: 'Guardrails missing on 3rd floor east side - Mike reinstalling.', createdAt: exampleNotes[1].createdAt },
+          { id: 'demo-s4', voiceNoteId: 'demo-2', category: 'Follow-up Items', content: 'Guardrail incident added to tomorrow\'s safety meeting agenda.', createdAt: exampleNotes[1].createdAt },
           { id: 'demo-s5', voiceNoteId: 'demo-3', category: 'Work Completed', content: 'Electrical rough-in completed for units 101-105.', createdAt: exampleNotes[2].createdAt },
-          { id: 'demo-s6', voiceNoteId: 'demo-3', category: 'Work To Be Done', content: 'Electrical rough-in for units 106-110 scheduled tomorrow.', createdAt: exampleNotes[2].createdAt },
-          { id: 'demo-s7', voiceNoteId: 'demo-3', category: 'Issues', content: 'Panel location in unit 103 was 2" off from drawings - resolved.', createdAt: exampleNotes[2].createdAt },
-          { id: 'demo-s8', voiceNoteId: 'demo-4', category: 'Logistics', content: 'Framing lumber delivery tomorrow 7am - forklift needed.', createdAt: exampleNotes[3].createdAt },
-          { id: 'demo-s9', voiceNoteId: 'demo-4', category: 'Follow-up Items', content: 'Clear south entrance staging area before lumber delivery.', createdAt: exampleNotes[3].createdAt },
-          { id: 'demo-s10', voiceNoteId: 'demo-5', category: 'Process', content: 'Plumbing rough-in start: Wednesday, pending framing completion.', createdAt: exampleNotes[4].createdAt },
-          { id: 'demo-s11', voiceNoteId: 'demo-5', category: 'Issues', content: 'Plumbing crew short one worker - potential 1-day delay.', createdAt: exampleNotes[4].createdAt },
+          { id: 'demo-s6', voiceNoteId: 'demo-3', category: 'Work To Be Done', content: 'Electrical rough-in for units 106-110 scheduled for tomorrow.', createdAt: exampleNotes[2].createdAt },
+          { id: 'demo-s7', voiceNoteId: 'demo-3', category: 'Issues', content: 'Panel location in unit 103 offset 2" from drawings - resolved with superintendent.', createdAt: exampleNotes[2].createdAt },
+          { id: 'demo-s8', voiceNoteId: 'demo-4', category: 'Logistics', content: 'Framing lumber delivery scheduled tomorrow 7am - forklift required.', createdAt: exampleNotes[3].createdAt },
+          { id: 'demo-s9', voiceNoteId: 'demo-4', category: 'Follow-up Items', content: 'South entrance staging area to be cleared before lumber delivery.', createdAt: exampleNotes[3].createdAt },
+          { id: 'demo-s10', voiceNoteId: 'demo-5', category: 'Process', content: 'Plumbing second floor rough-in scheduled for Wednesday (pending framing completion).', createdAt: exampleNotes[4].createdAt },
+          { id: 'demo-s11', voiceNoteId: 'demo-5', category: 'Issues', content: 'Plumbing crew short one worker - potential 1-day schedule delay.', createdAt: exampleNotes[4].createdAt },
         ];
 
-        // Example daily summary
+        // Example daily summary - simple bullets, no sections
         const exampleSummary: DailySummary = {
           id: 'demo-summary',
           date: today,
           projectId,
           userId,
-          summary: '**Work Done**\n• Concrete pour completed for Section B foundation (45 yards)\n• Electrical rough-in finished for units 101-105\n\n**Issues**\n• Missing guardrails on 3rd floor - being reinstalled\n• Plumbing crew short staffed - possible 1-day delay\n\n**Notes**\n• Lumber delivery arriving tomorrow 7am\n• Plumbing rough-in starts Wednesday',
+          summary: '• Concrete pour for Section B foundation completed (45 yards).\n• Electrical rough-in finished for units 101-105.\n• Guardrails missing on 3rd floor east side - Mike reinstalling.\n• Framing lumber delivery scheduled tomorrow 7am.\n• Plumbing second floor rough-in starts Wednesday (pending framing).',
           lastUpdatedAt: now.toISOString(),
           voiceNoteCount: 5,
           hasMinimumInfo: true,

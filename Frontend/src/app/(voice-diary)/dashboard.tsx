@@ -222,46 +222,20 @@ export default function DashboardScreen() {
             </View>
           ) : displaySummary?.hasMinimumInfo ? (
             <View>
-              {/* Render summary with sections - bold headers, bullet points */}
-              {displaySummary.summary.split('\n').filter(line => line.trim()).map((line, index) => {
-                // Check if line is a section header (e.g., **Work Done**)
-                const isHeader = line.startsWith('**') && line.endsWith('**');
-                const headerText = isHeader ? line.replace(/\*\*/g, '') : null;
-
-                if (isHeader) {
-                  return (
-                    <Text
-                      key={index}
-                      style={{
-                        fontSize: 13,
-                        fontWeight: '700',
-                        color: '#1F5C1A',
-                        marginTop: index > 0 ? 12 : 0,
-                        marginBottom: 6,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      {headerText}
-                    </Text>
-                  );
-                }
-
-                return (
-                  <Text
-                    key={index}
-                    style={{
-                      fontSize: 15,
-                      color: isDark ? '#E5E7EB' : '#374151',
-                      lineHeight: 22,
-                      marginBottom: 4,
-                      paddingLeft: line.startsWith('•') ? 0 : 0,
-                    }}
-                  >
-                    {line}
-                  </Text>
-                );
-              })}
+              {/* Render bullet points - clean, no section headers */}
+              {displaySummary.summary.split('\n').filter(line => line.trim() && !line.startsWith('**')).map((line, index) => (
+                <Text
+                  key={index}
+                  style={{
+                    fontSize: 15,
+                    color: isDark ? '#E5E7EB' : '#374151',
+                    lineHeight: 24,
+                    marginBottom: 8,
+                  }}
+                >
+                  {line}
+                </Text>
+              ))}
             </View>
           ) : (
             <View>

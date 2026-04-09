@@ -21,6 +21,84 @@ const VOICE_DIARY_CATEGORIES = [
 ];
 
 /**
+ * Clean text to be professional and standalone (no pronouns, no filler words)
+ * Adapted from FieldConnect's transcript-parser cleanText()
+ */
+function cleanTextProfessional(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let cleaned = text.trim();
+
+  // Remove filler words and conversational phrases
+  cleaned = cleaned
+    .replace(/^(so,?\s*|um,?\s*|uh,?\s*|well,?\s*|basically,?\s*|actually,?\s*|and then,?\s*)/gi, '')
+    .replace(/,?\s*(um|uh|you know|basically|actually|kind of|sort of|like)\s*,?/gi, ' ')
+    .replace(/\bfor the most part\b/gi, '')
+    .replace(/\bas well as\b/gi, 'and')
+    .replace(/\bgoing to be\b/gi, '')
+    .replace(/\bthat was\b/gi, '')
+    .trim();
+
+  // Remove "we/our/us" references (internal team language)
+  cleaned = cleaned
+    .replace(/\bwe\s+need\s+to\b/gi, '')
+    .replace(/\bwe\s+have\s+to\b/gi, '')
+    .replace(/\bwe\s+had\s+to\b/gi, '')
+    .replace(/\bwe\s+(had|have|were|are|will|would|should|could|did|do)\s+/gi, '')
+    .replace(/\bwe\s+/gi, '')
+    .replace(/\bour\s+(own\s+)?/gi, '')
+    .replace(/\bus\b/gi, '')
+    .replace(/\bI\s+(had|have|need|will|would|should)\s+to\b/gi, '')
+    .replace(/\bI\s+/gi, '');
+
+  // Remove "they/their/them" references
+  cleaned = cleaned
+    .replace(/\bthey\s+(had|have|were|are|will|would|should|could|did|do|need)\s+to\b/gi, '')
+    .replace(/\bthey\s+(had|have|were|are|will|would|should|could|did|do)\s+/gi, '')
+    .replace(/\bthey\s+/gi, '')
+    .replace(/\btheir\b/gi, 'the')
+    .replace(/\bthem\b/gi, '');
+
+  // Convert to action-oriented language
+  cleaned = cleaned
+    .replace(/\bneed\s+to\s+talk\s+to\b/gi, 'discuss with')
+    .replace(/\bneed\s+to\s+check\s+(in\s+)?with\b/gi, 'follow up with')
+    .replace(/\bhave\s+to\s+check\b/gi, 'verify')
+    .replace(/\bneed\s+to\s+review\b/gi, 'review')
+    .replace(/\bneed\s+to\s+/gi, '')
+    .replace(/\bhave\s+to\s+/gi, '')
+    .replace(/\bhad\s+to\s+/gi, '')
+    .replace(/\bwant\s+to\s+/gi, '');
+
+  // Fix "before then" and similar temporal phrases
+  cleaned = cleaned
+    .replace(/\bbefore\s+then,?\s*/gi, '')
+    .replace(/\bafter\s+that,?\s*/gi, '')
+    .replace(/\band\s+then\s+/gi, '')
+    .replace(/\bso\s+then\s+/gi, '');
+
+  // Clean up double spaces and punctuation
+  cleaned = cleaned
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.])/g, '$1')
+    .replace(/,\s*,/g, ',')
+    .replace(/^\s*(and|or|but|so)\s+/i, '')
+    .trim();
+
+  // Capitalize first letter
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+
+  // Ensure ends with period
+  if (cleaned && !/[.!?]$/.test(cleaned)) {
+    cleaned += '.';
+  }
+
+  return cleaned;
+}
+
+/**
  * Categorize a voice note transcript into relevant categories
  * Returns snippets with their assigned categories
  * @param {string} transcript - The transcribed voice note text
@@ -38,7 +116,7 @@ async function categorizeTranscript(transcript) {
   }
 
   try {
-    const systemPrompt = `You are a construction site voice note processor. Your job is to extract and categorize information from voice recordings made by field workers.
+    const systemPrompt = `You are a construction site voice note processor. Extract and categorize information from voice recordings into professional, standalone statements.
 
 CATEGORIES (use exactly these names):
 - Safety: Safety concerns, hazards, PPE, incidents, near-misses, OSHA
@@ -51,26 +129,37 @@ CATEGORIES (use exactly these names):
 - Team: Personnel, subcontractors, crew sizes, visitors, meetings
 - Materials: Supplies, inventory, orders, shortages, deliveries
 
-RULES:
-1. Extract distinct pieces of information from the transcript
-2. Assign each piece to the MOST relevant category
-3. A single transcript may have multiple items in different categories
-4. Keep each extracted item concise (1-2 sentences max)
-5. Preserve key details: names, numbers, locations, times
-6. If something doesn't fit any category, skip it
-7. Return empty array if no relevant content found
+CRITICAL RULES FOR CONTENT:
+1. NEVER use "we", "our", "us", "they", "their", "I" - write in third person or imperative
+2. Each item must be a STANDALONE professional statement that makes sense on its own
+3. Include SPECIFIC context - names, locations, dates, quantities
+4. Convert to action-oriented language: "Review panel naming" not "We need to review..."
+5. Keep concise but complete (1 sentence with full context)
+
+EXAMPLES:
+- BAD: "We need to talk to Sprigg Electric about the inspection findings"
+- GOOD: "Follow up with Sprigg Electric regarding electrical inspection findings."
+
+- BAD: "We had electrical inspection today"
+- GOOD: "Electrical inspection conducted today."
+
+- BAD: "Before then, we have to walk internally and do our own due diligence checks"
+- GOOD: "Internal walkthrough and due diligence verification required before proceeding."
+
+- BAD: "We have to check in with the electrical inspector next week"
+- GOOD: "Schedule follow-up with electrical inspector next week to verify all electrical room items."
 
 OUTPUT FORMAT (JSON array):
 [
-  {"category": "Category Name", "content": "Extracted information"},
-  {"category": "Category Name", "content": "Extracted information"}
+  {"category": "Category Name", "content": "Professional standalone statement."},
+  {"category": "Category Name", "content": "Professional standalone statement."}
 ]`;
 
-    const userPrompt = `Categorize this voice note from a construction site:
+    const userPrompt = `Extract and categorize this construction voice note into professional, standalone statements:
 
 "${transcript}"
 
-Return a JSON array of categorized items.`;
+Return a JSON array. Remember: NO pronouns (we/they/I), include specific context, action-oriented language.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -106,14 +195,15 @@ Return a JSON array of categorized items.`;
 
     const items = JSON.parse(jsonMatch[0]);
 
-    // Validate and normalize categories
+    // Validate, normalize categories, and clean content
     return items
       .filter(item => item.category && item.content)
       .map(item => ({
         category: normalizeCategory(item.category),
-        content: item.content.trim(),
+        // Apply additional cleanup in case AI didn't fully follow instructions
+        content: cleanTextProfessional(item.content),
       }))
-      .filter(item => VOICE_DIARY_CATEGORIES.includes(item.category));
+      .filter(item => VOICE_DIARY_CATEGORIES.includes(item.category) && item.content.length > 5);
 
   } catch (error) {
     console.error('[voice-diary] Categorization error:', error);
@@ -151,35 +241,36 @@ function normalizeCategory(category) {
 function basicCategorization(transcript) {
   const lower = transcript.toLowerCase();
   const results = [];
+  const cleaned = cleanTextProfessional(transcript);
 
   // Safety keywords
   if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe/i.test(lower)) {
-    results.push({ category: 'Safety', content: transcript });
+    results.push({ category: 'Safety', content: cleaned });
   }
 
   // Issues keywords
   if (/issue|problem|delay|concern|broken|damaged|wrong|missing|blocked/i.test(lower)) {
-    results.push({ category: 'Issues', content: transcript });
+    results.push({ category: 'Issues', content: cleaned });
   }
 
   // Work completed
   if (/finished|completed|done|installed|poured|framed|painted/i.test(lower)) {
-    results.push({ category: 'Work Completed', content: transcript });
+    results.push({ category: 'Work Completed', content: cleaned });
   }
 
   // Materials
   if (/material|delivery|delivered|supply|order|concrete|lumber|steel/i.test(lower)) {
-    results.push({ category: 'Materials', content: transcript });
+    results.push({ category: 'Materials', content: cleaned });
   }
 
   // Team
   if (/crew|team|worker|subcontractor|visitor|meeting|personnel/i.test(lower)) {
-    results.push({ category: 'Team', content: transcript });
+    results.push({ category: 'Team', content: cleaned });
   }
 
   // Default to Issues if nothing matched
   if (results.length === 0) {
-    results.push({ category: 'Issues', content: transcript });
+    results.push({ category: 'Issues', content: cleaned });
   }
 
   return results;
@@ -217,32 +308,35 @@ async function generateDailySummary(snippets, noteCount) {
       grouped[s.category].push(s.content);
     });
 
-    const systemPrompt = `You are a construction site daily summary writer. Create a brief end-of-day summary organized into three sections.
-
-FORMAT (use exactly this structure):
-**Work Done**
-• [1-3 bullet points of completed work]
-
-**Issues**
-• [1-2 bullet points of problems or concerns, or "None" if no issues]
-
-**Notes**
-• [1-2 key observations or lessons learned, or skip if none]
+    const systemPrompt = `You are a construction site daily summary writer. Create a brief bullet-point summary of the day's key activities.
 
 RULES:
-1. Keep each bullet point to ONE short sentence
-2. Be brief - details are tracked elsewhere
-3. Use professional construction language
-4. Only include sections that have content
-5. Don't invent information not in the notes`;
+1. Output 3-6 bullet points total, each starting with "• "
+2. NO section headers - just bullet points
+3. Each bullet must be a COMPLETE statement with full context
+4. NEVER use "we", "our", "us", "they", "their", "I" - third person only
+5. Include SPECIFIC details: names, locations, quantities, dates
+6. Prioritize: completed work, issues/blockers, important follow-ups
+7. Keep each bullet concise but informative
 
-    const userPrompt = `Create a brief daily summary from these notes:
+GOOD EXAMPLES:
+• Electrical inspection completed by city inspector.
+• Panel naming and fire-caulking penetrations review required by next week.
+• Follow up with Sprigg Electric regarding inspection findings.
+• Concrete pour for Section B foundation finished (45 yards).
+
+BAD EXAMPLES (don't do these):
+• We had an inspection today. (no "we", lacks detail)
+• Internal due diligence checks are required. (too vague, no context)
+• Work was completed. (no specifics)`;
+
+    const userPrompt = `Create a brief bullet-point summary from these notes:
 
 ${Object.entries(grouped).map(([cat, items]) =>
   `${cat}:\n${items.map(i => `- ${i}`).join('\n')}`
 ).join('\n\n')}
 
-Use the Work Done / Issues / Notes format. Be brief.`;
+Output 3-6 bullet points with full context. NO section headers, NO pronouns.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -277,12 +371,12 @@ Use the Work Done / Issues / Notes format. Be brief.`;
 }
 
 /**
- * Build a basic summary without AI - now returns bullet points
+ * Build a basic summary without AI - returns clean bullet points
  */
 function buildBasicSummary(snippets) {
   // Get unique snippets, prioritizing Safety and Issues
   const prioritized = [...snippets].sort((a, b) => {
-    const priority = { 'Safety': 0, 'Issues': 1 };
+    const priority = { 'Safety': 0, 'Issues': 1, 'Work Completed': 2, 'Follow-up Items': 3 };
     const aPriority = priority[a.category] ?? 10;
     const bPriority = priority[b.category] ?? 10;
     return aPriority - bPriority;
@@ -292,18 +386,21 @@ function buildBasicSummary(snippets) {
   const seen = new Set();
   const bullets = [];
   for (const snippet of prioritized) {
-    const key = snippet.content.substring(0, 50);
-    if (!seen.has(key) && bullets.length < 5) {
+    // Clean the content to remove pronouns
+    const cleanedContent = cleanTextProfessional(snippet.content);
+    const key = cleanedContent.substring(0, 50).toLowerCase();
+
+    if (!seen.has(key) && bullets.length < 5 && cleanedContent.length > 5) {
       seen.add(key);
       // Truncate long content
-      const content = snippet.content.length > 80
-        ? snippet.content.substring(0, 77) + '...'
-        : snippet.content;
+      const content = cleanedContent.length > 100
+        ? cleanedContent.substring(0, 97) + '...'
+        : cleanedContent;
       bullets.push(`• ${content}`);
     }
   }
 
-  return bullets.join('\n') || '• No notes recorded yet';
+  return bullets.join('\n') || '• No notes recorded yet.';
 }
 
 /**
@@ -392,39 +489,54 @@ async function generateNoteTitle(transcript, snippets = []) {
 
   // Fallback: generate title from snippets or transcript
   const fallbackTitle = generateFallbackTitle(transcript, snippets);
-  const fallbackCleaned = cleanTranscriptBasic(transcript);
+  const fallbackCleaned = cleanTextProfessional(transcript);
 
   if (!OPENAI_API_KEY) {
     return { title: fallbackTitle, cleanedTranscript: fallbackCleaned };
   }
 
   try {
-    const systemPrompt = `You are a construction site note editor. Given a voice transcript, you will:
-1. Create a SHORT title (3-7 words) that captures the main topic
-2. Clean up the transcript into professional, form-ready text
+    const systemPrompt = `You are a construction site note editor. Given a voice transcript, create:
+1. A SHORT TITLE (2-5 words) - descriptive topic, NOT the first words of the transcript
+2. A cleaned professional summary
 
 TITLE RULES:
-- 3-7 words max
-- Focus on the main activity or topic
-- Use construction terminology
-- Examples: "Concrete Pour Section B", "Electrical Rough-In Complete", "Safety Issue - Missing Guardrails"
+- 2-5 words maximum
+- Describe the TOPIC, not the action ("Electrical Inspection" not "Had electrical inspection")
+- Use noun phrases: "Panel Fire-Caulking Review", "Sprigg Electric Follow-up"
+- NO pronouns, NO verbs like "had", "did", "checked"
+- Include key entity names if mentioned (company names, locations, etc.)
 
-CLEANED TRANSCRIPT RULES:
-- Remove filler words (um, uh, like, you know)
-- Fix grammar and punctuation
-- Keep it concise but preserve all key details
-- Use professional construction language
-- Format as 1-3 clear sentences
+GOOD TITLES:
+- "Electrical Inspection Review"
+- "Sprigg Electric Coordination"
+- "Panel Fire-Caulking Follow-up"
+- "Foundation Section B Pour"
+- "Safety - Missing Guardrails"
+
+BAD TITLES (don't do these):
+- "We had electrical inspection" (starts with transcript, uses "we")
+- "Checking the panels" (uses verb, too vague)
+- "Work today" (too vague)
+- "Meeting with the team" (too generic)
+
+CLEANED SUMMARY RULES:
+- Remove filler words and conversational language
+- NO pronouns (we/they/our/their/I)
+- Professional third-person or imperative voice
+- Include all key details: names, locations, dates, quantities
+- 1-3 clear sentences
 
 OUTPUT FORMAT (JSON):
-{"title": "Short Title Here", "cleanedTranscript": "Professional cleaned text here."}`;
+{"title": "Short Topic Title", "cleanedTranscript": "Professional summary without pronouns."}`;
 
     const userPrompt = `Voice note transcript:
 "${transcript}"
 
-${snippets.length > 0 ? `\nExtracted topics: ${snippets.map(s => s.category).join(', ')}` : ''}
+${snippets.length > 0 ? `\nExtracted categories: ${snippets.map(s => s.category).join(', ')}` : ''}
+${snippets.length > 0 ? `Key content: ${snippets.map(s => s.content).slice(0, 2).join('; ')}` : ''}
 
-Return JSON with title and cleanedTranscript.`;
+Return JSON with title (2-5 word topic) and cleanedTranscript (no pronouns).`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -459,7 +571,8 @@ Return JSON with title and cleanedTranscript.`;
     const result = JSON.parse(jsonMatch[0]);
     return {
       title: result.title || fallbackTitle,
-      cleanedTranscript: result.cleanedTranscript || fallbackCleaned,
+      // Apply cleanup to ensure no pronouns slip through
+      cleanedTranscript: cleanTextProfessional(result.cleanedTranscript) || fallbackCleaned,
     };
 
   } catch (error) {
@@ -469,45 +582,89 @@ Return JSON with title and cleanedTranscript.`;
 }
 
 /**
- * Generate a fallback title without AI
+ * Generate a fallback title without AI - creates descriptive topic titles
  */
 function generateFallbackTitle(transcript, snippets) {
-  // Try to use category if available
+  // Try to create a topic-based title from categories and key words
   if (snippets.length > 0) {
     const mainCategory = snippets[0].category;
-    const words = transcript.split(' ').slice(0, 3).join(' ');
-    return `${mainCategory}: ${words}...`;
+    // Extract key nouns from content
+    const content = snippets[0].content;
+    const keyWords = extractKeyNouns(content);
+    if (keyWords) {
+      return `${mainCategory} - ${keyWords}`;
+    }
+    return mainCategory;
   }
 
-  // Otherwise use first few words
-  const words = transcript.trim().split(/\s+/).slice(0, 5).join(' ');
-  return words.length > 30 ? words.substring(0, 27) + '...' : words;
+  // Try to extract topic from transcript
+  const topic = extractTopicFromTranscript(transcript);
+  if (topic) return topic;
+
+  return 'Voice Note';
 }
 
 /**
- * Basic transcript cleanup without AI
+ * Extract key nouns/entities from text for title
  */
-function cleanTranscriptBasic(transcript) {
-  if (!transcript) return '';
+function extractKeyNouns(text) {
+  if (!text) return null;
 
-  let cleaned = transcript;
+  // Look for company names (capitalized words)
+  const companyMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:Electric|Plumbing|Construction|Concrete|Steel|Framing)/i);
+  if (companyMatch) return companyMatch[0];
 
-  // Remove filler words
-  cleaned = cleaned.replace(/\b(um|uh|er|ah|like|you know|basically|actually|so yeah)\b/gi, '');
+  // Look for location/area references
+  const locationMatch = text.match(/(?:Section|Floor|Unit|Area|Building|Room)\s+[A-Z0-9]+/i);
+  if (locationMatch) return locationMatch[0];
 
-  // Fix multiple spaces
-  cleaned = cleaned.replace(/\s{2,}/g, ' ');
+  // Look for inspection/work type
+  const typeMatch = text.match(/\b(electrical|plumbing|concrete|framing|roofing|HVAC|fire|safety)\s+(inspection|work|installation|pour|review)/i);
+  if (typeMatch) return typeMatch[0];
 
-  // Capitalize first letter
-  cleaned = cleaned.trim();
-  cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  return null;
+}
 
-  // Ensure ends with punctuation
-  if (!/[.!?]$/.test(cleaned)) {
-    cleaned += '.';
+/**
+ * Extract a topic title from raw transcript
+ */
+function extractTopicFromTranscript(transcript) {
+  if (!transcript) return null;
+
+  const lower = transcript.toLowerCase();
+
+  // Inspection-related
+  if (lower.includes('inspection')) {
+    const typeMatch = transcript.match(/\b(electrical|plumbing|fire|safety|building|city)\s*inspection/i);
+    if (typeMatch) return `${typeMatch[1].charAt(0).toUpperCase() + typeMatch[1].slice(1)} Inspection`;
+    return 'Site Inspection';
   }
 
-  return cleaned;
+  // Material/delivery related
+  if (lower.includes('delivery') || lower.includes('material')) {
+    const materialMatch = transcript.match(/\b(concrete|lumber|steel|framing|drywall)\s*(delivery|material)/i);
+    if (materialMatch) return `${materialMatch[1].charAt(0).toUpperCase() + materialMatch[1].slice(1)} Delivery`;
+    return 'Material Delivery';
+  }
+
+  // Safety related
+  if (lower.includes('safety') || lower.includes('hazard') || lower.includes('guardrail')) {
+    return 'Safety Issue';
+  }
+
+  // Coordination/meeting
+  if (lower.includes('coordination') || lower.includes('meeting') || lower.includes('check in')) {
+    const withMatch = transcript.match(/(?:with|from)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+    if (withMatch) return `${withMatch[1]} Coordination`;
+    return 'Team Coordination';
+  }
+
+  // Work completed
+  if (lower.includes('finished') || lower.includes('completed') || lower.includes('done')) {
+    return 'Work Completed';
+  }
+
+  return null;
 }
 
 module.exports = {
