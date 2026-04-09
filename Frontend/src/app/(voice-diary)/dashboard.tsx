@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -93,6 +93,11 @@ export default function DashboardScreen() {
 
   const today = getTodayDate();
   const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  // Clear orphaned form suggestions on mount (suggestions for deleted snippets)
+  useEffect(() => {
+    clearOrphanedFormSuggestions();
+  }, []);
 
   // LEARNING: We now filter by project - each user sees their own summary
   // and there's also a project-level summary combining all users

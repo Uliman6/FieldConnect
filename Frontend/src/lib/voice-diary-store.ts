@@ -117,6 +117,7 @@ interface VoiceDiaryStore {
   getActiveFormSuggestions: (projectId?: string) => FormSuggestion[];
   getValidFormSuggestions: (projectId?: string) => { formType: string; formName: string; snippetIds: string[]; snippets: CategorizedSnippet[] }[];
   clearOrphanedFormSuggestions: () => void;
+  clearAllFormSuggestions: () => void;
 
   // Actions - Project & User
   setCurrentProject: (projectId: string | null) => void;
@@ -469,6 +470,11 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         });
       },
 
+      // Clear all form suggestions
+      clearAllFormSuggestions: () => {
+        set({ formSuggestions: [] });
+      },
+
       // Project & User
       setCurrentProject: (projectId) => {
         set({ currentProjectId: projectId });
@@ -593,10 +599,33 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
           hasMinimumInfo: true,
         };
 
+        // Example form suggestions based on snippet content
+        const exampleFormSuggestions: FormSuggestion[] = [
+          {
+            id: 'demo-fs1',
+            formType: 'safety_report',
+            formName: 'Safety Report',
+            reason: 'Safety issue with guardrails reported',
+            snippetIds: ['demo-s3', 'demo-s4'],
+            dismissed: false,
+            createdAt: now.toISOString(),
+          },
+          {
+            id: 'demo-fs2',
+            formType: 'daily_log',
+            formName: 'Daily Log',
+            reason: 'Work completed and progress updates',
+            snippetIds: ['demo-s1', 'demo-s5', 'demo-s6'],
+            dismissed: false,
+            createdAt: now.toISOString(),
+          },
+        ];
+
         set((state) => ({
           voiceNotes: [...exampleNotes, ...state.voiceNotes.filter(n => !n.id.startsWith('demo-'))],
           categorizedSnippets: [...exampleSnippets, ...state.categorizedSnippets.filter(s => !s.id.startsWith('demo-'))],
           dailySummaries: [exampleSummary, ...state.dailySummaries.filter(s => s.id !== 'demo-summary')],
+          formSuggestions: [...exampleFormSuggestions, ...state.formSuggestions.filter(s => !s.id.startsWith('demo-'))],
         }));
       },
     }),

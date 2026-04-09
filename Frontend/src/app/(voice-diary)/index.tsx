@@ -265,12 +265,17 @@ export default function RecordScreen() {
             noteUpdates.cleanedTranscript = processResult.cleanedTranscript;
           }
 
-          // Add new snippets to store
+          // Add new snippets to store and collect their IDs
+          const createdSnippetIds: string[] = [];
           if (processResult.newSnippets && processResult.newSnippets.length > 0) {
             console.log('[voice-diary] Adding', processResult.newSnippets.length, 'snippets');
             for (const snippet of processResult.newSnippets) {
               addSnippet(noteId, snippet.category as any, snippet.content);
             }
+            // Get the IDs of snippets we just created (they're at the front of the array)
+            const allSnippets = useVoiceDiaryStore.getState().categorizedSnippets;
+            const noteSnippets = allSnippets.filter(s => s.voiceNoteId === noteId);
+            createdSnippetIds.push(...noteSnippets.map(s => s.id));
           }
 
           // Update daily summary (user-specific)
@@ -285,14 +290,14 @@ export default function RecordScreen() {
             );
           }
 
-          // Add form suggestions
-          if (processResult.formSuggestions) {
+          // Add form suggestions with the ACTUAL snippet IDs we created
+          if (processResult.formSuggestions && createdSnippetIds.length > 0) {
             for (const suggestion of processResult.formSuggestions) {
               addFormSuggestion(
                 suggestion.formType,
                 suggestion.formName,
                 suggestion.reason,
-                suggestion.snippetIds || []
+                createdSnippetIds // Use our created snippet IDs, not backend's
               );
             }
           }
@@ -330,21 +335,32 @@ export default function RecordScreen() {
   };
 
   const handleDeleteNote = (noteId: string) => {
-    Alert.alert(
-      'Delete Recording',
-      'Are you sure you want to delete this recording?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            deleteVoiceNote(noteId);
-            addNotification('info', 'Recording deleted');
+    // Use window.confirm for web since Alert.alert doesn't work
+    if (typeof window !== 'undefined' && window.confirm) {
+      if (window.confirm('Are you sure you want to delete this recording?')) {
+        deleteVoiceNote(noteId);
+        clearSnippetsForNote(noteId);
+        addNotification('info', 'Recording deleted');
+      }
+    } else {
+      // Fallback for native
+      Alert.alert(
+        'Delete Recording',
+        'Are you sure you want to delete this recording?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              deleteVoiceNote(noteId);
+              clearSnippetsForNote(noteId);
+              addNotification('info', 'Recording deleted');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleReRecord = (noteId: string) => {
@@ -485,17 +501,42 @@ export default function RecordScreen() {
       return 'Framing Work';
     }
 
-    // Default: extract first noun phrase or use generic
-    const firstWords = transcript.trim().split(/\s+/).slice(0, 4).join(' ');
-    // Remove common starting words
-    const cleaned = firstWords
-      .replace(/^(we|they|i|the|a|an|so|um|uh|just|had|have|got)\s+/gi, '')
-      .replace(/^(finished|completed|did|checked)\s+/gi, '');
-
-    if (cleaned.length > 3 && cleaned.length <= 30) {
-      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    // More pattern matching for common construction topics
+    if (lower.includes('drywall') || lower.includes('sheetrock')) {
+      return 'Drywall Work';
+    }
+    if (lower.includes('hvac') || lower.includes('duct') || lower.includes('heating') || lower.includes('cooling')) {
+      return 'HVAC Work';
+    }
+    if (lower.includes('roof') || lower.includes('shingle')) {
+      return 'Roofing Work';
+    }
+    if (lower.includes('window') || lower.includes('door')) {
+      return 'Doors & Windows';
+    }
+    if (lower.includes('paint') || lower.includes('finish')) {
+      return 'Painting & Finishes';
+    }
+    if (lower.includes('floor') || lower.includes('tile') || lower.includes('carpet')) {
+      return 'Flooring Work';
+    }
+    if (lower.includes('truck') || lower.includes('crane') || lower.includes('equipment')) {
+      return 'Equipment & Logistics';
+    }
+    if (lower.includes('weather') || lower.includes('rain') || lower.includes('delay')) {
+      return 'Weather Update';
+    }
+    if (lower.includes('progress') || lower.includes('update') || lower.includes('status')) {
+      return 'Progress Update';
+    }
+    if (lower.includes('issue') || lower.includes('problem') || lower.includes('fix')) {
+      return 'Issue Report';
+    }
+    if (lower.includes('schedule') || lower.includes('tomorrow') || lower.includes('next week')) {
+      return 'Schedule Update';
     }
 
+    // Default to generic titles - never use transcript excerpts
     return 'Voice Note';
   };
 
