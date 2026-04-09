@@ -60,11 +60,20 @@ const CATEGORY_COLORS: Record<VoiceDiaryCategory, string> = {
   'Materials': '#F5F5F4',
 };
 
+// Type for deduplicated form suggestion with snippets
+interface ValidFormSuggestion {
+  formType: string;
+  formName: string;
+  snippetIds: string[];
+  snippets: CategorizedSnippet[];
+}
+
 export default function DashboardScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   const [selectedCategory, setSelectedCategory] = useState<VoiceDiaryCategory | null>(null);
+  const [selectedForm, setSelectedForm] = useState<ValidFormSuggestion | null>(null);
 
   // Get project and user context
   const { projects } = useDailyLogStore();
@@ -76,8 +85,8 @@ export default function DashboardScreen() {
     getSnippetsForDate,
     getSnippetsForCategory,
     getVoiceNotesForDate,
-    getActiveFormSuggestions,
-    dismissFormSuggestion,
+    getValidFormSuggestions,
+    clearOrphanedFormSuggestions,
     getTodayDate,
     currentProjectId,
   } = useVoiceDiaryStore();
@@ -91,7 +100,11 @@ export default function DashboardScreen() {
   const projectSummary = currentProjectId ? getProjectSummary(today, currentProjectId) : undefined;
   const todaySnippets = getSnippetsForDate(today, currentProjectId || undefined);
   const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
-  const formSuggestions = getActiveFormSuggestions();
+
+  // Get deduplicated form suggestions with their snippets (filtered by project)
+  const validFormSuggestions = useMemo(() => {
+    return getValidFormSuggestions(currentProjectId || undefined);
+  }, [currentProjectId, todaySnippets]);
 
   // Count snippets per category (filtered by project)
   const categoryCounts = useMemo(() => {
@@ -286,8 +299,8 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* Form Suggestions */}
-        {formSuggestions.length > 0 && (
+        {/* Form Suggestions - deduplicated by form type */}
+        {validFormSuggestions.length > 0 && (
           <View style={{ marginBottom: 20 }}>
             <Text
               style={{
@@ -301,9 +314,10 @@ export default function DashboardScreen() {
             >
               Suggested Forms
             </Text>
-            {formSuggestions.map((suggestion) => (
+            {validFormSuggestions.map((suggestion) => (
               <Pressable
-                key={suggestion.id}
+                key={suggestion.formType}
+                onPress={() => setSelectedForm(suggestion)}
                 style={{
                   backgroundColor: '#EBF5FF',
                   borderRadius: 12,
@@ -319,15 +333,10 @@ export default function DashboardScreen() {
                     {suggestion.formName}
                   </Text>
                   <Text style={{ fontSize: 13, color: '#3B82F6', marginTop: 2 }}>
-                    {suggestion.reason}
+                    Based on {suggestion.snippets.length} related {suggestion.snippets.length === 1 ? 'note' : 'notes'}
                   </Text>
                 </View>
-                <Pressable
-                  onPress={() => dismissFormSuggestion(suggestion.id)}
-                  style={{ padding: 4 }}
-                >
-                  <X size={18} color="#6B7280" />
-                </Pressable>
+                <ChevronRight size={20} color="#3B82F6" />
               </Pressable>
             ))}
           </View>
@@ -546,6 +555,108 @@ export default function DashboardScreen() {
                 </View>
               ))
             )}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Form Detail Modal - shows related entries */}
+      <Modal
+        visible={selectedForm !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setSelectedForm(null)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#F9FAFB' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: isDark ? '#1F2937' : '#E5E7EB',
+            }}
+          >
+            <Pressable onPress={() => setSelectedForm(null)} style={{ padding: 4 }}>
+              <X size={24} color={isDark ? '#FFF' : '#111'} />
+            </Pressable>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '700',
+                  color: isDark ? '#FFF' : '#111',
+                }}
+              >
+                {selectedForm?.formName}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: isDark ? '#9CA3AF' : '#6B7280',
+                  marginTop: 2,
+                }}
+              >
+                {selectedForm?.snippets.length} related {selectedForm?.snippets.length === 1 ? 'entry' : 'entries'}
+              </Text>
+            </View>
+          </View>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: isDark ? '#9CA3AF' : '#6B7280',
+                marginBottom: 16,
+              }}
+            >
+              These items from your voice notes may be relevant for a {selectedForm?.formName}:
+            </Text>
+            {selectedForm?.snippets.map((snippet) => (
+              <View
+                key={snippet.id}
+                style={{
+                  backgroundColor: isDark ? '#1F2937' : '#FFF',
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 12,
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: CATEGORY_COLORS[snippet.category] || '#E5E7EB',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 6,
+                    alignSelf: 'flex-start',
+                    marginBottom: 8,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#374151' }}>
+                    {snippet.category}
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: isDark ? '#E5E7EB' : '#374151',
+                    lineHeight: 22,
+                  }}
+                >
+                  {snippet.content}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: isDark ? '#6B7280' : '#9CA3AF',
+                    marginTop: 8,
+                  }}
+                >
+                  {new Date(snippet.createdAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+              </View>
+            ))}
           </ScrollView>
         </SafeAreaView>
       </Modal>

@@ -428,18 +428,75 @@ export default function RecordScreen() {
     return cleaned;
   };
 
-  // Generate a short title from transcript (first sentence or first 50 chars)
+  // Generate a topic-based title from transcript (not transcript excerpt)
   const generateTitle = (transcript: string | null): string => {
     if (!transcript) return 'Processing...';
 
-    // Try to get first sentence
-    const firstSentence = transcript.split(/[.!?]/)[0].trim();
-    if (firstSentence.length <= 50) return firstSentence;
+    const lower = transcript.toLowerCase();
 
-    // Otherwise truncate at word boundary
-    const truncated = transcript.substring(0, 47);
-    const lastSpace = truncated.lastIndexOf(' ');
-    return (lastSpace > 20 ? truncated.substring(0, lastSpace) : truncated) + '...';
+    // Inspection-related
+    if (lower.includes('inspection')) {
+      const typeMatch = transcript.match(/\b(electrical|plumbing|fire|safety|building|city)\s*inspection/i);
+      if (typeMatch) return `${typeMatch[1].charAt(0).toUpperCase() + typeMatch[1].slice(1)} Inspection`;
+      return 'Site Inspection';
+    }
+
+    // Material/delivery related
+    if (lower.includes('delivery') || lower.includes('delivered')) {
+      const materialMatch = transcript.match(/\b(concrete|lumber|steel|framing|drywall|material)\s*(delivery)?/i);
+      if (materialMatch) return `${materialMatch[1].charAt(0).toUpperCase() + materialMatch[1].slice(1)} Delivery`;
+      return 'Material Delivery';
+    }
+
+    // Safety related
+    if (lower.includes('safety') || lower.includes('hazard') || lower.includes('guardrail')) {
+      return 'Safety Issue';
+    }
+
+    // Concrete/pour related
+    if (lower.includes('concrete') || lower.includes('pour')) {
+      return 'Concrete Work';
+    }
+
+    // Electrical work
+    if (lower.includes('electrical') || lower.includes('rough-in') || lower.includes('panel')) {
+      return 'Electrical Work';
+    }
+
+    // Plumbing work
+    if (lower.includes('plumb') || lower.includes('pipe')) {
+      return 'Plumbing Work';
+    }
+
+    // Coordination/meeting
+    if (lower.includes('coordination') || lower.includes('meeting') || lower.includes('check in')) {
+      const withMatch = transcript.match(/(?:with|from)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+      if (withMatch) return `${withMatch[1]} Coordination`;
+      return 'Team Coordination';
+    }
+
+    // Work completed
+    if (lower.includes('finished') || lower.includes('completed') || lower.includes('done')) {
+      return 'Work Completed';
+    }
+
+    // Framing
+    if (lower.includes('framing') || lower.includes('frame')) {
+      return 'Framing Work';
+    }
+
+    // Default: extract first noun phrase or use generic
+    const firstWords = transcript.trim().split(/\s+/).slice(0, 4).join(' ');
+    // Remove common starting words
+    const cleaned = firstWords
+      .replace(/^(we|they|i|the|a|an|so|um|uh|just|had|have|got)\s+/gi, '')
+      .replace(/^(finished|completed|did|checked)\s+/gi, '');
+
+    if (cleaned.length > 3 && cleaned.length <= 30) {
+      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    }
+
+    return 'Voice Note';
   };
 
   const getStatusIcon = (status: VoiceNote['status']) => {

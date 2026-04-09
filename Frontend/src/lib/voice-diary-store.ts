@@ -114,7 +114,9 @@ interface VoiceDiaryStore {
   // Actions - Form Suggestions
   addFormSuggestion: (formType: string, formName: string, reason: string, snippetIds: string[]) => void;
   dismissFormSuggestion: (id: string) => void;
-  getActiveFormSuggestions: () => FormSuggestion[];
+  getActiveFormSuggestions: (projectId?: string) => FormSuggestion[];
+  getValidFormSuggestions: (projectId?: string) => { formType: string; formName: string; snippetIds: string[]; snippets: CategorizedSnippet[] }[];
+  clearOrphanedFormSuggestions: () => void;
 
   // Actions - Project & User
   setCurrentProject: (projectId: string | null) => void;
@@ -396,8 +398,75 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         }));
       },
 
-      getActiveFormSuggestions: () => {
-        return get().formSuggestions.filter((s) => !s.dismissed);
+      getActiveFormSuggestions: (projectId) => {
+        const { formSuggestions, categorizedSnippets } = get();
+        // Get snippet IDs that actually exist
+        const existingSnippetIds = new Set(categorizedSnippets.map(s => s.id));
+
+        return formSuggestions.filter((s) => {
+          if (s.dismissed) return false;
+          // Check if at least one related snippet still exists
+          return s.snippetIds.some(id => existingSnippetIds.has(id));
+        });
+      },
+
+      // Get form suggestions deduplicated by form type with their related snippets
+      getValidFormSuggestions: (projectId) => {
+        const { formSuggestions, categorizedSnippets, voiceNotes } = get();
+
+        // Get snippets for current project if specified
+        const relevantSnippetIds = projectId
+          ? new Set(
+              categorizedSnippets
+                .filter(s => {
+                  const note = voiceNotes.find(n => n.id === s.voiceNoteId);
+                  return note?.projectId === projectId;
+                })
+                .map(s => s.id)
+            )
+          : new Set(categorizedSnippets.map(s => s.id));
+
+        // Group by formType and collect all valid snippetIds
+        const formTypeMap = new Map<string, { formType: string; formName: string; snippetIds: Set<string> }>();
+
+        for (const suggestion of formSuggestions) {
+          if (suggestion.dismissed) continue;
+
+          // Only include snippetIds that still exist in the current project
+          const validSnippetIds = suggestion.snippetIds.filter(id => relevantSnippetIds.has(id));
+          if (validSnippetIds.length === 0) continue;
+
+          if (formTypeMap.has(suggestion.formType)) {
+            const existing = formTypeMap.get(suggestion.formType)!;
+            validSnippetIds.forEach(id => existing.snippetIds.add(id));
+          } else {
+            formTypeMap.set(suggestion.formType, {
+              formType: suggestion.formType,
+              formName: suggestion.formName,
+              snippetIds: new Set(validSnippetIds),
+            });
+          }
+        }
+
+        // Convert to array with actual snippets
+        return Array.from(formTypeMap.values()).map(item => ({
+          formType: item.formType,
+          formName: item.formName,
+          snippetIds: Array.from(item.snippetIds),
+          snippets: categorizedSnippets.filter(s => item.snippetIds.has(s.id)),
+        }));
+      },
+
+      // Remove form suggestions that reference non-existent snippets
+      clearOrphanedFormSuggestions: () => {
+        const { formSuggestions, categorizedSnippets } = get();
+        const existingSnippetIds = new Set(categorizedSnippets.map(s => s.id));
+
+        set({
+          formSuggestions: formSuggestions.filter(s =>
+            s.snippetIds.some(id => existingSnippetIds.has(id))
+          ),
+        });
       },
 
       // Project & User
