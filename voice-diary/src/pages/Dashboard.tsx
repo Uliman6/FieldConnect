@@ -63,14 +63,15 @@ export default function Dashboard() {
   const {
     getDailySummary,
     getProjectSummary,
-    getSnippetsForDate,
     getSnippetsForCategory,
-    getVoiceNotesForDate,
+    getVoiceNotesForProject,
     getValidFormSuggestions,
     clearOrphanedFormSuggestions,
     getTodayDate,
     currentProjectId,
     projects,
+    categorizedSnippets,
+    voiceNotes,
   } = useVoiceDiaryStore();
 
   const today = getTodayDate();
@@ -83,23 +84,31 @@ export default function Dashboard() {
 
   const userSummary = currentProjectId ? getDailySummary(today, currentProjectId, user?.id) : undefined;
   const projectSummary = currentProjectId ? getProjectSummary(today, currentProjectId) : undefined;
-  const todaySnippets = getSnippetsForDate(today, currentProjectId || undefined);
-  const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
+
+  // Get ALL snippets and notes for the project (not just today)
+  const projectNotes = currentProjectId ? getVoiceNotesForProject(currentProjectId) : [];
+  const projectSnippets = useMemo(() => {
+    if (!currentProjectId) return [];
+    const projectNoteIds = new Set(voiceNotes.filter(n => n.projectId === currentProjectId).map(n => n.id));
+    return categorizedSnippets.filter(s => projectNoteIds.has(s.voiceNoteId));
+  }, [currentProjectId, voiceNotes, categorizedSnippets]);
 
   const validFormSuggestions = useMemo(() => {
     return getValidFormSuggestions(currentProjectId || undefined);
-  }, [currentProjectId, todaySnippets, getValidFormSuggestions]);
+  }, [currentProjectId, projectSnippets, getValidFormSuggestions]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<VoiceDiaryCategory, number> = {} as Record<VoiceDiaryCategory, number>;
     VOICE_DIARY_CATEGORIES.forEach((cat) => {
-      counts[cat] = getSnippetsForCategory(cat, today, currentProjectId || undefined).length;
+      // Pass undefined for date to get ALL snippets for this category in the project
+      counts[cat] = getSnippetsForCategory(cat, undefined, currentProjectId || undefined).length;
     });
     return counts;
-  }, [todaySnippets, today, currentProjectId, getSnippetsForCategory]);
+  }, [projectSnippets, currentProjectId, getSnippetsForCategory]);
 
   const selectedSnippets = selectedCategory
-    ? getSnippetsForCategory(selectedCategory, today, currentProjectId || undefined)
+    // Pass undefined for date to get ALL snippets for this category
+    ? getSnippetsForCategory(selectedCategory, undefined, currentProjectId || undefined)
     : [];
 
   const displaySummary = userSummary || projectSummary;
@@ -138,9 +147,9 @@ export default function Dashboard() {
             </span>
           </div>
 
-          {todayNotes.length === 0 ? (
+          {projectNotes.length === 0 ? (
             <p className={`text-center py-6 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              No voice notes recorded yet today.{'\n'}Start recording to build your summary!
+              No voice notes recorded yet.{'\n'}Start recording to build your summary!
             </p>
           ) : displaySummary?.hasMinimumInfo ? (
             <div className="space-y-2">
@@ -156,7 +165,7 @@ export default function Dashboard() {
           ) : (
             <div>
               <p className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {todayNotes.length} note{todayNotes.length !== 1 ? 's' : ''} recorded
+                {projectNotes.length} note{projectNotes.length !== 1 ? 's' : ''} recorded
               </p>
               {displaySummary?.summary && (
                 <div className="space-y-1">
@@ -204,7 +213,7 @@ export default function Dashboard() {
 
         {/* Categories Grid */}
         <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          Categories ({todaySnippets.length} items)
+          Categories ({projectSnippets.length} items)
         </h3>
         <div className="grid grid-cols-2 gap-2 mb-5">
           {VOICE_DIARY_CATEGORIES.map((category) => {
@@ -250,7 +259,7 @@ export default function Dashboard() {
               <div>
                 <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedCategory}</h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {selectedSnippets.length} item{selectedSnippets.length !== 1 ? 's' : ''} today
+                  {selectedSnippets.length} item{selectedSnippets.length !== 1 ? 's' : ''}
                 </p>
               </div>
               <button onClick={() => setSelectedCategory(null)} className="p-2">
@@ -269,7 +278,7 @@ export default function Dashboard() {
                       {snippet.content}
                     </p>
                     <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(snippet.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 ))
@@ -308,7 +317,7 @@ export default function Dashboard() {
                     {snippet.content}
                   </p>
                   <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(snippet.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               ))}

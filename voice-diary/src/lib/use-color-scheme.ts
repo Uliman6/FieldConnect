@@ -45,15 +45,21 @@ export function useThemeToggle() {
   const colorScheme = useColorScheme();
 
   const toggleTheme = useCallback(() => {
-    const newTheme: ColorScheme = colorScheme === 'dark' ? 'light' : 'dark';
+    // Use globalTheme to get current value (avoids stale closure)
+    const currentTheme = globalTheme || 'light';
+    const newTheme: ColorScheme = currentTheme === 'dark' ? 'light' : 'dark';
     globalTheme = newTheme;
     localStorage.setItem('theme', newTheme);
+    // Update document class immediately
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     if (globalSetTheme) {
       globalSetTheme(newTheme);
     }
-    // Force re-render by dispatching storage event
-    window.dispatchEvent(new Event('themechange'));
-  }, [colorScheme]);
+  }, []);
 
   return { colorScheme, toggleTheme };
 }

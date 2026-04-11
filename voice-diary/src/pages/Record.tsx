@@ -49,6 +49,7 @@ export default function Record() {
     updateDailySummary,
     addFormSuggestion,
     getVoiceNotesForDate,
+    getVoiceNotesForProject,
     getSnippetsForDate,
     getTodayDate,
     currentProjectId,
@@ -83,7 +84,21 @@ export default function Record() {
   };
 
   const today = getTodayDate();
-  const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
+  // Get all notes for the project (not just today)
+  const allProjectNotes = currentProjectId ? getVoiceNotesForProject(currentProjectId) : [];
+  // Sort by date descending (newest first)
+  const sortedNotes = [...allProjectNotes].sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  // Group notes by date
+  const notesByDate = sortedNotes.reduce((acc, note) => {
+    const date = note.createdAt.split('T')[0];
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(note);
+    return acc;
+  }, {} as Record<string, VoiceNote[]>);
+  const sortedDates = Object.keys(notesByDate).sort((a, b) => b.localeCompare(a));
+
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
   const startRecording = useCallback(async () => {
@@ -298,6 +313,18 @@ export default function Record() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString + 'T00:00:00');
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (dateString === yesterday.toISOString().split('T')[0]) {
+      return 'Yesterday';
+    }
+    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
   const cleanTranscript = (rawText: string): string => {
     if (!rawText || rawText.trim().length === 0) return rawText || '';
     let cleaned = rawText;
@@ -419,19 +446,19 @@ export default function Record() {
           )}
         </div>
 
-        {/* Today's Notes */}
-        <div className="max-h-72 overflow-hidden flex flex-col">
+        {/* Project Notes */}
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            Today's Notes ({todayNotes.length})
+            Project Notes ({allProjectNotes.length})
           </h3>
 
           {!currentProjectId ? (
             <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
               <p className="text-gray-400 text-sm">Select a project to see recordings</p>
             </div>
-          ) : todayNotes.length === 0 ? (
+          ) : allProjectNotes.length === 0 ? (
             <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-              <p className="text-gray-400 text-sm mb-3">No recordings yet today</p>
+              <p className="text-gray-400 text-sm mb-3">No recordings yet</p>
               {!hasExampleData() && (
                 <button
                   onClick={() => {
@@ -447,43 +474,52 @@ export default function Record() {
               )}
             </div>
           ) : (
-            <div className={`rounded-xl overflow-hidden ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-              <div className="overflow-y-auto max-h-56">
-                {todayNotes.map((note, index) => (
-                  <button
-                    key={note.id}
-                    onClick={() => setSelectedNote(note)}
-                    className={`w-full flex items-center p-4 text-left transition-colors ${
-                      index < todayNotes.length - 1 ? (isDark ? 'border-b border-gray-800' : 'border-b border-gray-100') : ''
-                    } ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
-                  >
-                    {getStatusIcon(note.status)}
-                    <div className="flex-1 ml-3 min-w-0">
-                      <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {note.status === 'error' ? note.errorMessage || 'Error' : note.title || generateTitle(note.transcriptText)}
-                      </p>
-                      <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {formatTime(note.createdAt)} · {formatDuration(note.duration)}
-                        {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
-                      </p>
+            <div className={`rounded-xl overflow-hidden flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+              <div className="overflow-y-auto h-full max-h-64">
+                {sortedDates.map((date) => (
+                  <div key={date}>
+                    {/* Date Header */}
+                    <div className={`sticky top-0 px-4 py-2 text-xs font-semibold ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                      {date === today ? 'Today' : formatDate(date)}
                     </div>
-                    <div className="flex items-center gap-1 ml-2">
+                    {/* Notes for this date */}
+                    {notesByDate[date].map((note, index) => (
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleReRecord(note.id); }}
-                        disabled={isRecording}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                        key={note.id}
+                        onClick={() => setSelectedNote(note)}
+                        className={`w-full flex items-center p-4 text-left transition-colors ${
+                          index < notesByDate[date].length - 1 ? (isDark ? 'border-b border-gray-800' : 'border-b border-gray-100') : ''
+                        } ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
                       >
-                        <RefreshCw size={16} className="text-blue-500" />
+                        {getStatusIcon(note.status)}
+                        <div className="flex-1 ml-3 min-w-0">
+                          <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {note.status === 'error' ? note.errorMessage || 'Error' : note.title || generateTitle(note.transcriptText)}
+                          </p>
+                          <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {formatTime(note.createdAt)} · {formatDuration(note.duration)}
+                            {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 ml-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleReRecord(note.id); }}
+                            disabled={isRecording}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                          >
+                            <RefreshCw size={16} className="text-blue-500" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}
+                            disabled={isRecording}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                          >
+                            <Trash2 size={16} className="text-red-500" />
+                          </button>
+                        </div>
                       </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}
-                        disabled={isRecording}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
-                      >
-                        <Trash2 size={16} className="text-red-500" />
-                      </button>
-                    </div>
-                  </button>
+                    ))}
+                  </div>
                 ))}
               </div>
             </div>

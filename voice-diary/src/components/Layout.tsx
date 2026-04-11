@@ -15,7 +15,7 @@ export default function Layout() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDark ? 'bg-black' : 'bg-gray-100'}`}>
+    <div className={`h-full min-h-screen flex flex-col ${isDark ? 'bg-black' : 'bg-gray-100'}`}>
       {/* Header */}
       <header className={`${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm safe-area-top`}>
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
