@@ -1,32 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-export function useColorScheme(): 'light' | 'dark' {
-  const [colorScheme, setColorScheme] = useState<'light' | 'dark'>(() => {
+type ColorScheme = 'light' | 'dark';
+
+// Global state to share across components
+let globalTheme: ColorScheme | null = null;
+let globalSetTheme: ((theme: ColorScheme) => void) | null = null;
+
+export function useColorScheme(): ColorScheme {
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(() => {
+    if (globalTheme) return globalTheme;
     // Check localStorage first
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || saved === 'light') return saved;
-    // Then check system preference
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const saved = localStorage.getItem('theme') as ColorScheme | null;
+    if (saved === 'dark' || saved === 'light') {
+      globalTheme = saved;
+      return saved;
     }
+    // Default to light for better visibility
+    globalTheme = 'light';
     return 'light';
   });
 
   useEffect(() => {
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      const saved = localStorage.getItem('theme');
-      if (!saved) {
-        setColorScheme(e.matches ? 'dark' : 'light');
-      }
+    globalSetTheme = setColorScheme;
+    return () => {
+      globalSetTheme = null;
     };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   useEffect(() => {
+    globalTheme = colorScheme;
+    localStorage.setItem('theme', colorScheme);
     // Update document class for Tailwind dark mode
     if (colorScheme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -36,4 +39,21 @@ export function useColorScheme(): 'light' | 'dark' {
   }, [colorScheme]);
 
   return colorScheme;
+}
+
+export function useThemeToggle() {
+  const colorScheme = useColorScheme();
+
+  const toggleTheme = useCallback(() => {
+    const newTheme: ColorScheme = colorScheme === 'dark' ? 'light' : 'dark';
+    globalTheme = newTheme;
+    localStorage.setItem('theme', newTheme);
+    if (globalSetTheme) {
+      globalSetTheme(newTheme);
+    }
+    // Force re-render by dispatching storage event
+    window.dispatchEvent(new Event('themechange'));
+  }, [colorScheme]);
+
+  return { colorScheme, toggleTheme };
 }

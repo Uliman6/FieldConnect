@@ -308,35 +308,35 @@ async function generateDailySummary(snippets, noteCount) {
       grouped[s.category].push(s.content);
     });
 
-    const systemPrompt = `You are a construction site daily summary writer. Create a brief bullet-point summary of the day's key activities.
+    const systemPrompt = `You are a construction daily summary writer. Create ULTRA-SHORT bullet points.
 
-RULES:
-1. Output 3-6 bullet points total, each starting with "• "
-2. NO section headers - just bullet points
-3. Each bullet must be a COMPLETE statement with full context
-4. NEVER use "we", "our", "us", "they", "their", "I" - third person only
-5. Include SPECIFIC details: names, locations, quantities, dates
-6. Prioritize: completed work, issues/blockers, important follow-ups
-7. Keep each bullet concise but informative
+CRITICAL RULES:
+1. Each bullet MUST be 5-12 words MAX - no exceptions
+2. Start each with "• "
+3. NO pronouns (we/our/they/their/I) - use passive voice or subjects
+4. Include key detail: what + where OR what + quantity
+5. Output 3-5 bullets only - prioritize important items
+6. Skip routine/redundant items
 
-GOOD EXAMPLES:
-• Electrical inspection completed by city inspector.
-• Panel naming and fire-caulking penetrations review required by next week.
-• Follow up with Sprigg Electric regarding inspection findings.
-• Concrete pour for Section B foundation finished (45 yards).
+GOOD EXAMPLES (follow this length):
+• Electrical inspection passed (levels 2-3)
+• Grand stairs painting complete
+• Fire caulking needed on level 4 penetrations
+• Elevator shaft cleanup before next inspection
+• Inspector return visit scheduled next week
 
-BAD EXAMPLES (don't do these):
-• We had an inspection today. (no "we", lacks detail)
-• Internal due diligence checks are required. (too vague, no context)
-• Work was completed. (no specifics)`;
+BAD EXAMPLES (too long - never do this):
+• Painting of the grand stairs in the lobby area completed today (TOO WORDY)
+• Electrical inspection conducted today, resulting in a passing grade (TOO WORDY)
+• We had an inspection and it went well (PRONOUNS + TOO VAGUE)`;
 
-    const userPrompt = `Create a brief bullet-point summary from these notes:
+    const userPrompt = `Summarize these notes in 3-5 ULTRA-SHORT bullets (5-12 words each):
 
 ${Object.entries(grouped).map(([cat, items]) =>
   `${cat}:\n${items.map(i => `- ${i}`).join('\n')}`
 ).join('\n\n')}
 
-Output 3-6 bullet points with full context. NO section headers, NO pronouns.`;
+REMEMBER: Each bullet 5-12 words MAX. No pronouns. Prioritize important items only.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -405,6 +405,7 @@ function buildBasicSummary(snippets) {
 
 /**
  * Check if transcript content matches any form templates
+ * BE SELECTIVE - only suggest forms for actionable items that genuinely need documentation
  * @param {Array} snippets - Categorized snippets
  * @param {Array} templates - Available form templates
  * @returns {Array<{formType: string, formName: string, reason: string}>}
@@ -413,65 +414,89 @@ function matchFormTemplates(snippets, templates = []) {
   const suggestions = [];
   const allContent = snippets.map(s => s.content.toLowerCase()).join(' ');
 
-  // Built-in form matching rules
-  const formRules = [
-    {
-      formType: 'daily_log',
-      formName: 'Daily Log',
-      keywords: ['work completed', 'crew', 'workers', 'hours', 'installed', 'poured'],
-      categories: ['Work Completed', 'Team'],
-    },
-    {
-      formType: 'rfi',
-      formName: 'Request for Information (RFI)',
-      keywords: ['question', 'clarification', 'unclear', 'drawing', 'specification', 'confirm'],
-      categories: ['Follow-up Items', 'Issues'],
-    },
-    {
-      formType: 'safety_report',
-      formName: 'Safety Incident Report',
-      keywords: ['injury', 'accident', 'incident', 'near miss', 'unsafe', 'hazard'],
-      categories: ['Safety'],
-    },
-    {
-      formType: 'material_order',
-      formName: 'Material Order',
-      keywords: ['order', 'need more', 'running low', 'shortage', 'restock'],
-      categories: ['Materials'],
-    },
-    {
-      formType: 'punch_list',
-      formName: 'Punch List',
-      keywords: ['defect', 'touch up', 'fix', 'incomplete', 'punch'],
-      categories: ['Issues', 'Follow-up Items'],
-    },
-  ];
+  // RFI: Only for ACTUAL questions needing clarification from architect/engineer
+  // Must have explicit question markers or clarification requests
+  const rfiKeywords = ['need clarification', 'unclear in drawing', 'confirm with architect',
+    'question about', 'verify with engineer', 'specification unclear', 'missing detail',
+    'drawing conflict', 'rfi needed', 'need answer'];
+  const hasRfiNeed = rfiKeywords.some(kw => allContent.includes(kw));
 
-  for (const rule of formRules) {
-    // Check if any keywords match
-    const keywordMatch = rule.keywords.some(kw => allContent.includes(kw));
-
-    // Check if we have snippets in relevant categories
-    const categoryMatch = rule.categories.some(cat =>
-      snippets.some(s => s.category === cat)
+  if (hasRfiNeed) {
+    const matchedSnippets = snippets.filter(s =>
+      rfiKeywords.some(kw => s.content.toLowerCase().includes(kw))
     );
-
-    if (keywordMatch || categoryMatch) {
-      const matchedSnippets = snippets.filter(s =>
-        rule.categories.includes(s.category) ||
-        rule.keywords.some(kw => s.content.toLowerCase().includes(kw))
-      );
-
-      if (matchedSnippets.length > 0) {
-        suggestions.push({
-          formType: rule.formType,
-          formName: rule.formName,
-          reason: `Based on ${matchedSnippets.length} related note${matchedSnippets.length > 1 ? 's' : ''}`,
-          snippetIds: [], // Will be populated by caller
-        });
-      }
+    if (matchedSnippets.length > 0) {
+      suggestions.push({
+        formType: 'rfi',
+        formName: 'Request for Information (RFI)',
+        reason: 'Question requiring architect/engineer clarification',
+        snippetIds: [],
+      });
     }
   }
+
+  // Safety Incident Report: Only for ACTUAL incidents, injuries, or serious hazards
+  // NOT routine safety observations
+  const incidentKeywords = ['injury', 'injured', 'accident', 'incident', 'near miss',
+    'fell', 'cut', 'hurt', 'ambulance', 'hospital', 'first aid', 'osha'];
+  const hasIncident = incidentKeywords.some(kw => allContent.includes(kw));
+
+  if (hasIncident) {
+    const matchedSnippets = snippets.filter(s =>
+      s.category === 'Safety' && incidentKeywords.some(kw => s.content.toLowerCase().includes(kw))
+    );
+    if (matchedSnippets.length > 0) {
+      suggestions.push({
+        formType: 'safety_report',
+        formName: 'Safety Incident Report',
+        reason: 'Safety incident requiring documentation',
+        snippetIds: [],
+      });
+    }
+  }
+
+  // Punch List: Only for DEFECTS or INCOMPLETE work near project completion
+  // Must mention specific defects, not just general follow-ups
+  const punchKeywords = ['defect', 'deficient', 'punch list', 'punchlist', 'touch up needed',
+    'damaged', 'scratched', 'dented', 'chipped', 'incomplete finish', 'needs repair',
+    'final walkthrough', 'substantial completion'];
+  const hasPunchItem = punchKeywords.some(kw => allContent.includes(kw));
+
+  if (hasPunchItem) {
+    const matchedSnippets = snippets.filter(s =>
+      punchKeywords.some(kw => s.content.toLowerCase().includes(kw))
+    );
+    if (matchedSnippets.length > 0) {
+      suggestions.push({
+        formType: 'punch_list',
+        formName: 'Punch List',
+        reason: 'Defect or incomplete work item',
+        snippetIds: [],
+      });
+    }
+  }
+
+  // Material Order: Only when there's explicit shortage or order request
+  const materialKeywords = ['running low', 'ran out', 'shortage', 'need to order',
+    'order more', 'restock', 'back order', 'not enough'];
+  const hasMaterialNeed = materialKeywords.some(kw => allContent.includes(kw));
+
+  if (hasMaterialNeed) {
+    const matchedSnippets = snippets.filter(s =>
+      materialKeywords.some(kw => s.content.toLowerCase().includes(kw))
+    );
+    if (matchedSnippets.length > 0) {
+      suggestions.push({
+        formType: 'material_order',
+        formName: 'Material Order',
+        reason: 'Material shortage requiring order',
+        snippetIds: [],
+      });
+    }
+  }
+
+  // NOTE: Daily Log is NOT suggested here - it's implicit that all notes go into daily logs
+  // We only suggest forms for items that require ADDITIONAL documentation beyond the diary
 
   return suggestions;
 }

@@ -1,12 +1,12 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Mic, LayoutDashboard, LogOut } from 'lucide-react';
+import { Mic, LayoutDashboard, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../lib/auth';
-import { useColorScheme } from '../lib/use-color-scheme';
+import { useThemeToggle } from '../lib/use-color-scheme';
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const colorScheme = useColorScheme();
+  const { colorScheme, toggleTheme } = useThemeToggle();
   const isDark = colorScheme === 'dark';
 
   const handleLogout = () => {
@@ -15,17 +15,28 @@ export default function Layout() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen flex flex-col ${isDark ? 'bg-black' : 'bg-gray-100'}`}>
       {/* Header */}
       <header className={`${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm safe-area-top`}>
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Voice Diary
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} hidden sm:block`}>
               {user?.name || user?.email}
             </span>
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} transition-colors`}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? (
+                <Sun size={20} className="text-yellow-400" />
+              ) : (
+                <Moon size={20} className="text-gray-600" />
+              )}
+            </button>
             <button
               onClick={handleLogout}
               className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} transition-colors`}

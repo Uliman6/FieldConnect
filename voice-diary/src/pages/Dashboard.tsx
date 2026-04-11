@@ -239,29 +239,6 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Recent Items */}
-        {todaySnippets.length > 0 && (
-          <div className="mb-20">
-            <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Recent Items
-            </h3>
-            {todaySnippets.slice(0, 5).map((snippet) => (
-              <div key={snippet.id} className={`p-4 rounded-xl mb-2 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-md mb-2 ${CATEGORY_COLORS[snippet.category]}`}>
-                  {snippet.category}
-                </span>
-                <p className={`text-sm line-clamp-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                  {snippet.content}
-                </p>
-              </div>
-            ))}
-            {todaySnippets.length > 5 && (
-              <p className={`text-center text-sm mt-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                +{todaySnippets.length - 5} more items
-              </p>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Category Detail Modal */}
