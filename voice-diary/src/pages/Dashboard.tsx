@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ChevronRight,
+  ChevronDown,
   Shield,
   Truck,
   Settings2,
@@ -13,12 +14,19 @@ import {
   FileText,
   X,
   Building2,
-  User,
+  Calendar,
+  ListChecks,
+  HelpCircle,
+  ClipboardCheck,
+  PenTool,
+  Plus,
+  Check,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useVoiceDiaryStore, VOICE_DIARY_CATEGORIES } from '../lib/voice-diary-store';
 import { useAuth } from '../lib/auth';
-import type { VoiceDiaryCategory, CategorizedSnippet } from '../lib/types';
+import type { VoiceDiaryCategory, FormTypeId } from '../lib/types';
+import { FORM_TYPES } from '../lib/types';
 
 const CATEGORY_ICONS: Record<VoiceDiaryCategory, React.ReactNode> = {
   'Safety': <Shield size={20} className="text-red-500" />,
@@ -44,48 +52,42 @@ const CATEGORY_COLORS: Record<VoiceDiaryCategory, string> = {
   'Materials': 'bg-stone-100 dark:bg-stone-900/30',
 };
 
-interface ValidFormSuggestion {
-  formType: string;
-  formName: string;
-  snippetIds: string[];
-  snippets: CategorizedSnippet[];
-}
+const FORM_ICONS: Record<string, React.ReactNode> = {
+  'FileText': <FileText size={24} className="text-blue-500" />,
+  'ListChecks': <ListChecks size={24} className="text-orange-500" />,
+  'HelpCircle': <HelpCircle size={24} className="text-purple-500" />,
+  'ClipboardCheck': <ClipboardCheck size={24} className="text-green-500" />,
+  'PenTool': <PenTool size={24} className="text-cyan-500" />,
+  'AlertTriangle': <AlertTriangle size={24} className="text-red-500" />,
+  'Plus': <Plus size={24} className="text-gray-500" />,
+};
 
 export default function Dashboard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   const [selectedCategory, setSelectedCategory] = useState<VoiceDiaryCategory | null>(null);
-  const [selectedForm, setSelectedForm] = useState<ValidFormSuggestion | null>(null);
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+  const [selectedFormType, setSelectedFormType] = useState<FormTypeId | null>(null);
+  const [selectedSnippetIds, setSelectedSnippetIds] = useState<Set<string>>(new Set());
 
   const { user } = useAuth();
 
   const {
-    getDailySummary,
-    getProjectSummary,
     getSnippetsForCategory,
     getVoiceNotesForProject,
-    getValidFormSuggestions,
-    clearOrphanedFormSuggestions,
     getTodayDate,
     currentProjectId,
     projects,
     categorizedSnippets,
     voiceNotes,
+    dailySummaries,
   } = useVoiceDiaryStore();
 
   const today = getTodayDate();
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
-  // Clear orphaned form suggestions on mount
-  useEffect(() => {
-    clearOrphanedFormSuggestions();
-  }, [clearOrphanedFormSuggestions]);
-
-  const userSummary = currentProjectId ? getDailySummary(today, currentProjectId, user?.id) : undefined;
-  const projectSummary = currentProjectId ? getProjectSummary(today, currentProjectId) : undefined;
-
-  // Get ALL snippets and notes for the project (not just today)
+  // Get ALL snippets and notes for the project
   const projectNotes = currentProjectId ? getVoiceNotesForProject(currentProjectId) : [];
   const projectSnippets = useMemo(() => {
     if (!currentProjectId) return [];
@@ -93,25 +95,81 @@ export default function Dashboard() {
     return categorizedSnippets.filter(s => projectNoteIds.has(s.voiceNoteId));
   }, [currentProjectId, voiceNotes, categorizedSnippets]);
 
-  const validFormSuggestions = useMemo(() => {
-    return getValidFormSuggestions(currentProjectId || undefined);
-  }, [currentProjectId, projectSnippets, getValidFormSuggestions]);
+  // Group notes by date for daily summaries
+  const notesByDate = useMemo(() => {
+    const grouped: Record<string, typeof projectNotes> = {};
+    projectNotes.forEach(note => {
+      const date = note.createdAt.split('T')[0];
+      if (!grouped[date]) grouped[date] = [];
+      grouped[date].push(note);
+    });
+    return grouped;
+  }, [projectNotes]);
+
+  const sortedDates = Object.keys(notesByDate).sort((a, b) => b.localeCompare(a));
+
+  // Get daily summaries for this project
+  const projectSummaries = useMemo(() => {
+    if (!currentProjectId) return {};
+    const summaryMap: Record<string, typeof dailySummaries[0]> = {};
+    dailySummaries
+      .filter(s => s.projectId === currentProjectId && (s.userId === user?.id || !s.userId))
+      .forEach(s => {
+        // Prefer user-specific summary over project summary
+        if (!summaryMap[s.date] || (s.userId === user?.id)) {
+          summaryMap[s.date] = s;
+        }
+      });
+    return summaryMap;
+  }, [currentProjectId, dailySummaries, user?.id]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<VoiceDiaryCategory, number> = {} as Record<VoiceDiaryCategory, number>;
     VOICE_DIARY_CATEGORIES.forEach((cat) => {
-      // Pass undefined for date to get ALL snippets for this category in the project
       counts[cat] = getSnippetsForCategory(cat, undefined, currentProjectId || undefined).length;
     });
     return counts;
   }, [projectSnippets, currentProjectId, getSnippetsForCategory]);
 
   const selectedSnippets = selectedCategory
-    // Pass undefined for date to get ALL snippets for this category
     ? getSnippetsForCategory(selectedCategory, undefined, currentProjectId || undefined)
     : [];
 
-  const displaySummary = userSummary || projectSummary;
+  const toggleDateExpanded = (date: string) => {
+    const newSet = new Set(expandedDates);
+    if (newSet.has(date)) {
+      newSet.delete(date);
+    } else {
+      newSet.add(date);
+    }
+    setExpandedDates(newSet);
+  };
+
+  const formatDateHeader = (dateStr: string) => {
+    if (dateStr === today) return 'Today';
+    const date = new Date(dateStr + 'T00:00:00');
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (dateStr === yesterday.toISOString().split('T')[0]) return 'Yesterday';
+    return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+  };
+
+  const toggleSnippetSelection = (snippetId: string) => {
+    const newSet = new Set(selectedSnippetIds);
+    if (newSet.has(snippetId)) {
+      newSet.delete(snippetId);
+    } else {
+      newSet.add(snippetId);
+    }
+    setSelectedSnippetIds(newSet);
+  };
+
+  const handleCreateForm = () => {
+    // TODO: Implement actual form creation
+    alert(`Creating ${FORM_TYPES.find(f => f.id === selectedFormType)?.name} with ${selectedSnippetIds.size} entries`);
+    setSelectedFormType(null);
+    setSelectedSnippetIds(new Set());
+  };
 
   if (!currentProjectId) {
     return (
@@ -138,78 +196,89 @@ export default function Dashboard() {
           </span>
         </div>
 
-        {/* Daily Summary Card */}
-        <div className={`rounded-2xl p-5 mb-5 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-          <div className="flex items-center gap-2 mb-3">
-            <User size={18} className="text-primary-600" />
-            <span className="text-xs font-semibold text-primary-600 uppercase tracking-wider">
-              Your Summary
-            </span>
+        {/* Daily Summaries Section */}
+        <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+          Daily Summaries
+        </h3>
+
+        {projectNotes.length === 0 ? (
+          <div className={`rounded-2xl p-5 mb-5 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+            <p className={`text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              No voice notes recorded yet. Start recording to build your daily summaries!
+            </p>
           </div>
+        ) : (
+          <div className="space-y-2 mb-5">
+            {sortedDates.map((date) => {
+              const summary = projectSummaries[date];
+              const notes = notesByDate[date];
+              const isExpanded = expandedDates.has(date);
 
-          {projectNotes.length === 0 ? (
-            <p className={`text-center py-6 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              No voice notes recorded yet.{'\n'}Start recording to build your summary!
-            </p>
-          ) : displaySummary?.hasMinimumInfo ? (
-            <div className="space-y-2">
-              {displaySummary.summary
-                .split('\n')
-                .filter(line => line.trim() && !line.startsWith('**'))
-                .map((line, index) => (
-                  <p key={index} className={`text-sm leading-relaxed ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                    {line}
-                  </p>
-                ))}
-            </div>
-          ) : (
-            <div>
-              <p className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {projectNotes.length} note{projectNotes.length !== 1 ? 's' : ''} recorded
-              </p>
-              {displaySummary?.summary && (
-                <div className="space-y-1">
-                  {displaySummary.summary.split('\n').filter(line => line.trim()).map((line, index) => (
-                    <p key={index} className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                      {line}
-                    </p>
-                  ))}
+              return (
+                <div key={date} className={`rounded-xl overflow-hidden ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+                  <button
+                    onClick={() => toggleDateExpanded(date)}
+                    className={`w-full flex items-center gap-3 p-4 text-left ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
+                  >
+                    <Calendar size={18} className="text-primary-600" />
+                    <div className="flex-1">
+                      <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {formatDateHeader(date)}
+                      </p>
+                      <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {notes.length} note{notes.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    {isExpanded ? (
+                      <ChevronDown size={20} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
+                    ) : (
+                      <ChevronRight size={20} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
+                    )}
+                  </button>
+
+                  {isExpanded && (
+                    <div className={`px-4 pb-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                      {summary?.summary ? (
+                        <div className="pt-3 space-y-1">
+                          {summary.summary.split('\n').filter(line => line.trim()).map((line, idx) => (
+                            <p key={idx} className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {line}
+                            </p>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className={`pt-3 text-sm italic ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          No summary generated yet
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
-
-          {displaySummary?.lastUpdatedAt && (
-            <p className={`text-xs mt-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-              Last updated: {new Date(displaySummary.lastUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          )}
-        </div>
-
-        {/* Form Suggestions */}
-        {validFormSuggestions.length > 0 && (
-          <div className="mb-5">
-            <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Suggested Forms
-            </h3>
-            {validFormSuggestions.map((suggestion) => (
-              <button
-                key={suggestion.formType}
-                onClick={() => setSelectedForm(suggestion)}
-                className="w-full flex items-center gap-3 p-4 mb-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 transition-colors"
-              >
-                <FileText size={24} className="text-blue-500" />
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">{suggestion.formName}</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
-                    Based on {suggestion.snippets.length} related {suggestion.snippets.length === 1 ? 'note' : 'notes'}
-                  </p>
-                </div>
-                <ChevronRight size={20} className="text-blue-500" />
-              </button>
-            ))}
+              );
+            })}
           </div>
         )}
+
+        {/* Forms Section */}
+        <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+          Create Form
+        </h3>
+        <div className="grid grid-cols-2 gap-2 mb-5">
+          {FORM_TYPES.map((formType) => (
+            <button
+              key={formType.id}
+              onClick={() => setSelectedFormType(formType.id)}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
+                isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white hover:bg-gray-50'
+              } shadow-sm`}
+            >
+              {FORM_ICONS[formType.icon]}
+              <span className={`text-xs font-semibold text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {formType.name}
+              </span>
+            </button>
+          ))}
+        </div>
 
         {/* Categories Grid */}
         <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
@@ -247,7 +316,6 @@ export default function Dashboard() {
             );
           })}
         </div>
-
       </div>
 
       {/* Category Detail Modal */}
@@ -288,40 +356,95 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Form Detail Modal */}
-      {selectedForm && (
+      {/* Form Creation Modal */}
+      {selectedFormType && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedForm(null)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => { setSelectedFormType(null); setSelectedSnippetIds(new Set()); }} />
           <div className={`relative w-full sm:max-w-md max-h-[85vh] rounded-t-2xl sm:rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} safe-area-bottom overflow-hidden`}>
             <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
               <div>
-                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedForm.formName}</h2>
+                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {FORM_TYPES.find(f => f.id === selectedFormType)?.name}
+                </h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {selectedForm.snippets.length} related {selectedForm.snippets.length === 1 ? 'entry' : 'entries'}
+                  Select entries to include
                 </p>
               </div>
-              <button onClick={() => setSelectedForm(null)} className="p-2">
+              <button onClick={() => { setSelectedFormType(null); setSelectedSnippetIds(new Set()); }} className="p-2">
                 <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
               </button>
             </div>
-            <div className="p-4 overflow-y-auto max-h-[70vh]">
-              <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                These items from your voice notes may be relevant for a {selectedForm.formName}:
-              </p>
-              {selectedForm.snippets.map((snippet) => (
-                <div key={snippet.id} className={`p-4 rounded-xl mb-3 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-md mb-2 ${CATEGORY_COLORS[snippet.category]}`}>
-                    {snippet.category}
-                  </span>
-                  <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                    {snippet.content}
+
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              {selectedFormType === 'custom' ? (
+                <div className="text-center py-8">
+                  <Plus size={48} className={`mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
+                  <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Custom form templates coming soon!
                   </p>
-                  <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {new Date(snippet.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  <button
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'}`}
+                  >
+                    Upload Template
+                  </button>
                 </div>
-              ))}
+              ) : projectSnippets.length === 0 ? (
+                <p className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  No entries available. Record voice notes to create forms.
+                </p>
+              ) : (
+                projectSnippets.map((snippet) => (
+                  <button
+                    key={snippet.id}
+                    onClick={() => toggleSnippetSelection(snippet.id)}
+                    className={`w-full p-4 rounded-xl mb-3 text-left transition-colors ${
+                      selectedSnippetIds.has(snippet.id)
+                        ? 'bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-500'
+                        : isDark ? 'bg-gray-800' : 'bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        selectedSnippetIds.has(snippet.id)
+                          ? 'bg-primary-600'
+                          : isDark ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'
+                      }`}>
+                        {selectedSnippetIds.has(snippet.id) && <Check size={14} className="text-white" />}
+                      </div>
+                      <div className="flex-1">
+                        <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md mb-2 ${CATEGORY_COLORS[snippet.category]}`}>
+                          {snippet.category}
+                        </span>
+                        <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                          {snippet.content}
+                        </p>
+                        <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {new Date(snippet.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
+
+            {selectedFormType !== 'custom' && projectSnippets.length > 0 && (
+              <div className={`p-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                <button
+                  onClick={handleCreateForm}
+                  disabled={selectedSnippetIds.size === 0}
+                  className={`w-full py-3 rounded-xl font-semibold transition-colors ${
+                    selectedSnippetIds.size > 0
+                      ? 'bg-primary-600 text-white'
+                      : isDark ? 'bg-gray-800 text-gray-500' : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  {selectedSnippetIds.size > 0
+                    ? `Create Form (${selectedSnippetIds.size} entries)`
+                    : 'Select entries to create form'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
