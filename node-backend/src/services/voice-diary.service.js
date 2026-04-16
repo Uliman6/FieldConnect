@@ -131,23 +131,29 @@ CATEGORIES (use exactly these names):
 
 CRITICAL RULES FOR CONTENT:
 1. NEVER use "we", "our", "us", "they", "their", "I" - write in third person or imperative
-2. Each item must be a STANDALONE professional statement that makes sense on its own
-3. Include SPECIFIC context - names, locations, dates, quantities
-4. Convert to action-oriented language: "Review panel naming" not "We need to review..."
-5. Keep concise but complete (1 sentence with full context)
+2. Each item must be a STANDALONE professional statement
+3. PRESERVE COMPANY/CONTRACTOR NAMES exactly as mentioned (e.g., "Sprigg Electric", "ABC Drywall")
+4. Include SPECIFIC context - names, locations, quantities
+5. Keep concise: WHAT + WHERE or WHAT + WHO format
+6. NO added interpretation or adjectives not in original
+
+COMPANY NAME DETECTION:
+- Look for patterns like "[Name] Electric/Plumbing/Drywall/Mechanical/HVAC/Roofing"
+- Look for "with [Company]", "from [Company]", "[Company] crew"
+- Preserve the company name in the output statement
 
 EXAMPLES:
 - BAD: "We need to talk to Sprigg Electric about the inspection findings"
-- GOOD: "Follow up with Sprigg Electric regarding electrical inspection findings."
+- GOOD: "Follow up with Sprigg Electric - inspection findings."
 
 - BAD: "We had electrical inspection today"
-- GOOD: "Electrical inspection conducted today."
+- GOOD: "Electrical inspection passed."
 
-- BAD: "Before then, we have to walk internally and do our own due diligence checks"
-- GOOD: "Internal walkthrough and due diligence verification required before proceeding."
+- BAD: "ABC Drywall is doing the framing on level 4 today and it looks good"
+- GOOD: "ABC Drywall - framing level 4."
 
 - BAD: "We have to check in with the electrical inspector next week"
-- GOOD: "Schedule follow-up with electrical inspector next week to verify all electrical room items."
+- GOOD: "Electrical inspector follow-up - next week."
 
 OUTPUT FORMAT (JSON array):
 [
@@ -308,35 +314,39 @@ async function generateDailySummary(snippets, noteCount) {
       grouped[s.category].push(s.content);
     });
 
-    const systemPrompt = `You are a construction daily summary writer. Create ULTRA-SHORT bullet points.
+    const systemPrompt = `You are a construction daily summary writer. Create MINIMAL bullet points.
 
 CRITICAL RULES:
-1. Each bullet MUST be 5-12 words MAX - no exceptions
+1. Each bullet MUST be 4-8 words MAX - shorter is better
 2. Start each with "• "
-3. NO pronouns (we/our/they/their/I) - use passive voice or subjects
-4. Include key detail: what + where OR what + quantity
-5. Output 3-5 bullets only - prioritize important items
-6. Skip routine/redundant items
+3. NO pronouns (we/our/they/their/I)
+4. NO added context or interpretation - ONLY what was explicitly stated
+5. Include: WHAT + WHERE or WHAT + WHO (company name if mentioned)
+6. Output 3-5 bullets only - most important items
+7. DO NOT add adjectives, reasons, or implications not stated
 
-GOOD EXAMPLES (follow this length):
-• Electrical inspection passed (levels 2-3)
+FORMAT: [Task/Item] - [Location/Company]
+
+GOOD EXAMPLES:
+• Electrical inspection passed - levels 2-3
 • Grand stairs painting complete
-• Fire caulking needed on level 4 penetrations
-• Elevator shaft cleanup before next inspection
-• Inspector return visit scheduled next week
+• ABC Drywall - framing level 4
+• Fire caulking needed - level 4 penetrations
+• Follow up with Sprigg Electric
 
-BAD EXAMPLES (too long - never do this):
-• Painting of the grand stairs in the lobby area completed today (TOO WORDY)
-• Electrical inspection conducted today, resulting in a passing grade (TOO WORDY)
-• We had an inspection and it went well (PRONOUNS + TOO VAGUE)`;
+BAD EXAMPLES (NEVER DO):
+• "enhancing the overall aesthetics" (ADDING INTERPRETATION)
+• "completed today" (REDUNDANT - it's a daily log)
+• "resulting in a passing grade" (TOO WORDY)
+• "in the lobby area" when just "lobby" works (WORDY)`;
 
-    const userPrompt = `Summarize these notes in 3-5 ULTRA-SHORT bullets (5-12 words each):
+    const userPrompt = `Summarize these notes in 3-5 MINIMAL bullets (4-8 words each):
 
 ${Object.entries(grouped).map(([cat, items]) =>
   `${cat}:\n${items.map(i => `- ${i}`).join('\n')}`
 ).join('\n\n')}
 
-REMEMBER: Each bullet 5-12 words MAX. No pronouns. Prioritize important items only.`;
+REMEMBER: 4-8 words MAX per bullet. Include company names if mentioned. No interpretation.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',

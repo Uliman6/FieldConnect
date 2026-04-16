@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   ChevronRight,
-  ChevronDown,
+  ChevronLeft,
   Shield,
   Truck,
   Settings2,
@@ -62,12 +62,50 @@ const FORM_ICONS: Record<string, React.ReactNode> = {
   'Plus': <Plus size={24} className="text-gray-500" />,
 };
 
+// Date utilities
+const formatDateISO = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+const parseDate = (dateStr: string): Date => {
+  return new Date(dateStr + 'T00:00:00');
+};
+
+const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+const formatDateDisplay = (dateStr: string): string => {
+  const date = parseDate(dateStr);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const formatDateShort = (dateStr: string): string => {
+  const today = formatDateISO(new Date());
+  if (dateStr === today) return 'Today';
+
+  const yesterday = formatDateISO(addDays(new Date(), -1));
+  if (dateStr === yesterday) return 'Yesterday';
+
+  const date = parseDate(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
 export default function Dashboard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  // Current selected date (defaults to today)
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateISO(new Date()));
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<VoiceDiaryCategory | null>(null);
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [selectedFormType, setSelectedFormType] = useState<FormTypeId | null>(null);
   const [selectedSnippetIds, setSelectedSnippetIds] = useState<Set<string>>(new Set());
 
@@ -75,83 +113,61 @@ export default function Dashboard() {
 
   const {
     getSnippetsForCategory,
-    getVoiceNotesForProject,
+    getSnippetsForDate,
+    getVoiceNotesForDate,
     getTodayDate,
     currentProjectId,
     projects,
-    categorizedSnippets,
-    voiceNotes,
     dailySummaries,
   } = useVoiceDiaryStore();
 
   const today = getTodayDate();
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
-  // Get ALL snippets and notes for the project
-  const projectNotes = currentProjectId ? getVoiceNotesForProject(currentProjectId) : [];
-  const projectSnippets = useMemo(() => {
-    if (!currentProjectId) return [];
-    const projectNoteIds = new Set(voiceNotes.filter(n => n.projectId === currentProjectId).map(n => n.id));
-    return categorizedSnippets.filter(s => projectNoteIds.has(s.voiceNoteId));
-  }, [currentProjectId, voiceNotes, categorizedSnippets]);
+  // Get data for the SELECTED date
+  const selectedDateNotes = getVoiceNotesForDate(selectedDate, currentProjectId || undefined);
+  const selectedDateSnippets = getSnippetsForDate(selectedDate, currentProjectId || undefined);
 
-  // Group notes by date for daily summaries
-  const notesByDate = useMemo(() => {
-    const grouped: Record<string, typeof projectNotes> = {};
-    projectNotes.forEach(note => {
-      const date = note.createdAt.split('T')[0];
-      if (!grouped[date]) grouped[date] = [];
-      grouped[date].push(note);
-    });
-    return grouped;
-  }, [projectNotes]);
+  // Get summary for selected date
+  const selectedDateSummary = useMemo(() => {
+    if (!currentProjectId) return null;
+    return dailySummaries.find(
+      s => s.projectId === currentProjectId && s.date === selectedDate && (s.userId === user?.id || !s.userId)
+    );
+  }, [currentProjectId, dailySummaries, selectedDate, user?.id]);
 
-  const sortedDates = Object.keys(notesByDate).sort((a, b) => b.localeCompare(a));
-
-  // Get daily summaries for this project
-  const projectSummaries = useMemo(() => {
-    if (!currentProjectId) return {};
-    const summaryMap: Record<string, typeof dailySummaries[0]> = {};
-    dailySummaries
-      .filter(s => s.projectId === currentProjectId && (s.userId === user?.id || !s.userId))
-      .forEach(s => {
-        // Prefer user-specific summary over project summary
-        if (!summaryMap[s.date] || (s.userId === user?.id)) {
-          summaryMap[s.date] = s;
-        }
-      });
-    return summaryMap;
-  }, [currentProjectId, dailySummaries, user?.id]);
-
+  // Category counts for SELECTED date
   const categoryCounts = useMemo(() => {
     const counts: Record<VoiceDiaryCategory, number> = {} as Record<VoiceDiaryCategory, number>;
     VOICE_DIARY_CATEGORIES.forEach((cat) => {
-      counts[cat] = getSnippetsForCategory(cat, undefined, currentProjectId || undefined).length;
+      counts[cat] = getSnippetsForCategory(cat, selectedDate, currentProjectId || undefined).length;
     });
     return counts;
-  }, [projectSnippets, currentProjectId, getSnippetsForCategory]);
+  }, [selectedDate, currentProjectId, getSnippetsForCategory, selectedDateSnippets]);
 
   const selectedSnippets = selectedCategory
-    ? getSnippetsForCategory(selectedCategory, undefined, currentProjectId || undefined)
+    ? getSnippetsForCategory(selectedCategory, selectedDate, currentProjectId || undefined)
     : [];
 
-  const toggleDateExpanded = (date: string) => {
-    const newSet = new Set(expandedDates);
-    if (newSet.has(date)) {
-      newSet.delete(date);
-    } else {
-      newSet.add(date);
-    }
-    setExpandedDates(newSet);
+  // Date navigation handlers
+  const handlePrevDay = () => {
+    const current = parseDate(selectedDate);
+    const newDate = addDays(current, -1);
+    setSelectedDate(formatDateISO(newDate));
   };
 
-  const formatDateHeader = (dateStr: string) => {
-    if (dateStr === today) return 'Today';
-    const date = new Date(dateStr + 'T00:00:00');
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (dateStr === yesterday.toISOString().split('T')[0]) return 'Yesterday';
-    return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+  const handleNextDay = () => {
+    const current = parseDate(selectedDate);
+    const newDate = addDays(current, 1);
+    // Don't go past today
+    if (formatDateISO(newDate) <= today) {
+      setSelectedDate(formatDateISO(newDate));
+    }
+  };
+
+  const handleDateSelect = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    setShowDatePicker(false);
   };
 
   const toggleSnippetSelection = (snippetId: string) => {
@@ -171,6 +187,16 @@ export default function Dashboard() {
     setSelectedSnippetIds(new Set());
   };
 
+  // Get available dates (dates with notes)
+  const availableDates = useMemo(() => {
+    const dates = new Set<string>();
+    // Add last 30 days
+    for (let i = 0; i < 30; i++) {
+      dates.add(formatDateISO(addDays(new Date(), -i)));
+    }
+    return Array.from(dates).sort((a, b) => b.localeCompare(a));
+  }, []);
+
   if (!currentProjectId) {
     return (
       <div className={`h-full flex flex-col items-center justify-center p-10 ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
@@ -185,6 +211,8 @@ export default function Dashboard() {
     );
   }
 
+  const isToday = selectedDate === today;
+
   return (
     <div className={`h-full overflow-y-auto ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
       <div className="p-4">
@@ -196,93 +224,71 @@ export default function Dashboard() {
           </span>
         </div>
 
-        {/* Daily Summaries Section */}
-        <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          Daily Summaries
-        </h3>
-
-        {projectNotes.length === 0 ? (
-          <div className={`rounded-2xl p-5 mb-5 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-            <p className={`text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              No voice notes recorded yet. Start recording to build your daily summaries!
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2 mb-5">
-            {sortedDates.map((date) => {
-              const summary = projectSummaries[date];
-              const notes = notesByDate[date];
-              const isExpanded = expandedDates.has(date);
-
-              return (
-                <div key={date} className={`rounded-xl overflow-hidden ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-                  <button
-                    onClick={() => toggleDateExpanded(date)}
-                    className={`w-full flex items-center gap-3 p-4 text-left ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
-                  >
-                    <Calendar size={18} className="text-primary-600" />
-                    <div className="flex-1">
-                      <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {formatDateHeader(date)}
-                      </p>
-                      <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {notes.length} note{notes.length !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronDown size={20} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
-                    ) : (
-                      <ChevronRight size={20} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
-                    )}
-                  </button>
-
-                  {isExpanded && (
-                    <div className={`px-4 pb-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                      {summary?.summary ? (
-                        <div className="pt-3 space-y-1">
-                          {summary.summary.split('\n').filter(line => line.trim()).map((line, idx) => (
-                            <p key={idx} className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                              {line}
-                            </p>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className={`pt-3 text-sm italic ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          No summary generated yet
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Forms Section */}
-        <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          Create Form
-        </h3>
-        <div className="grid grid-cols-2 gap-2 mb-5">
-          {FORM_TYPES.map((formType) => (
+        {/* Date Navigation */}
+        <div className={`rounded-xl p-3 mb-4 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          <div className="flex items-center justify-between">
             <button
-              key={formType.id}
-              onClick={() => setSelectedFormType(formType.id)}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
-                isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white hover:bg-gray-50'
-              } shadow-sm`}
+              onClick={handlePrevDay}
+              className={`p-2 rounded-lg ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}
             >
-              {FORM_ICONS[formType.icon]}
-              <span className={`text-xs font-semibold text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {formType.name}
+              <ChevronLeft size={20} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
+            </button>
+
+            <button
+              onClick={() => setShowDatePicker(true)}
+              className="flex-1 mx-3 flex items-center justify-center gap-2 py-2"
+            >
+              <Calendar size={18} className="text-primary-600" />
+              <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {formatDateDisplay(selectedDate)}
               </span>
             </button>
-          ))}
+
+            <button
+              onClick={handleNextDay}
+              disabled={isToday}
+              className={`p-2 rounded-lg ${
+                isToday
+                  ? 'opacity-30'
+                  : isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
+              }`}
+            >
+              <ChevronRight size={20} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
+            </button>
+          </div>
+          <p className={`text-xs text-center mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+            Tap date to select
+          </p>
         </div>
 
-        {/* Categories Grid */}
+        {/* Daily Summary Card */}
+        <div className={`rounded-xl p-4 mb-4 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            Daily Summary
+          </h3>
+
+          {selectedDateNotes.length === 0 ? (
+            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              No notes recorded on {formatDateShort(selectedDate)}.
+            </p>
+          ) : selectedDateSummary?.summary ? (
+            <div className="space-y-1">
+              {selectedDateSummary.summary.split('\n').filter(line => line.trim()).map((line, idx) => (
+                <p key={idx} className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {line}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              {selectedDateNotes.length} note{selectedDateNotes.length !== 1 ? 's' : ''} recorded. Summary pending.
+            </p>
+          )}
+        </div>
+
+        {/* Categories Grid - for selected date */}
         <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          Categories ({projectSnippets.length} items)
+          Categories ({selectedDateSnippets.length} items on {formatDateShort(selectedDate)})
         </h3>
         <div className="grid grid-cols-2 gap-2 mb-5">
           {VOICE_DIARY_CATEGORIES.map((category) => {
@@ -316,7 +322,78 @@ export default function Dashboard() {
             );
           })}
         </div>
+
+        {/* Forms Section */}
+        <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+          Create Form
+        </h3>
+        <div className="grid grid-cols-2 gap-2 mb-5">
+          {FORM_TYPES.map((formType) => (
+            <button
+              key={formType.id}
+              onClick={() => setSelectedFormType(formType.id)}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
+                isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white hover:bg-gray-50'
+              } shadow-sm`}
+            >
+              {FORM_ICONS[formType.icon]}
+              <span className={`text-xs font-semibold text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {formType.name}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Date Picker Modal */}
+      {showDatePicker && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDatePicker(false)} />
+          <div className={`relative w-full sm:max-w-md max-h-[70vh] rounded-t-2xl sm:rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} safe-area-bottom overflow-hidden`}>
+            <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Select Date</h2>
+              <button onClick={() => setShowDatePicker(false)} className="p-2">
+                <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[50vh]">
+              {availableDates.map((date) => {
+                const hasNotes = getVoiceNotesForDate(date, currentProjectId || undefined).length > 0;
+                const isSelected = date === selectedDate;
+
+                return (
+                  <button
+                    key={date}
+                    onClick={() => handleDateSelect(date)}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl mb-2 ${
+                      isSelected
+                        ? 'bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-500'
+                        : isDark ? 'bg-gray-800' : 'bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Calendar size={18} className={isSelected ? 'text-primary-600' : isDark ? 'text-gray-400' : 'text-gray-500'} />
+                      <div className="text-left">
+                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {formatDateShort(date)}
+                        </p>
+                        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {parseDate(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    {hasNotes && (
+                      <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs rounded-full">
+                        Has notes
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category Detail Modal */}
       {selectedCategory && (
@@ -327,7 +404,7 @@ export default function Dashboard() {
               <div>
                 <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedCategory}</h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {selectedSnippets.length} item{selectedSnippets.length !== 1 ? 's' : ''}
+                  {selectedSnippets.length} item{selectedSnippets.length !== 1 ? 's' : ''} on {formatDateShort(selectedDate)}
                 </p>
               </div>
               <button onClick={() => setSelectedCategory(null)} className="p-2">
@@ -337,7 +414,7 @@ export default function Dashboard() {
             <div className="p-4 overflow-y-auto max-h-[70vh]">
               {selectedSnippets.length === 0 ? (
                 <p className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  No items in this category yet
+                  No items in this category on {formatDateShort(selectedDate)}
                 </p>
               ) : (
                 selectedSnippets.map((snippet) => (
@@ -346,7 +423,7 @@ export default function Dashboard() {
                       {snippet.content}
                     </p>
                     <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {new Date(snippet.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 ))
@@ -367,7 +444,7 @@ export default function Dashboard() {
                   {FORM_TYPES.find(f => f.id === selectedFormType)?.name}
                 </h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Select entries to include
+                  Select entries from {formatDateShort(selectedDate)}
                 </p>
               </div>
               <button onClick={() => { setSelectedFormType(null); setSelectedSnippetIds(new Set()); }} className="p-2">
@@ -388,12 +465,12 @@ export default function Dashboard() {
                     Upload Template
                   </button>
                 </div>
-              ) : projectSnippets.length === 0 ? (
+              ) : selectedDateSnippets.length === 0 ? (
                 <p className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  No entries available. Record voice notes to create forms.
+                  No entries on {formatDateShort(selectedDate)}. Record voice notes first.
                 </p>
               ) : (
-                projectSnippets.map((snippet) => (
+                selectedDateSnippets.map((snippet) => (
                   <button
                     key={snippet.id}
                     onClick={() => toggleSnippetSelection(snippet.id)}
@@ -418,9 +495,6 @@ export default function Dashboard() {
                         <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
                           {snippet.content}
                         </p>
-                        <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          {new Date(snippet.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                        </p>
                       </div>
                     </div>
                   </button>
@@ -428,7 +502,7 @@ export default function Dashboard() {
               )}
             </div>
 
-            {selectedFormType !== 'custom' && projectSnippets.length > 0 && (
+            {selectedFormType !== 'custom' && selectedDateSnippets.length > 0 && (
               <div className={`p-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                 <button
                   onClick={handleCreateForm}
