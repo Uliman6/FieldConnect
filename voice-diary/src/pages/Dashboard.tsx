@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
   ChevronLeft,
@@ -101,6 +102,7 @@ const formatDateShort = (dateStr: string): string => {
 export default function Dashboard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const navigate = useNavigate();
 
   // Current selected date (defaults to today)
   const [selectedDate, setSelectedDate] = useState<string>(formatDateISO(new Date()));
@@ -181,8 +183,10 @@ export default function Dashboard() {
   };
 
   const handleCreateForm = () => {
-    // TODO: Implement actual form creation
-    alert(`Creating ${FORM_TYPES.find(f => f.id === selectedFormType)?.name} with ${selectedSnippetIds.size} entries`);
+    if (!selectedFormType || selectedFormType === 'custom') return;
+
+    const snippetIds = Array.from(selectedSnippetIds).join(',');
+    navigate(`/form-fill?template=${selectedFormType}&snippets=${snippetIds}`);
     setSelectedFormType(null);
     setSelectedSnippetIds(new Set());
   };

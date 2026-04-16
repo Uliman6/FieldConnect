@@ -4,6 +4,7 @@ import { useColorScheme } from './lib/use-color-scheme';
 import Login from './pages/Login';
 import Record from './pages/Record';
 import Dashboard from './pages/Dashboard';
+import FormFill from './pages/FormFill';
 import Layout from './components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -44,6 +45,7 @@ export default function App() {
       >
         <Route index element={<Record />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="form-fill" element={<FormFill />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
