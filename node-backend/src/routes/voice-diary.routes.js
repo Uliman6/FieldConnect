@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const voiceDiaryController = require('../controllers/voice-diary.controller');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate, requireAdmin } = require('../middleware/auth.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -34,6 +34,27 @@ router.post('/process', (req, res, next) =>
 // GET /api/voice-diary/categories - Get available categories
 router.get('/categories', (req, res) =>
   voiceDiaryController.getCategories(req, res)
+);
+
+// POST /api/voice-diary/feedback - Submit feedback
+router.post('/feedback', (req, res, next) =>
+  voiceDiaryController.submitFeedback(req, res, next)
+);
+
+// POST /api/voice-diary/entry - Save a voice diary entry
+router.post('/entry', (req, res, next) =>
+  voiceDiaryController.saveEntry(req, res, next)
+);
+
+// Admin routes
+// GET /api/voice-diary/admin/feedback - Get all feedback (admin only)
+router.get('/admin/feedback', requireAdmin, (req, res, next) =>
+  voiceDiaryController.getAllFeedback(req, res, next)
+);
+
+// GET /api/voice-diary/admin/entries - Get all entries (admin only)
+router.get('/admin/entries', requireAdmin, (req, res, next) =>
+  voiceDiaryController.getAllEntries(req, res, next)
 );
 
 module.exports = router;

@@ -166,7 +166,7 @@ class ApiClient {
     userName?: string;
     timestamp: string;
   }>> {
-    const response = await this.client.get('/voice-diary/feedback');
+    const response = await this.client.get('/voice-diary/admin/feedback');
     return response.data;
   }
 
@@ -182,7 +182,7 @@ class ApiClient {
     transcriptText?: string;
     createdAt: string;
   }>> {
-    const response = await this.client.get('/admin/entries');
+    const response = await this.client.get('/voice-diary/admin/entries');
     return response.data;
   }
 }

@@ -1160,3 +1160,68 @@ model MaintenancePumpForm {
   @@index([status])
   @@map("maintenance_pump_forms")
 }
+
+// ============================================
+// VOICE DIARY FEEDBACK
+// ============================================
+// Feedback from Voice Diary app users
+
+model VoiceDiaryFeedback {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Feedback content
+  text        String    @db.Text
+
+  // User info (optional - can be anonymous)
+  userId      String?   @map("user_id")
+  userName    String?   @map("user_name")
+  userEmail   String?   @map("user_email")
+
+  // Audio file if feedback was voice recorded
+  audioUrl    String?   @map("audio_url")
+
+  // Status tracking
+  isRead      Boolean   @default(false) @map("is_read")
+  readAt      DateTime? @map("read_at")
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("voice_diary_feedback")
+}
+
+// ============================================
+// VOICE DIARY ENTRIES
+// ============================================
+// Tracks all voice diary entries across users
+
+model VoiceDiaryEntry {
+  id             String    @id @default(uuid())
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // User info
+  userId         String    @map("user_id")
+  userName       String?   @map("user_name")
+
+  // Project info
+  projectId      String?   @map("project_id")
+  projectName    String?   @map("project_name")
+
+  // Entry content
+  transcriptText String?   @map("transcript_text") @db.Text
+  cleanedText    String?   @map("cleaned_text") @db.Text
+  category       String?
+
+  // Audio file
+  audioUrl       String?   @map("audio_url")
+  audioDuration  Int?      @map("audio_duration") // seconds
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("voice_diary_entries")
+}
