@@ -60,6 +60,12 @@ class ApiClient {
     return response.data;
   }
 
+  async register(data: { email: string; password: string; name: string }): Promise<LoginResponse> {
+    const response = await this.client.post<LoginResponse>('/auth/register', data);
+    this.setToken(response.data.token);
+    return response.data;
+  }
+
   async getCurrentUser() {
     const response = await this.client.get<{ user: LoginResponse['user'] }>('/auth/me');
     return response.data.user;
@@ -136,6 +142,47 @@ class ApiClient {
     error?: string;
   }> {
     const response = await this.client.post('/voice-diary/summarize', { snippets, noteCount });
+    return response.data;
+  }
+
+  // ============================================
+  // FEEDBACK
+  // ============================================
+
+  async submitFeedback(data: {
+    text: string;
+    userId?: string;
+    userName?: string;
+    timestamp: string;
+  }): Promise<{ success: boolean; id?: string }> {
+    const response = await this.client.post('/voice-diary/feedback', data);
+    return response.data;
+  }
+
+  async getFeedback(): Promise<Array<{
+    id: string;
+    text: string;
+    userId?: string;
+    userName?: string;
+    timestamp: string;
+  }>> {
+    const response = await this.client.get('/voice-diary/feedback');
+    return response.data;
+  }
+
+  // ============================================
+  // ADMIN
+  // ============================================
+
+  async getAllUserEntries(): Promise<Array<{
+    id: string;
+    userId: string;
+    userName?: string;
+    projectName?: string;
+    transcriptText?: string;
+    createdAt: string;
+  }>> {
+    const response = await this.client.get('/admin/entries');
     return response.data;
   }
 }

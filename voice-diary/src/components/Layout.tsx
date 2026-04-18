@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Mic, LayoutDashboard, LogOut, Sun, Moon } from 'lucide-react';
+import { Mic, LayoutDashboard, LogOut, Sun, Moon, Shield } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useThemeToggle } from '../lib/use-color-scheme';
 
@@ -8,6 +8,8 @@ export default function Layout() {
   const navigate = useNavigate();
   const { colorScheme, toggleTheme } = useThemeToggle();
   const isDark = colorScheme === 'dark';
+
+  const isAdmin = user?.role === 'ADMIN' || user?.email === '***REMOVED***';
 
   const handleLogout = () => {
     logout();
@@ -26,6 +28,21 @@ export default function Layout() {
             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} hidden sm:block`}>
               {user?.name || user?.email}
             </span>
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `p-2 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-primary-100 dark:bg-primary-900/30'
+                      : isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                  }`
+                }
+                title="Admin Dashboard"
+              >
+                <Shield size={20} className="text-primary-600" />
+              </NavLink>
+            )}
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} transition-colors`}

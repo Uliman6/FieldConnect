@@ -7,11 +7,22 @@ import {
   Clock,
   Loader2,
   ChevronDown,
+  ChevronUp,
   Plus,
   Trash2,
   RefreshCw,
   Building2,
   X,
+  Shield,
+  Truck,
+  CheckCircle2,
+  ListTodo,
+  ArrowRight,
+  Users,
+  Package,
+  MessageSquare,
+  Edit3,
+  Save,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useVoiceDiaryStore } from '../lib/voice-diary-store';
@@ -32,6 +43,10 @@ export default function Record() {
   const [newProjectName, setNewProjectName] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editedTranscript, setEditedTranscript] = useState('');
+  const [isFeedbackMode, setIsFeedbackMode] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -381,6 +396,118 @@ export default function Record() {
     }
   };
 
+  // Category icons for the record page hints
+  const CATEGORY_HINTS = [
+    { icon: <CheckCircle2 size={18} />, label: 'Work Done', color: 'text-green-500' },
+    { icon: <ListTodo size={18} />, label: 'To Do', color: 'text-amber-500' },
+    { icon: <Shield size={18} />, label: 'Safety', color: 'text-red-500' },
+    { icon: <ArrowRight size={18} />, label: 'Follow-up', color: 'text-pink-500' },
+    { icon: <Users size={18} />, label: 'Team', color: 'text-cyan-500' },
+    { icon: <Truck size={18} />, label: 'Logistics', color: 'text-blue-500' },
+    { icon: <Package size={18} />, label: 'Materials', color: 'text-stone-500' },
+    { icon: <AlertCircle size={18} />, label: 'Issues', color: 'text-red-500' },
+  ];
+
+  const handleStartEditing = (note: VoiceNote) => {
+    setEditingNoteId(note.id);
+    setEditedTranscript(note.cleanedTranscript || note.transcriptText || '');
+  };
+
+  const handleSaveEdit = (noteId: string) => {
+    if (editedTranscript.trim()) {
+      updateVoiceNote(noteId, {
+        transcriptText: editedTranscript,
+        cleanedTranscript: editedTranscript,
+      });
+      addNotification('success', 'Note updated');
+    }
+    setEditingNoteId(null);
+    setEditedTranscript('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null);
+    setEditedTranscript('');
+  };
+
+  // Feedback recording handler
+  const startFeedbackRecording = useCallback(async () => {
+    setIsFeedbackMode(true);
+    setError(null);
+    chunksRef.current = [];
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 },
+      });
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : 'audio/mp4';
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        stream.getTracks().forEach((track) => track.stop());
+
+        if (blob.size < 1000) {
+          setError('No audio detected. Please try again.');
+          setIsFeedbackMode(false);
+          return;
+        }
+
+        // Transcribe and store as feedback
+        try {
+          const result = await api.transcribeAudio(blob);
+          if (result.success && result.text) {
+            // Store feedback (we'll create an API endpoint for this)
+            await api.submitFeedback({
+              text: result.text,
+              userId: user?.id,
+              userName: user?.name || user?.email,
+              timestamp: new Date().toISOString(),
+            });
+            addNotification('success', 'Thank you for your feedback!');
+          } else {
+            addNotification('error', 'Could not transcribe feedback');
+          }
+        } catch (err) {
+          // Fallback: store locally
+          const feedbackList = JSON.parse(localStorage.getItem('voice-diary-feedback') || '[]');
+          feedbackList.push({
+            id: `feedback-${Date.now()}`,
+            audioUrl: URL.createObjectURL(blob),
+            timestamp: new Date().toISOString(),
+            userId: user?.id,
+            userName: user?.name || user?.email,
+          });
+          localStorage.setItem('voice-diary-feedback', JSON.stringify(feedbackList));
+          addNotification('info', 'Feedback saved locally');
+        }
+        setIsFeedbackMode(false);
+      };
+
+      mediaRecorder.start(1000);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      timerRef.current = setInterval(() => {
+        setRecordingDuration((d) => d + 1);
+      }, 1000);
+    } catch (err: any) {
+      setError('Could not start recording. Please try again.');
+      setIsFeedbackMode(false);
+    }
+  }, [user, addNotification]);
+
   return (
     <div className={`h-full flex flex-col ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
       <div className="flex-1 flex flex-col p-4 overflow-hidden">
@@ -404,11 +531,33 @@ export default function Record() {
 
         {/* Main Record Button */}
         <div className="flex-1 flex flex-col items-center justify-center">
+          {/* Category Hints - shown when project selected and not recording */}
+          {currentProjectId && !isRecording && (
+            <div className="mb-4">
+              <p className={`text-xs text-center mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                Topics to cover in your note:
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 max-w-xs">
+                {CATEGORY_HINTS.map((hint, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-sm`}
+                  >
+                    <span className={hint.color}>{hint.icon}</span>
+                    <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{hint.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p className={`text-base mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             {!currentProjectId
               ? 'Select a project to start recording'
               : isRecording
-              ? reRecordingNoteId
+              ? isFeedbackMode
+                ? 'Recording feedback... Tap to stop'
+                : reRecordingNoteId
                 ? 'Re-recording... Tap to stop'
                 : 'Recording... Tap to stop'
               : 'Tap to record a voice note'}
@@ -421,7 +570,9 @@ export default function Record() {
               !currentProjectId
                 ? 'bg-gray-400'
                 : isRecording
-                ? 'bg-red-500 animate-recording-pulse'
+                ? isFeedbackMode
+                  ? 'bg-purple-500 animate-recording-pulse'
+                  : 'bg-red-500 animate-recording-pulse'
                 : 'bg-primary-600 hover:bg-primary-700 active:scale-95'
             }`}
           >
@@ -433,9 +584,20 @@ export default function Record() {
           </button>
 
           {isRecording && (
-            <p className="text-3xl font-bold text-red-500 mt-6 tabular-nums">
+            <p className={`text-3xl font-bold mt-6 tabular-nums ${isFeedbackMode ? 'text-purple-500' : 'text-red-500'}`}>
               {formatDuration(recordingDuration)}
             </p>
+          )}
+
+          {/* Feedback Button */}
+          {currentProjectId && !isRecording && (
+            <button
+              onClick={startFeedbackRecording}
+              className={`mt-6 flex items-center gap-2 px-4 py-2 rounded-full ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'}`}
+            >
+              <MessageSquare size={16} />
+              <span className="text-sm font-medium">Give Feedback</span>
+            </button>
           )}
 
           {error && (
@@ -446,85 +608,137 @@ export default function Record() {
           )}
         </div>
 
-        {/* Project Notes */}
-        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-          <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            Project Notes ({allProjectNotes.length})
-          </h3>
+        {/* View and Edit Notes - Collapsible Section */}
+        {currentProjectId && (
+          <div className="mt-auto">
+            {/* Toggle Button */}
+            <button
+              onClick={() => setShowNotes(!showNotes)}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-2 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} shadow-sm`}
+            >
+              {showNotes ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+              <span className="font-medium">
+                View and Edit Notes {allProjectNotes.length > 0 && `(${allProjectNotes.length})`}
+              </span>
+            </button>
 
-          {!currentProjectId ? (
-            <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-              <p className="text-gray-400 text-sm">Select a project to see recordings</p>
-            </div>
-          ) : allProjectNotes.length === 0 ? (
-            <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-              <p className="text-gray-400 text-sm mb-3">No recordings yet</p>
-              {!hasExampleData() && (
-                <button
-                  onClick={() => {
-                    if (currentProjectId) {
-                      seedExampleData(currentProjectId, user?.id);
-                      addNotification('success', 'Loaded example data');
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700'}`}
-                >
-                  Load Example Data
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className={`rounded-xl overflow-hidden flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-              <div className="overflow-y-auto h-full max-h-64">
-                {sortedDates.map((date) => (
-                  <div key={date}>
-                    {/* Date Header */}
-                    <div className={`sticky top-0 px-4 py-2 text-xs font-semibold ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
-                      {date === today ? 'Today' : formatDate(date)}
-                    </div>
-                    {/* Notes for this date */}
-                    {notesByDate[date].map((note, index) => (
+            {/* Collapsible Notes Section */}
+            {showNotes && (
+              <div className="overflow-hidden flex flex-col" style={{ maxHeight: '40vh' }}>
+                {allProjectNotes.length === 0 ? (
+                  <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+                    <p className="text-gray-400 text-sm mb-3">No recordings yet</p>
+                    {!hasExampleData() && (
                       <button
-                        key={note.id}
-                        onClick={() => setSelectedNote(note)}
-                        className={`w-full flex items-center p-4 text-left transition-colors ${
-                          index < notesByDate[date].length - 1 ? (isDark ? 'border-b border-gray-800' : 'border-b border-gray-100') : ''
-                        } ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
+                        onClick={() => {
+                          if (currentProjectId) {
+                            seedExampleData(currentProjectId, user?.id);
+                            addNotification('success', 'Loaded example data');
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700'}`}
                       >
-                        {getStatusIcon(note.status)}
-                        <div className="flex-1 ml-3 min-w-0">
-                          <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {note.status === 'error' ? note.errorMessage || 'Error' : note.title || generateTitle(note.transcriptText)}
-                          </p>
-                          <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {formatTime(note.createdAt)} · {formatDuration(note.duration)}
-                            {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 ml-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleReRecord(note.id); }}
-                            disabled={isRecording}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
-                          >
-                            <RefreshCw size={16} className="text-blue-500" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}
-                            disabled={isRecording}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
-                          >
-                            <Trash2 size={16} className="text-red-500" />
-                          </button>
-                        </div>
+                        Load Example Data
                       </button>
-                    ))}
+                    )}
                   </div>
-                ))}
+                ) : (
+                  <div className={`rounded-xl overflow-hidden flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+                    <div className="overflow-y-auto h-full">
+                      {sortedDates.map((date) => (
+                        <div key={date}>
+                          {/* Date Header */}
+                          <div className={`sticky top-0 px-4 py-2 text-xs font-semibold ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                            {date === today ? 'Today' : formatDate(date)}
+                          </div>
+                          {/* Notes for this date */}
+                          {notesByDate[date].map((note, index) => (
+                            <div
+                              key={note.id}
+                              className={`p-4 ${
+                                index < notesByDate[date].length - 1 ? (isDark ? 'border-b border-gray-800' : 'border-b border-gray-100') : ''
+                              }`}
+                            >
+                              {editingNoteId === note.id ? (
+                                /* Editing Mode */
+                                <div>
+                                  <textarea
+                                    value={editedTranscript}
+                                    onChange={(e) => setEditedTranscript(e.target.value)}
+                                    rows={4}
+                                    autoFocus
+                                    className={`w-full p-3 rounded-lg text-sm ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'}`}
+                                  />
+                                  <div className="flex gap-2 mt-2">
+                                    <button
+                                      onClick={handleCancelEdit}
+                                      className={`flex-1 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'}`}
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => handleSaveEdit(note.id)}
+                                      className="flex-1 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white flex items-center justify-center gap-1"
+                                    >
+                                      <Save size={14} />
+                                      Save
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                /* View Mode */
+                                <div>
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      {getStatusIcon(note.status)}
+                                      <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {note.status === 'error' ? note.errorMessage || 'Error' : note.title || generateTitle(note.transcriptText)}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        onClick={() => handleStartEditing(note)}
+                                        disabled={isRecording || note.status !== 'complete'}
+                                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                                      >
+                                        <Edit3 size={14} className="text-primary-600" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleReRecord(note.id)}
+                                        disabled={isRecording}
+                                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                                      >
+                                        <RefreshCw size={14} className="text-blue-500" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteNote(note.id)}
+                                        disabled={isRecording}
+                                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                                      >
+                                        <Trash2 size={14} className="text-red-500" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <p className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    {note.cleanedTranscript || note.transcriptText || 'Processing...'}
+                                  </p>
+                                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    {formatTime(note.createdAt)} · {formatDuration(note.duration)}
+                                    {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Project Picker Modal */}
