@@ -47,6 +47,7 @@ export default function Record() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editedTranscript, setEditedTranscript] = useState('');
   const [isFeedbackMode, setIsFeedbackMode] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -417,16 +418,70 @@ export default function Record() {
     setEditedTranscript(note.cleanedTranscript || note.transcriptText || '');
   };
 
-  const handleSaveEdit = (noteId: string) => {
-    if (editedTranscript.trim()) {
+  const handleSaveEdit = async (noteId: string) => {
+    if (!editedTranscript.trim()) {
+      setEditingNoteId(null);
+      setEditedTranscript('');
+      return;
+    }
+
+    setIsSavingEdit(true);
+
+    try {
+      // Update the note text first
       updateVoiceNote(noteId, {
         transcriptText: editedTranscript,
         cleanedTranscript: editedTranscript,
+        status: 'processing',
       });
-      addNotification('success', 'Note updated');
+
+      // Clear old snippets for this note
+      clearSnippetsForNote(noteId);
+
+      // Re-process the edited transcript to update categories/summary
+      const existingSnippets = getSnippetsForDate(today, currentProjectId || undefined)
+        .filter(s => s.voiceNoteId !== noteId) // Exclude this note's old snippets
+        .map((s) => ({ category: s.category, content: s.content }));
+      const noteCount = getVoiceNotesForDate(today, currentProjectId || undefined).length;
+
+      try {
+        const processResult = await api.processVoiceNote(editedTranscript, existingSnippets, noteCount);
+
+        if (processResult.success) {
+          const noteUpdates: Partial<VoiceNote> = { status: 'complete' };
+          if (processResult.title) noteUpdates.title = processResult.title;
+          if (processResult.cleanedTranscript) noteUpdates.cleanedTranscript = processResult.cleanedTranscript;
+
+          // Add new snippets
+          if (processResult.newSnippets && processResult.newSnippets.length > 0) {
+            for (const snippet of processResult.newSnippets) {
+              addSnippet(noteId, snippet.category, snippet.content);
+            }
+          }
+
+          // Update daily summary
+          if (currentProjectId && processResult.summary) {
+            updateDailySummary(today, currentProjectId, processResult.summary, processResult.hasMinimumInfo || false, user?.id);
+          }
+
+          updateVoiceNote(noteId, noteUpdates);
+          addNotification('success', 'Note updated and re-categorized');
+        } else {
+          updateVoiceNote(noteId, { status: 'complete' });
+          addNotification('success', 'Note updated');
+        }
+      } catch (apiError) {
+        // API failed but we still saved the text
+        updateVoiceNote(noteId, { status: 'complete' });
+        addNotification('info', 'Note saved (re-categorization unavailable)');
+      }
+    } catch (err) {
+      addNotification('error', 'Failed to save edit');
+    } finally {
+      setIsSavingEdit(false);
+      setEditingNoteId(null);
+      setEditedTranscript('');
     }
-    setEditingNoteId(null);
-    setEditedTranscript('');
   };
 
   const handleCancelEdit = () => {
@@ -684,16 +739,27 @@ export default function Record() {
                                   <div className="flex gap-2 mt-2">
                                     <button
                                       onClick={handleCancelEdit}
-                                      className={`flex-1 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'}`}
+                                      disabled={isSavingEdit}
+                                      className={`flex-1 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'} disabled:opacity-50`}
                                     >
                                       Cancel
                                     </button>
                                     <button
                                       onClick={() => handleSaveEdit(note.id)}
-                                      className="flex-1 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white flex items-center justify-center gap-1"
+                                      disabled={isSavingEdit}
+                                      className="flex-1 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white flex items-center justify-center gap-1 disabled:opacity-50"
                                     >
-                                      <Save size={14} />
-                                      Save
+                                      {isSavingEdit ? (
+                                        <>
+                                          <Loader2 size={14} className="animate-spin" />
+                                          Saving...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Save size={14} />
+                                          Save
+                                        </>
+                                      )}
                                     </button>
                                   </div>
                                 </div>
