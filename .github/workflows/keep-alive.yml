@@ -2,8 +2,18 @@ name: Keep Backend Alive
 
 on:
   schedule:
-    # Run every 5 minutes to prevent Render cold starts
-    - cron: '*/5 * * * *'
+    # Run every 5 minutes during work hours only
+    # Pacific Time: 6am-4pm, Monday-Friday
+    #
+    # Cron uses UTC, so we convert:
+    #   6am PT = 1pm UTC (summer/PDT) or 2pm UTC (winter/PST)
+    #   4pm PT = 11pm UTC (summer/PDT) or 12am UTC (winter/PST)
+    #
+    # Using 13-23 UTC covers 6am-4pm PDT (summer)
+    # Winter (PST) will be 5am-3pm PT - close enough for construction hours
+    #
+    - cron: '*/5 13-23 * * 1-5'  # Every 5 min, 1pm-11pm UTC, Mon-Fri
+
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -12,5 +22,10 @@ jobs:
     steps:
       - name: Ping health endpoint
         run: |
-          curl -s -o /dev/null -w "%{http_code}" https://fieldconnect.onrender.com/health || true
-          echo "Pinged backend to keep it warm"
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://fieldconnect.onrender.com/health || echo "000")
+          echo "Health check response: $response"
+          if [ "$response" = "200" ]; then
+            echo "Backend is healthy and warm"
+          else
+            echo "Backend may be waking up or having issues"
+          fi
