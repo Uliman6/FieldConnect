@@ -1,132 +1,181 @@
-# Lessons Applied — Backend Starter Kit (v2)
+# FieldConnect
 
-This is a **local dev backend** that ingests your mobile exports (JSON + audio files) and prepares an async pipeline for:
-- transcription (audio -> text)
-- structured extraction (one recording -> full daily log fields)
-- future: search / alerts / Procore-ACC ingestion
+A full-stack construction daily log platform with voice-powered documentation, AI transcription, and intelligent insights.
 
-It is designed to work with your updated app behavior:
-- audio exports can include **previously recorded files across multiple days**, not only “today”
-- each export bundle is treated as **append-only + idempotent** (safe to re-ingest)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=flat&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
 
----
+## Overview
 
-## What you run this on (where to run the code)
+FieldConnect enables construction field workers to document their work using voice recordings. The platform automatically transcribes audio, extracts structured data, categorizes observations, and generates professional PDF reports.
 
-Run this **on your computer**, not inside Vibecode.
+### Key Features
 
-Recommended: a laptop/desktop with Docker installed.
-- macOS / Windows (Docker Desktop) / Linux (Docker Engine)
+- **Voice-First Documentation** - Record observations hands-free on job sites
+- **AI Transcription** - Automatic speech-to-text using OpenAI Whisper
+- **Smart Categorization** - AI-powered classification of events (safety, delays, quality, materials)
+- **Daily Log Generation** - Structured daily reports with tasks, visitors, equipment, and weather
+- **PDF Export** - Professional report generation for stakeholders
+- **Offline Support** - Works in low-connectivity environments with automatic sync
+- **Multi-Platform** - Web, iOS, and Android from a single codebase
 
----
+## Architecture
 
-## What’s in the stack (local dev)
-
-- API: FastAPI
-- DB: Postgres
-- Queue: Redis + RQ worker
-- Media: local disk under `./data/blobs/` (dev only)
-
----
-
-## Quick start
-
-1) Install Docker + Docker Compose
-2) Unzip this repo and open a terminal in the folder
-3) Start services:
-
-```bash
-docker compose up --build
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         CLIENTS                                  │
+├─────────────────┬─────────────────┬─────────────────────────────┤
+│  FieldConnect   │   Voice Diary   │     Maintenance Forms       │
+│  (Expo/RN Web)  │   (React/Vite)  │       (React/Vite)          │
+└────────┬────────┴────────┬────────┴──────────────┬──────────────┘
+         │                 │                        │
+         └─────────────────┼────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    NODE.JS BACKEND (Express)                     │
+│  • Authentication (JWT)    • Voice Processing                    │
+│  • Daily Logs CRUD         • PDF Generation                      │
+│  • Event Management        • File Uploads (Cloudinary)           │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐   ┌─────────────────┐   ┌─────────────────────┐
+│   PostgreSQL    │   │  OpenAI API     │   │  Intelligence       │
+│   (Railway)     │   │  (Whisper)      │   │  (Python/FastAPI)   │
+└─────────────────┘   └─────────────────┘   └─────────────────────┘
 ```
 
-4) Verify health:
-- http://localhost:8000/health
-- API docs: http://localhost:8000/docs
+## Project Structure
 
----
-
-## Your ingestion workflow (recommended)
-
-Each time you export from the app, you should have:
-- `..._with-audio-linkage.json` (or `..._all-data.json`)
-- `manifest.json`
-- `audio_pack.zip` (or a folder of `.m4a` files)
-
-### Option A: Bundle ingest (JSON + manifest + ZIP)
-Use the provided script (easiest):
-
-```bash
-python scripts/ingest_bundle.py --api http://localhost:8000   --export /path/to/lessons_applied_export_with-audio-linkage.json   --manifest /path/to/manifest.json   --zip /path/to/audio_pack.zip
+```
+├── Frontend/              # Main mobile/web app (Expo SDK 53)
+│   ├── src/app/          # File-based routing (Expo Router)
+│   ├── src/components/   # Reusable UI components
+│   └── src/lib/          # Utilities, stores, API clients
+│
+├── voice-diary/          # Simplified voice note app (Vite/React)
+│   └── src/              # Pages, components, state management
+│
+├── maintenance-forms/    # Equipment maintenance forms (Vite/React)
+│   └── src/              # Form pages and templates
+│
+├── node-backend/         # Express API server
+│   ├── src/controllers/  # Route handlers
+│   ├── src/services/     # Business logic (transcription, PDF)
+│   ├── src/routes/       # API route definitions
+│   └── prisma/           # Database schema and migrations
+│
+└── intelligence/         # Python analytics service (FastAPI)
+    ├── api/              # REST endpoints
+    ├── extraction/       # Data extraction pipelines
+    └── similarity/       # Pattern matching algorithms
 ```
 
-### Option B: JSON-only (if you don’t have audio yet)
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Mobile/Web** | Expo SDK 53, React Native | Cross-platform UI |
+| **Styling** | NativeWind, Tailwind CSS | Utility-first styling |
+| **State** | Zustand, React Query | Client state management |
+| **Backend** | Node.js, Express | REST API server |
+| **ORM** | Prisma | Type-safe database access |
+| **Database** | PostgreSQL | Primary data store |
+| **Auth** | JWT, bcrypt | Authentication |
+| **AI** | OpenAI Whisper | Speech-to-text |
+| **Analytics** | Python, FastAPI, Pandas | Data analysis |
+| **Storage** | Cloudinary | Media file storage |
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- PostgreSQL 16+
+- OpenAI API key
+
+### Installation
+
 ```bash
-python scripts/ingest_bundle.py --api http://localhost:8000   --export /path/to/lessons_applied_export_all-data.json
+# Clone the repository
+git clone https://github.com/Uliman6/FieldConnect.git
+cd FieldConnect/Backend
+
+# Install all dependencies
+npm run install:all
+
+# Set up environment variables
+cp node-backend/.env.example node-backend/.env
+# Edit .env with your database URL and API keys
+
+# Initialize database
+npm run db:setup
+
+# Start development servers
+npm run dev
 ```
 
-### Option C: If your audio is NOT zipped (you have loose .m4a files)
-Upload them individually (still automated) using:
+### Environment Variables
 
-```bash
-python scripts/upload_audio_from_manifest.py --api http://localhost:8000   --manifest /path/to/manifest.json   --audio-dir /path/to/audio_files_folder
+```env
+# node-backend/.env
+DATABASE_URL=postgresql://user:password@localhost:5432/fieldconnect
+JWT_SECRET=your-secret-key
+OPENAI_API_KEY=your-openai-key
+CLOUDINARY_URL=cloudinary://...
 ```
 
----
+## API Endpoints
 
-## What happens after ingest
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/login` | User authentication |
+| `GET` | `/api/projects` | List user projects |
+| `POST` | `/api/daily-logs` | Create daily log |
+| `POST` | `/api/events` | Log an event/observation |
+| `POST` | `/api/transcription/transcribe` | Transcribe audio file |
+| `POST` | `/api/voice-diary/process` | Process voice note |
+| `GET` | `/api/reports/:id/pdf` | Generate PDF report |
 
-- Projects / Daily Logs / Events are upserted into Postgres
-- Each audio file becomes an `audio_blobs` row
-- A `processing_jobs` row is created and queued for transcription
+## Deployment
 
-By default, transcription jobs will end as `needs_config` until you wire up a provider.
+### Frontend (Vercel)
+- Auto-deploys from `main` branch
+- Build command: `npx expo export --platform web`
 
----
+### Backend (Render)
+- Docker-based deployment
+- Root directory: `node-backend`
 
-## Hooking up transcription (later)
+### Database (Railway)
+- Managed PostgreSQL instance
 
-Set in `docker-compose.yml`:
-- `OPENAI_API_KEY`
+## Development
 
-Then implement the provider call in:
-- `app/services/transcription.py`
+```bash
+# Run backend only
+npm run dev:backend
 
-(We keep this vendor-agnostic so you can choose OpenAI / Deepgram / AssemblyAI / self-hosted.)
+# Run frontend only
+npm run dev:frontend
 
----
+# Run database migrations
+npm run db:setup
 
-## The “one voice recording -> full daily log” pipeline (next milestone)
+# Open Prisma Studio
+cd node-backend && npx prisma studio
+```
 
-This backend is structured for the flow:
+## License
 
-1) Upload a **daily master recording** (entity_type=`daily_log`, section_key=`daily_master`)
-2) Worker transcribes it
-3) Worker runs extraction to output a full structured daily log payload
-4) Store extracted fields + confidence + missing fields
+MIT
 
-The extraction stub lives in:
-- `app/services/parsing.py`
+## Author
 
-Next, we’ll implement a strict schema-guided extractor.
-
----
-
-## Inspect data locally
-
-After ingest, you can list records:
-
-- http://localhost:8000/projects
-- http://localhost:8000/daily-logs
-- http://localhost:8000/events
-- http://localhost:8000/audio-blobs
-- http://localhost:8000/jobs
-
----
-
-## Next steps (future phases)
-
-- Store blobs in S3/GCS + signed URLs
-- Add RBAC + org/project access
-- Add vector search (pgvector) for “has this happened before?”
-- Add alert rules engine
-- Add Procore/ACC ingestion workers
+Built by [Uliman6](https://github.com/Uliman6)

@@ -143,6 +143,236 @@ def strip_noise(text: str) -> str:
     return result
 
 
+def extract_clean_question(text: str) -> str:
+    """
+    Extract the actual question/issue from RFI text for display.
+
+    This is more aggressive than strip_noise() - it removes all
+    reference headers, RFI identifiers, and procedural language
+    to extract just the core question being asked.
+
+    Use this for:
+    - Displaying RFI summaries to users
+    - CSV exports for review
+    - Search result snippets
+
+    Args:
+        text: Raw RFI text (question_text or raw_text)
+
+    Returns:
+        Cleaned question text suitable for display
+    """
+    if not text:
+        return ""
+
+    result = text
+
+    # Remove ALL SLP1 - RFI patterns wherever they appear
+    # Pattern: SLP1 - RFI0123 - Title or SLP1 - RFI 0123 - Title
+    # These add no value for question display
+    result = re.sub(
+        r'SLP1\s*-\s*RFI[- ]?\d+(?:\.\d+)?(?:\s*-[^:.\n]+)?:?\s*',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Reference: SLP1 - RFI... pattern (captures to Question:)
+    result = re.sub(
+        r'Reference:\s*SLP1\s*-\s*RFI[^Q]*(?=Question:)',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Remove standalone RFI-XXXX patterns at start with various prefixes/suffixes
+    # Handles: "RFI 0132 -", "SVOP RFI-086", "RFI-319 DPR Markup;", etc.
+    result = re.sub(
+        r'^,?\s*(?:DPR\s+|SVOP\s+)?RFI[- ]?\d+(?:\.\d+)?(?:\s+(?:DPR\s+)?(?:Markup|Response))?[;]?(?:\s*[-:][^:.\n]+)?:?\s*',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Remove "BLDGSITE -" and "Onsite -" prefixes
+    result = re.sub(
+        r'^(?:BLDGSITE|Onsite|Offsite)\s*[-–]\s*',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Remove mid-text "RFI XXXX shows" or "per RFI XXXX" patterns - but keep the rest
+    result = re.sub(
+        r'\b(?:per\s+)?RFI[- ]?\d+(?:\.\d+)?\s+(?:shows?|states?|indicates?)\s+',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Remove all types of reference headers with their content up to "Question:" if present
+    # Handles: Reference:, Reference Drawing:, Referenced Documents:, Reference Details:, etc.
+    ref_to_question = re.search(
+        r'^(?:Reference[ds]?(?:\s+(?:Drawing|Detail|Document|Sheet|Attachment)s?)?|Ref|REF):\s*.+?(?=Question:)',
+        result, flags=re.IGNORECASE | re.DOTALL
+    )
+    if ref_to_question:
+        result = result[ref_to_question.end():]
+
+    # Remove remaining reference headers at the start (all variants)
+    result = re.sub(
+        r'^(?:Reference[ds]?(?:\s+(?:Drawing|Detail|Document|Sheet|Attachment)s?)?|Ref|REF):\s*',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Also remove mid-text reference lines that start on their own line
+    result = re.sub(
+        r'\n(?:Reference[ds]?(?:\s+(?:Drawing|Detail|Document|Sheet|Attachment)s?)?|Ref):\s*[^\n]+',
+        '\n', result, flags=re.IGNORECASE
+    )
+
+    # Remove sheet references at the very start (A2.01, S5.3, E1.00, etc.)
+    result = re.sub(
+        r'^[A-Z]\d+\.\d+[A-Z]?(?:\s*,\s*[A-Z]\d+\.\d+[A-Z]?)*\s*',
+        '', result
+    )
+
+    # Remove "Offsite" or "Onsite" prefixes with codes (e.g., "Offsite C6.6")
+    result = re.sub(
+        r'^(?:Offsite|Onsite)\s+[A-Z]\d+(?:\.\d+)?\s*',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Remove "Site - Offsite Current Set:" boilerplate
+    result = re.sub(
+        r'^Site\s*[-–]\s*(?:Offsite|Onsite)?\s*(?:Current\s+Set:?)?\s*',
+        '', result, flags=re.IGNORECASE
+    )
+
+    # Remove standalone drawing codes like "C6.6" or "M-101" at the start
+    result = re.sub(
+        r'^[A-Z]-?\d+(?:\.\d+)?\s+',
+        '', result
+    )
+
+    # Find "Question:" marker and extract from there
+    question_match = re.search(r'Question:\s*(.+)', result, flags=re.IGNORECASE | re.DOTALL)
+    if question_match:
+        result = question_match.group(1)
+
+    # If there's a "Background:" followed by "Question:", remove Background section
+    bg_then_q = re.search(
+        r'Background:.*?Question:\s*',
+        result, flags=re.IGNORECASE | re.DOTALL
+    )
+    if bg_then_q:
+        result = result[bg_then_q.end():]
+
+    # Remove "Post on:" / "POST TO:" lines
+    result = re.sub(r'(?:Post on|POST TO):\s*[^\n]+\n?', '', result, flags=re.IGNORECASE)
+
+    # Remove "Please see attached" type endings
+    result = re.sub(r'\s*Please see attached\.?\s*$', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'\s*See attached\.?\s*$', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'\s*Please review the attached\.?\s*$', '', result, flags=re.IGNORECASE)
+
+    # Remove common procedural starts (but keep the actual content)
+    result = re.sub(r'^Please confirm (?:it is )?acceptable to\s+', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'^Please confirm that\s+', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'^Please confirm\s+', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'^Please advise\s+', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'^Please review\s+', '', result, flags=re.IGNORECASE)
+
+    # Remove working days / metadata lines that sometimes appear
+    result = re.sub(
+        r'Working Days Date Created:.*?(?:Reason|$)',
+        '', result, flags=re.IGNORECASE | re.DOTALL
+    )
+
+    # Clean up whitespace
+    result = re.sub(r'\s+', ' ', result)
+    result = result.strip()
+
+    # If we stripped too much (less than 20 chars) but original had content,
+    # fall back to basic cleaning
+    if len(result) < 20 and len(text) > 30:
+        # Just remove Reference header and normalize
+        fallback = re.sub(
+            r'^(?:Reference|Ref|Referenced Documents?):[^Q]*(?:Question:)?\s*',
+            '', text, flags=re.IGNORECASE
+        )
+        fallback = re.sub(r'\s+', ' ', fallback).strip()
+        if len(fallback) > len(result):
+            result = fallback
+
+    return result
+
+
+def is_revision_of(ref1: str, ref2: str) -> bool:
+    """
+    Check if two RFI references are revisions of the same RFI.
+
+    Examples of revisions (should return True):
+    - RFI-0030 and RFI-0030.1
+    - RFI-0030.1 and RFI-0030.2
+    - RFI-133 and RFI-133.4
+
+    Examples of different RFIs (should return False):
+    - RFI-0030 and RFI-0031
+    - RFI-30 and RFI-130
+
+    Args:
+        ref1: First RFI reference (e.g., "RFI-0030.1")
+        ref2: Second RFI reference (e.g., "RFI-0030")
+
+    Returns:
+        True if they are revisions of the same base RFI
+    """
+    if not ref1 or not ref2:
+        return False
+
+    # Normalize to lowercase
+    r1 = ref1.lower().strip()
+    r2 = ref2.lower().strip()
+
+    # If identical, they're the same (not a "match" scenario)
+    if r1 == r2:
+        return True
+
+    # Extract base RFI number (before any .revision suffix)
+    # Pattern: RFI-0030.1 -> RFI-0030, RFI-133.4 -> RFI-133
+    def get_base(ref: str) -> str:
+        # Remove revision suffix (.1, .2, etc.)
+        match = re.match(r'^(rfi-?\d+)(?:\.\d+)?$', ref, re.IGNORECASE)
+        if match:
+            return match.group(1).lower()
+        return ref.lower()
+
+    base1 = get_base(r1)
+    base2 = get_base(r2)
+
+    return base1 == base2
+
+
+def filter_revision_matches(
+    query_ref: str,
+    candidates: list[dict],
+    ref_field: str = "source_ref"
+) -> list[dict]:
+    """
+    Filter out candidates that are revisions of the query RFI.
+
+    Use this after similarity search to remove matches that are
+    just different revisions of the same RFI (e.g., RFI-0030.1
+    matching RFI-0030).
+
+    Args:
+        query_ref: The query RFI reference (e.g., "RFI-0030.1")
+        candidates: List of candidate dicts with source_ref field
+        ref_field: Field name containing the RFI reference
+
+    Returns:
+        Filtered list with revisions removed
+    """
+    if not query_ref:
+        return candidates
+
+    return [
+        c for c in candidates
+        if not is_revision_of(query_ref, c.get(ref_field, ""))
+    ]
+
+
 def extract_drawing_refs(text: str) -> list[str]:
     """Extract drawing/detail references from text."""
     refs = []

@@ -476,6 +476,234 @@ class FullHybridRetriever:
 
 
 # =============================================================================
+# APPROACH 6: Abstraction-Based (New - uses LLM-extracted key terms and issue types)
+# =============================================================================
+
+class AbstractionRetriever:
+    """
+    Retrieval using LLM-abstracted key terms and issue types.
+
+    This approach uses the abstracted_summary field which contains:
+    - scope_summary: Clean 1-2 sentence summary of the issue
+    - key_terms: Technical terms extracted by LLM
+    - issue_type: Categorized issue type
+    """
+
+    def __init__(
+        self,
+        weights: Optional[dict] = None
+    ):
+        self.weights = weights or {
+            "semantic": 0.30,      # Embedding similarity (from scope_summary)
+            "key_terms": 0.25,     # Abstracted key terms matching
+            "issue_type": 0.15,    # Issue type matching
+            "phase": 0.12,         # Phase proximity
+            "keyword": 0.10,       # Legacy keyword fallback
+            "entity": 0.08,        # Entity overlap
+        }
+        self.doc_ids = []
+        self.doc_embeddings = []
+        self.doc_abstractions = []  # List of abstraction dicts
+        self.doc_metadata = {}
+        self.keyword_retriever = KeywordRetriever()
+
+    def fit(
+        self,
+        documents: list[dict],
+        text_field: str = "text",
+        embedding_field: str = "embedding"
+    ):
+        """Fit on documents with abstractions."""
+        self.doc_ids = []
+        self.doc_embeddings = []
+        self.doc_abstractions = []
+        self.doc_metadata = {}
+
+        # Also fit keyword retriever for fallback
+        self.keyword_retriever.fit(documents, text_field)
+
+        for doc in documents:
+            doc_id = doc.get("id")
+            emb = doc.get(embedding_field)
+            abstraction = doc.get("abstraction") or {}
+
+            if emb is not None and len(emb) > 0:
+                self.doc_ids.append(doc_id)
+                self.doc_embeddings.append(np.array(emb))
+                self.doc_abstractions.append(abstraction)
+                self.doc_metadata[doc_id] = {
+                    "phase": doc.get("phase"),
+                    "trade": doc.get("trade"),
+                }
+
+    def _key_terms_score(self, query_terms: list[str], doc_abstraction: dict) -> float:
+        """Score based on key terms overlap."""
+        if not query_terms:
+            return 0.0
+
+        doc_terms = doc_abstraction.get("key_terms", [])
+        if not doc_terms:
+            return 0.0
+
+        query_set = {t.lower().strip() for t in query_terms}
+        doc_set = {t.lower().strip() for t in doc_terms}
+
+        # Exact matches
+        exact_matches = query_set & doc_set
+
+        # Partial matches (one contains the other)
+        partial_count = 0
+        for qt in query_set - exact_matches:
+            for dt in doc_set - exact_matches:
+                if qt in dt or dt in qt:
+                    partial_count += 0.7
+                    break
+
+        total_matches = len(exact_matches) + partial_count
+
+        if total_matches == 0:
+            return 0.0
+        elif total_matches < 1:
+            return 0.35
+        elif total_matches < 2:
+            return 0.5
+        elif total_matches < 3:
+            return 0.75
+        else:
+            return min(1.0, 0.85 + (total_matches - 3) * 0.05)
+
+    def _issue_type_score(self, query_type: str, doc_abstraction: dict) -> float:
+        """Score based on issue type matching."""
+        if not query_type:
+            return 0.5
+
+        doc_type = doc_abstraction.get("issue_type", "general")
+        if not doc_type:
+            return 0.5
+
+        query_type = query_type.lower().strip()
+        doc_type = doc_type.lower().strip()
+
+        if query_type == doc_type:
+            return 1.0
+
+        # Related issue types
+        related = {
+            "dimension": ["dimension_clarification", "missing_information", "missing_info"],
+            "dimension_clarification": ["dimension", "missing_information", "missing_info"],
+            "material": ["material_substitution", "installation_method"],
+            "material_substitution": ["material", "installation_method"],
+            "detail_conflict": ["dimension", "missing_information", "coordination"],
+            "coordination": ["detail_conflict", "installation_method"],
+            "confirmation": ["dimension", "material", "installation_method"],
+            "remediation": ["detail_conflict", "coordination"],
+            "installation_method": ["material", "coordination"],
+            "installation": ["installation_method", "material"],
+        }
+
+        if doc_type in related.get(query_type, []):
+            return 0.7
+        if query_type in related.get(doc_type, []):
+            return 0.7
+
+        return 0.3
+
+    def _phase_score(self, query_phase: Optional[str], doc_phase: Optional[str]) -> float:
+        """Score based on construction phase proximity."""
+        if not query_phase or not doc_phase:
+            return 0.5
+
+        phases = [
+            "preconstruction", "sitework", "foundation", "structure",
+            "envelope", "mep_rough_in", "interior_finishes",
+            "mep_trim_out", "commissioning", "closeout"
+        ]
+
+        try:
+            q_idx = phases.index(query_phase)
+            d_idx = phases.index(doc_phase)
+            distance = abs(q_idx - d_idx)
+
+            if distance == 0:
+                return 1.0
+            elif distance == 1:
+                return 0.85
+            elif distance == 2:
+                return 0.6
+            else:
+                return max(0.2, 1.0 - distance * 0.15)
+        except ValueError:
+            return 0.5
+
+    def rank(
+        self,
+        query_text: str,
+        query_embedding: Optional[list[float]] = None,
+        query_key_terms: Optional[list[str]] = None,
+        query_issue_type: Optional[str] = None,
+        query_phase: Optional[str] = None,
+        top_k: int = 20
+    ) -> list[tuple[str, float, dict]]:
+        """
+        Rank using abstraction-based signals.
+
+        Returns:
+            List of (doc_id, final_score, score_breakdown) tuples
+        """
+        if not self.doc_ids:
+            return []
+
+        # Get keyword scores as fallback
+        keyword_results = dict(self.keyword_retriever.rank(query_text, top_k=100))
+
+        # Compute scores for each document
+        ranked = []
+        query_vec = np.array(query_embedding) if query_embedding else None
+
+        for idx, doc_id in enumerate(self.doc_ids):
+            # Semantic score
+            if query_vec is not None:
+                doc_emb = self.doc_embeddings[idx]
+                semantic_score = cosine_similarity(query_vec, doc_emb)
+            else:
+                semantic_score = 0.0
+
+            # Abstraction-based scores
+            doc_abstraction = self.doc_abstractions[idx]
+            key_terms_score = self._key_terms_score(query_key_terms or [], doc_abstraction)
+            issue_type_score = self._issue_type_score(query_issue_type or "", doc_abstraction)
+
+            # Phase score
+            doc_phase = self.doc_metadata.get(doc_id, {}).get("phase")
+            phase_score = self._phase_score(query_phase, doc_phase)
+
+            # Keyword fallback
+            keyword_score = keyword_results.get(doc_id, 0)
+
+            # Weighted combination
+            final_score = (
+                self.weights.get("semantic", 0) * semantic_score +
+                self.weights.get("key_terms", 0) * key_terms_score +
+                self.weights.get("issue_type", 0) * issue_type_score +
+                self.weights.get("phase", 0) * phase_score +
+                self.weights.get("keyword", 0) * keyword_score
+            )
+
+            breakdown = {
+                "semantic": semantic_score,
+                "key_terms": key_terms_score,
+                "issue_type": issue_type_score,
+                "phase": phase_score,
+                "keyword": keyword_score,
+            }
+
+            ranked.append((doc_id, final_score, breakdown))
+
+        ranked.sort(key=lambda x: x[1], reverse=True)
+        return ranked[:top_k]
+
+
+# =============================================================================
 # Factory function to get retriever by name
 # =============================================================================
 
@@ -484,7 +712,7 @@ def get_retriever(name: str, **kwargs):
     Get a retriever instance by name.
 
     Args:
-        name: One of 'bm25', 'embedding', 'keyword', 'hybrid', 'full_hybrid'
+        name: One of 'bm25', 'embedding', 'keyword', 'hybrid', 'full_hybrid', 'abstraction'
         **kwargs: Passed to retriever constructor
     """
     retrievers = {
@@ -493,6 +721,7 @@ def get_retriever(name: str, **kwargs):
         "keyword": KeywordRetriever,
         "hybrid": HybridRetriever,
         "full_hybrid": FullHybridRetriever,
+        "abstraction": AbstractionRetriever,
     }
 
     if name not in retrievers:

@@ -20,7 +20,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from db import get_pool, close_db
-from evaluation.approaches import BM25, EmbeddingRetriever, KeywordRetriever, HybridRetriever, FullHybridRetriever
+from evaluation.approaches import BM25, EmbeddingRetriever, KeywordRetriever, HybridRetriever, FullHybridRetriever, AbstractionRetriever
+from extraction.abstraction import abstract_rule_based, abstraction_to_json
 
 
 # =============================================================================
@@ -154,7 +155,7 @@ def extract_ground_truth(task: dict) -> tuple[set[str], set[str], dict[str, floa
 # =============================================================================
 
 async def load_corpus(pool) -> list[dict]:
-    """Load all items from database for retrieval."""
+    """Load all items from database for retrieval, including abstractions."""
     async with pool.acquire() as conn:
         rows = await conn.fetch("""
             SELECT
@@ -162,12 +163,30 @@ async def load_corpus(pool) -> list[dict]:
                 COALESCE(question_text, normalized_text, raw_text) as text,
                 embedding,
                 project_phase as phase,
-                trade_category as trade
+                trade_category as trade,
+                abstracted_summary
             FROM intelligence.items
             WHERE (question_text IS NOT NULL OR normalized_text IS NOT NULL)
         """)
 
-    return [dict(row) for row in rows]
+    corpus = []
+    for row in rows:
+        doc = dict(row)
+        # Parse abstraction JSON if present
+        abstraction = row.get("abstracted_summary")
+        if abstraction and isinstance(abstraction, str):
+            try:
+                import json
+                doc["abstraction"] = json.loads(abstraction)
+            except:
+                doc["abstraction"] = {}
+        elif abstraction and isinstance(abstraction, dict):
+            doc["abstraction"] = abstraction
+        else:
+            doc["abstraction"] = {}
+        corpus.append(doc)
+
+    return corpus
 
 
 async def run_evaluation():
@@ -245,6 +264,17 @@ async def run_evaluation():
         full_hybrid.fit(corpus_with_embeddings)
         print("  - Full Hybrid (all signals): ready")
 
+        # Filter to documents with abstractions for abstraction-based approach
+        corpus_with_abstractions = [
+            d for d in corpus_with_embeddings
+            if d.get("abstraction") and d["abstraction"].get("key_terms")
+        ]
+        print(f"  Documents with abstractions: {len(corpus_with_abstractions)}")
+
+        abstraction_retriever = AbstractionRetriever()
+        abstraction_retriever.fit(corpus_with_abstractions)
+        print("  - Abstraction (key_terms + issue_type): ready")
+
         # Evaluate each approach
         print("\n" + "=" * 70)
         print("EVALUATION RESULTS")
@@ -256,6 +286,7 @@ async def run_evaluation():
             "Embeddings": ("embedding", embedding_retriever),
             "Hybrid (BM25+Emb)": ("hybrid", hybrid),
             "Full Hybrid": ("full_hybrid", full_hybrid),
+            "Abstraction": ("abstraction", abstraction_retriever),
         }
 
         results = {}
@@ -307,6 +338,26 @@ async def run_evaluation():
                             query_emb = doc["embedding"]
                             break
                     ranked = retriever.rank(query_text, query_emb, query_phase, top_k=50)
+                    retrieved = [doc_id for doc_id, _, _ in ranked]
+                elif approach_type == "abstraction":
+                    # Get query embedding and abstraction
+                    query_emb = None
+                    query_abstraction = None
+                    query_phase = task["query"].get("phase")
+                    for doc in corpus_with_abstractions:
+                        if doc["id"] == query_id:
+                            query_emb = doc["embedding"]
+                            query_abstraction = doc.get("abstraction", {})
+                            break
+                    # If query not in corpus, generate abstraction from text
+                    if query_abstraction is None:
+                        abs_result = abstract_rule_based(query_text)
+                        query_abstraction = abstraction_to_json(abs_result)
+                    query_key_terms = query_abstraction.get("key_terms", [])
+                    query_issue_type = query_abstraction.get("issue_type", "general")
+                    ranked = retriever.rank(
+                        query_text, query_emb, query_key_terms, query_issue_type, query_phase, top_k=50
+                    )
                     retrieved = [doc_id for doc_id, _, _ in ranked]
 
                 # Filter to candidates that were in this task
