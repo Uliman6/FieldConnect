@@ -396,17 +396,21 @@ export default function Record() {
     }
   };
 
-  // Category icons for the record page hints
+  // Category icons for the record page hints - categoryKey maps to actual snippet categories
   const CATEGORY_HINTS = [
-    { icon: <CheckCircle2 size={18} />, label: 'Work Done', color: 'text-green-500' },
-    { icon: <ListTodo size={18} />, label: 'To Do', color: 'text-amber-500' },
-    { icon: <Shield size={18} />, label: 'Safety', color: 'text-red-500' },
-    { icon: <ArrowRight size={18} />, label: 'Follow-up', color: 'text-pink-500' },
-    { icon: <Users size={18} />, label: 'Team', color: 'text-cyan-500' },
-    { icon: <Truck size={18} />, label: 'Logistics', color: 'text-blue-500' },
-    { icon: <Package size={18} />, label: 'Materials', color: 'text-stone-500' },
-    { icon: <AlertCircle size={18} />, label: 'Issues', color: 'text-red-500' },
+    { icon: <CheckCircle2 size={18} />, label: 'Work Done', categoryKey: 'Work Completed', color: 'text-green-500', bgActive: 'bg-green-100 dark:bg-green-900/40' },
+    { icon: <ListTodo size={18} />, label: 'To Do', categoryKey: 'Work To Be Done', color: 'text-amber-500', bgActive: 'bg-amber-100 dark:bg-amber-900/40' },
+    { icon: <Shield size={18} />, label: 'Safety', categoryKey: 'Safety', color: 'text-red-500', bgActive: 'bg-red-100 dark:bg-red-900/40' },
+    { icon: <ArrowRight size={18} />, label: 'Follow-up', categoryKey: 'Follow-up Items', color: 'text-pink-500', bgActive: 'bg-pink-100 dark:bg-pink-900/40' },
+    { icon: <Users size={18} />, label: 'Team', categoryKey: 'Team', color: 'text-cyan-500', bgActive: 'bg-cyan-100 dark:bg-cyan-900/40' },
+    { icon: <Truck size={18} />, label: 'Logistics', categoryKey: 'Logistics', color: 'text-blue-500', bgActive: 'bg-blue-100 dark:bg-blue-900/40' },
+    { icon: <Package size={18} />, label: 'Materials', categoryKey: 'Materials', color: 'text-stone-500', bgActive: 'bg-stone-100 dark:bg-stone-900/40' },
+    { icon: <AlertCircle size={18} />, label: 'Issues', categoryKey: 'Issues', color: 'text-red-500', bgActive: 'bg-red-100 dark:bg-red-900/40' },
   ];
+
+  // Get today's snippets to check which categories are covered
+  const todaySnippets = getSnippetsForDate(today, currentProjectId || undefined);
+  const coveredCategories = new Set(todaySnippets.map(s => s.category));
 
   const handleStartEditing = (note: VoiceNote) => {
     setEditingNoteId(note.id);
@@ -510,7 +514,7 @@ export default function Record() {
 
   return (
     <div className={`h-full flex flex-col ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
-      <div className="flex-1 flex flex-col p-4 overflow-hidden">
+      <div className="flex-1 flex flex-col p-4 overflow-y-auto">
         {/* Project Selector */}
         <button
           onClick={() => setShowProjectPicker(true)}
@@ -538,15 +542,23 @@ export default function Record() {
                 Topics to cover in your note:
               </p>
               <div className="flex flex-wrap justify-center gap-2 max-w-xs">
-                {CATEGORY_HINTS.map((hint, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-sm`}
-                  >
-                    <span className={hint.color}>{hint.icon}</span>
-                    <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{hint.label}</span>
-                  </div>
-                ))}
+                {CATEGORY_HINTS.map((hint, idx) => {
+                  const isCovered = coveredCategories.has(hint.categoryKey as any);
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full shadow-sm transition-all ${
+                        isCovered
+                          ? hint.bgActive + ' ring-2 ring-offset-1 ' + (isDark ? 'ring-offset-black' : 'ring-offset-gray-50') + ' ring-current'
+                          : isDark ? 'bg-gray-800 opacity-50' : 'bg-white opacity-60'
+                      }`}
+                    >
+                      <span className={hint.color}>{hint.icon}</span>
+                      <span className={`text-xs font-medium ${isCovered ? (isDark ? 'text-white' : 'text-gray-900') : (isDark ? 'text-gray-400' : 'text-gray-500')}`}>{hint.label}</span>
+                      {isCovered && <Check size={12} className={hint.color} />}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
