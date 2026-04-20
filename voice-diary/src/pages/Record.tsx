@@ -261,14 +261,42 @@ export default function Record() {
           }
 
           updateVoiceNote(noteId, noteUpdates);
+          
+          // Save to backend for admin visibility
+          api.saveEntry({
+            projectId: currentProjectId || undefined,
+            projectName: currentProject?.name,
+            transcriptText: cleanedText,
+            cleanedText: processResult.cleanedTranscript || cleanedText,
+            category: processResult.newSnippets?.[0]?.category,
+          });
+          
           const snippetCount = processResult.newSnippets?.length || 0;
           addNotification('info', snippetCount > 0 ? `Added ${snippetCount} items` : 'Note saved');
         } else {
           updateVoiceNote(noteId, { status: 'complete' });
+          
+          // Save to backend even without AI processing
+          api.saveEntry({
+            projectId: currentProjectId || undefined,
+            projectName: currentProject?.name,
+            transcriptText: cleanedText,
+            cleanedText: cleanedText,
+          });
+          
           addNotification('success', 'Note saved');
         }
       } catch (apiError: any) {
         updateVoiceNote(noteId, { status: 'complete' });
+        
+        // Save to backend even if AI fails
+        api.saveEntry({
+          projectId: currentProjectId || undefined,
+          projectName: currentProject?.name,
+          transcriptText: cleanedText,
+          cleanedText: cleanedText,
+        });
+        
         addNotification('info', 'Note saved (categorization unavailable)');
       }
     } catch (err: any) {

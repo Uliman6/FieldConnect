@@ -185,6 +185,27 @@ class ApiClient {
     const response = await this.client.get('/voice-diary/admin/entries');
     return response.data;
   }
+
+  // ============================================
+  // VOICE DIARY ENTRIES (sync to backend)
+  // ============================================
+
+  async saveEntry(data: {
+    projectId?: string;
+    projectName?: string;
+    transcriptText: string;
+    cleanedText?: string;
+    category?: string;
+  }): Promise<{ success: boolean; id?: string }> {
+    try {
+      const response = await this.client.post('/voice-diary/entry', data);
+      return response.data;
+    } catch (err) {
+      // Silently fail - local storage is the backup
+      console.error('[api] Failed to save entry to backend:', err);
+      return { success: false };
+    }
+  }
 }
 
 export const api = new ApiClient();
