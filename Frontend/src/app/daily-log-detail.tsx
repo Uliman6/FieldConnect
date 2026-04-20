@@ -345,8 +345,8 @@ function EditTaskModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
-          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[80%]" onPress={(e) => e.stopPropagation()}>
-            <ScrollView className="p-6">
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[90%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6 flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900 dark:text-white">
                   {isNew ? 'Add Task' : 'Edit Task'}
@@ -372,7 +372,6 @@ function EditTaskModal({
                 </Text>
               </Pressable>
             </ScrollView>
-            <View className="h-8" />
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
@@ -426,8 +425,8 @@ function EditIssueModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
-          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[80%]" onPress={(e) => e.stopPropagation()}>
-            <ScrollView className="p-6">
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[90%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6 flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900 dark:text-white">
                   {isNew ? 'Add Issue' : 'Edit Issue'}
@@ -466,7 +465,6 @@ function EditIssueModal({
                 </Text>
               </Pressable>
             </ScrollView>
-            <View className="h-8" />
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
@@ -514,8 +512,8 @@ function EditVisitorModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
-          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
-            <View className="p-6">
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[90%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6 flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900 dark:text-white">
                   {isNew ? 'Add Visitor' : 'Edit Visitor'}
@@ -533,8 +531,7 @@ function EditVisitorModal({
                   {isNew ? 'Add Visitor' : 'Save Changes'}
                 </Text>
               </Pressable>
-            </View>
-            <View className="h-8" />
+            </ScrollView>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
@@ -587,8 +584,8 @@ function EditEquipmentModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
-          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
-            <View className="p-6">
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[90%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6 flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900 dark:text-white">
                   {isNew ? 'Add Equipment' : 'Edit Equipment'}
@@ -612,8 +609,7 @@ function EditEquipmentModal({
                   {isNew ? 'Add Equipment' : 'Save Changes'}
                 </Text>
               </Pressable>
-            </View>
-            <View className="h-8" />
+            </ScrollView>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
@@ -670,8 +666,8 @@ function EditMaterialModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
-          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
-            <View className="p-6">
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[90%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6 flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900 dark:text-white">
                   {isNew ? 'Add Material' : 'Edit Material'}
@@ -696,8 +692,7 @@ function EditMaterialModal({
                   {isNew ? 'Add Material' : 'Save Changes'}
                 </Text>
               </Pressable>
-            </View>
-            <View className="h-8" />
+            </ScrollView>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
@@ -748,8 +743,8 @@ function EditInspectionModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <Pressable className="flex-1 bg-black/50 justify-end" onPress={onClose}>
-          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl" onPress={(e) => e.stopPropagation()}>
-            <View className="p-6">
+          <Pressable className="bg-white dark:bg-gray-800 rounded-t-3xl max-h-[90%]" onPress={(e) => e.stopPropagation()}>
+            <ScrollView className="p-6 flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900 dark:text-white">
                   {isNew ? 'Add Inspection' : 'Edit Inspection'}
@@ -786,8 +781,7 @@ function EditInspectionModal({
                   {isNew ? 'Add Inspection' : 'Save Changes'}
                 </Text>
               </Pressable>
-            </View>
-            <View className="h-8" />
+            </ScrollView>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>

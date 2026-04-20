@@ -124,12 +124,12 @@ class PDFGeneratorService {
     doc.rect(doc.x, doc.y, 512, 80).stroke();
 
     const boxY = doc.y + 10;
-    doc.text(`Project: ${project.name}`, 60, boxY);
-    doc.text(`Project #: ${project.number || 'N/A'}`, 350, boxY);
-    doc.text(`Address: ${project.address || 'N/A'}`, 60, boxY + 20);
-    doc.text(`Date: ${date}`, 350, boxY + 20);
-    doc.text(`Prepared By: ${dailyLog.preparedBy || 'N/A'}`, 60, boxY + 40);
-    doc.text(`Status: ${dailyLog.status || 'Draft'}`, 350, boxY + 40);
+    doc.text(`Project: ${project.name}`, 60, boxY, { width: 240 });
+    doc.text(`Project #: ${project.number || 'N/A'}`, 316, boxY, { width: 240 });
+    doc.text(`Address: ${project.address || 'N/A'}`, 60, boxY + 20, { width: 240 });
+    doc.text(`Date: ${date}`, 316, boxY + 20, { width: 240 });
+    doc.text(`Prepared By: ${dailyLog.preparedBy || 'N/A'}`, 60, boxY + 40, { width: 240 });
+    doc.text(`Status: ${dailyLog.status || 'Draft'}`, 316, boxY + 40, { width: 240 });
 
     doc.y = boxY + 70;
     doc.moveDown(1);
@@ -409,9 +409,9 @@ class PDFGeneratorService {
   addSectionHeader(doc, title) {
     doc.fontSize(12).font('Helvetica-Bold');
     doc.fillColor('#1a365d');
-    doc.text(title);
+    doc.text(title, 50, doc.y);
     doc.fillColor('black');
-    doc.moveTo(doc.x, doc.y).lineTo(562, doc.y).stroke();
+    doc.moveTo(50, doc.y).lineTo(562, doc.y).stroke();
     doc.moveDown(0.5);
   }
 
