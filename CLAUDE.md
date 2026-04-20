@@ -63,8 +63,8 @@ FieldConnect (formerly SiteSpeak) is a construction daily log application for fi
 
 ## Authentication
 - JWT-based authentication
-- Admin account: `***REMOVED***` / `***REMOVED***`
 - Setup endpoint: `/api/auth/setup` (one-time admin creation)
+- Admin credentials must be set via environment variables (ADMIN_EMAIL, ADMIN_PASSWORD)
 
 ## Key Features Implemented
 1. **Audio Recording** - MediaRecorder API for web (`VoiceRecorder.web.tsx`, `MasterVoiceCapture.web.tsx`)

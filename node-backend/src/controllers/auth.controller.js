@@ -143,8 +143,12 @@ const resetAdmin = async (req, res) => {
       return res.status(403).json({ error: 'Invalid secret' });
     }
 
-    const email = process.env.ADMIN_EMAIL || '***REMOVED***';
-    const password = process.env.ADMIN_PASSWORD || '***REMOVED***';
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+
+    if (!email || !password) {
+      return res.status(403).json({ error: 'Admin credentials not configured in environment' });
+    }
 
     const result = await authService.resetAdmin({ email, password });
     res.json({ message: 'Admin reset successfully', email: result.user.email });
