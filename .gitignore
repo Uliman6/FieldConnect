@@ -35,6 +35,7 @@ secrets/
 dist/
 build/
 .expo/
+.expo-image-cache/
 web-build/
 *.tsbuildinfo
 .next/
@@ -90,6 +91,15 @@ coverage/
 htmlcov/
 .pytest_cache/
 .nyc_output/
+**/test_report.html
+**/e2e_report.html
+
+# -----------------------------------------------------------------------------
+# Generated PDFs (test outputs)
+# -----------------------------------------------------------------------------
+node-backend/*.pdf
+**/test-*.pdf
+**/*-test.pdf
 
 # -----------------------------------------------------------------------------
 # Uploads & User Data
@@ -124,9 +134,10 @@ lessons_applied_*/
 audio_pack.zip
 
 # -----------------------------------------------------------------------------
-# AI/Claude Tool Configs (Optional - uncomment if you want to keep private)
+# AI/Claude Tool Configs
 # -----------------------------------------------------------------------------
-# .claude/
+**/.claude/settings.local.json
+**/settings.local.json
 
 # -----------------------------------------------------------------------------
 # Vercel & Deployment
