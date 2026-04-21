@@ -719,7 +719,7 @@ export default function Record() {
 
             {/* Collapsible Notes Section */}
             {showNotes && (
-              <div className="overflow-hidden flex flex-col" style={{ maxHeight: '40vh' }}>
+              <div className="flex flex-col" style={{ maxHeight: '50vh' }}>
                 {allProjectNotes.length === 0 ? (
                   <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
                     <p className="text-gray-400 text-sm mb-3">No recordings yet</p>
@@ -738,8 +738,8 @@ export default function Record() {
                     )}
                   </div>
                 ) : (
-                  <div className={`rounded-xl overflow-hidden flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                    <div className="overflow-y-auto h-full pb-48">
+                  <div className={`rounded-xl flex-1 overflow-y-auto ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+                    <div className="pb-32">
                       {sortedDates.map((date) => (
                         <div key={date}>
                           {/* Date Header */}
