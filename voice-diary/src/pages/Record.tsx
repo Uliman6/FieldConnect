@@ -739,7 +739,7 @@ export default function Record() {
                   </div>
                 ) : (
                   <div className={`rounded-xl overflow-hidden flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                    <div className="overflow-y-auto h-full pb-24">
+                    <div className="overflow-y-auto h-full pb-48">
                       {sortedDates.map((date) => (
                         <div key={date}>
                           {/* Date Header */}

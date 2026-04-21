@@ -88,28 +88,30 @@ export default function FormFill() {
     return prefillFormFromSnippets(templateId, selectedSnippets);
   });
 
-  // Work entries for daily log
+  // Work entries for daily log - includes ALL work-related categories
   const [workEntries, setWorkEntries] = useState<WorkEntry[]>(() => {
     // Extract work entries from snippets
     const entries: WorkEntry[] = [];
-    const workSnippets = selectedSnippets.filter(s => s.category === 'Work Completed');
+    // Include ALL categories in work entries (except Safety/Issues/Follow-up which go to inspection)
+    const workCategories = ['Work Completed', 'Work To Be Done', 'Materials', 'Logistics', 'Team', 'Process'];
+    const workSnippets = selectedSnippets.filter(s => workCategories.includes(s.category));
 
-    // Group by company if detected
-    const companyGroups: Record<string, string[]> = {};
+    // Group by category/company
+    const categoryGroups: Record<string, Array<{ category: string; content: string }>> = {};
     workSnippets.forEach(s => {
       // Try to detect company name from content
       const companyMatch = s.content.match(/^([A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)*(?:\s+(?:Electric|Plumbing|Drywall|HVAC|Mechanical|Roofing|Painting|Flooring|Division\s*\d+))?)/);
-      const company = companyMatch ? companyMatch[1] : 'General';
-      if (!companyGroups[company]) companyGroups[company] = [];
-      companyGroups[company].push(s.content);
+      const company = companyMatch ? companyMatch[1] : s.category; // Use category as label if no company
+      if (!categoryGroups[company]) categoryGroups[company] = [];
+      categoryGroups[company].push({ category: s.category, content: s.content });
     });
 
-    Object.entries(companyGroups).forEach(([company, contents]) => {
+    Object.entries(categoryGroups).forEach(([company, items]) => {
       entries.push({
         company,
         workers: '',
         hours: '',
-        description: contents.join('. '),
+        description: items.map(i => i.content).join('. '),
         notes: '',
       });
     });
@@ -117,14 +119,16 @@ export default function FormFill() {
     return entries.length > 0 ? entries : [{ company: '', workers: '', hours: '', description: '', notes: '' }];
   });
 
-  // Inspection entries for daily log
+  // Inspection entries for daily log - includes Safety, Issues, Follow-up Items
   const [inspectionEntries, setInspectionEntries] = useState<InspectionEntry[]>(() => {
-    const safetySnippets = selectedSnippets.filter(s => s.category === 'Safety');
-    const entries: InspectionEntry[] = safetySnippets.map(s => ({
-      type: 'General',
+    // Include Safety, Issues, and Follow-up Items categories
+    const inspectionCategories = ['Safety', 'Issues', 'Follow-up Items'];
+    const inspectionSnippets = selectedSnippets.filter(s => inspectionCategories.includes(s.category));
+    const entries: InspectionEntry[] = inspectionSnippets.map(s => ({
+      type: s.category === 'Safety' ? 'Safety' : (s.category === 'Issues' ? 'Issue' : 'Follow-up'),
       result: 'Pending',
       notes: s.content,
-      followUp: false,
+      followUp: s.category === 'Follow-up Items',
     }));
     return entries.length > 0 ? entries : [];
   });
