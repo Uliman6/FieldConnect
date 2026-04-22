@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from './api';
+import { useVoiceDiaryStore } from './voice-diary-store';
 import type { User } from './types';
 
 interface AuthContextType {
@@ -25,9 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const currentUser = await api.getCurrentUser();
           setUser(currentUser);
+          // Also set currentUserId in store for data filtering
+          useVoiceDiaryStore.getState().setCurrentUser(currentUser.id);
         } catch {
           // Token invalid, clear it
           api.logout();
+          useVoiceDiaryStore.getState().setCurrentUser(null);
         }
       }
       setIsLoading(false);
@@ -39,17 +43,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await api.login({ email, password });
     setUser(response.user);
     localStorage.setItem('user', JSON.stringify(response.user));
+    // Set current user in store for data filtering
+    useVoiceDiaryStore.getState().setCurrentUser(response.user.id);
   };
 
   const register = async (email: string, password: string, name: string) => {
     const response = await api.register({ email, password, name });
     setUser(response.user);
     localStorage.setItem('user', JSON.stringify(response.user));
+    // Set current user in store for data filtering
+    useVoiceDiaryStore.getState().setCurrentUser(response.user.id);
   };
 
   const logout = () => {
     api.logout();
     setUser(null);
+    // Clear user context in store
+    useVoiceDiaryStore.getState().setCurrentUser(null);
+    useVoiceDiaryStore.getState().setCurrentProject(null);
     // Clear all voice-diary data to prevent data leakage between users
     localStorage.removeItem('voice-diary-storage');
     localStorage.removeItem('voice-diary-forms');

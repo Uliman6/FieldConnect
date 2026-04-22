@@ -183,15 +183,24 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
       },
 
       getVoiceNotesForDate: (date, projectId) => {
-        return get().voiceNotes.filter((note) => {
+        const { voiceNotes, currentUserId } = get();
+        return voiceNotes.filter((note) => {
           const matchesDate = note.createdAt.startsWith(date);
           const matchesProject = projectId ? note.projectId === projectId : true;
-          return matchesDate && matchesProject;
+          // Filter by user if currentUserId is set
+          const matchesUser = !currentUserId || note.userId === currentUserId;
+          return matchesDate && matchesProject && matchesUser;
         });
       },
 
       getVoiceNotesForProject: (projectId) => {
-        return get().voiceNotes.filter((note) => note.projectId === projectId);
+        const { voiceNotes, currentUserId } = get();
+        return voiceNotes.filter((note) => {
+          const matchesProject = note.projectId === projectId;
+          // Filter by user if currentUserId is set
+          const matchesUser = !currentUserId || note.userId === currentUserId;
+          return matchesProject && matchesUser;
+        });
       },
 
       // Snippets
