@@ -90,15 +90,10 @@ export interface FormSuggestion {
   createdAt: string;
 }
 
-// Form Types for user selection
+// Form Types for user selection (only showing active forms)
 export const FORM_TYPES = [
   { id: 'daily_log', name: 'Daily Log', icon: 'FileText', description: 'Daily work summary and progress' },
-  { id: 'punch_list', name: 'Punch List', icon: 'ListChecks', description: 'Items requiring completion or correction' },
-  { id: 'rfi', name: 'RFI', icon: 'HelpCircle', description: 'Request for Information' },
   { id: 'inspection_notes', name: 'Inspection Notes', icon: 'ClipboardCheck', description: 'Site inspection findings' },
-  { id: 'field_notes', name: 'Field Notes', icon: 'PenTool', description: 'General field observations' },
-  { id: 'incident_report', name: 'Injury/Incident Report', icon: 'AlertTriangle', description: 'Safety incidents and injuries' },
-  { id: 'custom', name: 'Custom Form', icon: 'Plus', description: 'Create or upload your own form' },
 ] as const;
 
 export type FormTypeId = typeof FORM_TYPES[number]['id'];

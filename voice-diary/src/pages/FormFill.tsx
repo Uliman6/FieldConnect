@@ -90,28 +90,26 @@ export default function FormFill() {
 
   // Work entries for daily log - includes ALL work-related categories
   const [workEntries, setWorkEntries] = useState<WorkEntry[]>(() => {
-    // Extract work entries from snippets
     const entries: WorkEntry[] = [];
     // Include ALL categories in work entries (except Safety/Issues/Follow-up which go to inspection)
     const workCategories = ['Work Completed', 'Work To Be Done', 'Materials', 'Logistics', 'Team', 'Process'];
     const workSnippets = selectedSnippets.filter(s => workCategories.includes(s.category));
 
-    // Group by category/company
-    const categoryGroups: Record<string, Array<{ category: string; content: string }>> = {};
+    // Group by category - use category as the label (not extracted from content)
+    const categoryGroups: Record<string, string[]> = {};
     workSnippets.forEach(s => {
-      // Try to detect company name from content
-      const companyMatch = s.content.match(/^([A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)*(?:\s+(?:Electric|Plumbing|Drywall|HVAC|Mechanical|Roofing|Painting|Flooring|Division\s*\d+))?)/);
-      const company = companyMatch ? companyMatch[1] : s.category; // Use category as label if no company
-      if (!categoryGroups[company]) categoryGroups[company] = [];
-      categoryGroups[company].push({ category: s.category, content: s.content });
+      // Use the actual category as the grouping key
+      const key = s.category;
+      if (!categoryGroups[key]) categoryGroups[key] = [];
+      categoryGroups[key].push(s.content);
     });
 
-    Object.entries(categoryGroups).forEach(([company, items]) => {
+    Object.entries(categoryGroups).forEach(([category, contents]) => {
       entries.push({
-        company,
+        company: category, // Use category name as the label
         workers: '',
         hours: '',
-        description: items.map(i => i.content).join('. '),
+        description: contents.join('. '),
         notes: '',
       });
     });

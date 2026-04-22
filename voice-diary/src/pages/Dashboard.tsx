@@ -183,7 +183,7 @@ export default function Dashboard() {
   };
 
   const handleCreateForm = () => {
-    if (!selectedFormType || selectedFormType === 'custom') return;
+    if (!selectedFormType) return;
 
     const snippetIds = Array.from(selectedSnippetIds).join(',');
     navigate(`/form-fill?template=${selectedFormType}&snippets=${snippetIds}`);
@@ -457,19 +457,7 @@ export default function Dashboard() {
             </div>
 
             <div className="p-4 overflow-y-auto max-h-[60vh]">
-              {selectedFormType === 'custom' ? (
-                <div className="text-center py-8">
-                  <Plus size={48} className={`mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
-                  <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Custom form templates coming soon!
-                  </p>
-                  <button
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'}`}
-                  >
-                    Upload Template
-                  </button>
-                </div>
-              ) : selectedDateSnippets.length === 0 ? (
+              {selectedDateSnippets.length === 0 ? (
                 <p className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                   No entries on {formatDateShort(selectedDate)}. Record voice notes first.
                 </p>
@@ -506,7 +494,7 @@ export default function Dashboard() {
               )}
             </div>
 
-            {selectedFormType !== 'custom' && selectedDateSnippets.length > 0 && (
+            {selectedDateSnippets.length > 0 && (
               <div className={`p-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                 <button
                   onClick={handleCreateForm}
