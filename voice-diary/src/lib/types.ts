@@ -94,6 +94,7 @@ export interface FormSuggestion {
 export const FORM_TYPES = [
   { id: 'daily_log', name: 'Daily Log', icon: 'FileText', description: 'Daily work summary and progress' },
   { id: 'inspection_notes', name: 'Inspection Notes', icon: 'ClipboardCheck', description: 'Site inspection findings' },
+  { id: 'field_notes', name: 'Field Notes', icon: 'PenTool', description: 'Personal notes and observations' },
 ] as const;
 
 export type FormTypeId = typeof FORM_TYPES[number]['id'];
