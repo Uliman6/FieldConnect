@@ -171,7 +171,7 @@ export default function FormFill() {
       data: formData,
       workEntries: templateId === 'daily_log' ? workEntries : undefined,
       inspectionEntries: templateId === 'daily_log' ? inspectionEntries : undefined,
-      listItems: templateId === 'inspection_notes' ? listItems : undefined,
+      listItems: ['inspection_notes', 'field_notes'].includes(templateId) ? listItems : undefined,
       snippetIds,
       createdAt: new Date().toISOString(),
       createdBy: user?.name || user?.email,
@@ -729,6 +729,7 @@ export default function FormFill() {
         doc = generateRFIPDF();
         break;
       case 'inspection_notes':
+      case 'field_notes':
         doc = generateInspectionListPDF();
         break;
       default:
@@ -1142,8 +1143,8 @@ export default function FormFill() {
   // Fields to skip for special templates (handled separately)
   const skipFields = templateId === 'daily_log'
     ? ['work_performed', 'delays', 'safety_incidents']
-    : templateId === 'inspection_notes'
-    ? ['findings', 'corrective_actions']
+    : ['inspection_notes', 'field_notes'].includes(templateId)
+    ? ['findings', 'corrective_actions', 'notes']
     : [];
 
   return (
@@ -1213,7 +1214,7 @@ export default function FormFill() {
           )}
 
           {/* Special sections for Inspection Notes */}
-          {templateId === 'inspection_notes' && renderListItems()}
+          {['inspection_notes', 'field_notes'].includes(templateId) && renderListItems()}
 
           {/* Spacer for bottom buttons */}
           <div className="h-24" />
