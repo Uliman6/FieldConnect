@@ -199,10 +199,10 @@ export default function FormFill() {
     doc.text('DAILY CONSTRUCTION LOG', pageWidth / 2, y, { align: 'center' });
     y += 15;
 
-    // Header box
+    // Simplified Header - only Project, Date, Prepared By
     doc.setDrawColor(200);
     doc.setFillColor(255, 255, 255);
-    doc.rect(margin, y, pageWidth - margin * 2, 35, 'S');
+    doc.rect(margin, y, pageWidth - margin * 2, 24, 'S');
 
     doc.setFontSize(10);
     doc.setTextColor(0);
@@ -211,23 +211,17 @@ export default function FormFill() {
 
     doc.setFont('helvetica', 'bold');
     doc.text('Project:', leftCol, y + 8);
-    doc.text('Address:', leftCol, y + 16);
-    doc.text('Prepared By:', leftCol, y + 24);
-    doc.text('Project #:', rightCol, y + 8);
-    doc.text('Date:', rightCol, y + 16);
-    doc.text('Status:', rightCol, y + 24);
+    doc.text('Prepared By:', leftCol, y + 16);
+    doc.text('Date:', rightCol, y + 8);
 
     doc.setFont('helvetica', 'normal');
     doc.text(currentProject?.name || 'N/A', leftCol + 25, y + 8);
-    doc.text(formData['address'] || 'N/A', leftCol + 25, y + 16);
-    doc.text(user?.name || user?.email || 'N/A', leftCol + 35, y + 24);
-    doc.text(currentProject?.id?.substring(0, 8) || '1', rightCol + 30, y + 8);
-    doc.text(formatDateForPDF(formData['date']), rightCol + 30, y + 16);
-    doc.text('draft', rightCol + 30, y + 24);
+    doc.text(user?.name || user?.email || 'N/A', leftCol + 35, y + 16);
+    doc.text(formatDateForPDF(formData['date']), rightCol + 15, y + 8);
 
-    y += 45;
+    y += 34;
 
-    // Daily Totals
+    // Daily Totals - properly centered
     const totalWorkers = workEntries.reduce((sum, e) => sum + (parseInt(e.workers) || 0), 0);
     const totalHours = workEntries.reduce((sum, e) => sum + (parseInt(e.hours) || 0), 0);
 
@@ -238,13 +232,13 @@ export default function FormFill() {
     y += 3;
     doc.setDrawColor(26, 55, 96);
     doc.line(pageWidth / 2 - 30, y, pageWidth / 2 + 30, y);
-    y += 8;
+    y += 10;
 
     doc.setFontSize(10);
     doc.setTextColor(0);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Total Workers: ${totalWorkers || '-'}`, pageWidth / 2 - 20, y);
-    doc.text(`Total Hours: ${totalHours || '-'}`, pageWidth / 2 + 20, y);
+    const totalsText = `Total Workers: ${totalWorkers || '-'}     Total Hours: ${totalHours || '-'}`;
+    doc.text(totalsText, pageWidth / 2, y, { align: 'center' });
     y += 15;
 
     // Work Performed Section
