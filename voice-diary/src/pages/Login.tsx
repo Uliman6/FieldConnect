@@ -1,7 +1,18 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { Mic, UserPlus, LogIn } from 'lucide-react';
+import { Mic, UserPlus, LogIn, Check, X } from 'lucide-react';
+
+// Password validation
+const validatePassword = (password: string) => {
+  return {
+    minLength: password.length >= 12,
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+};
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,6 +24,12 @@ export default function Login() {
   const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // Password validation state
+  const passwordChecks = useMemo(() => validatePassword(password), [password]);
+  const isPasswordValid = useMemo(() => {
+    return Object.values(passwordChecks).every(Boolean);
+  }, [passwordChecks]);
+
   // Redirect if already logged in
   if (isAuthenticated) {
     navigate('/');
@@ -22,25 +39,33 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (isRegisterMode) {
+      if (!name.trim()) {
+        setError('Please enter your name');
+        return;
+      }
+      if (!isPasswordValid) {
+        setError('Please meet all password requirements');
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
       if (isRegisterMode) {
-        if (!name.trim()) {
-          setError('Please enter your name');
-          setIsLoading(false);
-          return;
-        }
         await register(email, password, name);
       } else {
         await login(email, password);
       }
       navigate('/');
     } catch (err: any) {
+      const serverError = err?.response?.data?.error || err?.response?.data?.message;
       if (isRegisterMode) {
-        setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+        setError(serverError || 'Registration failed. Please try again.');
       } else {
-        setError('Login failed. Please check your credentials.');
+        setError(serverError || 'Login failed. Please check your credentials.');
       }
     } finally {
       setIsLoading(false);
@@ -51,7 +76,15 @@ export default function Login() {
     setIsRegisterMode(!isRegisterMode);
     setError('');
     setName('');
+    setPassword('');
   };
+
+  const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
+    <div className={`flex items-center gap-2 text-xs ${met ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+      {met ? <Check size={14} /> : <X size={14} />}
+      {text}
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black px-4 safe-area-top safe-area-bottom">
@@ -121,15 +154,26 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
-                minLength={isRegisterMode ? 6 : undefined}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base"
-                placeholder={isRegisterMode ? 'Min 6 characters' : '••••••••'}
+                placeholder={isRegisterMode ? 'Create a strong password' : 'Enter your password'}
               />
+
+              {/* Password requirements (only show in register mode when password has content) */}
+              {isRegisterMode && password.length > 0 && (
+                <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-1.5">
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Password requirements:</p>
+                  <PasswordRequirement met={passwordChecks.minLength} text="At least 12 characters" />
+                  <PasswordRequirement met={passwordChecks.hasUppercase} text="One uppercase letter" />
+                  <PasswordRequirement met={passwordChecks.hasLowercase} text="One lowercase letter" />
+                  <PasswordRequirement met={passwordChecks.hasNumber} text="One number" />
+                  <PasswordRequirement met={passwordChecks.hasSpecial} text="One special character (!@#$%^&*)" />
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || (isRegisterMode && !isPasswordValid)}
               className="w-full bg-primary-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base flex items-center justify-center gap-2"
             >
               {isRegisterMode ? (

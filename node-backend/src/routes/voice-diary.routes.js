@@ -46,6 +46,11 @@ router.post('/entry', (req, res, next) =>
   voiceDiaryController.saveEntry(req, res, next)
 );
 
+// GET /api/voice-diary/entries - Get current user's entries (user-scoped)
+router.get('/entries', (req, res, next) =>
+  voiceDiaryController.getMyEntries(req, res, next)
+);
+
 // Admin routes
 // GET /api/voice-diary/admin/feedback - Get all feedback (admin only)
 router.get('/admin/feedback', requireAdmin, (req, res, next) =>

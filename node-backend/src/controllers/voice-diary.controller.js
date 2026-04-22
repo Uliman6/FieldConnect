@@ -165,6 +165,37 @@ const voiceDiaryController = {
       next(error);
     }
   },
+
+  // Get entries for current user only (user-scoped)
+  async getMyEntries(req, res, next) {
+    try {
+      const userId = req.user && req.user.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      console.log('[voice-diary] Fetching entries for user:', userId);
+      const entries = await prisma.voiceDiaryEntry.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      });
+      const transformedEntries = entries.map(e => ({
+        id: e.id,
+        userId: e.userId,
+        userName: e.userName,
+        projectId: e.projectId,
+        projectName: e.projectName,
+        transcriptText: e.transcriptText,
+        cleanedText: e.cleanedText,
+        category: e.category,
+        createdAt: e.createdAt.toISOString(),
+      }));
+      res.json(transformedEntries);
+    } catch (error) {
+      console.error('[voice-diary] User entries fetch error:', error);
+      next(error);
+    }
+  },
 };
 
 module.exports = voiceDiaryController;

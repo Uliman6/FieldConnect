@@ -1,5 +1,31 @@
 const authService = require('../services/auth.service');
 
+// Password validation helper
+const validatePassword = (password) => {
+  const errors = [];
+
+  if (password.length < 12) {
+    errors.push('at least 12 characters');
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push('an uppercase letter');
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push('a lowercase letter');
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push('a number');
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push('a special character (!@#$%^&*(),.?":{}|<>)');
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, message: 'Password must contain ' + errors.join(', ') };
+  }
+  return { valid: true };
+};
+
 // POST /api/auth/register
 const register = async (req, res) => {
   try {
@@ -9,8 +35,9 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.message });
     }
 
     // New registrations are VIEWER by default (admin can upgrade later)
@@ -114,8 +141,9 @@ const setupFirstAdmin = async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.message });
     }
 
     const result = await authService.setupFirstAdmin({ email, password, name });

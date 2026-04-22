@@ -50,6 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     api.logout();
     setUser(null);
+    // Clear all voice-diary data to prevent data leakage between users
+    localStorage.removeItem('voice-diary-storage');
+    localStorage.removeItem('voice-diary-forms');
+    localStorage.removeItem('user');
+    localStorage.removeItem('voice-diary-current-project');
   };
 
   return (

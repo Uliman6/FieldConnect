@@ -88,25 +88,34 @@ export default function FormFill() {
     return prefillFormFromSnippets(templateId, selectedSnippets);
   });
 
-  // Work entries for daily log - includes ALL work-related categories
+  // Work entries for daily log - extract company from content if pattern "Company - description" exists
   const [workEntries, setWorkEntries] = useState<WorkEntry[]>(() => {
     const entries: WorkEntry[] = [];
     // Include ALL categories in work entries (except Safety/Issues/Follow-up which go to inspection)
     const workCategories = ['Work Completed', 'Work To Be Done', 'Materials', 'Logistics', 'Team', 'Process'];
     const workSnippets = selectedSnippets.filter(s => workCategories.includes(s.category));
 
-    // Group by category - use category as the label (not extracted from content)
-    const categoryGroups: Record<string, string[]> = {};
+    // Group by extracted company name from content
+    const companyGroups: Record<string, string[]> = {};
     workSnippets.forEach(s => {
-      // Use the actual category as the grouping key
-      const key = s.category;
-      if (!categoryGroups[key]) categoryGroups[key] = [];
-      categoryGroups[key].push(s.content);
+      // Try to extract company name from content like "ABC Electrical - pulled wire..."
+      const dashMatch = s.content.match(/^([^-]+)\s*-\s*(.+)$/s);
+      if (dashMatch) {
+        const companyName = dashMatch[1].trim();
+        const description = dashMatch[2].trim();
+        if (!companyGroups[companyName]) companyGroups[companyName] = [];
+        companyGroups[companyName].push(description);
+      } else {
+        // No company pattern found - use category as fallback
+        const key = s.category;
+        if (!companyGroups[key]) companyGroups[key] = [];
+        companyGroups[key].push(s.content);
+      }
     });
 
-    Object.entries(categoryGroups).forEach(([category, contents]) => {
+    Object.entries(companyGroups).forEach(([company, contents]) => {
       entries.push({
-        company: category, // Use category name as the label
+        company: company,
         workers: '',
         hours: '',
         description: contents.join('. '),
@@ -131,16 +140,30 @@ export default function FormFill() {
     return entries.length > 0 ? entries : [];
   });
 
-  // List items for inspection notes
+  // List items for inspection notes - extract company from content if pattern "Company - description" exists
   const [listItems, setListItems] = useState<ListItem[]>(() => {
-    const items: ListItem[] = selectedSnippets.map(s => ({
-      company: '',
-      scope: s.category,
-      description: s.content,
-      dueDate: '',
-      type: '',
-      status: 'Pending',
-    }));
+    const items: ListItem[] = selectedSnippets.map(s => {
+      // Try to extract company name from content like "ABC Electrical - pulled wire..."
+      const dashMatch = s.content.match(/^([^-]+)\s*-\s*(.+)$/s);
+      if (dashMatch) {
+        return {
+          company: dashMatch[1].trim(),
+          scope: s.category,
+          description: dashMatch[2].trim(),
+          dueDate: '',
+          type: '',
+          status: 'Pending',
+        };
+      }
+      return {
+        company: '',
+        scope: s.category,
+        description: s.content,
+        dueDate: '',
+        type: '',
+        status: 'Pending',
+      };
+    });
     return items.length > 0 ? items : [{ company: '', scope: '', description: '', dueDate: '', type: '', status: 'Pending' }];
   });
 
@@ -533,7 +556,8 @@ export default function FormFill() {
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0);
-    doc.text(formData['title'] || 'Inspection Checklist', pageWidth / 2, y, { align: 'center' });
+    const defaultTitle = templateId === 'field_notes' ? 'Field Notes' : 'Inspection Checklist';
+    doc.text(formData['title'] || defaultTitle, pageWidth / 2, y, { align: 'center' });
     y += 7;
 
     // Subtitle
@@ -561,8 +585,8 @@ export default function FormFill() {
     y += 10;
 
     // Table header
-    const colWidths = [10, 40, 55, 45, 30];
-    const cols = [margin, margin + 10, margin + 50, margin + 105, margin + 150];
+    const colWidths = [10, 35, 80, 30, 25];
+    const cols = [margin, margin + 10, margin + 45, margin + 125, margin + 155];
 
     doc.setFillColor(230, 126, 34); // Orange header
     doc.rect(margin, y, pageWidth - margin * 2, 8, 'F');
@@ -605,14 +629,21 @@ export default function FormFill() {
       doc.setFontSize(8);
       doc.text(String(idx + 1), cols[0] + 2, y + 4);
 
-      // Wrap description
+      // Wrap description - show all lines
       const descLines = doc.splitTextToSize(item.description, colWidths[2] - 4);
-      doc.text(descLines[0] || '-', cols[2] + 2, y + 4);
+      const lineHeight = 4;
+      const rowHeight = Math.max(8, descLines.length * lineHeight + 2);
 
+      // Draw each description line
+      descLines.forEach((line: string, lineIdx: number) => {
+        doc.text(line || '', cols[2] + 2, y + 4 + (lineIdx * lineHeight));
+      });
+
+      // Due date and status on first line
       doc.text(item.dueDate || '-', cols[3] + 2, y + 4);
       doc.text(item.status || '-', cols[4] + 2, y + 4);
 
-      y += 8;
+      y += rowHeight;
     });
 
     // Footer
