@@ -25,8 +25,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         try {
           const currentUser = await api.getCurrentUser();
+
+          // Check if stored data belongs to a different user
+          const lastUserId = localStorage.getItem('voice-diary-last-user-id');
+          if (lastUserId && lastUserId !== currentUser.id) {
+            console.log('[auth] Session restored for different user, clearing stale data');
+            localStorage.removeItem('voice-diary-storage');
+            localStorage.removeItem('voice-diary-forms');
+            useVoiceDiaryStore.setState({
+              voiceNotes: [],
+              categorizedSnippets: [],
+              dailySummaries: [],
+              notifications: [],
+              formSuggestions: [],
+              currentProjectId: null,
+            });
+          }
+
           setUser(currentUser);
-          // Also set currentUserId in store for data filtering
+          localStorage.setItem('voice-diary-last-user-id', currentUser.id);
           useVoiceDiaryStore.getState().setCurrentUser(currentUser.id);
         } catch {
           // Token invalid, clear it
@@ -41,16 +58,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await api.login({ email, password });
+
+    // Check if this is a different user than before - if so, clear all data
+    const lastUserId = localStorage.getItem('voice-diary-last-user-id');
+    if (lastUserId && lastUserId !== response.user.id) {
+      // Different user logging in - clear all previous user's data
+      console.log('[auth] Different user detected, clearing previous data');
+      localStorage.removeItem('voice-diary-storage');
+      localStorage.removeItem('voice-diary-forms');
+      // Reset store state
+      useVoiceDiaryStore.setState({
+        voiceNotes: [],
+        categorizedSnippets: [],
+        dailySummaries: [],
+        notifications: [],
+        formSuggestions: [],
+        currentProjectId: null,
+      });
+    }
+
     setUser(response.user);
     localStorage.setItem('user', JSON.stringify(response.user));
+    localStorage.setItem('voice-diary-last-user-id', response.user.id);
     // Set current user in store for data filtering
     useVoiceDiaryStore.getState().setCurrentUser(response.user.id);
   };
 
   const register = async (email: string, password: string, name: string) => {
     const response = await api.register({ email, password, name });
+
+    // New user registration - clear any existing data from previous users
+    const lastUserId = localStorage.getItem('voice-diary-last-user-id');
+    if (lastUserId && lastUserId !== response.user.id) {
+      console.log('[auth] New user registration, clearing previous data');
+      localStorage.removeItem('voice-diary-storage');
+      localStorage.removeItem('voice-diary-forms');
+      useVoiceDiaryStore.setState({
+        voiceNotes: [],
+        categorizedSnippets: [],
+        dailySummaries: [],
+        notifications: [],
+        formSuggestions: [],
+        currentProjectId: null,
+      });
+    }
+
     setUser(response.user);
     localStorage.setItem('user', JSON.stringify(response.user));
+    localStorage.setItem('voice-diary-last-user-id', response.user.id);
     // Set current user in store for data filtering
     useVoiceDiaryStore.getState().setCurrentUser(response.user.id);
   };
@@ -64,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear all voice-diary data to prevent data leakage between users
     localStorage.removeItem('voice-diary-storage');
     localStorage.removeItem('voice-diary-forms');
+    localStorage.removeItem('voice-diary-last-user-id');
     localStorage.removeItem('user');
     localStorage.removeItem('voice-diary-current-project');
   };
