@@ -1,5 +1,48 @@
 # FieldConnect Project Context
 
+## CRITICAL: Test-Driven Development Requirements
+
+**ALWAYS test changes before marking them complete.** Do not just write code and commit - verify it works.
+
+### Testing Checklist (MANDATORY)
+Before saying a feature is "done" or committing code:
+
+1. **Run the dev server**: Start the app locally (`npm run dev` for voice-diary/maintenance-forms, `npm run web` for Frontend)
+2. **Test new UI elements**: Click new buttons, verify modals open/close, check forms submit
+3. **Verify data flow**: Ensure data displays correctly, updates persist, API calls succeed
+4. **Check console for errors**: No red errors in browser console or terminal
+5. **Test edge cases**: Empty states, error states, missing data scenarios
+
+### How to Test Each App
+```bash
+# Voice Diary (Vite React)
+cd voice-diary && npm run dev
+# Opens at http://localhost:5173
+
+# Maintenance Forms (Vite React)
+cd maintenance-forms && npm run dev
+# Opens at http://localhost:5173
+
+# Main Frontend (Expo)
+cd Frontend && npm run web
+# Opens at http://localhost:8081
+
+# Backend
+cd node-backend && npm run dev
+# Runs at http://localhost:3001
+```
+
+### What to Verify
+- **New buttons**: Do they trigger the expected action?
+- **Modals/popups**: Do they open, display correct content, and close?
+- **Forms**: Do inputs work, validation trigger, submissions save?
+- **Data connections**: Does saved data appear where expected?
+- **State updates**: Do changes reflect immediately in the UI?
+
+**Never assume code works just because it compiles. Always run and click through the changes.**
+
+---
+
 ## Overview
 FieldConnect (formerly SiteSpeak) is a construction daily log application for field workers to record voice notes, events, and generate PDF reports.
 
