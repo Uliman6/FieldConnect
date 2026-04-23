@@ -3,14 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
   ChevronLeft,
-  Shield,
-  Truck,
-  Settings2,
-  CheckCircle2,
-  ListTodo,
   AlertTriangle,
-  Users,
-  Package,
   ArrowRight,
   FileText,
   X,
@@ -24,22 +17,10 @@ import {
   Check,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
-import { useVoiceDiaryStore, VOICE_DIARY_CATEGORIES } from '../lib/voice-diary-store';
+import { useVoiceDiaryStore } from '../lib/voice-diary-store';
 import { useAuth } from '../lib/auth';
 import type { VoiceDiaryCategory, FormTypeId } from '../lib/types';
 import { FORM_TYPES } from '../lib/types';
-
-const CATEGORY_ICONS: Record<VoiceDiaryCategory, React.ReactNode> = {
-  'Safety': <Shield size={20} className="text-red-500" />,
-  'Logistics': <Truck size={20} className="text-blue-500" />,
-  'Process': <Settings2 size={20} className="text-purple-500" />,
-  'Work Completed': <CheckCircle2 size={20} className="text-green-500" />,
-  'Work To Be Done': <ListTodo size={20} className="text-amber-500" />,
-  'Follow-up Items': <ArrowRight size={20} className="text-pink-500" />,
-  'Issues': <AlertTriangle size={20} className="text-red-500" />,
-  'Team': <Users size={20} className="text-cyan-500" />,
-  'Materials': <Package size={20} className="text-stone-500" />,
-};
 
 const CATEGORY_COLORS: Record<VoiceDiaryCategory, string> = {
   'Safety': 'bg-red-100 dark:bg-red-900/30',
@@ -110,6 +91,10 @@ export default function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState<VoiceDiaryCategory | null>(null);
   const [selectedFormType, setSelectedFormType] = useState<FormTypeId | null>(null);
   const [selectedSnippetIds, setSelectedSnippetIds] = useState<Set<string>>(new Set());
+  const [completedFollowUps, setCompletedFollowUps] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('voice-diary-completed-followups');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   const { user } = useAuth();
 
@@ -137,15 +122,6 @@ export default function Dashboard() {
       s => s.projectId === currentProjectId && s.date === selectedDate && (s.userId === user?.id || !s.userId)
     );
   }, [currentProjectId, dailySummaries, selectedDate, user?.id]);
-
-  // Category counts for SELECTED date
-  const categoryCounts = useMemo(() => {
-    const counts: Record<VoiceDiaryCategory, number> = {} as Record<VoiceDiaryCategory, number>;
-    VOICE_DIARY_CATEGORIES.forEach((cat) => {
-      counts[cat] = getSnippetsForCategory(cat, selectedDate, currentProjectId || undefined).length;
-    });
-    return counts;
-  }, [selectedDate, currentProjectId, getSnippetsForCategory, selectedDateSnippets]);
 
   const selectedSnippets = selectedCategory
     ? getSnippetsForCategory(selectedCategory, selectedDate, currentProjectId || undefined)
@@ -181,6 +157,97 @@ export default function Dashboard() {
     }
     setSelectedSnippetIds(newSet);
   };
+
+  const toggleFollowUpComplete = (snippetId: string) => {
+    const newSet = new Set(completedFollowUps);
+    if (newSet.has(snippetId)) {
+      newSet.delete(snippetId);
+    } else {
+      newSet.add(snippetId);
+    }
+    setCompletedFollowUps(newSet);
+    localStorage.setItem('voice-diary-completed-followups', JSON.stringify([...newSet]));
+  };
+
+  // Extract company name from snippet content
+  const extractCompanyName = (content: string): string => {
+    // Look for patterns like "Company: X", "from X", "by X", or capitalized words
+    const patterns = [
+      /(?:company|vendor|contractor|from|by|with)\s*[:\-]?\s*([A-Z][A-Za-z0-9\s&]+?)(?:\s*[-–—]|\s+(?:will|to|for|about|regarding|needs|is|has|should))/i,
+      /^([A-Z][A-Za-z0-9\s&]+?)(?:\s*[-–—]|\s+(?:will|to|for|about|regarding|needs|is|has|should))/,
+    ];
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match && match[1] && match[1].trim().length > 1) {
+        return match[1].trim().slice(0, 30);
+      }
+    }
+    // Fallback: first 2-3 words if they look like a name
+    const words = content.split(/\s+/).slice(0, 3);
+    const firstCapitalized = words.filter(w => /^[A-Z]/.test(w)).join(' ');
+    return firstCapitalized || words.slice(0, 2).join(' ').slice(0, 20);
+  };
+
+  // Extract due date from snippet content
+  const extractDueDate = (content: string): string | null => {
+    const lower = content.toLowerCase();
+    // Check for specific date mentions
+    const datePatterns = [
+      /(?:by|before|due|until|deadline)\s+(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/i,
+      /(?:by|before|due)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
+      /(?:by|before|due)\s+(tomorrow|next week|end of (?:week|day))/i,
+    ];
+    for (const pattern of datePatterns) {
+      const match = content.match(pattern);
+      if (match) return match[1];
+    }
+    // Check for urgency words
+    if (lower.includes('asap') || lower.includes('urgent') || lower.includes('immediately')) return 'ASAP';
+    if (lower.includes('tomorrow')) return 'Tomorrow';
+    if (lower.includes('this week') || lower.includes('end of week')) return 'This Week';
+    if (lower.includes('next week')) return 'Next Week';
+    return null;
+  };
+
+  // Get follow-up items (from Follow-up Items category + items with due dates)
+  const followUpItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      company: string;
+      task: string;
+      dueDate: string | null;
+      completed: boolean;
+    }> = [];
+
+    // Get Follow-up Items category snippets
+    const followUpSnippets = getSnippetsForCategory('Follow-up Items', selectedDate, currentProjectId || undefined);
+
+    // Also check Work To Be Done for items with due dates
+    const todoSnippets = getSnippetsForCategory('Work To Be Done', selectedDate, currentProjectId || undefined);
+
+    const allRelevant = [...followUpSnippets, ...todoSnippets.filter(s => {
+      const lower = s.content.toLowerCase();
+      return lower.includes('due') || lower.includes('deadline') || lower.includes('by ') ||
+             lower.includes('asap') || lower.includes('urgent') || lower.includes('tomorrow');
+    })];
+
+    // Dedupe by id
+    const seen = new Set<string>();
+    for (const snippet of allRelevant) {
+      if (seen.has(snippet.id)) continue;
+      seen.add(snippet.id);
+
+      items.push({
+        id: snippet.id,
+        company: extractCompanyName(snippet.content),
+        task: snippet.content.length > 60 ? snippet.content.slice(0, 60) + '...' : snippet.content,
+        dueDate: extractDueDate(snippet.content),
+        completed: completedFollowUps.has(snippet.id),
+      });
+    }
+
+    return items;
+  }, [selectedDate, currentProjectId, getSnippetsForCategory, completedFollowUps]);
 
   const handleCreateForm = () => {
     if (!selectedFormType) return;
@@ -290,41 +357,67 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Categories Grid - for selected date */}
+        {/* Follow-up Items Table */}
         <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          Categories ({selectedDateSnippets.length} items on {formatDateShort(selectedDate)})
+          Follow-up Items ({followUpItems.length} on {formatDateShort(selectedDate)})
         </h3>
-        <div className="grid grid-cols-2 gap-2 mb-5">
-          {VOICE_DIARY_CATEGORIES.map((category) => {
-            const count = categoryCounts[category];
-            const hasItems = count > 0;
-
-            return (
-              <button
-                key={category}
-                onClick={() => hasItems && setSelectedCategory(category)}
-                disabled={!hasItems}
-                className={`flex items-center gap-2 p-3 rounded-xl transition-colors ${
-                  hasItems
-                    ? CATEGORY_COLORS[category]
-                    : isDark
-                    ? 'bg-gray-900 opacity-50'
-                    : 'bg-gray-100 opacity-50'
-                } ${!hasItems && 'border border-dashed ' + (isDark ? 'border-gray-700' : 'border-gray-300')}`}
-              >
-                {CATEGORY_ICONS[category]}
-                <div className="flex-1 text-left min-w-0">
-                  <p className={`text-xs font-semibold truncate ${hasItems ? (isDark ? 'text-white' : 'text-gray-900') : 'text-gray-400'}`}>
-                    {category}
-                  </p>
-                  <p className={`text-xs ${hasItems ? (isDark ? 'text-gray-400' : 'text-gray-500') : 'text-gray-400'}`}>
-                    {count} item{count !== 1 ? 's' : ''}
-                  </p>
+        <div className={`rounded-xl overflow-hidden mb-5 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          {followUpItems.length === 0 ? (
+            <div className="p-6 text-center">
+              <ArrowRight size={32} className={`mx-auto mb-2 ${isDark ? 'text-gray-700' : 'text-gray-300'}`} />
+              <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                No follow-up items on {formatDateShort(selectedDate)}
+              </p>
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                Items from "Follow-up" category or with due dates will appear here
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {/* Table Header */}
+              <div className={`grid grid-cols-12 gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-50 text-gray-500'}`}>
+                <div className="col-span-3">Company</div>
+                <div className="col-span-5">Task</div>
+                <div className="col-span-3">Due</div>
+                <div className="col-span-1 text-center">Done</div>
+              </div>
+              {/* Table Rows */}
+              {followUpItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`grid grid-cols-12 gap-2 px-3 py-3 items-center ${
+                    item.completed ? 'opacity-50' : ''
+                  }`}
+                >
+                  <div className={`col-span-3 text-xs font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {item.company}
+                  </div>
+                  <div className={`col-span-5 text-xs truncate ${item.completed ? 'line-through' : ''} ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {item.task}
+                  </div>
+                  <div className={`col-span-3 text-xs ${
+                    item.dueDate === 'ASAP' ? 'text-red-500 font-semibold' :
+                    item.dueDate === 'Tomorrow' ? 'text-amber-500 font-medium' :
+                    isDark ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {item.dueDate || '—'}
+                  </div>
+                  <div className="col-span-1 flex justify-center">
+                    <button
+                      onClick={() => toggleFollowUpComplete(item.id)}
+                      className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+                        item.completed
+                          ? 'bg-green-500'
+                          : isDark ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'
+                      }`}
+                    >
+                      {item.completed && <Check size={14} className="text-white" />}
+                    </button>
+                  </div>
                 </div>
-                {hasItems && <ChevronRight size={16} className={isDark ? 'text-gray-500' : 'text-gray-400'} />}
-              </button>
-            );
-          })}
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Forms Section */}

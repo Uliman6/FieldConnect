@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Mic,
+  Settings2,
+  AlertTriangle as AlertTriangleIcon,
   Square,
   Check,
   AlertCircle,
@@ -28,7 +30,32 @@ import { useColorScheme } from '../lib/use-color-scheme';
 import { useVoiceDiaryStore } from '../lib/voice-diary-store';
 import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
-import type { VoiceNote, CategorizedSnippet } from '../lib/types';
+import type { VoiceNote, CategorizedSnippet, VoiceDiaryCategory } from '../lib/types';
+import { VOICE_DIARY_CATEGORIES } from '../lib/voice-diary-store';
+
+const CATEGORY_ICONS_RECORD: Record<string, React.ReactNode> = {
+  'Safety': <Shield size={18} className="text-red-500" />,
+  'Logistics': <Truck size={18} className="text-blue-500" />,
+  'Process': <Settings2 size={18} className="text-purple-500" />,
+  'Work Completed': <CheckCircle2 size={18} className="text-green-500" />,
+  'Work To Be Done': <ListTodo size={18} className="text-amber-500" />,
+  'Follow-up Items': <ArrowRight size={18} className="text-pink-500" />,
+  'Issues': <AlertTriangleIcon size={18} className="text-red-500" />,
+  'Team': <Users size={18} className="text-cyan-500" />,
+  'Materials': <Package size={18} className="text-stone-500" />,
+};
+
+const CATEGORY_COLORS_RECORD: Record<string, string> = {
+  'Safety': 'bg-red-100 dark:bg-red-900/30',
+  'Logistics': 'bg-blue-100 dark:bg-blue-900/30',
+  'Process': 'bg-purple-100 dark:bg-purple-900/30',
+  'Work Completed': 'bg-green-100 dark:bg-green-900/30',
+  'Work To Be Done': 'bg-amber-100 dark:bg-amber-900/30',
+  'Follow-up Items': 'bg-pink-100 dark:bg-pink-900/30',
+  'Issues': 'bg-red-100 dark:bg-red-900/30',
+  'Team': 'bg-cyan-100 dark:bg-cyan-900/30',
+  'Materials': 'bg-stone-100 dark:bg-stone-900/30',
+};
 
 export default function Record() {
   const colorScheme = useColorScheme();
@@ -48,6 +75,7 @@ export default function Record() {
   const [editedTranscript, setEditedTranscript] = useState('');
   const [isFeedbackMode, setIsFeedbackMode] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -72,6 +100,7 @@ export default function Record() {
     setCurrentProject,
     clearSnippetsForNote,
     categorizedSnippets,
+    getSnippetsForCategory,
     seedExampleData,
     hasExampleData,
     projects,
@@ -100,6 +129,18 @@ export default function Record() {
   };
 
   const today = getTodayDate();
+
+  // Calculate category counts for today's snippets in current project
+  const categoryCounts = VOICE_DIARY_CATEGORIES.reduce((acc, cat) => {
+    acc[cat] = getSnippetsForCategory(cat, today, currentProjectId || undefined).length;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalTodaySnippets = Object.values(categoryCounts).reduce((a, b) => a + b, 0);
+
+  const selectedCategorySnippets = selectedCategory
+    ? getSnippetsForCategory(selectedCategory as VoiceDiaryCategory, today, currentProjectId || undefined)
+    : [];
   // Get all notes for the project (not just today)
   const allProjectNotes = currentProjectId ? getVoiceNotesForProject(currentProjectId) : [];
   // Sort by date descending (newest first)
@@ -463,12 +504,9 @@ export default function Record() {
         status: 'processing',
       });
 
-      // Clear old snippets for this note
-      clearSnippetsForNote(noteId);
-
-      // Re-process the edited transcript to update categories/summary
+      // Get existing snippets from OTHER notes for context
       const existingSnippets = getSnippetsForDate(today, currentProjectId || undefined)
-        .filter(s => s.voiceNoteId !== noteId) // Exclude this note's old snippets
+        .filter(s => s.voiceNoteId !== noteId)
         .map((s) => ({ category: s.category, content: s.content }));
       const noteCount = getVoiceNotesForDate(today, currentProjectId || undefined).length;
 
@@ -476,32 +514,39 @@ export default function Record() {
         const processResult = await api.processVoiceNote(editedTranscript, existingSnippets, noteCount);
 
         if (processResult.success) {
+          // Only clear old snippets AFTER successful API response
+          clearSnippetsForNote(noteId);
+
           const noteUpdates: Partial<VoiceNote> = { status: 'complete' };
           if (processResult.title) noteUpdates.title = processResult.title;
           if (processResult.cleanedTranscript) noteUpdates.cleanedTranscript = processResult.cleanedTranscript;
 
-          // Add new snippets
+          // Add new snippets from the re-processed content
           if (processResult.newSnippets && processResult.newSnippets.length > 0) {
             for (const snippet of processResult.newSnippets) {
               addSnippet(noteId, snippet.category, snippet.content);
             }
+            console.log('[Edit] Added', processResult.newSnippets.length, 'new snippets');
           }
 
-          // Update daily summary
+          // Update daily summary with new content
           if (currentProjectId && processResult.summary) {
             updateDailySummary(today, currentProjectId, processResult.summary, processResult.hasMinimumInfo || false, user?.id);
+            console.log('[Edit] Summary updated');
           }
 
           updateVoiceNote(noteId, noteUpdates);
           addNotification('success', 'Note updated and re-categorized');
         } else {
+          // API didn't return success - keep existing snippets
           updateVoiceNote(noteId, { status: 'complete' });
-          addNotification('success', 'Note updated');
+          addNotification('success', 'Note text updated');
         }
       } catch (apiError) {
-        // API failed but we still saved the text
+        // API failed - keep existing snippets, just update the note text
+        console.log('[Edit] API failed, keeping existing categories');
         updateVoiceNote(noteId, { status: 'complete' });
-        addNotification('info', 'Note saved (re-categorization unavailable)');
+        addNotification('info', 'Note saved (categories unchanged)');
       }
     } catch (err) {
       addNotification('error', 'Failed to save edit');
@@ -717,6 +762,34 @@ export default function Record() {
               </span>
             </button>
 
+            {/* Today's Categories - Clickable */}
+            {totalTodaySnippets > 0 && !showNotes && (
+              <div className="mb-4">
+                <p className={`text-xs font-medium uppercase tracking-wider mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Today's Categories ({totalTodaySnippets})
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {VOICE_DIARY_CATEGORIES.filter(cat => categoryCounts[cat] > 0).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                        CATEGORY_COLORS_RECORD[cat]
+                      }`}
+                    >
+                      {CATEGORY_ICONS_RECORD[cat]}
+                      <span className={`text-[10px] font-medium text-center leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {cat.split(' ')[0]}
+                      </span>
+                      <span className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {categoryCounts[cat]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Collapsible Notes Section */}
             {showNotes && (
               <div className="flex flex-col" style={{ maxHeight: '50vh' }}>
@@ -922,6 +995,45 @@ export default function Record() {
                     {currentProjectId === project.id && <Check size={20} className="text-primary-600" />}
                   </button>
                 ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Detail Modal */}
+      {selectedCategory && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedCategory(null)} />
+          <div className={`relative w-full sm:max-w-md max-h-[85vh] rounded-t-2xl sm:rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} safe-area-bottom overflow-hidden`}>
+            <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                {CATEGORY_ICONS_RECORD[selectedCategory]}
+                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedCategory}</h2>
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                  {selectedCategorySnippets.length}
+                </span>
+              </div>
+              <button onClick={() => setSelectedCategory(null)} className="p-2">
+                <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[70vh]">
+              {selectedCategorySnippets.length === 0 ? (
+                <p className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  No items in this category today
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {selectedCategorySnippets.map((snippet) => (
+                    <div key={snippet.id} className={`p-4 rounded-xl ${CATEGORY_COLORS_RECORD[selectedCategory]}`}>
+                      <p className={`text-sm ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{snippet.content}</p>
+                      <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {new Date(snippet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
