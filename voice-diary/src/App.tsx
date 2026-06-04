@@ -6,6 +6,8 @@ import Record from './pages/Record';
 import Dashboard from './pages/Dashboard';
 import FormFill from './pages/FormFill';
 import Admin from './pages/Admin';
+import ToolFeedback from './pages/ToolFeedback';
+import ToolSummary from './pages/ToolSummary';
 import Layout from './components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -48,6 +50,8 @@ export default function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="form-fill" element={<FormFill />} />
         <Route path="admin" element={<Admin />} />
+        <Route path="tool-feedback" element={<ToolFeedback />} />
+        <Route path="tool-summary" element={<ToolSummary />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

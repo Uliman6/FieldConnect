@@ -702,10 +702,168 @@ function extractTopicFromTranscript(transcript) {
   return null;
 }
 
+// Tool Feedback Categories
+const TOOL_FEEDBACK_CATEGORIES = [
+  'Safety',
+  'Productivity',
+  'Comfort',
+  'Reliability',
+  'Feature Request',
+  'Tip',
+];
+
+/**
+ * Categorize tool feedback into relevant categories with sentiment
+ * @param {string} transcript - The transcribed feedback
+ * @param {string} toolBrand - The tool brand being reviewed
+ * @returns {Promise<Array<{category: string, sentiment: string, content: string}>>}
+ */
+async function categorizeToolFeedback(transcript, toolBrand) {
+  if (!transcript || transcript.trim().length < 10) {
+    return [];
+  }
+
+  if (!OPENAI_API_KEY) {
+    return basicToolFeedbackCategorization(transcript, toolBrand);
+  }
+
+  try {
+    const systemPrompt = `You are a tool feedback analyzer for construction power tools. Extract and categorize feedback about ${toolBrand} tools.
+
+CATEGORIES (use exactly these):
+- Safety: Safety features, concerns, protective mechanisms, injury risks
+- Productivity: Speed, efficiency, time savings, workflow impact
+- Comfort: Ergonomics, weight, grip, vibration, ease of use
+- Reliability: Durability, battery life, consistency, breakdowns
+- Feature Request: Missing features, desired improvements, comparisons to other tools
+- Tip: Best practices, usage tips, tricks, recommendations
+
+SENTIMENT (for each item):
+- positive: Good experience, praise, what works well
+- negative: Problems, complaints, issues, frustrations
+- neutral: Observations, facts without strong opinion
+
+OUTPUT FORMAT (JSON array):
+[
+  {"category": "Category", "sentiment": "positive|negative|neutral", "content": "Concise feedback point."}
+]
+
+RULES:
+1. Keep content concise (1-2 sentences max)
+2. Preserve specific details (model numbers, measurements, comparisons)
+3. One feedback point per item
+4. Include ALL relevant feedback points from the transcript`;
+
+    const userPrompt = `Analyze this ${toolBrand} tool feedback and categorize with sentiment:
+
+"${transcript}"
+
+Return a JSON array of categorized feedback items.`;
+
+    const response = await fetch(CHAT_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 800,
+      }),
+    });
+
+    if (!response.ok) {
+      return basicToolFeedbackCategorization(transcript, toolBrand);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '[]';
+
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      return basicToolFeedbackCategorization(transcript, toolBrand);
+    }
+
+    const items = JSON.parse(jsonMatch[0]);
+
+    return items
+      .filter(item => item.category && item.content && item.sentiment)
+      .map(item => ({
+        category: normalizeToolCategory(item.category),
+        sentiment: ['positive', 'negative', 'neutral'].includes(item.sentiment) ? item.sentiment : 'neutral',
+        content: item.content.trim(),
+      }))
+      .filter(item => TOOL_FEEDBACK_CATEGORIES.includes(item.category));
+
+  } catch (error) {
+    console.error('[voice-diary] Tool feedback categorization error:', error);
+    return basicToolFeedbackCategorization(transcript, toolBrand);
+  }
+}
+
+function normalizeToolCategory(category) {
+  const lower = category.toLowerCase().trim();
+
+  if (lower.includes('safety')) return 'Safety';
+  if (lower.includes('productivity') || lower.includes('efficiency') || lower.includes('speed')) return 'Productivity';
+  if (lower.includes('comfort') || lower.includes('ergonomic')) return 'Comfort';
+  if (lower.includes('reliab') || lower.includes('durability') || lower.includes('battery')) return 'Reliability';
+  if (lower.includes('feature') || lower.includes('request') || lower.includes('wish')) return 'Feature Request';
+  if (lower.includes('tip') || lower.includes('recommend') || lower.includes('best practice')) return 'Tip';
+
+  return 'Productivity'; // Default
+}
+
+function basicToolFeedbackCategorization(transcript, toolBrand) {
+  const lower = transcript.toLowerCase();
+  const results = [];
+
+  // Determine sentiment
+  const positiveWords = ['great', 'love', 'excellent', 'good', 'best', 'awesome', 'reliable', 'fast', 'powerful'];
+  const negativeWords = ['bad', 'hate', 'terrible', 'slow', 'heavy', 'broke', 'issue', 'problem', 'weak', 'frustrat'];
+
+  const hasPositive = positiveWords.some(w => lower.includes(w));
+  const hasNegative = negativeWords.some(w => lower.includes(w));
+  const sentiment = hasNegative ? 'negative' : hasPositive ? 'positive' : 'neutral';
+
+  // Safety
+  if (/safety|safe|dangerous|injury|hurt|protect/i.test(lower)) {
+    results.push({ category: 'Safety', sentiment, content: transcript.trim() });
+  }
+
+  // Comfort
+  if (/comfort|heavy|light|grip|ergonomic|vibrat|fatigue|wrist|hand/i.test(lower)) {
+    results.push({ category: 'Comfort', sentiment, content: transcript.trim() });
+  }
+
+  // Reliability
+  if (/battery|reliable|broke|last|durability|consistent|power/i.test(lower)) {
+    results.push({ category: 'Reliability', sentiment, content: transcript.trim() });
+  }
+
+  // Productivity
+  if (/fast|slow|efficient|quick|time|productivity|speed/i.test(lower)) {
+    results.push({ category: 'Productivity', sentiment, content: transcript.trim() });
+  }
+
+  if (results.length === 0) {
+    results.push({ category: 'Productivity', sentiment, content: transcript.trim() });
+  }
+
+  return results;
+}
+
 module.exports = {
   categorizeTranscript,
   generateDailySummary,
   generateNoteTitle,
   matchFormTemplates,
+  categorizeToolFeedback,
   VOICE_DIARY_CATEGORIES,
+  TOOL_FEEDBACK_CATEGORIES,
 };

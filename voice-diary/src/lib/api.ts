@@ -6,6 +6,8 @@ import type {
   TranscriptionResponse,
   VoiceDiaryProcessResult,
   CategorizedSnippet,
+  ToolBrand,
+  ToolFeedbackProcessResult,
 } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -142,6 +144,14 @@ class ApiClient {
     error?: string;
   }> {
     const response = await this.client.post('/voice-diary/summarize', { snippets, noteCount });
+    return response.data;
+  }
+
+  async processToolFeedback(transcript: string, toolBrand: ToolBrand): Promise<ToolFeedbackProcessResult> {
+    const response = await this.client.post<ToolFeedbackProcessResult>('/voice-diary/tool-feedback', {
+      transcript,
+      toolBrand,
+    });
     return response.data;
   }
 

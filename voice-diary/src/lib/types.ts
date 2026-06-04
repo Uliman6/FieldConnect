@@ -99,6 +99,53 @@ export const FORM_TYPES = [
 
 export type FormTypeId = typeof FORM_TYPES[number]['id'];
 
+// Tool Feedback Types
+export const TOOL_BRANDS = ['DeWalt', 'Milwaukee', 'Hilti', 'Makita'] as const;
+export type ToolBrand = typeof TOOL_BRANDS[number];
+
+export const TOOL_FEEDBACK_CATEGORIES = [
+  'Safety',
+  'Productivity',
+  'Comfort',
+  'Reliability',
+  'Feature Request',
+  'Tip',
+] as const;
+export type ToolFeedbackCategory = typeof TOOL_FEEDBACK_CATEGORIES[number];
+
+export interface ToolFeedbackEntry {
+  id: string;
+  projectId: string;
+  userId?: string;
+  toolBrand: ToolBrand;
+  audioUri: string;
+  transcriptText: string | null;
+  status: 'recording' | 'transcribing' | 'processing' | 'complete' | 'error';
+  errorMessage?: string;
+  createdAt: string;
+  duration: number;
+}
+
+export interface ToolFeedbackSnippet {
+  id: string;
+  feedbackId: string;
+  toolBrand: ToolBrand;
+  category: ToolFeedbackCategory;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  content: string;
+  createdAt: string;
+}
+
+export interface ToolFeedbackProcessResult {
+  success: boolean;
+  snippets?: Array<{
+    category: ToolFeedbackCategory;
+    sentiment: 'positive' | 'negative' | 'neutral';
+    content: string;
+  }>;
+  summary?: string;
+}
+
 // API Types
 export interface LoginRequest {
   email: string;

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Mic, LayoutDashboard, LogOut, Sun, Moon, Shield } from 'lucide-react';
+import { Mic, LayoutDashboard, LogOut, Sun, Moon, Shield, Wrench, BarChart3 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useThemeToggle } from '../lib/use-color-scheme';
 
@@ -79,7 +79,7 @@ export default function Layout() {
             to="/"
             end
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-3 px-4 transition-colors ${
+              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
                 isActive
                   ? 'text-primary-600'
                   : isDark
@@ -88,13 +88,13 @@ export default function Layout() {
               }`
             }
           >
-            <Mic size={24} />
-            <span className="text-xs mt-1 font-medium">Record</span>
+            <Mic size={22} />
+            <span className="text-[10px] mt-1 font-medium">Record</span>
           </NavLink>
           <NavLink
             to="/dashboard"
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-3 px-4 transition-colors ${
+              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
                 isActive
                   ? 'text-primary-600'
                   : isDark
@@ -103,8 +103,38 @@ export default function Layout() {
               }`
             }
           >
-            <LayoutDashboard size={24} />
-            <span className="text-xs mt-1 font-medium">Dashboard</span>
+            <LayoutDashboard size={22} />
+            <span className="text-[10px] mt-1 font-medium">Dashboard</span>
+          </NavLink>
+          <NavLink
+            to="/tool-feedback"
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
+                isActive
+                  ? 'text-orange-500'
+                  : isDark
+                  ? 'text-gray-500 hover:text-gray-300'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`
+            }
+          >
+            <Wrench size={22} />
+            <span className="text-[10px] mt-1 font-medium">Tools</span>
+          </NavLink>
+          <NavLink
+            to="/tool-summary"
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
+                isActive
+                  ? 'text-orange-500'
+                  : isDark
+                  ? 'text-gray-500 hover:text-gray-300'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`
+            }
+          >
+            <BarChart3 size={22} />
+            <span className="text-[10px] mt-1 font-medium">Summary</span>
           </NavLink>
         </div>
       </nav>

@@ -166,6 +166,23 @@ const voiceDiaryController = {
     }
   },
 
+  // Process tool feedback
+  async processToolFeedback(req, res, next) {
+    try {
+      const { transcript, toolBrand } = req.body;
+      if (!transcript || !toolBrand) {
+        return res.status(400).json({ error: 'Validation Error', message: 'transcript and toolBrand are required' });
+      }
+      console.log('[voice-diary] Processing tool feedback for:', toolBrand);
+      const snippets = await voiceDiaryService.categorizeToolFeedback(transcript, toolBrand);
+      console.log('[voice-diary] Tool feedback categorized into', snippets.length, 'snippets');
+      res.json({ success: true, snippets });
+    } catch (error) {
+      console.error('[voice-diary] Tool feedback error:', error);
+      next(error);
+    }
+  },
+
   // Get entries for current user only (user-scoped)
   async getMyEntries(req, res, next) {
     try {
