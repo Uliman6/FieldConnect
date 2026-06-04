@@ -105,12 +105,17 @@ function cleanForForm(text: string): string {
       if (/hate|dislike|can't stand/.test(verb)) return 'Poor ';
       return '';
     })
-    // "I think/believe/find" -> remove
-    .replace(/\bi (think|believe|find|noticed|noticed that|realized|feel like|feel that)\s*(that\s*)?/gi, '')
+    // "I think/believe/find/would say" -> remove
+    .replace(/\bi (think|believe|find|noticed|noticed that|realized|feel like|feel that|would say|could say|might say|have to say)\s*(that\s*)?/gi, '')
     // "It is/was/has been" -> convert or remove
-    .replace(/\b(it|this|the tool|this tool|the drill|this drill)\s*(is|was|has been|'s)\s*(really |very |so |extremely )?(a\s*)?/gi, '')
-    // Remove remaining pronouns
-    .replace(/\b(i|i'm|i've|i'd|i'll|my|me|myself|we|we're|we've|our|us|you|you're|your|they|their|them)\b/gi, '')
+    .replace(/\b(it|this|the tool|this tool|the drill|this drill)\s*(is|was|has been|'s)\s*(really |very |so |extremely |a lot )?(a\s*)?/gi, '')
+    // "anything/everything I've used/tried" -> "comparable tools"
+    .replace(/\b(anything|everything|any.?thing|other tools?)\s*(else\s*)?(i've|i have|we've|we have)\s*(ever\s*)?(used|tried|tested|worked with)/gi, 'comparable tools')
+    // "I've used/tried/been using" -> remove the I've part
+    .replace(/\bi've\s*(been\s*)?(using|used|trying|tried|testing|tested|working with)/gi, '')
+    .replace(/\bi('ve| have| had)\s*/gi, '')
+    // Remove remaining pronouns and contractions
+    .replace(/\b(i|i'm|i'd|i'll|my|me|myself|we|we're|we've|we'd|our|us|you|you're|your|they|their|them)\b/gi, '')
     // "knowing that" -> remove
     .replace(/knowing that\s*/gi, '')
     // "this has a" -> just describe what it has
