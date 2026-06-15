@@ -728,15 +728,29 @@ async function categorizeToolFeedback(transcript, toolBrand) {
   }
 
   try {
-    const systemPrompt = `You are a tool feedback analyzer for construction power tools. Extract and categorize feedback about ${toolBrand} tools.
+    const systemPrompt = `You are a tool feedback analyzer for construction power tools. Your job is to extract ONLY feedback that is specifically about ${toolBrand} power tools (drills, saws, grinders, impact drivers, etc.).
+
+IMPORTANT - WHAT TO INCLUDE:
+- Feedback about the tool's performance, features, safety, comfort, reliability
+- Comments about training on the tool, incidents while using it
+- Tips for using the tool effectively
+- Comparisons with other tool brands
+- Accessory needs or issues
+
+IMPORTANT - WHAT TO EXCLUDE (return empty array if transcript only contains these):
+- Greetings, small talk, or casual conversation
+- Unrelated topics (food, weather, personal matters, etc.)
+- Incomplete sentences that don't convey tool feedback
+- Generic statements that could apply to anything
+- Test recordings or audio checks
 
 CATEGORIES (use exactly these):
-- Safety: Safety features, concerns, protective mechanisms, injury risks
-- Productivity: Speed, efficiency, time savings, workflow impact
-- Comfort: Ergonomics, weight, grip, vibration, ease of use
-- Reliability: Durability, battery life, consistency, breakdowns
+- Safety: Safety features, concerns, protective mechanisms, injury risks, incidents, training
+- Productivity: Speed, efficiency, time savings, workflow impact, job completion
+- Comfort: Ergonomics, weight, grip, vibration, ease of use, fatigue
+- Reliability: Durability, battery life, consistency, breakdowns, repairs needed
 - Feature Request: Missing features, desired improvements, comparisons to other tools
-- Tip: Best practices, usage tips, tricks, recommendations
+- Tip: Best practices, usage tips, tricks, recommendations, lessons learned
 
 SENTIMENT (for each item):
 - positive: Good experience, praise, what works well
@@ -745,20 +759,21 @@ SENTIMENT (for each item):
 
 OUTPUT FORMAT (JSON array):
 [
-  {"category": "Category", "sentiment": "positive|negative|neutral", "content": "Concise feedback point."}
+  {"category": "Category", "sentiment": "positive|negative|neutral", "content": "Concise feedback point about the tool."}
 ]
 
 RULES:
-1. Keep content concise (1-2 sentences max)
-2. Preserve specific details (model numbers, measurements, comparisons)
-3. One feedback point per item
-4. Include ALL relevant feedback points from the transcript`;
+1. ONLY include feedback specifically about power tools
+2. If no relevant tool feedback exists, return an empty array: []
+3. Keep content concise (1-2 sentences max)
+4. Rewrite content to be professional and clear
+5. Remove filler words, personal pronouns, and conversational fluff`;
 
-    const userPrompt = `Analyze this ${toolBrand} tool feedback and categorize with sentiment:
+    const userPrompt = `Analyze this recording for ${toolBrand} power tool feedback. Extract ONLY statements about the tool itself. If there's no relevant tool feedback, return [].
 
-"${transcript}"
+Transcript: "${transcript}"
 
-Return a JSON array of categorized feedback items.`;
+Return a JSON array of categorized tool feedback items (or empty array if no relevant feedback).`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -821,38 +836,88 @@ function normalizeToolCategory(category) {
 
 function basicToolFeedbackCategorization(transcript, toolBrand) {
   const lower = transcript.toLowerCase();
+  const brandLower = toolBrand.toLowerCase();
   const results = [];
 
+  // First, check if transcript is about tools at all
+  // Must contain tool-related keywords OR the brand name
+  const toolKeywords = [
+    'tool', 'drill', 'saw', 'grinder', 'driver', 'impact', 'hammer', 'sander',
+    'battery', 'charge', 'trigger', 'motor', 'torque', 'rpm', 'cordless',
+    'dewalt', 'milwaukee', 'hilti', 'makita', 'brushless', 'chuck',
+    'training', 'trained', 'incident', 'accident', 'injury', 'safety',
+    'accessory', 'accessories', 'bit', 'blade', 'silica', 'vacuum',
+    'lanyard', 'repair', 'broken', 'working', 'job', 'task'
+  ];
+
+  const hasToolContext = toolKeywords.some(kw => lower.includes(kw)) || lower.includes(brandLower);
+
+  // If no tool context, return empty - this is likely irrelevant content
+  if (!hasToolContext) {
+    console.log(`[voice-diary] No tool context found in transcript, skipping: "${transcript.substring(0, 50)}..."`);
+    return [];
+  }
+
+  // Transcript too short to be meaningful feedback
+  if (transcript.trim().length < 15) {
+    return [];
+  }
+
   // Determine sentiment
-  const positiveWords = ['great', 'love', 'excellent', 'good', 'best', 'awesome', 'reliable', 'fast', 'powerful'];
-  const negativeWords = ['bad', 'hate', 'terrible', 'slow', 'heavy', 'broke', 'issue', 'problem', 'weak', 'frustrat'];
+  const positiveWords = ['great', 'love', 'excellent', 'good', 'best', 'awesome', 'reliable', 'fast', 'powerful', 'easy', 'comfortable', 'safe'];
+  const negativeWords = ['bad', 'hate', 'terrible', 'slow', 'heavy', 'broke', 'broken', 'issue', 'problem', 'weak', 'frustrat', 'difficult', 'hard', 'dangerous'];
 
   const hasPositive = positiveWords.some(w => lower.includes(w));
   const hasNegative = negativeWords.some(w => lower.includes(w));
   const sentiment = hasNegative ? 'negative' : hasPositive ? 'positive' : 'neutral';
 
-  // Safety
-  if (/safety|safe|dangerous|injury|hurt|protect/i.test(lower)) {
+  // Categorize based on specific keywords
+  let categorized = false;
+
+  // Safety - training, incidents, protection
+  if (/safety|safe|dangerous|injury|hurt|protect|incident|accident|training|trained/i.test(lower)) {
     results.push({ category: 'Safety', sentiment, content: transcript.trim() });
+    categorized = true;
   }
 
-  // Comfort
-  if (/comfort|heavy|light|grip|ergonomic|vibrat|fatigue|wrist|hand/i.test(lower)) {
+  // Comfort - ergonomics, physical aspects
+  if (/comfort|ergonomic|vibrat|fatigue|wrist|grip|balance|weight/i.test(lower)) {
     results.push({ category: 'Comfort', sentiment, content: transcript.trim() });
+    categorized = true;
   }
 
-  // Reliability
-  if (/battery|reliable|broke|last|durability|consistent|power/i.test(lower)) {
+  // Reliability - durability, battery, consistency
+  if (/battery|reliable|reliab|broke|broken|last|durability|durable|consistent|repair|needs repair/i.test(lower)) {
     results.push({ category: 'Reliability', sentiment, content: transcript.trim() });
+    categorized = true;
   }
 
-  // Productivity
-  if (/fast|slow|efficient|quick|time|productivity|speed/i.test(lower)) {
+  // Productivity - speed, efficiency
+  if (/fast|slow|efficient|quick|productivity|speed|finish|complete|job done/i.test(lower)) {
     results.push({ category: 'Productivity', sentiment, content: transcript.trim() });
+    categorized = true;
   }
 
-  if (results.length === 0) {
-    results.push({ category: 'Productivity', sentiment, content: transcript.trim() });
+  // Feature Request
+  if (/wish|would be nice|should have|missing|feature|need|want|could use|improvement/i.test(lower)) {
+    results.push({ category: 'Feature Request', sentiment, content: transcript.trim() });
+    categorized = true;
+  }
+
+  // Tip - recommendations, lessons learned
+  if (/tip|trick|recommend|lesson|learned|best way|try to|should try|works best|advice/i.test(lower)) {
+    results.push({ category: 'Tip', sentiment, content: transcript.trim() });
+    categorized = true;
+  }
+
+  // If tool context exists but no specific category matched,
+  // only add as Productivity if it seems like actual feedback
+  if (!categorized && hasToolContext) {
+    // Check for feedback-like language
+    const hasFeedbackLanguage = /it's|this|the tool|works|using|used|tried|tested|like|good|bad|okay|fine/i.test(lower);
+    if (hasFeedbackLanguage) {
+      results.push({ category: 'Productivity', sentiment, content: transcript.trim() });
+    }
   }
 
   return results;

@@ -14,10 +14,14 @@ import {
   ThumbsDown,
   Calendar,
   X,
+  ClipboardCheck,
+  AlertTriangle,
+  Check,
+  Wrench,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useToolFeedbackStore } from '../lib/tool-feedback-store';
-import { TOOL_FEEDBACK_CATEGORIES, type ToolBrand, type ToolFeedbackCategory } from '../lib/types';
+import { TOOL_FEEDBACK_CATEGORIES, TOOL_BRANDS, type ToolBrand, type ToolFeedbackCategory } from '../lib/types';
 
 // Date utilities
 const formatDateISO = (date: Date): string => {
@@ -80,8 +84,35 @@ export default function ToolSummary() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<ToolFeedbackCategory | null>(null);
 
-  const { currentProjectId, projects, feedbackSnippets, feedbackEntries } = useToolFeedbackStore();
+  const { currentProjectId, projects, feedbackSnippets, feedbackEntries, dailyChecks } = useToolFeedbackStore();
   const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  // Get daily checks for selected date
+  const dateChecks = useMemo(() => {
+    if (!currentProjectId) return dailyChecks.filter((c) => c.date === selectedDate);
+    return dailyChecks.filter((c) => c.projectId === currentProjectId && c.date === selectedDate);
+  }, [currentProjectId, dailyChecks, selectedDate]);
+
+  // Aggregate check stats
+  const checkStats = useMemo(() => {
+    const stats = {
+      total: dateChecks.length,
+      needsRepair: dateChecks.filter((c) => c.needsRepair === true).length,
+      issueCount: dateChecks.filter((c) => c.issueTypes.length > 0).length,
+      allIssues: dateChecks.flatMap((c) => c.issueTypes.map((issue) => ({ brand: c.toolBrand, issue }))),
+      byBrand: {} as Record<ToolBrand, { completed: boolean; needsRepair: boolean; issues: string[] }>,
+    };
+
+    for (const check of dateChecks) {
+      stats.byBrand[check.toolBrand] = {
+        completed: true,
+        needsRepair: check.needsRepair === true,
+        issues: check.issueTypes as string[],
+      };
+    }
+
+    return stats;
+  }, [dateChecks]);
 
   // Date navigation handlers
   const handlePrevDay = () => {
@@ -226,6 +257,78 @@ export default function ToolSummary() {
         <p className={`text-xs mb-4 px-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
           {totalFeedback} feedback items on {formatDateShort(selectedDate)}
         </p>
+
+        {/* Daily Checklist Stats */}
+        {checkStats.total > 0 && (
+          <div className={`rounded-xl p-4 mb-4 border-l-4 border-orange-500 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+            <div className="flex items-center gap-2 mb-3">
+              <ClipboardCheck size={18} className="text-orange-500" />
+              <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Daily Checklists ({checkStats.total})
+              </span>
+            </div>
+
+            {/* Brand Status */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {TOOL_BRANDS.map((brand) => {
+                const brandCheck = checkStats.byBrand[brand];
+                if (!brandCheck) return null;
+                return (
+                  <div
+                    key={brand}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium ${
+                      brandCheck.needsRepair
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                        : brandCheck.issues.length > 0
+                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                    }`}
+                  >
+                    {brandCheck.needsRepair ? (
+                      <Wrench size={12} />
+                    ) : brandCheck.issues.length > 0 ? (
+                      <AlertTriangle size={12} />
+                    ) : (
+                      <Check size={12} />
+                    )}
+                    {brand}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Issues Summary */}
+            {checkStats.issueCount > 0 && (
+              <div className={`mt-3 pt-3 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                <p className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Issues Reported:
+                </p>
+                <div className="space-y-1">
+                  {checkStats.allIssues.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className={`px-1.5 py-0.5 text-xs font-bold text-white rounded ${BRAND_COLORS[item.brand]}`}>
+                        {item.brand}
+                      </span>
+                      <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {item.issue}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Repair Alert */}
+            {checkStats.needsRepair > 0 && (
+              <div className={`mt-3 p-2 rounded-lg flex items-center gap-2 bg-red-100 dark:bg-red-900/30`}>
+                <AlertTriangle size={16} className="text-red-500" />
+                <span className="text-xs font-medium text-red-700 dark:text-red-400">
+                  {checkStats.needsRepair} tool(s) flagged for repair
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* No Feedback State */}
         {totalFeedback === 0 ? (

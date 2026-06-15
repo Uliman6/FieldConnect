@@ -19,12 +19,15 @@ import {
   Edit3,
   Save,
   Trash2,
+  ClipboardCheck,
+  MessageCircle,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
 import { useToolFeedbackStore } from '../lib/tool-feedback-store';
 import { TOOL_BRANDS, type ToolBrand, type ToolFeedbackCategory } from '../lib/types';
+import DailyChecklist from '../components/DailyChecklist';
 
 const BRAND_COLORS: Record<ToolBrand, { bg: string; border: string; text: string }> = {
   'DeWalt': { bg: 'bg-yellow-100 dark:bg-yellow-900/30', border: 'border-yellow-500', text: 'text-yellow-700 dark:text-yellow-400' },
@@ -199,53 +202,92 @@ function cleanForForm(text: string): string {
 // Local categorization when API is unavailable
 function localCategorize(text: string): Array<{ category: ToolFeedbackCategory; sentiment: 'positive' | 'negative' | 'neutral'; content: string }> {
   const results: Array<{ category: ToolFeedbackCategory; sentiment: 'positive' | 'negative' | 'neutral'; content: string }> = [];
+  const lower = text.toLowerCase();
+
+  // First check if transcript is about tools at all
+  const toolKeywords = [
+    'tool', 'drill', 'saw', 'grinder', 'driver', 'impact', 'hammer', 'sander',
+    'battery', 'charge', 'trigger', 'motor', 'torque', 'cordless',
+    'dewalt', 'milwaukee', 'hilti', 'makita', 'brushless', 'chuck',
+    'training', 'trained', 'incident', 'accident', 'injury', 'safety',
+    'accessory', 'accessories', 'bit', 'blade', 'silica', 'vacuum',
+    'lanyard', 'repair', 'broken', 'working', 'job', 'task'
+  ];
+
+  const hasToolContext = toolKeywords.some(kw => lower.includes(kw));
+
+  // If no tool context, return empty array - this is irrelevant content
+  if (!hasToolContext) {
+    console.log('[ToolFeedback] No tool context found, skipping categorization');
+    return [];
+  }
+
+  // Transcript too short
+  if (text.trim().length < 15) {
+    return [];
+  }
 
   // Split into sentences
   const sentences = text
     .replace(/([.!?])\s+/g, '$1|')
     .split('|')
     .map(s => s.trim())
-    .filter(s => s.length > 5);
+    .filter(s => s.length > 10); // Increased minimum length
 
-  if (sentences.length === 0) {
+  if (sentences.length === 0 && text.trim().length > 15) {
     sentences.push(text.trim());
   }
 
-  // Determine sentiment from original text
+  // Determine sentiment
   const detectSentiment = (t: string): 'positive' | 'negative' | 'neutral' => {
-    const lower = t.toLowerCase();
-    const positiveWords = ['great', 'love', 'excellent', 'good', 'best', 'awesome', 'reliable', 'fast', 'powerful', 'easy', 'comfortable', 'like', 'perfect', 'safe', 'confident', 'happy', 'enjoy'];
-    const negativeWords = ['bad', 'hate', 'terrible', 'slow', 'heavy', 'broke', 'issue', 'problem', 'weak', 'frustrat', 'difficult', 'hard', 'annoying', 'worst', 'don\'t like', 'dislike', 'unreliable'];
+    const l = t.toLowerCase();
+    const positiveWords = ['great', 'love', 'excellent', 'good', 'best', 'awesome', 'reliable', 'fast', 'powerful', 'easy', 'comfortable', 'safe'];
+    const negativeWords = ['bad', 'hate', 'terrible', 'slow', 'heavy', 'broke', 'broken', 'issue', 'problem', 'weak', 'frustrat', 'difficult', 'hard', 'dangerous'];
 
-    const hasPositive = positiveWords.some(w => lower.includes(w));
-    const hasNegative = negativeWords.some(w => lower.includes(w));
+    const hasPositive = positiveWords.some(w => l.includes(w));
+    const hasNegative = negativeWords.some(w => l.includes(w));
 
     if (hasNegative && !hasPositive) return 'negative';
     if (hasPositive && !hasNegative) return 'positive';
     return 'neutral';
   };
 
-  // Categorize each sentence
-  const categorize = (t: string): ToolFeedbackCategory => {
-    const lower = t.toLowerCase();
-    // Check Tip FIRST - tips often contain words that match other categories
-    if (/\b(one tip|a tip|my tip|pro tip|tip for|tips for|trick|recommend|best way|advice|suggestion|for others|effectively|efficiently|start with|try using|try to|should try|works best)\b/i.test(lower)) return 'Tip';
-    if (/safety|safe|dangerous|injury|hurt|protect|hazard|safeguard/i.test(lower)) return 'Safety';
-    if (/comfort|heavy|light|grip|ergonomic|vibrat|fatigue|wrist|weight/i.test(lower)) return 'Comfort';
-    if (/battery|reliable|broke|last|durability|consistent|dies|charge|dependable/i.test(lower)) return 'Reliability';
-    if (/wish|would be nice|should have|missing|need|want|feature|add|could use/i.test(lower)) return 'Feature Request';
-    return 'Productivity';
+  // Categorize - returns null if sentence doesn't match any category
+  const categorize = (t: string): ToolFeedbackCategory | null => {
+    const l = t.toLowerCase();
+
+    // Tip - check first
+    if (/\b(tip|trick|recommend|lesson|learned|best way|try to|should try|works best|advice)\b/i.test(l)) return 'Tip';
+    // Safety
+    if (/safety|safe|dangerous|injury|hurt|protect|incident|accident|training|trained/i.test(l)) return 'Safety';
+    // Comfort
+    if (/comfort|ergonomic|vibrat|fatigue|wrist|grip|balance|weight/i.test(l)) return 'Comfort';
+    // Reliability
+    if (/battery|reliable|reliab|broke|broken|durability|durable|consistent|repair/i.test(l)) return 'Reliability';
+    // Productivity
+    if (/fast|slow|efficient|quick|productivity|speed|finish|complete|job/i.test(l)) return 'Productivity';
+    // Feature Request
+    if (/wish|would be nice|should have|missing|feature|need|want|could use|improvement/i.test(l)) return 'Feature Request';
+
+    // Only return Productivity for generic tool-related feedback
+    if (/tool|drill|saw|using|used|works|it's|this/i.test(l)) return 'Productivity';
+
+    return null; // No match
   };
 
   const seen = new Set<string>();
 
   for (const sentence of sentences) {
-    const sentiment = detectSentiment(sentence);
     const category = categorize(sentence);
+
+    // Skip if no category matched
+    if (!category) continue;
+
+    const sentiment = detectSentiment(sentence);
     const cleaned = cleanForForm(sentence);
 
     // Skip if too short, duplicate, or just punctuation
-    if (cleaned.length > 3 && !seen.has(cleaned.toLowerCase())) {
+    if (cleaned.length > 10 && !seen.has(cleaned.toLowerCase())) {
       seen.add(cleaned.toLowerCase());
       results.push({
         category,
@@ -274,6 +316,7 @@ export default function ToolFeedback() {
   const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -294,6 +337,7 @@ export default function ToolFeedback() {
     deleteFeedbackSnippet,
     getSnippetsForProject,
     addNotification,
+    getDailyCheckForToday,
   } = useToolFeedbackStore();
 
   // Load projects from API
@@ -471,7 +515,7 @@ export default function ToolFeedback() {
         </button>
 
         {/* Tool Brand Selector */}
-        <div className="mb-6">
+        <div className="mb-4">
           <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
             Select Tool Brand
           </p>
@@ -496,46 +540,112 @@ export default function ToolFeedback() {
           </div>
         </div>
 
-        {/* Record Button */}
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <p className={`text-base mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            {!currentProjectId
-              ? 'Select a project to start'
-              : !selectedToolBrand
-              ? 'Select a tool brand above'
-              : isRecording
-              ? 'Recording... Tap to stop'
-              : `Record feedback for ${selectedToolBrand}`}
-          </p>
-
+        {/* Daily Checklist Button */}
+        {currentProjectId && selectedToolBrand && (
           <button
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={!currentProjectId || !selectedToolBrand}
-            className={`w-32 h-32 rounded-full flex items-center justify-center shadow-lg transition-all ${
-              !currentProjectId || !selectedToolBrand
-                ? 'bg-gray-400'
-                : isRecording
-                ? 'bg-orange-500 animate-pulse'
-                : 'bg-orange-500 hover:bg-orange-600 active:scale-95'
+            onClick={() => setShowChecklist(true)}
+            className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl mb-4 transition-colors border ${
+              getDailyCheckForToday(currentProjectId, selectedToolBrand)
+                ? 'border-green-500 ' + (isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-50 text-green-700')
+                : isDark
+                ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
-            {isRecording ? (
-              <Square size={40} className="text-white" fill="white" />
-            ) : (
-              <Mic size={48} className="text-white" />
+            <ClipboardCheck size={20} className={getDailyCheckForToday(currentProjectId, selectedToolBrand) ? 'text-green-500' : 'text-orange-500'} />
+            <span className="font-medium">
+              {getDailyCheckForToday(currentProjectId, selectedToolBrand) ? 'View/Edit Daily Checklist' : 'Daily Checklist'}
+            </span>
+            {getDailyCheckForToday(currentProjectId, selectedToolBrand) && (
+              <Check size={16} className="text-green-500 ml-1" />
             )}
           </button>
+        )}
 
-          {isRecording && (
-            <p className="text-3xl font-bold mt-6 tabular-nums text-orange-500">
-              {formatDuration(recordingDuration)}
-            </p>
-          )}
+        {/* Recording Section */}
+        <div className="flex-1 flex flex-col">
+          {/* Recording Mode - Shows talking points and mic */}
+          {isRecording ? (
+            <div className="flex-1 flex flex-col">
+              {/* Talking Points Section */}
+              <div className={`rounded-xl p-4 mb-4 border ${
+                isDark ? 'bg-orange-900/20 border-orange-800' : 'bg-orange-50 border-orange-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageCircle size={18} className="text-orange-500" />
+                  <span className={`font-semibold text-sm ${isDark ? 'text-orange-400' : 'text-orange-700'}`}>
+                    Talk about these points:
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    'Are you trained on this tool?',
+                    'Any incidents from previous work?',
+                    'Is this the correct tool for the job?',
+                    'What accessories are needed?',
+                    'Any incidents or issues today?',
+                    'Lessons learned?',
+                  ].map((point, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 text-sm ${
+                        isDark ? 'text-orange-300' : 'text-orange-800'
+                      }`}
+                    >
+                      <span className="text-orange-500 font-bold">{index + 1}.</span>
+                      <span>{point}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-          {error && (
-            <div className="flex items-center gap-2 mt-6 px-4 py-3 bg-red-100 dark:bg-red-900/30 rounded-xl">
-              <AlertCircle size={18} className="text-red-500" />
-              <span className="text-red-600 dark:text-red-400 text-sm">{error}</span>
+              {/* Recording Controls */}
+              <div className="flex-1 flex flex-col items-center justify-center">
+                <p className={`text-base mb-4 text-center font-medium ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                  Recording... Tap to stop
+                </p>
+
+                <button
+                  onClick={stopRecording}
+                  className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg bg-orange-500 animate-pulse"
+                >
+                  <Square size={36} className="text-white" fill="white" />
+                </button>
+
+                <p className="text-4xl font-bold mt-4 tabular-nums text-orange-500">
+                  {formatDuration(recordingDuration)}
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* Normal Mode - Show mic button */
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <p className={`text-base mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {!currentProjectId
+                  ? 'Select a project to start'
+                  : !selectedToolBrand
+                  ? 'Select a tool brand above'
+                  : `Record feedback for ${selectedToolBrand}`}
+              </p>
+
+              <button
+                onClick={startRecording}
+                disabled={!currentProjectId || !selectedToolBrand}
+                className={`w-32 h-32 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                  !currentProjectId || !selectedToolBrand
+                    ? 'bg-gray-400'
+                    : 'bg-orange-500 hover:bg-orange-600 active:scale-95'
+                }`}
+              >
+                <Mic size={48} className="text-white" />
+              </button>
+
+              {error && (
+                <div className="flex items-center gap-2 mt-6 px-4 py-3 bg-red-100 dark:bg-red-900/30 rounded-xl">
+                  <AlertCircle size={18} className="text-red-500" />
+                  <span className="text-red-600 dark:text-red-400 text-sm">{error}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -742,6 +852,18 @@ export default function ToolFeedback() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Daily Checklist Modal */}
+      {currentProjectId && selectedToolBrand && (
+        <DailyChecklist
+          isDark={isDark}
+          isOpen={showChecklist}
+          onClose={() => setShowChecklist(false)}
+          projectId={currentProjectId}
+          toolBrand={selectedToolBrand}
+          userId={user?.id}
+        />
       )}
     </div>
   );

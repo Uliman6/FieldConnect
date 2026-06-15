@@ -146,6 +146,57 @@ export interface ToolFeedbackProcessResult {
   summary?: string;
 }
 
+// Daily Tool Checklist Types (DPR Defense)
+export const TOOL_ISSUE_TYPES = [
+  'Needs Repair',
+  'Wrong Tool',
+  'Missing Accessories',
+  'Lack of Training',
+  'Improper Use',
+  'Accessories Not Used',
+  'Other',
+] as const;
+export type ToolIssueType = typeof TOOL_ISSUE_TYPES[number];
+
+export interface DailyToolCheck {
+  id: string;
+  projectId: string;
+  toolBrand: ToolBrand;
+  userId?: string;
+  date: string; // YYYY-MM-DD format
+
+  // Start of Day checks
+  toolInspected: boolean;
+  batteryCharged: boolean;
+  needsRepair: boolean | null; // null = not answered
+  accessoriesAvailable: boolean;
+  workingAtHeights: boolean;
+  lanyardReady: boolean; // only relevant if workingAtHeights
+
+  // End of Day checks
+  toolCleaned: boolean;
+  toolInspectedEndOfDay: boolean;
+  storedProperly: boolean;
+  batteryOnCharger: boolean;
+
+  // Issues (can select multiple)
+  issueTypes: ToolIssueType[];
+  otherIssueNote?: string;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Talking points shown during recording
+export const RECORDING_TALKING_POINTS = [
+  'Are you trained on this tool?',
+  'Any incidents from previous work?',
+  'Is this the correct tool for the job?',
+  'What accessories are needed?',
+  'Any incidents or issues today?',
+  'Lessons learned?',
+] as const;
+
 // API Types
 export interface LoginRequest {
   email: string;

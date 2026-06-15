@@ -6,6 +6,7 @@ import type {
   ToolFeedbackEntry,
   ToolFeedbackSnippet,
   Project,
+  DailyToolCheck,
 } from './types';
 
 interface ToolFeedbackStore {
@@ -16,6 +17,7 @@ interface ToolFeedbackStore {
   feedbackEntries: ToolFeedbackEntry[];
   feedbackSnippets: ToolFeedbackSnippet[];
   notifications: Array<{ id: string; type: string; message: string }>;
+  dailyChecks: DailyToolCheck[];
 
   // Actions
   setSelectedToolBrand: (brand: ToolBrand | null) => void;
@@ -36,6 +38,14 @@ interface ToolFeedbackStore {
   getSnippetsForDate: (projectId: string, date: string) => ToolFeedbackSnippet[];
 
   addNotification: (type: string, message: string) => void;
+
+  // Daily Checklist Actions
+  saveDailyCheck: (check: Omit<DailyToolCheck, 'id' | 'createdAt' | 'updatedAt'>) => DailyToolCheck;
+  updateDailyCheck: (id: string, updates: Partial<DailyToolCheck>) => void;
+  getDailyCheckForToday: (projectId: string, toolBrand: ToolBrand) => DailyToolCheck | null;
+  getDailyChecksForProject: (projectId: string) => DailyToolCheck[];
+  getDailyChecksForDate: (projectId: string, date: string) => DailyToolCheck[];
+  getChecksWithIssues: (projectId: string) => DailyToolCheck[];
 }
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -49,6 +59,7 @@ export const useToolFeedbackStore = create<ToolFeedbackStore>()(
       feedbackEntries: [],
       feedbackSnippets: [],
       notifications: [],
+      dailyChecks: [],
 
       setSelectedToolBrand: (brand) => set({ selectedToolBrand: brand }),
       setCurrentProject: (projectId) => set({ currentProjectId: projectId }),
@@ -149,6 +160,48 @@ export const useToolFeedbackStore = create<ToolFeedbackStore>()(
       addNotification: (type, message) => {
         const notification = { id: generateId(), type, message };
         set((state) => ({ notifications: [notification, ...state.notifications].slice(0, 20) }));
+      },
+
+      // Daily Checklist Actions
+      saveDailyCheck: (checkData) => {
+        const now = new Date().toISOString();
+        const check: DailyToolCheck = {
+          ...checkData,
+          id: generateId(),
+          createdAt: now,
+          updatedAt: now,
+        };
+        set((state) => ({ dailyChecks: [check, ...state.dailyChecks] }));
+        return check;
+      },
+
+      updateDailyCheck: (id, updates) => {
+        set((state) => ({
+          dailyChecks: state.dailyChecks.map((c) =>
+            c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
+          ),
+        }));
+      },
+
+      getDailyCheckForToday: (projectId, toolBrand) => {
+        const today = new Date().toISOString().split('T')[0];
+        return get().dailyChecks.find(
+          (c) => c.projectId === projectId && c.toolBrand === toolBrand && c.date === today
+        ) || null;
+      },
+
+      getDailyChecksForProject: (projectId) => {
+        return get().dailyChecks.filter((c) => c.projectId === projectId);
+      },
+
+      getDailyChecksForDate: (projectId, date) => {
+        return get().dailyChecks.filter((c) => c.projectId === projectId && c.date === date);
+      },
+
+      getChecksWithIssues: (projectId) => {
+        return get().dailyChecks.filter(
+          (c) => c.projectId === projectId && c.issueTypes.length > 0
+        );
       },
     }),
     {
