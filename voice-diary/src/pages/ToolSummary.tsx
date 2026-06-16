@@ -18,10 +18,20 @@ import {
   AlertTriangle,
   Check,
   Wrench,
+  GraduationCap,
+  Target,
+  MessageCircle,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useToolFeedbackStore } from '../lib/tool-feedback-store';
-import { TOOL_FEEDBACK_CATEGORIES, TOOL_BRANDS, type ToolBrand, type ToolFeedbackCategory } from '../lib/types';
+import {
+  TOOL_FEEDBACK_CATEGORIES,
+  STANDARD_FEEDBACK_CATEGORIES,
+  DPR_CHECKIN_CATEGORIES,
+  TOOL_BRANDS,
+  type ToolBrand,
+  type ToolFeedbackCategory,
+} from '../lib/types';
 
 // Date utilities
 const formatDateISO = (date: Date): string => {
@@ -66,6 +76,11 @@ const CATEGORY_CONFIG: Record<ToolFeedbackCategory, { icon: React.ReactNode; bg:
   'Reliability': { icon: <Settings size={20} />, bg: 'bg-purple-100 dark:bg-purple-900/30', border: 'border-purple-500' },
   'Feature Request': { icon: <Lightbulb size={20} />, bg: 'bg-amber-100 dark:bg-amber-900/30', border: 'border-amber-500' },
   'Tip': { icon: <Star size={20} />, bg: 'bg-cyan-100 dark:bg-cyan-900/30', border: 'border-cyan-500' },
+  // DPR Check-In categories
+  'Training': { icon: <GraduationCap size={20} />, bg: 'bg-indigo-100 dark:bg-indigo-900/30', border: 'border-indigo-500' },
+  'Incidents': { icon: <AlertTriangle size={20} />, bg: 'bg-rose-100 dark:bg-rose-900/30', border: 'border-rose-500' },
+  'Tool Selection': { icon: <Target size={20} />, bg: 'bg-emerald-100 dark:bg-emerald-900/30', border: 'border-emerald-500' },
+  'Accessories': { icon: <Wrench size={20} />, bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-500' },
 };
 
 const BRAND_COLORS: Record<ToolBrand, string> = {
@@ -344,101 +359,202 @@ export default function ToolSummary() {
             </p>
           </div>
         ) : (
-          /* Category Cards */
-          <div className="space-y-3">
-          {TOOL_FEEDBACK_CATEGORIES.map((cat) => {
-            const data = byCategory[cat];
-            const config = CATEGORY_CONFIG[cat];
-            const isExpanded = expandedCategory === cat;
-            const hasItems = data.total > 0;
+          <>
+            {/* DPR Check-In Responses Section */}
+            {DPR_CHECKIN_CATEGORIES.some(cat => byCategory[cat]?.total > 0) && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <MessageCircle size={16} className="text-orange-500" />
+                  <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                    DPR Check-In Responses
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {DPR_CHECKIN_CATEGORIES.map((cat) => {
+                    const data = byCategory[cat];
+                    const config = CATEGORY_CONFIG[cat];
+                    const isExpanded = expandedCategory === cat;
+                    const hasItems = data.total > 0;
 
-            return (
-              <div
-                key={cat}
-                className={`rounded-xl overflow-hidden border-l-4 ${config.border} ${
-                  isDark ? 'bg-gray-900' : 'bg-white'
-                } shadow-sm`}
-              >
-                {/* Category Header - Clickable */}
-                <button
-                  onClick={() => hasItems && toggleCategory(cat)}
-                  disabled={!hasItems}
-                  className={`w-full flex items-center gap-3 p-4 text-left transition-colors ${
-                    hasItems ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : 'opacity-50'
-                  }`}
-                >
-                  <div className={`p-2 rounded-lg ${config.bg}`}>
-                    {config.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {cat}
-                      </span>
-                      {data.total > 0 && (
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
-                          {data.total}
-                        </span>
-                      )}
-                    </div>
-                    {data.total > 0 && (
-                      <div className="flex items-center gap-3 mt-1">
-                        {data.positive > 0 && (
-                          <span className="flex items-center gap-1 text-xs text-green-600">
-                            <ThumbsUp size={12} /> {data.positive}
-                          </span>
-                        )}
-                        {data.negative > 0 && (
-                          <span className="flex items-center gap-1 text-xs text-red-500">
-                            <ThumbsDown size={12} /> {data.negative}
-                          </span>
+                    if (!hasItems) return null;
+
+                    return (
+                      <div
+                        key={cat}
+                        className={`rounded-xl overflow-hidden border-l-4 ${config.border} ${
+                          isDark ? 'bg-gray-900' : 'bg-white'
+                        } shadow-sm`}
+                      >
+                        <button
+                          onClick={() => toggleCategory(cat)}
+                          className="w-full flex items-center gap-3 p-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                          <div className={`p-2 rounded-lg ${config.bg}`}>
+                            {config.icon}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {cat}
+                              </span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                                {data.total}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1">
+                              {data.positive > 0 && (
+                                <span className="flex items-center gap-1 text-xs text-green-600">
+                                  <ThumbsUp size={12} /> {data.positive}
+                                </span>
+                              )}
+                              {data.negative > 0 && (
+                                <span className="flex items-center gap-1 text-xs text-red-500">
+                                  <ThumbsDown size={12} /> {data.negative}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronDown size={20} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                          ) : (
+                            <ChevronRight size={20} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                          )}
+                        </button>
+                        {isExpanded && (
+                          <div className={`px-4 pb-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                            <div className="space-y-2 mt-3">
+                              {data.items.map((item, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`p-3 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-50'} flex gap-3`}
+                                >
+                                  <span className={`px-2 py-0.5 h-fit text-xs font-bold text-white rounded ${BRAND_COLORS[item.brand]}`}>
+                                    {item.brand}
+                                  </span>
+                                  <div className="flex-1">
+                                    <p className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                                      {item.content}
+                                    </p>
+                                    <span className={`text-xs mt-1 inline-block ${
+                                      item.sentiment === 'positive' ? 'text-green-500' :
+                                      item.sentiment === 'negative' ? 'text-red-500' : 'text-gray-400'
+                                    }`}>
+                                      {item.sentiment}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                  {hasItems && (
-                    isExpanded ? (
-                      <ChevronDown size={20} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
-                    ) : (
-                      <ChevronRight size={20} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
-                    )
-                  )}
-                </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-                {/* Expanded Content */}
-                {isExpanded && data.items.length > 0 && (
-                  <div className={`px-4 pb-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                    <div className="space-y-2 mt-3">
-                      {data.items.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className={`p-3 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-50'} flex gap-3`}
-                        >
-                          {/* Brand Badge */}
-                          <span className={`px-2 py-0.5 h-fit text-xs font-bold text-white rounded ${BRAND_COLORS[item.brand]}`}>
-                            {item.brand}
-                          </span>
-                          {/* Content */}
-                          <div className="flex-1">
-                            <p className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                              {item.content}
-                            </p>
-                            <span className={`text-xs mt-1 inline-block ${
-                              item.sentiment === 'positive' ? 'text-green-500' :
-                              item.sentiment === 'negative' ? 'text-red-500' : 'text-gray-400'
-                            }`}>
-                              {item.sentiment}
+            {/* Standard Feedback Section */}
+            <div>
+              {STANDARD_FEEDBACK_CATEGORIES.some(cat => byCategory[cat]?.total > 0) && (
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <Zap size={16} className="text-gray-500" />
+                  <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                    Tool Feedback
+                  </span>
+                </div>
+              )}
+              <div className="space-y-3">
+                {STANDARD_FEEDBACK_CATEGORIES.map((cat) => {
+                  const data = byCategory[cat];
+                  const config = CATEGORY_CONFIG[cat];
+                  const isExpanded = expandedCategory === cat;
+                  const hasItems = data.total > 0;
+
+                  return (
+                    <div
+                      key={cat}
+                      className={`rounded-xl overflow-hidden border-l-4 ${config.border} ${
+                        isDark ? 'bg-gray-900' : 'bg-white'
+                      } shadow-sm`}
+                    >
+                      <button
+                        onClick={() => hasItems && toggleCategory(cat)}
+                        disabled={!hasItems}
+                        className={`w-full flex items-center gap-3 p-4 text-left transition-colors ${
+                          hasItems ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : 'opacity-50'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg ${config.bg}`}>
+                          {config.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {cat}
                             </span>
+                            {data.total > 0 && (
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                                {data.total}
+                              </span>
+                            )}
+                          </div>
+                          {data.total > 0 && (
+                            <div className="flex items-center gap-3 mt-1">
+                              {data.positive > 0 && (
+                                <span className="flex items-center gap-1 text-xs text-green-600">
+                                  <ThumbsUp size={12} /> {data.positive}
+                                </span>
+                              )}
+                              {data.negative > 0 && (
+                                <span className="flex items-center gap-1 text-xs text-red-500">
+                                  <ThumbsDown size={12} /> {data.negative}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {hasItems && (
+                          isExpanded ? (
+                            <ChevronDown size={20} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                          ) : (
+                            <ChevronRight size={20} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                          )
+                        )}
+                      </button>
+                      {isExpanded && data.items.length > 0 && (
+                        <div className={`px-4 pb-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                          <div className="space-y-2 mt-3">
+                            {data.items.map((item, idx) => (
+                              <div
+                                key={idx}
+                                className={`p-3 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-50'} flex gap-3`}
+                              >
+                                <span className={`px-2 py-0.5 h-fit text-xs font-bold text-white rounded ${BRAND_COLORS[item.brand]}`}>
+                                  {item.brand}
+                                </span>
+                                <div className="flex-1">
+                                  <p className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                                    {item.content}
+                                  </p>
+                                  <span className={`text-xs mt-1 inline-block ${
+                                    item.sentiment === 'positive' ? 'text-green-500' :
+                                    item.sentiment === 'negative' ? 'text-red-500' : 'text-gray-400'
+                                  }`}>
+                                    {item.sentiment}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })}
               </div>
-            );
-          })}
-          </div>
+            </div>
+          </>
         )}
       </div>
 

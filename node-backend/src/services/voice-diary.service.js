@@ -710,6 +710,11 @@ const TOOL_FEEDBACK_CATEGORIES = [
   'Reliability',
   'Feature Request',
   'Tip',
+  // DPR Check-In categories
+  'Training',
+  'Incidents',
+  'Tool Selection',
+  'Accessories',
 ];
 
 /**
@@ -728,52 +733,61 @@ async function categorizeToolFeedback(transcript, toolBrand) {
   }
 
   try {
-    const systemPrompt = `You are a tool feedback analyzer for construction power tools. Your job is to extract ONLY feedback that is specifically about ${toolBrand} power tools (drills, saws, grinders, impact drivers, etc.).
+    const systemPrompt = `You are a tool feedback analyzer for construction power tools. Your job is to extract feedback about ${toolBrand} power tools.
 
-IMPORTANT - WHAT TO INCLUDE:
-- Feedback about the tool's performance, features, safety, comfort, reliability
-- Comments about training on the tool, incidents while using it
-- Tips for using the tool effectively
-- Comparisons with other tool brands
-- Accessory needs or issues
-
-IMPORTANT - WHAT TO EXCLUDE (return empty array if transcript only contains these):
-- Greetings, small talk, or casual conversation
-- Unrelated topics (food, weather, personal matters, etc.)
-- Incomplete sentences that don't convey tool feedback
-- Generic statements that could apply to anything
-- Test recordings or audio checks
+CONTEXT: The user was prompted to answer these questions while recording:
+1. "Are you trained on this tool?"
+2. "Any incidents from previous work?"
+3. "Is this the correct tool for the job?"
+4. "What accessories are needed?"
+5. "Any incidents or issues today?"
+6. "Lessons learned?"
 
 CATEGORIES (use exactly these):
-- Safety: Safety features, concerns, protective mechanisms, injury risks, incidents, training
+STANDARD FEEDBACK:
+- Safety: Safety features, concerns, protective mechanisms, injury prevention
 - Productivity: Speed, efficiency, time savings, workflow impact, job completion
 - Comfort: Ergonomics, weight, grip, vibration, ease of use, fatigue
 - Reliability: Durability, battery life, consistency, breakdowns, repairs needed
-- Feature Request: Missing features, desired improvements, comparisons to other tools
-- Tip: Best practices, usage tips, tricks, recommendations, lessons learned
+- Feature Request: Missing features, desired improvements, suggestions for the tool
+- Tip: Best practices, usage tips, tricks, recommendations
 
-SENTIMENT (for each item):
-- positive: Good experience, praise, what works well
-- negative: Problems, complaints, issues, frustrations
+DPR CHECK-IN (from the prompted questions):
+- Training: Responses about being trained/not trained on the tool, comfort level with using it
+- Incidents: Any incidents, accidents, close calls, or issues from previous or current work
+- Tool Selection: Whether this was the correct/right tool for the job, tool choice feedback
+- Accessories: Accessory needs, missing accessories, silica control, bits, blades, vacuum, etc.
+
+IMPORTANT CATEGORIZATION RULES:
+- "correct tool for the job" or "right tool" statements → Tool Selection (NOT Feature Request)
+- Training/comfort level statements → Training
+- Incident/accident reports → Incidents
+- Accessory mentions → Accessories
+- "Lessons learned" or advice → Tip
+- Feature wishes/improvements → Feature Request
+
+SENTIMENT:
+- positive: Good experience, confirmation, what works well
+- negative: Problems, complaints, issues, missing items
 - neutral: Observations, facts without strong opinion
 
 OUTPUT FORMAT (JSON array):
 [
-  {"category": "Category", "sentiment": "positive|negative|neutral", "content": "Concise feedback point about the tool."}
+  {"category": "Category", "sentiment": "positive|negative|neutral", "content": "Concise feedback point."}
 ]
 
 RULES:
-1. ONLY include feedback specifically about power tools
-2. If no relevant tool feedback exists, return an empty array: []
-3. Keep content concise (1-2 sentences max)
-4. Rewrite content to be professional and clear
-5. Remove filler words, personal pronouns, and conversational fluff`;
+1. Capture responses to ALL the prompted questions
+2. "This was the correct tool" = Tool Selection (positive), NOT Feature Request
+3. If no relevant feedback exists, return empty array: []
+4. Keep content concise and professional
+5. Remove filler words and conversational fluff`;
 
-    const userPrompt = `Analyze this recording for ${toolBrand} power tool feedback. Extract ONLY statements about the tool itself. If there's no relevant tool feedback, return [].
+    const userPrompt = `Analyze this ${toolBrand} tool feedback recording. The user was answering questions about training, incidents, tool selection, accessories, and lessons learned.
 
 Transcript: "${transcript}"
 
-Return a JSON array of categorized tool feedback items (or empty array if no relevant feedback).`;
+Extract and categorize all relevant feedback. Remember: "correct tool for the job" = Tool Selection category.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -824,12 +838,19 @@ Return a JSON array of categorized tool feedback items (or empty array if no rel
 function normalizeToolCategory(category) {
   const lower = category.toLowerCase().trim();
 
+  // DPR Check-In categories (check these first)
+  if (lower.includes('training') || lower.includes('trained')) return 'Training';
+  if (lower.includes('incident') || lower.includes('accident') || lower.includes('close call')) return 'Incidents';
+  if (lower.includes('tool selection') || lower.includes('correct tool') || lower.includes('right tool')) return 'Tool Selection';
+  if (lower.includes('accessor')) return 'Accessories';
+
+  // Standard categories
   if (lower.includes('safety')) return 'Safety';
   if (lower.includes('productivity') || lower.includes('efficiency') || lower.includes('speed')) return 'Productivity';
   if (lower.includes('comfort') || lower.includes('ergonomic')) return 'Comfort';
   if (lower.includes('reliab') || lower.includes('durability') || lower.includes('battery')) return 'Reliability';
-  if (lower.includes('feature') || lower.includes('request') || lower.includes('wish')) return 'Feature Request';
-  if (lower.includes('tip') || lower.includes('recommend') || lower.includes('best practice')) return 'Tip';
+  if (lower.includes('feature') || lower.includes('request') || lower.includes('wish') || lower.includes('improvement')) return 'Feature Request';
+  if (lower.includes('tip') || lower.includes('recommend') || lower.includes('best practice') || lower.includes('lesson')) return 'Tip';
 
   return 'Productivity'; // Default
 }

@@ -21,6 +21,10 @@ import {
   Trash2,
   ClipboardCheck,
   MessageCircle,
+  GraduationCap,
+  AlertTriangle,
+  Target,
+  Wrench,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useAuth } from '../lib/auth';
@@ -43,6 +47,11 @@ const CATEGORY_ICONS: Record<ToolFeedbackCategory, React.ReactNode> = {
   'Reliability': <Settings size={14} />,
   'Feature Request': <Lightbulb size={14} />,
   'Tip': <Star size={14} />,
+  // DPR Check-In categories
+  'Training': <GraduationCap size={14} />,
+  'Incidents': <AlertTriangle size={14} />,
+  'Tool Selection': <Target size={14} />,
+  'Accessories': <Wrench size={14} />,
 };
 
 const CATEGORY_COLORS: Record<ToolFeedbackCategory, string> = {
@@ -52,6 +61,11 @@ const CATEGORY_COLORS: Record<ToolFeedbackCategory, string> = {
   'Reliability': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
   'Feature Request': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
   'Tip': 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400',
+  // DPR Check-In categories
+  'Training': 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400',
+  'Incidents': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400',
+  'Tool Selection': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
+  'Accessories': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
 };
 
 // Clean and format text for professional forms
@@ -256,21 +270,42 @@ function localCategorize(text: string): Array<{ category: ToolFeedbackCategory; 
   const categorize = (t: string): ToolFeedbackCategory | null => {
     const l = t.toLowerCase();
 
-    // Tip - check first
-    if (/\b(tip|trick|recommend|lesson|learned|best way|try to|should try|works best|advice)\b/i.test(l)) return 'Tip';
-    // Safety
-    if (/safety|safe|dangerous|injury|hurt|protect|incident|accident|training|trained/i.test(l)) return 'Safety';
+    // DPR Check-In categories - check these first for talking point responses
+    // Training: "Are you trained on this tool?"
+    if (/\b(train(ed|ing)?|certified|certification|qualified|experience|know how|familiar|learned|learning)\b/i.test(l)) return 'Training';
+
+    // Incidents: "Any incidents from previous work?" / "Any incidents or issues today?"
+    if (/\b(incident|accident|injury|close call|near miss|hazard|mishap|problem.*(happen|occur)|happen.*(problem|issue))\b/i.test(l)) return 'Incidents';
+
+    // Tool Selection: "Is this the correct tool for the job?"
+    if (/\b(correct tool|right tool|wrong tool|best tool|proper tool|appropriate|suited for|good choice|job|task)\b/i.test(l) &&
+        !/\b(wish|want|need|feature|improvement)\b/i.test(l)) return 'Tool Selection';
+
+    // Accessories: "What accessories are needed?"
+    if (/\b(accessor|bit|blade|attachment|silica|vacuum|dust|lanyard|guard|shield|adapter|chuck)\b/i.test(l)) return 'Accessories';
+
+    // Tip - lessons learned responses
+    if (/\b(tip|trick|recommend|lesson|learned|best way|try to|should try|works best|advice|next time)\b/i.test(l)) return 'Tip';
+
+    // Standard categories
+    // Safety - general safety (but not training/incident specific)
+    if (/\b(safety|safe|dangerous|protect|caution|careful)\b/i.test(l) &&
+        !/\b(train|incident|accident)\b/i.test(l)) return 'Safety';
+
     // Comfort
     if (/comfort|ergonomic|vibrat|fatigue|wrist|grip|balance|weight/i.test(l)) return 'Comfort';
+
     // Reliability
     if (/battery|reliable|reliab|broke|broken|durability|durable|consistent|repair/i.test(l)) return 'Reliability';
+
     // Productivity
-    if (/fast|slow|efficient|quick|productivity|speed|finish|complete|job/i.test(l)) return 'Productivity';
-    // Feature Request
-    if (/wish|would be nice|should have|missing|feature|need|want|could use|improvement/i.test(l)) return 'Feature Request';
+    if (/fast|slow|efficient|quick|productivity|speed|finish|complete/i.test(l)) return 'Productivity';
+
+    // Feature Request - only for explicit feature wishes (not "correct tool" statements)
+    if (/\b(wish|would be nice|should have|missing|feature|need.*(to have|new)|want.*(new|add)|could use|improvement)\b/i.test(l)) return 'Feature Request';
 
     // Only return Productivity for generic tool-related feedback
-    if (/tool|drill|saw|using|used|works|it's|this/i.test(l)) return 'Productivity';
+    if (/tool|drill|saw|using|used|works/i.test(l)) return 'Productivity';
 
     return null; // No match
   };

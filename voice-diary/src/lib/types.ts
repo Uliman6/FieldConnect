@@ -103,6 +103,7 @@ export type FormTypeId = typeof FORM_TYPES[number]['id'];
 export const TOOL_BRANDS = ['DeWalt', 'Milwaukee', 'Hilti', 'Makita'] as const;
 export type ToolBrand = typeof TOOL_BRANDS[number];
 
+// Core feedback categories
 export const TOOL_FEEDBACK_CATEGORIES = [
   'Safety',
   'Productivity',
@@ -110,8 +111,31 @@ export const TOOL_FEEDBACK_CATEGORIES = [
   'Reliability',
   'Feature Request',
   'Tip',
+  // DPR Check-In categories (from talking points)
+  'Training',
+  'Incidents',
+  'Tool Selection',
+  'Accessories',
 ] as const;
 export type ToolFeedbackCategory = typeof TOOL_FEEDBACK_CATEGORIES[number];
+
+// Categories that come from DPR talking points
+export const DPR_CHECKIN_CATEGORIES: ToolFeedbackCategory[] = [
+  'Training',
+  'Incidents',
+  'Tool Selection',
+  'Accessories',
+];
+
+// Standard feedback categories
+export const STANDARD_FEEDBACK_CATEGORIES: ToolFeedbackCategory[] = [
+  'Safety',
+  'Productivity',
+  'Comfort',
+  'Reliability',
+  'Feature Request',
+  'Tip',
+];
 
 export interface ToolFeedbackEntry {
   id: string;
