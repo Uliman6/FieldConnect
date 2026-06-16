@@ -24,6 +24,8 @@ interface ToolFeedbackStore {
   setCurrentProject: (projectId: string | null) => void;
   setProjects: (projects: Project[]) => void;
   addProject: (name: string) => Project;
+  updateProject: (id: string, updates: Partial<Project>) => void;
+  deleteProject: (id: string) => void;
 
   addFeedbackEntry: (projectId: string, toolBrand: ToolBrand, audioUri: string, duration: number, userId?: string) => ToolFeedbackEntry;
   updateFeedbackEntry: (id: string, updates: Partial<ToolFeedbackEntry>) => void;
@@ -77,6 +79,25 @@ export const useToolFeedbackStore = create<ToolFeedbackStore>()(
         };
         set((state) => ({ projects: [project, ...state.projects] }));
         return project;
+      },
+
+      updateProject: (id, updates) => {
+        set((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+          ),
+        }));
+      },
+
+      deleteProject: (id) => {
+        set((state) => {
+          // Clear selection if deleting current project
+          const newCurrentProjectId = state.currentProjectId === id ? null : state.currentProjectId;
+          return {
+            projects: state.projects.filter((p) => p.id !== id),
+            currentProjectId: newCurrentProjectId,
+          };
+        });
       },
 
       addFeedbackEntry: (projectId, toolBrand, audioUri, duration, userId) => {

@@ -1,13 +1,41 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Mic, LayoutDashboard, LogOut, Sun, Moon, Shield, Wrench, BarChart3 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Mic, LayoutDashboard, LogOut, Sun, Moon, Shield, Wrench, BarChart3, FileText } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useThemeToggle } from '../lib/use-color-scheme';
+
+type AppMode = 'voice-diary' | 'tool-feedback';
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { colorScheme, toggleTheme } = useThemeToggle();
   const isDark = colorScheme === 'dark';
+
+  // Mode state - persisted to localStorage
+  const [appMode, setAppMode] = useState<AppMode>(() => {
+    const saved = localStorage.getItem('app-mode');
+    return (saved as AppMode) || 'tool-feedback';
+  });
+
+  // Save mode preference
+  useEffect(() => {
+    localStorage.setItem('app-mode', appMode);
+  }, [appMode]);
+
+  // Redirect to correct route when mode changes
+  useEffect(() => {
+    const voiceDiaryRoutes = ['/', '/dashboard'];
+    const toolFeedbackRoutes = ['/tool-feedback', '/tool-summary'];
+    const currentPath = location.pathname;
+
+    if (appMode === 'voice-diary' && toolFeedbackRoutes.includes(currentPath)) {
+      navigate('/');
+    } else if (appMode === 'tool-feedback' && voiceDiaryRoutes.includes(currentPath)) {
+      navigate('/tool-feedback');
+    }
+  }, [appMode, location.pathname, navigate]);
 
   const isAdmin = user?.role === 'ADMIN' || user?.email === '***REMOVED***';
 
@@ -22,12 +50,31 @@ export default function Layout() {
       <header className={`${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm safe-area-top`}>
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Voice Diary
+            {appMode === 'voice-diary' ? 'Voice Diary' : 'Tool Feedback'}
           </h1>
           <div className="flex items-center gap-2">
-            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} hidden sm:block`}>
-              {user?.name || user?.email}
-            </span>
+            {/* Mode Toggle */}
+            <button
+              onClick={() => setAppMode(appMode === 'voice-diary' ? 'tool-feedback' : 'voice-diary')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                appMode === 'tool-feedback'
+                  ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                  : 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+              }`}
+              title={`Switch to ${appMode === 'voice-diary' ? 'Tool Feedback' : 'Voice Diary'}`}
+            >
+              {appMode === 'voice-diary' ? (
+                <>
+                  <Wrench size={14} />
+                  <span className="hidden sm:inline">Tools</span>
+                </>
+              ) : (
+                <>
+                  <FileText size={14} />
+                  <span className="hidden sm:inline">Diary</span>
+                </>
+              )}
+            </button>
             {isAdmin && (
               <NavLink
                 to="/admin"
@@ -75,67 +122,74 @@ export default function Layout() {
       {/* Bottom Tab Navigation - Mobile Friendly */}
       <nav className={`${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-t safe-area-bottom`}>
         <div className="max-w-lg mx-auto flex">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
-                isActive
-                  ? 'text-primary-600'
-                  : isDark
-                  ? 'text-gray-500 hover:text-gray-300'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`
-            }
-          >
-            <Mic size={22} />
-            <span className="text-[10px] mt-1 font-medium">Record</span>
-          </NavLink>
-          <NavLink
-            to="/dashboard"
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
-                isActive
-                  ? 'text-primary-600'
-                  : isDark
-                  ? 'text-gray-500 hover:text-gray-300'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`
-            }
-          >
-            <LayoutDashboard size={22} />
-            <span className="text-[10px] mt-1 font-medium">Dashboard</span>
-          </NavLink>
-          <NavLink
-            to="/tool-feedback"
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
-                isActive
-                  ? 'text-orange-500'
-                  : isDark
-                  ? 'text-gray-500 hover:text-gray-300'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`
-            }
-          >
-            <Wrench size={22} />
-            <span className="text-[10px] mt-1 font-medium">Tools</span>
-          </NavLink>
-          <NavLink
-            to="/tool-summary"
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 px-2 transition-colors ${
-                isActive
-                  ? 'text-orange-500'
-                  : isDark
-                  ? 'text-gray-500 hover:text-gray-300'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`
-            }
-          >
-            <BarChart3 size={22} />
-            <span className="text-[10px] mt-1 font-medium">Summary</span>
-          </NavLink>
+          {appMode === 'voice-diary' ? (
+            <>
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+                    isActive
+                      ? 'text-primary-600'
+                      : isDark
+                      ? 'text-gray-500 hover:text-gray-300'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`
+                }
+              >
+                <Mic size={24} />
+                <span className="text-xs mt-1 font-medium">Record</span>
+              </NavLink>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+                    isActive
+                      ? 'text-primary-600'
+                      : isDark
+                      ? 'text-gray-500 hover:text-gray-300'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`
+                }
+              >
+                <LayoutDashboard size={24} />
+                <span className="text-xs mt-1 font-medium">Dashboard</span>
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink
+                to="/tool-feedback"
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+                    isActive
+                      ? 'text-orange-500'
+                      : isDark
+                      ? 'text-gray-500 hover:text-gray-300'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`
+                }
+              >
+                <Wrench size={24} />
+                <span className="text-xs mt-1 font-medium">Record</span>
+              </NavLink>
+              <NavLink
+                to="/tool-summary"
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+                    isActive
+                      ? 'text-orange-500'
+                      : isDark
+                      ? 'text-gray-500 hover:text-gray-300'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`
+                }
+              >
+                <BarChart3 size={24} />
+                <span className="text-xs mt-1 font-medium">Summary</span>
+              </NavLink>
+            </>
+          )}
         </div>
       </nav>
     </div>

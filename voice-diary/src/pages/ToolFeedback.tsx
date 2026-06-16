@@ -317,6 +317,8 @@ export default function ToolFeedback() {
   const [editedContent, setEditedContent] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editedProjectName, setEditedProjectName] = useState('');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -330,6 +332,8 @@ export default function ToolFeedback() {
     projects,
     setProjects,
     addProject,
+    updateProject,
+    deleteProject,
     addFeedbackEntry,
     updateFeedbackEntry,
     addFeedbackSnippet,
@@ -834,19 +838,86 @@ export default function ToolFeedback() {
                 <div className="text-center py-6"><Loader2 className="animate-spin mx-auto text-gray-400" size={24} /></div>
               ) : (
                 projects.map((project) => (
-                  <button
+                  <div
                     key={project.id}
-                    onClick={() => { setCurrentProject(project.id); setShowProjectPicker(false); }}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl mb-2 transition-colors ${
+                    className={`rounded-xl mb-2 transition-colors ${
                       currentProjectId === project.id
                         ? 'bg-orange-50 dark:bg-orange-900/30 border border-orange-500'
-                        : isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 border border-gray-200'
+                        : isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'
                     }`}
                   >
-                    <Building2 size={24} className={currentProjectId === project.id ? 'text-orange-500' : 'text-gray-400'} />
-                    <span className={`flex-1 text-left font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{project.name}</span>
-                    {currentProjectId === project.id && <Check size={20} className="text-orange-500" />}
-                  </button>
+                    {editingProjectId === project.id ? (
+                      /* Edit Mode */
+                      <div className="p-4">
+                        <input
+                          value={editedProjectName}
+                          onChange={(e) => setEditedProjectName(e.target.value)}
+                          placeholder="Project name..."
+                          autoFocus
+                          className={`w-full px-3 py-2 rounded-lg mb-3 text-sm ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setEditingProjectId(null); setEditedProjectName(''); }}
+                            className={`flex-1 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (editedProjectName.trim()) {
+                                updateProject(project.id, { name: editedProjectName.trim() });
+                                addNotification('success', 'Project updated');
+                              }
+                              setEditingProjectId(null);
+                              setEditedProjectName('');
+                            }}
+                            className="flex-1 py-2 rounded-lg text-sm font-medium bg-orange-500 text-white"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* View Mode */
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => { setCurrentProject(project.id); setShowProjectPicker(false); }}
+                          className={`flex-1 flex items-center gap-3 p-4 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} rounded-l-xl transition-colors`}
+                        >
+                          <Building2 size={24} className={currentProjectId === project.id ? 'text-orange-500' : 'text-gray-400'} />
+                          <span className={`flex-1 text-left font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{project.name}</span>
+                          {currentProjectId === project.id && <Check size={20} className="text-orange-500" />}
+                        </button>
+                        <div className="flex items-center pr-2 gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingProjectId(project.id);
+                              setEditedProjectName(project.name);
+                            }}
+                            className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-100'}`}
+                            title="Edit project"
+                          >
+                            <Edit3 size={16} className="text-orange-500" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`Delete "${project.name}"? This cannot be undone.`)) {
+                                deleteProject(project.id);
+                                addNotification('info', 'Project deleted');
+                              }
+                            }}
+                            className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-100'}`}
+                            title="Delete project"
+                          >
+                            <Trash2 size={16} className="text-red-500" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))
               )}
             </div>
