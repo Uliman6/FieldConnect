@@ -17,6 +17,7 @@ async function clearUserStores(): Promise<void> {
     currentLogId: null,
     events: [],
     userName: '',
+    currentUserId: null,
   });
   useVoiceDiaryStore.setState({
     voiceNotes: [],
@@ -112,6 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await setStorageItem(TOKEN_KEY, token);
       await setStorageItem(USER_KEY, JSON.stringify(user));
 
+      useDailyLogStore.getState().setCurrentUserId(user.id);
       set({
         user,
         token,
@@ -148,6 +150,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await setStorageItem(TOKEN_KEY, token);
       await setStorageItem(USER_KEY, JSON.stringify(user));
 
+      useDailyLogStore.getState().setCurrentUserId(user.id);
       set({
         user,
         token,
@@ -193,8 +196,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (response.ok) {
           const data = await response.json();
+          const verifiedUser = data.user as User;
+
+          // On cold start the Zustand store may be hydrated from a different user's
+          // persisted data. Clear it before proceeding if user IDs don't match.
+          const storedUserId = useDailyLogStore.getState().currentUserId;
+          if (storedUserId !== verifiedUser.id) {
+            await clearUserStores();
+          }
+
+          useDailyLogStore.getState().setCurrentUserId(verifiedUser.id);
           set({
-            user: data.user,
+            user: verifiedUser,
             token,
             isAuthenticated: true,
             isLoading: false,

@@ -37,6 +37,7 @@ interface DailyLogStore {
 
   // User info
   userName: string;
+  currentUserId: string | null;
 
   // Project Actions
   addProject: (name: string, number: string, address: string) => Project;
@@ -102,6 +103,7 @@ interface DailyLogStore {
 
   // User Actions
   setUserName: (name: string) => void;
+  setCurrentUserId: (userId: string | null) => void;
 
   // Utility
   recalculateTotals: (logId: string) => void;
@@ -116,6 +118,7 @@ export const useDailyLogStore = create<DailyLogStore>()(
       currentLogId: null,
       events: [],
       userName: '',
+      currentUserId: null,
 
       // Project Actions
       addProject: (name, number, address) => {
@@ -600,6 +603,10 @@ export const useDailyLogStore = create<DailyLogStore>()(
       // User Actions
       setUserName: (name) => {
         set({ userName: name });
+      },
+
+      setCurrentUserId: (userId) => {
+        set({ currentUserId: userId });
       },
 
       // Utility
