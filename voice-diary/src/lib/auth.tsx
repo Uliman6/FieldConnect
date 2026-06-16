@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from './api';
 import { useVoiceDiaryStore } from './voice-diary-store';
+import { useToolFeedbackStore } from './tool-feedback-store';
 import type { User } from './types';
 
 interface AuthContextType {
@@ -13,6 +14,31 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Clears all user-scoped store data (in-memory + localStorage) to prevent
+// cross-user data leakage when switching accounts or on cold start
+function clearAllUserStores() {
+  localStorage.removeItem('voice-diary-storage');
+  localStorage.removeItem('voice-diary-forms');
+  localStorage.removeItem('tool-feedback-storage');
+  useVoiceDiaryStore.setState({
+    voiceNotes: [],
+    categorizedSnippets: [],
+    dailySummaries: [],
+    notifications: [],
+    formSuggestions: [],
+    currentProjectId: null,
+  });
+  useToolFeedbackStore.setState({
+    selectedToolBrand: null,
+    currentProjectId: null,
+    projects: [],
+    feedbackEntries: [],
+    feedbackSnippets: [],
+    notifications: [],
+    dailyChecks: [],
+  });
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -30,16 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const lastUserId = localStorage.getItem('voice-diary-last-user-id');
           if (lastUserId && lastUserId !== currentUser.id) {
             console.log('[auth] Session restored for different user, clearing stale data');
-            localStorage.removeItem('voice-diary-storage');
-            localStorage.removeItem('voice-diary-forms');
-            useVoiceDiaryStore.setState({
-              voiceNotes: [],
-              categorizedSnippets: [],
-              dailySummaries: [],
-              notifications: [],
-              formSuggestions: [],
-              currentProjectId: null,
-            });
+            clearAllUserStores();
           }
 
           setUser(currentUser);
@@ -62,19 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if this is a different user than before - if so, clear all data
     const lastUserId = localStorage.getItem('voice-diary-last-user-id');
     if (lastUserId && lastUserId !== response.user.id) {
-      // Different user logging in - clear all previous user's data
       console.log('[auth] Different user detected, clearing previous data');
-      localStorage.removeItem('voice-diary-storage');
-      localStorage.removeItem('voice-diary-forms');
-      // Reset store state
-      useVoiceDiaryStore.setState({
-        voiceNotes: [],
-        categorizedSnippets: [],
-        dailySummaries: [],
-        notifications: [],
-        formSuggestions: [],
-        currentProjectId: null,
-      });
+      clearAllUserStores();
     }
 
     setUser(response.user);
@@ -91,16 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const lastUserId = localStorage.getItem('voice-diary-last-user-id');
     if (lastUserId && lastUserId !== response.user.id) {
       console.log('[auth] New user registration, clearing previous data');
-      localStorage.removeItem('voice-diary-storage');
-      localStorage.removeItem('voice-diary-forms');
-      useVoiceDiaryStore.setState({
-        voiceNotes: [],
-        categorizedSnippets: [],
-        dailySummaries: [],
-        notifications: [],
-        formSuggestions: [],
-        currentProjectId: null,
-      });
+      clearAllUserStores();
     }
 
     setUser(response.user);
@@ -113,12 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     api.logout();
     setUser(null);
-    // Clear user context in store
-    useVoiceDiaryStore.getState().setCurrentUser(null);
-    useVoiceDiaryStore.getState().setCurrentProject(null);
-    // Clear all voice-diary data to prevent data leakage between users
-    localStorage.removeItem('voice-diary-storage');
-    localStorage.removeItem('voice-diary-forms');
+    clearAllUserStores();
     localStorage.removeItem('voice-diary-last-user-id');
     localStorage.removeItem('user');
     localStorage.removeItem('voice-diary-current-project');
