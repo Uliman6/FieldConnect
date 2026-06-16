@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { User, AuthResponse } from './types';
 import { useDailyLogStore } from './store';
+import { useVoiceDiaryStore } from './voice-diary-store';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 const TOKEN_KEY = 'fieldconnect_auth_token';
@@ -141,6 +142,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       userName: '',
     });
     await useDailyLogStore.persist.clearStorage();
+
+    // Clear voice diary data (tool feedback form and voice notes)
+    useVoiceDiaryStore.setState({
+      voiceNotes: [],
+      categorizedSnippets: [],
+      dailySummaries: [],
+      notifications: [],
+      formSuggestions: [],
+      currentProjectId: null,
+      currentUserId: null,
+    });
+    await useVoiceDiaryStore.persist.clearStorage();
 
     set({
       user: null,
