@@ -3,12 +3,34 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, AuthResponse } from './types';
+import { useDailyLogStore } from './store';
+import { useVoiceDiaryStore } from './voice-diary-store';
 
-// Clears all user-specific persisted store data to prevent cross-user data leakage
+// Resets all user-specific store data (both in-memory and persisted) to prevent
+// cross-user data leakage when logging out or switching accounts on a shared device
 async function clearUserStores(): Promise<void> {
+  // Reset in-memory Zustand state immediately
+  useDailyLogStore.setState({
+    projects: [],
+    currentProjectId: null,
+    dailyLogs: [],
+    currentLogId: null,
+    events: [],
+    userName: '',
+  });
+  useVoiceDiaryStore.setState({
+    voiceNotes: [],
+    categorizedSnippets: [],
+    dailySummaries: [],
+    notifications: [],
+    formSuggestions: [],
+    currentProjectId: null,
+    currentUserId: null,
+  });
+
+  // Also clear the persisted AsyncStorage keys so the next app load starts clean
   const storeKeys = ['daily-log-storage', 'voice-diary-storage'];
   await AsyncStorage.multiRemove(storeKeys);
-  // Also clear web localStorage equivalents
   if (Platform.OS === 'web') {
     storeKeys.forEach((key) => localStorage.removeItem(key));
   }
