@@ -284,6 +284,16 @@ export function DataProvider({ children }: DataProviderProps) {
     console.log('[data] Hydrating from backend...');
     setState((s) => ({ ...s, isSyncing: true, error: null }));
 
+    // Clear any stale local data before loading from backend to prevent
+    // data from a previous user being visible during hydration
+    useDailyLogStore.setState({
+      projects: [],
+      currentProjectId: null,
+      dailyLogs: [],
+      currentLogId: null,
+      events: [],
+    });
+
     try {
       // ============================================
       // STEP 0: Wake up server (Render cold start protection)
