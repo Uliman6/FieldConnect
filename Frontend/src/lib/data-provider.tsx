@@ -375,6 +375,14 @@ export function DataProvider({ children }: DataProviderProps) {
       // ============================================
       // STEP 2: Fetch and sync EVENTS
       // ============================================
+      // Skip events/logs sync if user has no projects — prevents cross-user data
+      // leakage on shared devices where persisted store may contain another user's data
+      if (finalProjects.length === 0) {
+        console.log('[data] No projects for user, skipping events/logs hydration');
+        setState((s) => ({ ...s, isHydrated: true, isSyncing: false, lastSyncAt: new Date().toISOString() }));
+        return;
+      }
+
       const backendEvents = await getEvents({ limit: 200 });
       console.log('[data] Fetched events from backend:', backendEvents.length);
 

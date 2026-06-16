@@ -1,7 +1,18 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, AuthResponse } from './types';
+
+// Clears all user-specific persisted store data to prevent cross-user data leakage
+async function clearUserStores(): Promise<void> {
+  const storeKeys = ['daily-log-storage', 'voice-diary-storage'];
+  await AsyncStorage.multiRemove(storeKeys);
+  // Also clear web localStorage equivalents
+  if (Platform.OS === 'web') {
+    storeKeys.forEach((key) => localStorage.removeItem(key));
+  }
+}
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 const TOKEN_KEY = 'fieldconnect_auth_token';
@@ -56,6 +67,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
+
+    // Clear any previously persisted store data before loading a new user's session
+    await clearUserStores();
 
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -129,6 +143,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     await removeStorageItem(TOKEN_KEY);
     await removeStorageItem(USER_KEY);
+    await clearUserStores();
 
     set({
       user: null,
