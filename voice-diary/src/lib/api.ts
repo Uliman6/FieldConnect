@@ -78,6 +78,39 @@ class ApiClient {
     localStorage.removeItem('user');
   }
 
+  // Admin user management
+  async getAllUsers(): Promise<Array<{
+    id: string;
+    email: string;
+    name: string | null;
+    role: 'ADMIN' | 'EDITOR' | 'VIEWER';
+    isActive: boolean;
+    createdAt: string;
+  }>> {
+    const response = await this.client.get<{ users: any[] }>('/auth/users');
+    return response.data.users;
+  }
+
+  async createUser(data: { email: string; password: string; name?: string; role?: 'EDITOR' | 'VIEWER' }): Promise<{
+    token: string;
+    user: { id: string; email: string; name: string | null; role: string };
+  }> {
+    const response = await this.client.post('/auth/register', data);
+    return response.data;
+  }
+
+  async updateUser(id: string, data: { name?: string; role?: string; isActive?: boolean; password?: string }): Promise<{
+    user: { id: string; email: string; name: string | null; role: string; isActive: boolean };
+  }> {
+    const response = await this.client.patch(`/auth/users/${id}`, data);
+    return response.data;
+  }
+
+  async deleteUser(id: string): Promise<{ message: string }> {
+    const response = await this.client.delete(`/auth/users/${id}`);
+    return response.data;
+  }
+
   // ============================================
   // PROJECTS
   // ============================================

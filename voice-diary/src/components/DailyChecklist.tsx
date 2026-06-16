@@ -19,6 +19,7 @@ interface DailyChecklistProps {
   projectId: string;
   toolBrand: ToolBrand;
   userId?: string;
+  date?: string; // YYYY-MM-DD format, defaults to today
 }
 
 interface CheckState {
@@ -54,6 +55,22 @@ const initialState: CheckState = {
   otherIssueNote: '',
 };
 
+// Helper to format date for display
+const formatDateForDisplay = (dateStr: string): string => {
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+// Get local date in YYYY-MM-DD format
+const getLocalDateISO = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
 export default function DailyChecklist({
   isDark,
   isOpen,
@@ -61,18 +78,23 @@ export default function DailyChecklist({
   projectId,
   toolBrand,
   userId,
+  date,
 }: DailyChecklistProps) {
-  const { saveDailyCheck, getDailyCheckForToday, updateDailyCheck, addNotification } =
+  const { saveDailyCheck, getDailyChecksForDate, updateDailyCheck, addNotification } =
     useToolFeedbackStore();
+
+  // Use provided date or default to today
+  const selectedDate = date || getLocalDateISO();
 
   const [checkState, setCheckState] = useState<CheckState>(initialState);
   const [expandedSection, setExpandedSection] = useState<'start' | 'end' | 'issues' | null>('start');
   const [existingCheckId, setExistingCheckId] = useState<string | null>(null);
 
-  // Load existing check for today if it exists
+  // Load existing check for the selected date if it exists
   useEffect(() => {
     if (isOpen && projectId && toolBrand) {
-      const existing = getDailyCheckForToday(projectId, toolBrand);
+      const checksForDate = getDailyChecksForDate(projectId, selectedDate);
+      const existing = checksForDate.find((c) => c.toolBrand === toolBrand);
       if (existing) {
         setExistingCheckId(existing.id);
         setCheckState({
@@ -94,7 +116,7 @@ export default function DailyChecklist({
         setCheckState(initialState);
       }
     }
-  }, [isOpen, projectId, toolBrand, getDailyCheckForToday]);
+  }, [isOpen, projectId, toolBrand, selectedDate, getDailyChecksForDate]);
 
   const toggleCheck = (key: keyof CheckState) => {
     if (typeof checkState[key] === 'boolean') {
@@ -116,8 +138,6 @@ export default function DailyChecklist({
   };
 
   const handleSave = () => {
-    const today = new Date().toISOString().split('T')[0];
-
     if (existingCheckId) {
       updateDailyCheck(existingCheckId, {
         ...checkState,
@@ -129,7 +149,7 @@ export default function DailyChecklist({
         projectId,
         toolBrand,
         userId,
-        date: today,
+        date: selectedDate,
         ...checkState,
         otherIssueNote: checkState.otherIssueNote || undefined,
       });
@@ -246,7 +266,7 @@ export default function DailyChecklist({
                 Daily Tool Checklist
               </h2>
               <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {toolBrand} - {new Date().toLocaleDateString()}
+                {toolBrand} - {formatDateForDisplay(selectedDate)}
               </p>
             </div>
           </div>

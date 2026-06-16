@@ -25,6 +25,9 @@ import {
   AlertTriangle,
   Target,
   Wrench,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useAuth } from '../lib/auth';
@@ -66,6 +69,39 @@ const CATEGORY_COLORS: Record<ToolFeedbackCategory, string> = {
   'Incidents': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400',
   'Tool Selection': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
   'Accessories': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+};
+
+// Date utilities - using local time (not UTC)
+const formatDateISO = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDate = (dateStr: string): Date => {
+  return new Date(dateStr + 'T00:00:00');
+};
+
+const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+const formatDateDisplay = (dateStr: string): string => {
+  const today = formatDateISO(new Date());
+  if (dateStr === today) return 'Today';
+
+  const yesterday = formatDateISO(addDays(new Date(), -1));
+  if (dateStr === yesterday) return 'Yesterday';
+
+  const date = parseDate(dateStr);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
 };
 
 // Clean and format text for professional forms
@@ -340,6 +376,9 @@ export default function ToolFeedback() {
   const isDark = colorScheme === 'dark';
   const { user } = useAuth();
 
+  const today = formatDateISO(new Date());
+  const [selectedDate, setSelectedDate] = useState<string>(today);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -374,9 +413,9 @@ export default function ToolFeedback() {
     addFeedbackSnippet,
     updateFeedbackSnippet,
     deleteFeedbackSnippet,
-    getSnippetsForProject,
+    getSnippetsForDate,
     addNotification,
-    getDailyCheckForToday,
+    getDailyChecksForDate,
   } = useToolFeedbackStore();
 
   // Load projects from API
@@ -396,7 +435,28 @@ export default function ToolFeedback() {
   }, [setProjects]);
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
-  const projectSnippets = currentProjectId ? getSnippetsForProject(currentProjectId) : [];
+  const projectSnippets = currentProjectId ? getSnippetsForDate(currentProjectId, selectedDate) : [];
+  const dateChecks = currentProjectId ? getDailyChecksForDate(currentProjectId, selectedDate) : [];
+  const hasDailyCheck = currentProjectId && selectedToolBrand
+    ? dateChecks.some((c) => c.toolBrand === selectedToolBrand)
+    : false;
+
+  // Date navigation handlers
+  const handlePrevDay = () => {
+    const current = parseDate(selectedDate);
+    const newDate = addDays(current, -1);
+    setSelectedDate(formatDateISO(newDate));
+  };
+
+  const handleNextDay = () => {
+    const current = parseDate(selectedDate);
+    const newDate = addDays(current, 1);
+    if (formatDateISO(newDate) <= today) {
+      setSelectedDate(formatDateISO(newDate));
+    }
+  };
+
+  const isToday = selectedDate === today;
 
   const startRecording = useCallback(async () => {
     if (!currentProjectId) {
@@ -534,9 +594,48 @@ export default function ToolFeedback() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Generate available dates for picker (last 30 days)
+  const availableDates = Array.from({ length: 30 }, (_, i) =>
+    formatDateISO(addDays(new Date(), -i))
+  );
+
   return (
     <div className={`h-full flex flex-col ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
       <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+        {/* Date Navigation */}
+        <div className={`rounded-xl p-3 mb-4 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handlePrevDay}
+              className={`p-2 rounded-lg ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            >
+              <ChevronLeft size={20} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
+            </button>
+
+            <button
+              onClick={() => setShowDatePicker(true)}
+              className="flex-1 mx-3 flex items-center justify-center gap-2 py-2"
+            >
+              <Calendar size={18} className="text-orange-500" />
+              <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {formatDateDisplay(selectedDate)}
+              </span>
+            </button>
+
+            <button
+              onClick={handleNextDay}
+              disabled={isToday}
+              className={`p-2 rounded-lg ${
+                isToday
+                  ? 'opacity-30'
+                  : isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
+              }`}
+            >
+              <ChevronRight size={20} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
+            </button>
+          </div>
+        </div>
+
         {/* Project Selector */}
         <button
           onClick={() => setShowProjectPicker(true)}
@@ -584,18 +683,18 @@ export default function ToolFeedback() {
           <button
             onClick={() => setShowChecklist(true)}
             className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl mb-4 transition-colors border ${
-              getDailyCheckForToday(currentProjectId, selectedToolBrand)
+              hasDailyCheck
                 ? 'border-green-500 ' + (isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-50 text-green-700')
                 : isDark
                 ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
                 : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <ClipboardCheck size={20} className={getDailyCheckForToday(currentProjectId, selectedToolBrand) ? 'text-green-500' : 'text-orange-500'} />
+            <ClipboardCheck size={20} className={hasDailyCheck ? 'text-green-500' : 'text-orange-500'} />
             <span className="font-medium">
-              {getDailyCheckForToday(currentProjectId, selectedToolBrand) ? 'View/Edit Daily Checklist' : 'Daily Checklist'}
+              {hasDailyCheck ? 'View/Edit Daily Checklist' : 'Daily Checklist'}
             </span>
-            {getDailyCheckForToday(currentProjectId, selectedToolBrand) && (
+            {hasDailyCheck && (
               <Check size={16} className="text-green-500 ml-1" />
             )}
           </button>
@@ -969,7 +1068,60 @@ export default function ToolFeedback() {
           projectId={currentProjectId}
           toolBrand={selectedToolBrand}
           userId={user?.id}
+          date={selectedDate}
         />
+      )}
+
+      {/* Date Picker Modal */}
+      {showDatePicker && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDatePicker(false)} />
+          <div className={`relative w-full sm:max-w-md max-h-[70vh] rounded-t-2xl sm:rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} safe-area-bottom overflow-hidden`}>
+            <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Select Date</h2>
+              <button onClick={() => setShowDatePicker(false)} className="p-2">
+                <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[50vh]">
+              {availableDates.map((date) => {
+                const isSelected = date === selectedDate;
+                const hasData = getSnippetsForDate(currentProjectId || '', date).length > 0;
+                return (
+                  <button
+                    key={date}
+                    onClick={() => {
+                      setSelectedDate(date);
+                      setShowDatePicker(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl mb-2 ${
+                      isSelected
+                        ? 'bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-500'
+                        : isDark ? 'bg-gray-800' : 'bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Calendar size={18} className={isSelected ? 'text-orange-500' : isDark ? 'text-gray-400' : 'text-gray-500'} />
+                      <div className="text-left">
+                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {formatDateDisplay(date)}
+                        </p>
+                        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {parseDate(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    {hasData && (
+                      <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs rounded-full">
+                        Has feedback
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
