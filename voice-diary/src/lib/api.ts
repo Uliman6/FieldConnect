@@ -129,9 +129,14 @@ class ApiClient {
   // TRANSCRIPTION
   // ============================================
 
-  async transcribeAudio(audioBlob: Blob, filename: string = 'recording.webm'): Promise<TranscriptionResponse> {
+  async transcribeAudio(
+    audioBlob: Blob,
+    filename: string = 'recording.webm',
+    language: 'en' | 'es' = 'en'
+  ): Promise<TranscriptionResponse> {
     const formData = new FormData();
     formData.append('audio', audioBlob, filename);
+    formData.append('language', language);
 
     const response = await this.client.post<TranscriptionResponse>('/transcripts/transcribe', formData, {
       headers: {
@@ -139,6 +144,25 @@ class ApiClient {
       },
     });
     return response.data;
+  }
+
+  // Translate text from Spanish to English using AI
+  async translateText(text: string, fromLang: 'es' | 'en' = 'es', toLang: 'es' | 'en' = 'en'): Promise<{
+    success: boolean;
+    translatedText?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await this.client.post('/voice-diary/translate', {
+        text,
+        fromLang,
+        toLang,
+      });
+      return response.data;
+    } catch (err) {
+      console.error('[api] Translation failed:', err);
+      return { success: false, error: 'Translation failed' };
+    }
   }
 
   // ============================================

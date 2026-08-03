@@ -30,8 +30,8 @@ import { useColorScheme } from '../lib/use-color-scheme';
 import { useVoiceDiaryStore } from '../lib/voice-diary-store';
 import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
+import { useLanguageStore } from '../lib/use-language';
 import type { VoiceNote, CategorizedSnippet, VoiceDiaryCategory } from '../lib/types';
-import { VOICE_DIARY_CATEGORIES } from '../lib/voice-diary-store';
 
 const CATEGORY_ICONS_RECORD: Record<string, React.ReactNode> = {
   'Safety': <Shield size={18} className="text-red-500" />,
@@ -60,6 +60,8 @@ const CATEGORY_COLORS_RECORD: Record<string, string> = {
 export default function Record() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  // Language is accessed via localStorage in recording callbacks
+  useLanguageStore(); // Keep hook active for reactivity
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -129,14 +131,6 @@ export default function Record() {
   };
 
   const today = getTodayDate();
-
-  // Calculate category counts for today's snippets in current project
-  const categoryCounts = VOICE_DIARY_CATEGORIES.reduce((acc, cat) => {
-    acc[cat] = getSnippetsForCategory(cat, today, currentProjectId || undefined).length;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const totalTodaySnippets = Object.values(categoryCounts).reduce((a, b) => a + b, 0);
 
   const selectedCategorySnippets = selectedCategory
     ? getSnippetsForCategory(selectedCategory as VoiceDiaryCategory, today, currentProjectId || undefined)
@@ -215,7 +209,9 @@ export default function Record() {
           addNotification('success', 'Note captured!');
         }
 
-        processVoiceNoteAsync(note.id, blob);
+        // Get current language from localStorage (since callback can't access state directly)
+        const currentLang = (localStorage.getItem('voice-diary-language') || 'en') as 'en' | 'es';
+        processVoiceNoteAsync(note.id, blob, currentLang);
       };
 
       mediaRecorder.start(1000);
@@ -249,12 +245,12 @@ export default function Record() {
     }
   }, [isRecording]);
 
-  const processVoiceNoteAsync = async (noteId: string, audioBlob: Blob) => {
+  const processVoiceNoteAsync = async (noteId: string, audioBlob: Blob, lang: 'en' | 'es' = 'en') => {
     updateVoiceNote(noteId, { status: 'transcribing' });
 
     try {
-      // Step 1: Transcribe
-      const result = await api.transcribeAudio(audioBlob);
+      // Step 1: Transcribe (with language support for Spanish)
+      const result = await api.transcribeAudio(audioBlob, 'recording.webm', lang);
 
       if (!result.success || !result.text) {
         const errorMsg = result.error || 'Could not transcribe audio';
@@ -598,7 +594,8 @@ export default function Record() {
 
         // Transcribe and store as feedback
         try {
-          const result = await api.transcribeAudio(blob);
+          const currentLang = (localStorage.getItem('voice-diary-language') || 'en') as 'en' | 'es';
+          const result = await api.transcribeAudio(blob, 'recording.webm', currentLang);
           if (result.success && result.text) {
             // Store feedback (we'll create an API endpoint for this)
             await api.submitFeedback({
@@ -761,34 +758,6 @@ export default function Record() {
                 View and Edit Notes {allProjectNotes.length > 0 && `(${allProjectNotes.length})`}
               </span>
             </button>
-
-            {/* Today's Categories - Clickable */}
-            {totalTodaySnippets > 0 && !showNotes && (
-              <div className="mb-4">
-                <p className={`text-xs font-medium uppercase tracking-wider mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  Today's Categories ({totalTodaySnippets})
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {VOICE_DIARY_CATEGORIES.filter(cat => categoryCounts[cat] > 0).map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-                        CATEGORY_COLORS_RECORD[cat]
-                      }`}
-                    >
-                      {CATEGORY_ICONS_RECORD[cat]}
-                      <span className={`text-[10px] font-medium text-center leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {cat.split(' ')[0]}
-                      </span>
-                      <span className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {categoryCounts[cat]}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Collapsible Notes Section */}
             {showNotes && (

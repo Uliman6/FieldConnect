@@ -36,6 +36,7 @@ interface VoiceDiaryStore {
 
   // Actions - Snippets
   addSnippet: (voiceNoteId: string, category: VoiceDiaryCategory, content: string) => void;
+  updateSnippet: (snippetId: string, content: string) => void;
   getSnippetsForCategory: (category: VoiceDiaryCategory, date?: string, projectId?: string) => CategorizedSnippet[];
   getSnippetsForDate: (date: string, projectId?: string) => CategorizedSnippet[];
   clearSnippetsForNote: (voiceNoteId: string) => void;
@@ -214,6 +215,16 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         };
         set((state) => ({
           categorizedSnippets: [snippet, ...state.categorizedSnippets],
+        }));
+      },
+
+      updateSnippet: (snippetId, content) => {
+        set((state) => ({
+          categorizedSnippets: state.categorizedSnippets.map((snippet) =>
+            snippet.id === snippetId
+              ? { ...snippet, content }
+              : snippet
+          ),
         }));
       },
 

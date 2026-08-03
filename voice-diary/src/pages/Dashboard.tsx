@@ -15,12 +15,35 @@ import {
   PenTool,
   Plus,
   Check,
+  ChevronDown,
+  ChevronUp,
+  Edit3,
+  Save,
+  Loader2,
+  Shield,
+  Truck,
+  CheckCircle2,
+  ListTodo,
+  Users,
+  Package,
+  Settings2,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useVoiceDiaryStore } from '../lib/voice-diary-store';
-import { useAuth } from '../lib/auth';
-import type { VoiceDiaryCategory, FormTypeId } from '../lib/types';
+import type { VoiceDiaryCategory, FormTypeId, CategorizedSnippet } from '../lib/types';
 import { FORM_TYPES } from '../lib/types';
+
+const CATEGORY_ICONS: Record<VoiceDiaryCategory, React.ReactNode> = {
+  'Safety': <Shield size={16} className="text-red-500" />,
+  'Logistics': <Truck size={16} className="text-blue-500" />,
+  'Process': <Settings2 size={16} className="text-purple-500" />,
+  'Work Completed': <CheckCircle2 size={16} className="text-green-500" />,
+  'Work To Be Done': <ListTodo size={16} className="text-amber-500" />,
+  'Follow-up Items': <ArrowRight size={16} className="text-pink-500" />,
+  'Issues': <AlertTriangle size={16} className="text-red-500" />,
+  'Team': <Users size={16} className="text-cyan-500" />,
+  'Materials': <Package size={16} className="text-stone-500" />,
+};
 
 const CATEGORY_COLORS: Record<VoiceDiaryCategory, string> = {
   'Safety': 'bg-red-100 dark:bg-red-900/30',
@@ -95,8 +118,9 @@ export default function Dashboard() {
     const saved = localStorage.getItem('voice-diary-completed-followups');
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
-
-  const { user } = useAuth();
+  const [editingFollowUp, setEditingFollowUp] = useState<{ id: string; content: string } | null>(null);
+  const [isSavingFollowUp, setIsSavingFollowUp] = useState(false);
+  const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
   const {
     getSnippetsForCategory,
@@ -105,7 +129,7 @@ export default function Dashboard() {
     getTodayDate,
     currentProjectId,
     projects,
-    dailySummaries,
+    updateSnippet,
   } = useVoiceDiaryStore();
 
   const today = getTodayDate();
@@ -115,17 +139,59 @@ export default function Dashboard() {
   const selectedDateNotes = getVoiceNotesForDate(selectedDate, currentProjectId || undefined);
   const selectedDateSnippets = getSnippetsForDate(selectedDate, currentProjectId || undefined);
 
-  // Get summary for selected date
-  const selectedDateSummary = useMemo(() => {
-    if (!currentProjectId) return null;
-    return dailySummaries.find(
-      s => s.projectId === currentProjectId && s.date === selectedDate && (s.userId === user?.id || !s.userId)
-    );
-  }, [currentProjectId, dailySummaries, selectedDate, user?.id]);
-
   const selectedSnippets = selectedCategory
     ? getSnippetsForCategory(selectedCategory, selectedDate, currentProjectId || undefined)
     : [];
+
+  // Group snippets by voice note (topic) - excluding follow-up items
+  const topicGroups = useMemo(() => {
+    const groups: Array<{
+      noteId: string;
+      title: string;
+      primaryCategory: VoiceDiaryCategory;
+      snippets: CategorizedSnippet[];
+      time: string;
+    }> = [];
+
+    // Get notes for the selected date
+    const notesForDate = selectedDateNotes;
+
+    for (const note of notesForDate) {
+      // Get snippets for this note, excluding Follow-up Items
+      const noteSnippets = selectedDateSnippets.filter(
+        s => s.voiceNoteId === note.id && s.category !== 'Follow-up Items'
+      );
+
+      if (noteSnippets.length === 0) continue;
+
+      // Determine primary category (most common or first)
+      const categoryCount: Record<string, number> = {};
+      for (const s of noteSnippets) {
+        categoryCount[s.category] = (categoryCount[s.category] || 0) + 1;
+      }
+      const primaryCategory = Object.entries(categoryCount)
+        .sort((a, b) => b[1] - a[1])[0]?.[0] as VoiceDiaryCategory || noteSnippets[0].category;
+
+      groups.push({
+        noteId: note.id,
+        title: note.title || generateTopicTitle(noteSnippets),
+        primaryCategory,
+        snippets: noteSnippets,
+        time: new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      });
+    }
+
+    return groups;
+  }, [selectedDateNotes, selectedDateSnippets]);
+
+  // Helper to generate topic title from snippets
+  function generateTopicTitle(snippets: CategorizedSnippet[]): string {
+    if (snippets.length === 0) return 'Voice Note';
+    const firstContent = snippets[0].content;
+    // Extract first meaningful words
+    const words = firstContent.split(/\s+/).slice(0, 5).join(' ');
+    return words.length > 40 ? words.slice(0, 40) + '...' : words;
+  }
 
   // Date navigation handlers
   const handlePrevDay = () => {
@@ -169,25 +235,6 @@ export default function Dashboard() {
     localStorage.setItem('voice-diary-completed-followups', JSON.stringify([...newSet]));
   };
 
-  // Extract company name from snippet content
-  const extractCompanyName = (content: string): string => {
-    // Look for patterns like "Company: X", "from X", "by X", or capitalized words
-    const patterns = [
-      /(?:company|vendor|contractor|from|by|with)\s*[:\-]?\s*([A-Z][A-Za-z0-9\s&]+?)(?:\s*[-–—]|\s+(?:will|to|for|about|regarding|needs|is|has|should))/i,
-      /^([A-Z][A-Za-z0-9\s&]+?)(?:\s*[-–—]|\s+(?:will|to|for|about|regarding|needs|is|has|should))/,
-    ];
-    for (const pattern of patterns) {
-      const match = content.match(pattern);
-      if (match && match[1] && match[1].trim().length > 1) {
-        return match[1].trim().slice(0, 30);
-      }
-    }
-    // Fallback: first 2-3 words if they look like a name
-    const words = content.split(/\s+/).slice(0, 3);
-    const firstCapitalized = words.filter(w => /^[A-Z]/.test(w)).join(' ');
-    return firstCapitalized || words.slice(0, 2).join(' ').slice(0, 20);
-  };
-
   // Extract due date from snippet content
   const extractDueDate = (content: string): string | null => {
     const lower = content.toLowerCase();
@@ -213,10 +260,10 @@ export default function Dashboard() {
   const followUpItems = useMemo(() => {
     const items: Array<{
       id: string;
-      company: string;
-      task: string;
+      content: string;
       dueDate: string | null;
       completed: boolean;
+      createdAt: string;
     }> = [];
 
     // Get Follow-up Items category snippets
@@ -239,15 +286,26 @@ export default function Dashboard() {
 
       items.push({
         id: snippet.id,
-        company: extractCompanyName(snippet.content),
-        task: snippet.content.length > 60 ? snippet.content.slice(0, 60) + '...' : snippet.content,
+        content: snippet.content,
         dueDate: extractDueDate(snippet.content),
         completed: completedFollowUps.has(snippet.id),
+        createdAt: snippet.createdAt,
       });
     }
 
     return items;
   }, [selectedDate, currentProjectId, getSnippetsForCategory, completedFollowUps]);
+
+  // Handle saving follow-up edit
+  const handleSaveFollowUp = () => {
+    if (!editingFollowUp) return;
+    setIsSavingFollowUp(true);
+    updateSnippet(editingFollowUp.id, editingFollowUp.content);
+    setTimeout(() => {
+      setIsSavingFollowUp(false);
+      setEditingFollowUp(null);
+    }, 300);
+  };
 
   const handleCreateForm = () => {
     if (!selectedFormType) return;
@@ -332,7 +390,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Daily Summary Card */}
+        {/* Daily Summary - Grouped by Topic */}
         <div className={`rounded-xl p-4 mb-4 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
           <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
             Daily Summary
@@ -342,22 +400,61 @@ export default function Dashboard() {
             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
               No notes recorded on {formatDateShort(selectedDate)}.
             </p>
-          ) : selectedDateSummary?.summary ? (
-            <div className="space-y-1">
-              {selectedDateSummary.summary.split('\n').filter(line => line.trim()).map((line, idx) => (
-                <p key={idx} className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {line}
-                </p>
+          ) : topicGroups.length === 0 ? (
+            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              {selectedDateNotes.length} note{selectedDateNotes.length !== 1 ? 's' : ''} recorded. Processing...
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {topicGroups.map((topic) => (
+                <div key={topic.noteId}>
+                  {/* Topic Header - Clickable */}
+                  <button
+                    onClick={() => setExpandedTopic(expandedTopic === topic.noteId ? null : topic.noteId)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      CATEGORY_COLORS[topic.primaryCategory]
+                    } ${expandedTopic === topic.noteId ? 'ring-2 ring-primary-500' : ''}`}
+                  >
+                    {CATEGORY_ICONS[topic.primaryCategory]}
+                    <div className="flex-1 text-left">
+                      <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {topic.title}
+                      </p>
+                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {topic.snippets.length} item{topic.snippets.length !== 1 ? 's' : ''} · {topic.time}
+                      </p>
+                    </div>
+                    {expandedTopic === topic.noteId ? (
+                      <ChevronUp size={18} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                    ) : (
+                      <ChevronDown size={18} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                    )}
+                  </button>
+
+                  {/* Expanded Content */}
+                  {expandedTopic === topic.noteId && (
+                    <div className={`mt-2 ml-4 pl-4 border-l-2 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                      {topic.snippets.map((snippet) => (
+                        <div key={snippet.id} className="py-2">
+                          <div className="flex items-start gap-2">
+                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded ${CATEGORY_COLORS[snippet.category]}`}>
+                              {snippet.category.split(' ')[0]}
+                            </span>
+                          </div>
+                          <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {snippet.content}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
-          ) : (
-            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              {selectedDateNotes.length} note{selectedDateNotes.length !== 1 ? 's' : ''} recorded. Summary pending.
-            </p>
           )}
         </div>
 
-        {/* Follow-up Items Table */}
+        {/* Follow-up Items */}
         <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
           Follow-up Items ({followUpItems.length} on {formatDateShort(selectedDate)})
         </h3>
@@ -373,45 +470,63 @@ export default function Dashboard() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {/* Table Header */}
-              <div className={`grid grid-cols-12 gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-50 text-gray-500'}`}>
-                <div className="col-span-3">Company</div>
-                <div className="col-span-5">Task</div>
-                <div className="col-span-3">Due</div>
-                <div className="col-span-1 text-center">Done</div>
-              </div>
-              {/* Table Rows */}
+            <div className="p-3 space-y-3">
               {followUpItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`grid grid-cols-12 gap-2 px-3 py-3 items-center ${
-                    item.completed ? 'opacity-50' : ''
+                  className={`p-4 rounded-xl transition-all ${
+                    item.completed
+                      ? 'opacity-50 ' + (isDark ? 'bg-gray-800' : 'bg-gray-100')
+                      : isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}
                 >
-                  <div className={`col-span-3 text-xs font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {item.company}
-                  </div>
-                  <div className={`col-span-5 text-xs truncate ${item.completed ? 'line-through' : ''} ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {item.task}
-                  </div>
-                  <div className={`col-span-3 text-xs ${
-                    item.dueDate === 'ASAP' ? 'text-red-500 font-semibold' :
-                    item.dueDate === 'Tomorrow' ? 'text-amber-500 font-medium' :
-                    isDark ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    {item.dueDate || '—'}
-                  </div>
-                  <div className="col-span-1 flex justify-center">
+                  <div className="flex items-start gap-3">
+                    {/* Checkbox */}
                     <button
                       onClick={() => toggleFollowUpComplete(item.id)}
-                      className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+                      className={`w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-colors mt-0.5 ${
                         item.completed
                           ? 'bg-green-500'
                           : isDark ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'
                       }`}
                     >
                       {item.completed && <Check size={14} className="text-white" />}
+                    </button>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        onClick={() => setEditingFollowUp({ id: item.id, content: item.content })}
+                        className={`text-sm leading-relaxed cursor-pointer hover:underline ${
+                          item.completed ? 'line-through' : ''
+                        } ${isDark ? 'text-gray-200' : 'text-gray-700'}`}
+                      >
+                        {item.content}
+                      </p>
+                      <div className="flex items-center gap-3 mt-2">
+                        {item.dueDate && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            item.dueDate === 'ASAP'
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold'
+                              : item.dueDate === 'Tomorrow'
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-medium'
+                              : isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500'
+                          }`}>
+                            {item.dueDate}
+                          </span>
+                        )}
+                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Edit button */}
+                    <button
+                      onClick={() => setEditingFollowUp({ id: item.id, content: item.content })}
+                      className={`p-2 rounded-lg flex-shrink-0 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                    >
+                      <Edit3 size={16} className="text-primary-600" />
                     </button>
                   </div>
                 </div>
@@ -604,6 +719,63 @@ export default function Dashboard() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Follow-up Modal */}
+      {editingFollowUp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setEditingFollowUp(null)} />
+          <div className={`relative w-full max-w-lg rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-xl`}>
+            <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Edit Follow-up Item
+              </h2>
+              <button onClick={() => setEditingFollowUp(null)} className="p-2">
+                <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
+              </button>
+            </div>
+            <div className="p-4">
+              <textarea
+                value={editingFollowUp.content}
+                onChange={(e) => setEditingFollowUp({ ...editingFollowUp, content: e.target.value })}
+                rows={6}
+                autoFocus
+                className={`w-full p-4 rounded-xl text-base leading-relaxed resize-none ${
+                  isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
+                }`}
+                placeholder="Enter follow-up item..."
+              />
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setEditingFollowUp(null)}
+                  disabled={isSavingFollowUp}
+                  className={`flex-1 py-3 rounded-xl font-medium ${
+                    isDark ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'
+                  } disabled:opacity-50`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveFollowUp}
+                  disabled={isSavingFollowUp || !editingFollowUp.content.trim()}
+                  className="flex-1 py-3 rounded-xl font-medium bg-primary-600 text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingFollowUp ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} />
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -944,12 +944,83 @@ function basicToolFeedbackCategorization(transcript, toolBrand) {
   return results;
 }
 
+/**
+ * Translate text between languages using AI
+ * @param {string} text - Text to translate
+ * @param {string} fromLang - Source language ('es' or 'en')
+ * @param {string} toLang - Target language ('es' or 'en')
+ * @returns {Promise<string>} Translated text
+ */
+async function translateText(text, fromLang = 'es', toLang = 'en') {
+  if (!text || text.trim().length === 0) {
+    return text;
+  }
+
+  if (!OPENAI_API_KEY) {
+    console.warn('[voice-diary] No OpenAI API key for translation');
+    return text;
+  }
+
+  const langNames = { es: 'Spanish', en: 'English' };
+  const fromName = langNames[fromLang] || fromLang;
+  const toName = langNames[toLang] || toLang;
+
+  try {
+    const systemPrompt = `You are a professional translator for construction site documentation. Translate the following text from ${fromName} to ${toName}.
+
+RULES:
+- Maintain the same tone and level of formality
+- Keep technical construction terms accurate
+- Preserve any measurements, numbers, dates, and proper nouns
+- Keep the same paragraph structure
+- Do NOT add explanations or notes, just provide the translation
+- If the text is already in ${toName}, return it unchanged`;
+
+    const response = await fetch(CHAT_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text },
+        ],
+        temperature: 0.2,
+        max_tokens: Math.max(500, text.length * 2),
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[voice-diary] Translation API error:', response.status);
+      return text;
+    }
+
+    const data = await response.json();
+    const translatedText = data.choices?.[0]?.message?.content?.trim();
+
+    if (!translatedText) {
+      return text;
+    }
+
+    console.log(`[voice-diary] Translated ${text.length} chars from ${fromLang} to ${toLang}`);
+    return translatedText;
+
+  } catch (error) {
+    console.error('[voice-diary] Translation error:', error);
+    return text;
+  }
+}
+
 module.exports = {
   categorizeTranscript,
   generateDailySummary,
   generateNoteTitle,
   matchFormTemplates,
   categorizeToolFeedback,
+  translateText,
   VOICE_DIARY_CATEGORIES,
   TOOL_FEEDBACK_CATEGORIES,
 };

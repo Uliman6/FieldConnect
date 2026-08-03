@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Mic, LayoutDashboard, LogOut, Sun, Moon, Shield, Wrench, BarChart3, FileText } from 'lucide-react';
+import { Mic, LayoutDashboard, LogOut, Shield, Wrench, BarChart3, FileText, Globe } from 'lucide-react';
 import { useAuth } from '../lib/auth';
-import { useThemeToggle } from '../lib/use-color-scheme';
+import { useColorScheme } from '../lib/use-color-scheme';
+import { useLanguageStore } from '../lib/use-language';
 
 type AppMode = 'voice-diary' | 'tool-feedback';
 
@@ -10,8 +11,9 @@ export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { colorScheme, toggleTheme } = useThemeToggle();
+  const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { language, toggleLanguage, t } = useLanguageStore();
 
   // Mode state - persisted to localStorage
   const [appMode, setAppMode] = useState<AppMode>(() => {
@@ -50,7 +52,7 @@ export default function Layout() {
       <header className={`${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm safe-area-top`}>
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {appMode === 'voice-diary' ? 'Voice Diary' : 'Tool Feedback'}
+            {appMode === 'voice-diary' ? t('app.voiceDiary') : t('app.toolFeedback')}
           </h1>
           <div className="flex items-center gap-2">
             {/* Mode Toggle */}
@@ -91,15 +93,16 @@ export default function Layout() {
               </NavLink>
             )}
             <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} transition-colors`}
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              onClick={toggleLanguage}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                language === 'es'
+                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                  : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+              }`}
+              title={language === 'en' ? 'Cambiar a Espa\u00f1ol' : 'Switch to English'}
             >
-              {isDark ? (
-                <Sun size={20} className="text-yellow-400" />
-              ) : (
-                <Moon size={20} className="text-gray-600" />
-              )}
+              <Globe size={16} />
+              <span>{language === 'en' ? 'ES' : 'EN'}</span>
             </button>
             <button
               onClick={handleLogout}
@@ -138,7 +141,7 @@ export default function Layout() {
                 }
               >
                 <Mic size={24} />
-                <span className="text-xs mt-1 font-medium">Record</span>
+                <span className="text-xs mt-1 font-medium">{t('nav.record')}</span>
               </NavLink>
               <NavLink
                 to="/dashboard"
@@ -153,7 +156,7 @@ export default function Layout() {
                 }
               >
                 <LayoutDashboard size={24} />
-                <span className="text-xs mt-1 font-medium">Dashboard</span>
+                <span className="text-xs mt-1 font-medium">{t('nav.dashboard')}</span>
               </NavLink>
             </>
           ) : (
@@ -171,7 +174,7 @@ export default function Layout() {
                 }
               >
                 <Wrench size={24} />
-                <span className="text-xs mt-1 font-medium">Record</span>
+                <span className="text-xs mt-1 font-medium">{t('nav.record')}</span>
               </NavLink>
               <NavLink
                 to="/tool-summary"
@@ -186,7 +189,7 @@ export default function Layout() {
                 }
               >
                 <BarChart3 size={24} />
-                <span className="text-xs mt-1 font-medium">Summary</span>
+                <span className="text-xs mt-1 font-medium">{t('nav.summary')}</span>
               </NavLink>
             </>
           )}

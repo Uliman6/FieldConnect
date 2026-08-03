@@ -183,6 +183,32 @@ const voiceDiaryController = {
     }
   },
 
+  // Translate text between languages using AI
+  async translateText(req, res, next) {
+    try {
+      const { text, fromLang = 'es', toLang = 'en' } = req.body;
+
+      if (!text) {
+        return res.status(400).json({ error: 'Validation Error', message: 'text is required' });
+      }
+
+      console.log(`[voice-diary] Translating text from ${fromLang} to ${toLang}, length: ${text.length}`);
+
+      // Use GPT for translation
+      const translatedText = await voiceDiaryService.translateText(text, fromLang, toLang);
+
+      res.json({
+        success: true,
+        translatedText,
+        fromLang,
+        toLang
+      });
+    } catch (error) {
+      console.error('[voice-diary] Translation error:', error);
+      next(error);
+    }
+  },
+
   // Get entries for current user only (user-scoped)
   async getMyEntries(req, res, next) {
     try {

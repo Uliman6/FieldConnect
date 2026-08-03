@@ -41,6 +41,11 @@ router.post('/tool-feedback', (req, res, next) =>
   voiceDiaryController.processToolFeedback(req, res, next)
 );
 
+// POST /api/voice-diary/translate - Translate text between languages
+router.post('/translate', (req, res, next) =>
+  voiceDiaryController.translateText(req, res, next)
+);
+
 // POST /api/voice-diary/feedback - Submit feedback
 router.post('/feedback', (req, res, next) =>
   voiceDiaryController.submitFeedback(req, res, next)
