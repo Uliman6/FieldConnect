@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useVoiceDiaryStore } from '../lib/voice-diary-store';
+import { useLanguageStore } from '../lib/use-language';
 import type { VoiceDiaryCategory, FormTypeId, CategorizedSnippet } from '../lib/types';
 import { FORM_TYPES } from '../lib/types';
 
@@ -82,26 +83,6 @@ const addDays = (date: Date, days: number): Date => {
   return result;
 };
 
-const formatDateDisplay = (dateStr: string): string => {
-  const date = parseDate(dateStr);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-};
-
-const formatDateShort = (dateStr: string): string => {
-  const today = formatDateISO(new Date());
-  if (dateStr === today) return 'Today';
-
-  const yesterday = formatDateISO(addDays(new Date(), -1));
-  if (dateStr === yesterday) return 'Yesterday';
-
-  const date = parseDate(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
 
 export default function Dashboard() {
   const colorScheme = useColorScheme();
@@ -121,6 +102,8 @@ export default function Dashboard() {
   const [editingFollowUp, setEditingFollowUp] = useState<{ id: string; content: string } | null>(null);
   const [isSavingFollowUp, setIsSavingFollowUp] = useState(false);
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
+
+  const { language, t } = useLanguageStore();
 
   const {
     getSnippetsForCategory,
@@ -143,55 +126,165 @@ export default function Dashboard() {
     ? getSnippetsForCategory(selectedCategory, selectedDate, currentProjectId || undefined)
     : [];
 
-  // Group snippets by voice note (topic) - excluding follow-up items
+  // Topic/trade keywords for detection
+  const TOPIC_KEYWORDS: Record<string, { keywords: string[]; label: string; labelEs: string }> = {
+    'electrical': {
+      keywords: ['electrical', 'electric', 'wiring', 'wire', 'outlet', 'switch', 'panel', 'conduit', 'breaker', 'voltage', 'electrician'],
+      label: 'Electrical Work',
+      labelEs: 'Trabajo Eléctrico'
+    },
+    'structural': {
+      keywords: ['structural', 'structure', 'beam', 'column', 'foundation', 'framing', 'frame', 'load-bearing', 'steel', 'rebar'],
+      label: 'Structural Work',
+      labelEs: 'Trabajo Estructural'
+    },
+    'concrete': {
+      keywords: ['concrete', 'cement', 'pour', 'slab', 'footing', 'curing', 'rebar', 'formwork'],
+      label: 'Concrete Work',
+      labelEs: 'Trabajo de Concreto'
+    },
+    'plumbing': {
+      keywords: ['plumbing', 'plumber', 'pipe', 'pipes', 'water', 'drain', 'sewer', 'valve', 'faucet', 'toilet', 'sink'],
+      label: 'Plumbing Work',
+      labelEs: 'Trabajo de Plomería'
+    },
+    'hvac': {
+      keywords: ['hvac', 'heating', 'cooling', 'air conditioning', 'ac', 'duct', 'ventilation', 'furnace', 'thermostat'],
+      label: 'HVAC Work',
+      labelEs: 'Trabajo HVAC'
+    },
+    'drywall': {
+      keywords: ['drywall', 'sheetrock', 'gypsum', 'taping', 'mudding', 'finishing'],
+      label: 'Drywall Work',
+      labelEs: 'Trabajo de Tablaroca'
+    },
+    'roofing': {
+      keywords: ['roof', 'roofing', 'shingles', 'membrane', 'flashing', 'gutter'],
+      label: 'Roofing Work',
+      labelEs: 'Trabajo de Techado'
+    },
+    'painting': {
+      keywords: ['paint', 'painting', 'primer', 'coat', 'spray', 'brush', 'roller'],
+      label: 'Painting Work',
+      labelEs: 'Trabajo de Pintura'
+    },
+    'flooring': {
+      keywords: ['floor', 'flooring', 'tile', 'tiles', 'carpet', 'hardwood', 'vinyl', 'laminate'],
+      label: 'Flooring Work',
+      labelEs: 'Trabajo de Pisos'
+    },
+    'delivery': {
+      keywords: ['delivery', 'delivered', 'truck', 'shipment', 'arrived', 'arriving', 'pickup', 'drop-off'],
+      label: 'Deliveries',
+      labelEs: 'Entregas'
+    },
+    'inspection': {
+      keywords: ['inspection', 'inspector', 'inspected', 'code', 'permit', 'compliance', 'passed', 'failed'],
+      label: 'Inspections',
+      labelEs: 'Inspecciones'
+    },
+    'weather': {
+      keywords: ['weather', 'rain', 'storm', 'wind', 'cold', 'hot', 'snow', 'delay'],
+      label: 'Weather Impact',
+      labelEs: 'Impacto del Clima'
+    },
+    'equipment': {
+      keywords: ['equipment', 'crane', 'excavator', 'loader', 'forklift', 'scaffold', 'scaffolding', 'tool', 'machine'],
+      label: 'Equipment',
+      labelEs: 'Equipo'
+    },
+    'personnel': {
+      keywords: ['personnel', 'crew', 'workers', 'team', 'manpower', 'staff', 'guys', 'men', 'people', 'trabajadores'],
+      label: 'Personnel',
+      labelEs: 'Personal'
+    },
+    'safety': {
+      keywords: ['safety', 'hazard', 'ppe', 'incident', 'accident', 'injury', 'osha', 'caution', 'warning'],
+      label: 'Safety',
+      labelEs: 'Seguridad'
+    },
+  };
+
+  // Detect topic from snippet content
+  function detectTopic(content: string): string {
+    const lower = content.toLowerCase();
+    for (const [topicKey, { keywords }] of Object.entries(TOPIC_KEYWORDS)) {
+      for (const keyword of keywords) {
+        if (lower.includes(keyword)) {
+          return topicKey;
+        }
+      }
+    }
+    return 'general';
+  }
+
+  // Group snippets by detected topic - each snippet can only belong to one group
   const topicGroups = useMemo(() => {
     const groups: Array<{
-      noteId: string;
+      topicKey: string;
       title: string;
       primaryCategory: VoiceDiaryCategory;
       snippets: CategorizedSnippet[];
       time: string;
     }> = [];
 
-    // Get notes for the selected date
-    const notesForDate = selectedDateNotes;
+    // Get snippets for selected date, excluding Follow-up Items
+    const snippetsForDate = selectedDateSnippets.filter(s => s.category !== 'Follow-up Items');
 
-    for (const note of notesForDate) {
-      // Get snippets for this note, excluding Follow-up Items
-      const noteSnippets = selectedDateSnippets.filter(
-        s => s.voiceNoteId === note.id && s.category !== 'Follow-up Items'
-      );
+    // Group snippets by detected topic
+    const topicMap = new Map<string, CategorizedSnippet[]>();
 
-      if (noteSnippets.length === 0) continue;
+    for (const snippet of snippetsForDate) {
+      const topic = detectTopic(snippet.content);
+      if (!topicMap.has(topic)) {
+        topicMap.set(topic, []);
+      }
+      topicMap.get(topic)!.push(snippet);
+    }
 
-      // Determine primary category (most common or first)
+    // Convert map to array of groups
+    for (const [topicKey, snippets] of topicMap) {
+      if (snippets.length === 0) continue;
+
+      // Sort snippets by time
+      snippets.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+      // Determine primary category (most common)
       const categoryCount: Record<string, number> = {};
-      for (const s of noteSnippets) {
+      for (const s of snippets) {
         categoryCount[s.category] = (categoryCount[s.category] || 0) + 1;
       }
       const primaryCategory = Object.entries(categoryCount)
-        .sort((a, b) => b[1] - a[1])[0]?.[0] as VoiceDiaryCategory || noteSnippets[0].category;
+        .sort((a, b) => b[1] - a[1])[0]?.[0] as VoiceDiaryCategory || snippets[0].category;
+
+      // Get title based on topic
+      const topicInfo = TOPIC_KEYWORDS[topicKey];
+      const title = topicInfo
+        ? (language === 'es' ? topicInfo.labelEs : topicInfo.label)
+        : (language === 'es' ? 'General' : 'General Notes');
+
+      // Get earliest time
+      const earliestTime = new Date(snippets[0].createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       groups.push({
-        noteId: note.id,
-        title: note.title || generateTopicTitle(noteSnippets),
+        topicKey,
+        title,
         primaryCategory,
-        snippets: noteSnippets,
-        time: new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        snippets,
+        time: earliestTime,
       });
     }
 
-    return groups;
-  }, [selectedDateNotes, selectedDateSnippets]);
+    // Sort groups by number of snippets (most first) then alphabetically
+    groups.sort((a, b) => {
+      if (b.snippets.length !== a.snippets.length) {
+        return b.snippets.length - a.snippets.length;
+      }
+      return a.title.localeCompare(b.title);
+    });
 
-  // Helper to generate topic title from snippets
-  function generateTopicTitle(snippets: CategorizedSnippet[]): string {
-    if (snippets.length === 0) return 'Voice Note';
-    const firstContent = snippets[0].content;
-    // Extract first meaningful words
-    const words = firstContent.split(/\s+/).slice(0, 5).join(' ');
-    return words.length > 40 ? words.slice(0, 40) + '...' : words;
-  }
+    return groups;
+  }, [selectedDateSnippets, language]);
 
   // Date navigation handlers
   const handlePrevDay = () => {
@@ -326,15 +419,37 @@ export default function Dashboard() {
     return Array.from(dates).sort((a, b) => b.localeCompare(a));
   }, []);
 
+  // Helper function for localized date format
+  const formatDateDisplayLocalized = (dateStr: string): string => {
+    const date = parseDate(dateStr);
+    return date.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const formatDateShortLocalized = (dateStr: string): string => {
+    const todayStr = formatDateISO(new Date());
+    if (dateStr === todayStr) return t('common.today');
+
+    const yesterdayStr = formatDateISO(addDays(new Date(), -1));
+    if (dateStr === yesterdayStr) return t('common.yesterday');
+
+    const date = parseDate(dateStr);
+    return date.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' });
+  };
+
   if (!currentProjectId) {
     return (
       <div className={`h-full flex flex-col items-center justify-center p-10 ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
         <Building2 size={64} className={isDark ? 'text-gray-700' : 'text-gray-300'} />
         <h2 className={`mt-5 text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          No Project Selected
+          {t('dashboard.noProject')}
         </h2>
         <p className={`mt-2 text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          Select a project on the Record tab to see your dashboard
+          {t('dashboard.selectOnRecord')}
         </p>
       </div>
     );
@@ -369,7 +484,7 @@ export default function Dashboard() {
             >
               <Calendar size={18} className="text-primary-600" />
               <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {formatDateDisplay(selectedDate)}
+                {formatDateDisplayLocalized(selectedDate)}
               </span>
             </button>
 
@@ -386,34 +501,34 @@ export default function Dashboard() {
             </button>
           </div>
           <p className={`text-xs text-center mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-            Tap date to select
+            {t('dashboard.tapDateToSelect')}
           </p>
         </div>
 
         {/* Daily Summary - Grouped by Topic */}
         <div className={`rounded-xl p-4 mb-4 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
           <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            Daily Summary
+            {t('dashboard.dailySummary')}
           </h3>
 
           {selectedDateNotes.length === 0 ? (
             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              No notes recorded on {formatDateShort(selectedDate)}.
+              {t('dashboard.noNotes')} {formatDateShortLocalized(selectedDate)}.
             </p>
           ) : topicGroups.length === 0 ? (
             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              {selectedDateNotes.length} note{selectedDateNotes.length !== 1 ? 's' : ''} recorded. Processing...
+              {selectedDateNotes.length} {t('dashboard.notesRecorded')}
             </p>
           ) : (
             <div className="space-y-2">
               {topicGroups.map((topic) => (
-                <div key={topic.noteId}>
+                <div key={topic.topicKey}>
                   {/* Topic Header - Clickable */}
                   <button
-                    onClick={() => setExpandedTopic(expandedTopic === topic.noteId ? null : topic.noteId)}
+                    onClick={() => setExpandedTopic(expandedTopic === topic.topicKey ? null : topic.topicKey)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
                       CATEGORY_COLORS[topic.primaryCategory]
-                    } ${expandedTopic === topic.noteId ? 'ring-2 ring-primary-500' : ''}`}
+                    } ${expandedTopic === topic.topicKey ? 'ring-2 ring-primary-500' : ''}`}
                   >
                     {CATEGORY_ICONS[topic.primaryCategory]}
                     <div className="flex-1 text-left">
@@ -421,10 +536,10 @@ export default function Dashboard() {
                         {topic.title}
                       </p>
                       <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {topic.snippets.length} item{topic.snippets.length !== 1 ? 's' : ''} · {topic.time}
+                        {topic.snippets.length} {topic.snippets.length !== 1 ? t('dashboard.items') : t('dashboard.item')} · {topic.time}
                       </p>
                     </div>
-                    {expandedTopic === topic.noteId ? (
+                    {expandedTopic === topic.topicKey ? (
                       <ChevronUp size={18} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
                     ) : (
                       <ChevronDown size={18} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
@@ -432,13 +547,13 @@ export default function Dashboard() {
                   </button>
 
                   {/* Expanded Content */}
-                  {expandedTopic === topic.noteId && (
+                  {expandedTopic === topic.topicKey && (
                     <div className={`mt-2 ml-4 pl-4 border-l-2 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                       {topic.snippets.map((snippet) => (
                         <div key={snippet.id} className="py-2">
                           <div className="flex items-start gap-2">
                             <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded ${CATEGORY_COLORS[snippet.category]}`}>
-                              {snippet.category.split(' ')[0]}
+                              {t(`category.${snippet.category.toLowerCase().replace(/\s+/g, '')}`)}
                             </span>
                           </div>
                           <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -456,17 +571,17 @@ export default function Dashboard() {
 
         {/* Follow-up Items */}
         <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          Follow-up Items ({followUpItems.length} on {formatDateShort(selectedDate)})
+          {t('dashboard.followUpItems')} ({followUpItems.length} {t('dashboard.on')} {formatDateShortLocalized(selectedDate)})
         </h3>
         <div className={`rounded-xl overflow-hidden mb-5 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
           {followUpItems.length === 0 ? (
             <div className="p-6 text-center">
               <ArrowRight size={32} className={`mx-auto mb-2 ${isDark ? 'text-gray-700' : 'text-gray-300'}`} />
               <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                No follow-up items on {formatDateShort(selectedDate)}
+                {t('dashboard.noFollowUps')} {formatDateShortLocalized(selectedDate)}
               </p>
               <p className={`text-xs mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                Items from "Follow-up" category or with due dates will appear here
+                {t('dashboard.followUpHint')}
               </p>
             </div>
           ) : (
@@ -537,23 +652,29 @@ export default function Dashboard() {
 
         {/* Forms Section */}
         <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          Create Form
+          {t('dashboard.createForm')}
         </h3>
         <div className="grid grid-cols-2 gap-2 mb-5">
-          {FORM_TYPES.map((formType) => (
-            <button
-              key={formType.id}
-              onClick={() => setSelectedFormType(formType.id)}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
-                isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white hover:bg-gray-50'
-              } shadow-sm`}
-            >
-              {FORM_ICONS[formType.icon]}
-              <span className={`text-xs font-semibold text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {formType.name}
-              </span>
-            </button>
-          ))}
+          {FORM_TYPES.map((formType) => {
+            // Map form type IDs to translation keys
+            const formNameKey = `template.${formType.id.replace(/-/g, '')}`;
+            const translatedName = t(formNameKey) !== formNameKey ? t(formNameKey) : formType.name;
+
+            return (
+              <button
+                key={formType.id}
+                onClick={() => setSelectedFormType(formType.id)}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
+                  isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white hover:bg-gray-50'
+                } shadow-sm`}
+              >
+                {FORM_ICONS[formType.icon]}
+                <span className={`text-xs font-semibold text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {translatedName}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -563,7 +684,7 @@ export default function Dashboard() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowDatePicker(false)} />
           <div className={`relative w-full sm:max-w-md max-h-[70vh] rounded-t-2xl sm:rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} safe-area-bottom overflow-hidden`}>
             <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Select Date</h2>
+              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('dashboard.selectDate')}</h2>
               <button onClick={() => setShowDatePicker(false)} className="p-2">
                 <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
               </button>
@@ -587,16 +708,16 @@ export default function Dashboard() {
                       <Calendar size={18} className={isSelected ? 'text-primary-600' : isDark ? 'text-gray-400' : 'text-gray-500'} />
                       <div className="text-left">
                         <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {formatDateShort(date)}
+                          {formatDateShortLocalized(date)}
                         </p>
                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          {parseDate(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                          {parseDate(date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                         </p>
                       </div>
                     </div>
                     {hasNotes && (
                       <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs rounded-full">
-                        Has notes
+                        {t('dashboard.hasNotes')}
                       </span>
                     )}
                   </button>
@@ -614,9 +735,11 @@ export default function Dashboard() {
           <div className={`relative w-full sm:max-w-md max-h-[85vh] rounded-t-2xl sm:rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} safe-area-bottom overflow-hidden`}>
             <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
               <div>
-                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedCategory}</h2>
+                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {t(`category.${selectedCategory.toLowerCase().replace(/\s+/g, '')}`)}
+                </h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {selectedSnippets.length} item{selectedSnippets.length !== 1 ? 's' : ''} on {formatDateShort(selectedDate)}
+                  {selectedSnippets.length} {selectedSnippets.length !== 1 ? t('dashboard.items') : t('dashboard.item')} {t('dashboard.on')} {formatDateShortLocalized(selectedDate)}
                 </p>
               </div>
               <button onClick={() => setSelectedCategory(null)} className="p-2">
@@ -626,7 +749,7 @@ export default function Dashboard() {
             <div className="p-4 overflow-y-auto max-h-[70vh]">
               {selectedSnippets.length === 0 ? (
                 <p className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  No items in this category on {formatDateShort(selectedDate)}
+                  {t('dashboard.noFollowUps')} {formatDateShortLocalized(selectedDate)}
                 </p>
               ) : (
                 selectedSnippets.map((snippet) => (
@@ -653,10 +776,14 @@ export default function Dashboard() {
             <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
               <div>
                 <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {FORM_TYPES.find(f => f.id === selectedFormType)?.name}
+                  {(() => {
+                    const formNameKey = `template.${selectedFormType.replace(/-/g, '')}`;
+                    const formType = FORM_TYPES.find(f => f.id === selectedFormType);
+                    return t(formNameKey) !== formNameKey ? t(formNameKey) : formType?.name;
+                  })()}
                 </h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Select entries from {formatDateShort(selectedDate)}
+                  {t('form.selectEntries')} {formatDateShortLocalized(selectedDate)}
                 </p>
               </div>
               <button onClick={() => { setSelectedFormType(null); setSelectedSnippetIds(new Set()); }} className="p-2">
@@ -667,7 +794,7 @@ export default function Dashboard() {
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               {selectedDateSnippets.length === 0 ? (
                 <p className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  No entries on {formatDateShort(selectedDate)}. Record voice notes first.
+                  {t('form.noEntries')} {formatDateShortLocalized(selectedDate)}. {t('form.recordFirst')}
                 </p>
               ) : (
                 selectedDateSnippets.map((snippet) => (
@@ -690,7 +817,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex-1">
                         <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md mb-2 ${CATEGORY_COLORS[snippet.category]}`}>
-                          {snippet.category}
+                          {t(`category.${snippet.category.toLowerCase().replace(/\s+/g, '')}`)}
                         </span>
                         <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
                           {snippet.content}
@@ -714,8 +841,8 @@ export default function Dashboard() {
                   }`}
                 >
                   {selectedSnippetIds.size > 0
-                    ? `Create Form (${selectedSnippetIds.size} entries)`
-                    : 'Select entries to create form'}
+                    ? `${t('form.createForm')} (${selectedSnippetIds.size} ${t('form.entries')})`
+                    : t('form.selectToCreate')}
                 </button>
               </div>
             )}
@@ -730,7 +857,7 @@ export default function Dashboard() {
           <div className={`relative w-full max-w-lg rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-xl`}>
             <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
               <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Edit Follow-up Item
+                {t('dashboard.editFollowUp')}
               </h2>
               <button onClick={() => setEditingFollowUp(null)} className="p-2">
                 <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
@@ -745,7 +872,7 @@ export default function Dashboard() {
                 className={`w-full p-4 rounded-xl text-base leading-relaxed resize-none ${
                   isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
                 }`}
-                placeholder="Enter follow-up item..."
+                placeholder={t('dashboard.enterFollowUp')}
               />
               <div className="flex gap-3 mt-4">
                 <button
@@ -755,7 +882,7 @@ export default function Dashboard() {
                     isDark ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'
                   } disabled:opacity-50`}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleSaveFollowUp}
@@ -765,12 +892,12 @@ export default function Dashboard() {
                   {isSavingFollowUp ? (
                     <>
                       <Loader2 size={18} className="animate-spin" />
-                      Saving...
+                      {t('dashboard.saving')}
                     </>
                   ) : (
                     <>
                       <Save size={18} />
-                      Save
+                      {t('common.save')}
                     </>
                   )}
                 </button>

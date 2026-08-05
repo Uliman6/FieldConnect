@@ -45,13 +45,13 @@ export const translations: Record<Language, Record<string, string>> = {
     'record.save': 'Save',
     'record.saving': 'Saving...',
 
-    // Categories
+    // Categories (keys match actual category names lowercase without spaces)
     'category.safety': 'Safety',
     'category.logistics': 'Logistics',
     'category.process': 'Process',
-    'category.workCompleted': 'Work Done',
-    'category.workToBeDone': 'To Do',
-    'category.followUp': 'Follow-up',
+    'category.workcompleted': 'Work Done',
+    'category.worktobedone': 'To Do',
+    'category.follow-upitems': 'Follow-up',
     'category.issues': 'Issues',
     'category.team': 'Team',
     'category.materials': 'Materials',
@@ -70,8 +70,12 @@ export const translations: Record<Language, Record<string, string>> = {
     'dashboard.tapDateToSelect': 'Tap date to select',
     'dashboard.hasNotes': 'Has notes',
     'dashboard.items': 'items',
+    'dashboard.item': 'item',
     'dashboard.editFollowUp': 'Edit Follow-up Item',
     'dashboard.enterFollowUp': 'Enter follow-up item...',
+    'dashboard.on': 'on',
+    'dashboard.generalNotes': 'General Notes',
+    'dashboard.saving': 'Saving...',
 
     // Forms
     'form.selectEntries': 'Select entries from',
@@ -86,12 +90,18 @@ export const translations: Record<Language, Record<string, string>> = {
     'form.spanishOriginal': 'Spanish (Original)',
     'form.englishTranslation': 'English (Translation)',
 
-    // Form Templates
+    // Form Templates (lowercase keys for ID matching)
+    'template.dailylog': 'Daily Log',
+    'template.punchlist': 'Punch List',
+    'template.rfi': 'RFI',
+    'template.inspectionnotes': 'Inspection Notes',
+    'template.fieldnotes': 'Field Notes',
+    'template.incidentreport': 'Injury/Incident Report',
+    // Legacy camelCase keys
     'template.dailyLog': 'Daily Log',
     'template.dailyLogDesc': 'Daily work summary and progress report',
     'template.punchList': 'Punch List',
     'template.punchListDesc': 'Track deficiencies and incomplete work items',
-    'template.rfi': 'RFI',
     'template.rfiDesc': 'Request for Information - clarify design or construction questions',
     'template.inspectionNotes': 'Inspection Notes',
     'template.inspectionNotesDesc': 'Document site inspection findings',
@@ -155,33 +165,37 @@ export const translations: Record<Language, Record<string, string>> = {
     'record.save': 'Guardar',
     'record.saving': 'Guardando...',
 
-    // Categories
+    // Categories (keys match actual category names lowercase without spaces)
     'category.safety': 'Seguridad',
-    'category.logistics': 'Log\u00edstica',
+    'category.logistics': 'Logística',
     'category.process': 'Proceso',
-    'category.workCompleted': 'Trabajo Hecho',
-    'category.workToBeDone': 'Por Hacer',
-    'category.followUp': 'Seguimiento',
+    'category.workcompleted': 'Trabajo Hecho',
+    'category.worktobedone': 'Por Hacer',
+    'category.follow-upitems': 'Seguimiento',
     'category.issues': 'Problemas',
     'category.team': 'Equipo',
     'category.materials': 'Materiales',
 
     // Dashboard
-    'dashboard.noProject': 'Ning\u00fan Proyecto Seleccionado',
-    'dashboard.selectOnRecord': 'Selecciona un proyecto en la pesta\u00f1a Grabar para ver tu tablero',
+    'dashboard.noProject': 'Ningún Proyecto Seleccionado',
+    'dashboard.selectOnRecord': 'Selecciona un proyecto en la pestaña Grabar para ver tu tablero',
     'dashboard.dailySummary': 'Resumen Diario',
     'dashboard.noNotes': 'Sin notas grabadas el',
     'dashboard.notesRecorded': 'nota(s) grabadas. Procesando...',
     'dashboard.followUpItems': 'Elementos de Seguimiento',
     'dashboard.noFollowUps': 'Sin elementos de seguimiento el',
-    'dashboard.followUpHint': 'Los elementos de la categor\u00eda "Seguimiento" o con fechas l\u00edmite aparecer\u00e1n aqu\u00ed',
+    'dashboard.followUpHint': 'Los elementos de la categoría "Seguimiento" o con fechas límite aparecerán aquí',
     'dashboard.createForm': 'Crear Formulario',
     'dashboard.selectDate': 'Seleccionar Fecha',
     'dashboard.tapDateToSelect': 'Toca la fecha para seleccionar',
     'dashboard.hasNotes': 'Tiene notas',
     'dashboard.items': 'elementos',
+    'dashboard.item': 'elemento',
     'dashboard.editFollowUp': 'Editar Elemento de Seguimiento',
     'dashboard.enterFollowUp': 'Ingresa el elemento de seguimiento...',
+    'dashboard.on': 'el',
+    'dashboard.generalNotes': 'Notas Generales',
+    'dashboard.saving': 'Guardando...',
 
     // Forms
     'form.selectEntries': 'Selecciona entradas de',
@@ -196,15 +210,21 @@ export const translations: Record<Language, Record<string, string>> = {
     'form.spanishOriginal': 'Espa\u00f1ol (Original)',
     'form.englishTranslation': 'Ingl\u00e9s (Traducci\u00f3n)',
 
-    // Form Templates
+    // Form Templates (lowercase keys for ID matching)
+    'template.dailylog': 'Registro Diario',
+    'template.punchlist': 'Lista de Pendientes',
+    'template.rfi': 'RFI',
+    'template.inspectionnotes': 'Notas de Inspección',
+    'template.fieldnotes': 'Notas de Campo',
+    'template.incidentreport': 'Reporte de Lesiones/Incidentes',
+    // Legacy camelCase keys
     'template.dailyLog': 'Registro Diario',
     'template.dailyLogDesc': 'Resumen de trabajo diario e informe de progreso',
     'template.punchList': 'Lista de Pendientes',
     'template.punchListDesc': 'Seguimiento de deficiencias y trabajos incompletos',
-    'template.rfi': 'RFI',
-    'template.rfiDesc': 'Solicitud de Informaci\u00f3n - aclarar preguntas de dise\u00f1o o construcci\u00f3n',
-    'template.inspectionNotes': 'Notas de Inspecci\u00f3n',
-    'template.inspectionNotesDesc': 'Documentar hallazgos de inspecci\u00f3n del sitio',
+    'template.rfiDesc': 'Solicitud de Información - aclarar preguntas de diseño o construcción',
+    'template.inspectionNotes': 'Notas de Inspección',
+    'template.inspectionNotesDesc': 'Documentar hallazgos de inspección del sitio',
     'template.fieldNotes': 'Notas de Campo',
     'template.fieldNotesDesc': 'Observaciones generales de campo',
     'template.incidentReport': 'Reporte de Lesiones/Incidentes',

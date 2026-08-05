@@ -137,6 +137,16 @@ CRITICAL RULES FOR CONTENT:
 5. Keep concise: WHAT + WHERE or WHAT + WHO format
 6. NO added interpretation or adjectives not in original
 
+WORKER/PERSONNEL COUNT EXTRACTION:
+- When numbers of workers, crew members, or personnel are mentioned, ALWAYS create a Team category entry
+- Look for phrases like "4 guys", "three workers", "crew of 5", "four personnel", "ten men"
+- Convert word numbers to digits: "four" → 4, "ten" → 10
+- Format: "[Number] workers/crew on site" or "[Company] - [Number] workers"
+- Examples:
+  - "we had four personnel today" → {"category": "Team", "content": "4 personnel on site."}
+  - "ABC had 3 guys here" → {"category": "Team", "content": "ABC - 3 workers on site."}
+  - "crew of ten on the second floor" → {"category": "Team", "content": "10 workers - second floor."}
+
 COMPANY NAME DETECTION:
 - Look for patterns like "[Name] Electric/Plumbing/Drywall/Mechanical/HVAC/Roofing"
 - Look for "with [Company]", "from [Company]", "[Company] crew"
@@ -269,9 +279,15 @@ function basicCategorization(transcript) {
     results.push({ category: 'Materials', content: cleaned });
   }
 
-  // Team
-  if (/crew|team|worker|subcontractor|visitor|meeting|personnel/i.test(lower)) {
-    results.push({ category: 'Team', content: cleaned });
+  // Team - including worker count extraction
+  if (/crew|team|worker|subcontractor|visitor|meeting|personnel|guys|men|people/i.test(lower)) {
+    // Try to extract worker count
+    const workerCount = extractWorkerCount(transcript);
+    if (workerCount) {
+      results.push({ category: 'Team', content: `${workerCount} workers on site.` });
+    } else {
+      results.push({ category: 'Team', content: cleaned });
+    }
   }
 
   // Default to Issues if nothing matched
@@ -280,6 +296,42 @@ function basicCategorization(transcript) {
   }
 
   return results;
+}
+
+/**
+ * Extract worker/personnel count from transcript
+ */
+function extractWorkerCount(transcript) {
+  const lower = transcript.toLowerCase();
+
+  // Number words to digits mapping
+  const wordToNum = {
+    'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'eleven': 11, 'twelve': 12, 'fifteen': 15, 'twenty': 20
+  };
+
+  // Look for patterns like "4 workers", "three guys", "crew of 5"
+  const patterns = [
+    /(\d+)\s*(?:workers?|guys?|men|people|personnel|crew members?)/i,
+    /(?:crew of|team of|group of)\s*(\d+)/i,
+    /(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)\s*(?:workers?|guys?|men|people|personnel|crew members?)/i,
+    /(?:crew of|team of|group of)\s*(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = lower.match(pattern);
+    if (match) {
+      const numStr = match[1];
+      // Check if it's a word or digit
+      const count = wordToNum[numStr] || parseInt(numStr, 10);
+      if (count && !isNaN(count)) {
+        return count;
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
