@@ -10,6 +10,8 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Plus,
   Trash2,
   RefreshCw,
@@ -25,6 +27,7 @@ import {
   MessageSquare,
   Edit3,
   Save,
+  Calendar,
 } from 'lucide-react';
 import { useColorScheme } from '../lib/use-color-scheme';
 import { useVoiceDiaryStore } from '../lib/voice-diary-store';
@@ -57,6 +60,21 @@ const CATEGORY_COLORS_RECORD: Record<string, string> = {
   'Materials': 'bg-stone-100 dark:bg-stone-900/30',
 };
 
+// Date utilities
+const formatDateISO = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+const parseDate = (dateStr: string): Date => {
+  return new Date(dateStr + 'T00:00:00');
+};
+
+const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
 export default function Record() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -78,6 +96,7 @@ export default function Record() {
   const [isFeedbackMode, setIsFeedbackMode] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateISO(new Date()));
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -95,7 +114,6 @@ export default function Record() {
     updateDailySummary,
     addFormSuggestion,
     getVoiceNotesForDate,
-    getVoiceNotesForProject,
     getSnippetsForDate,
     getTodayDate,
     currentProjectId,
@@ -133,24 +151,47 @@ export default function Record() {
   const today = getTodayDate();
 
   const selectedCategorySnippets = selectedCategory
-    ? getSnippetsForCategory(selectedCategory as VoiceDiaryCategory, today, currentProjectId || undefined)
+    ? getSnippetsForCategory(selectedCategory as VoiceDiaryCategory, selectedDate, currentProjectId || undefined)
     : [];
-  // Get all notes for the project (not just today)
-  const allProjectNotes = currentProjectId ? getVoiceNotesForProject(currentProjectId) : [];
-  // Sort by date descending (newest first)
-  const sortedNotes = [...allProjectNotes].sort((a, b) =>
+
+  // Get notes for the selected date only
+  const notesForSelectedDate = getVoiceNotesForDate(selectedDate, currentProjectId || undefined);
+  // Sort by time (newest first)
+  const sortedNotes = [...notesForSelectedDate].sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
-  // Group notes by date
-  const notesByDate = sortedNotes.reduce((acc, note) => {
-    const date = note.createdAt.split('T')[0];
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(note);
-    return acc;
-  }, {} as Record<string, VoiceNote[]>);
-  const sortedDates = Object.keys(notesByDate).sort((a, b) => b.localeCompare(a));
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
+  const isToday = selectedDate === today;
+
+  // Date navigation handlers
+  const handlePrevDay = () => {
+    const current = parseDate(selectedDate);
+    const newDate = addDays(current, -1);
+    setSelectedDate(formatDateISO(newDate));
+  };
+
+  const handleNextDay = () => {
+    const current = parseDate(selectedDate);
+    const newDate = addDays(current, 1);
+    // Don't go past today
+    if (formatDateISO(newDate) <= today) {
+      setSelectedDate(formatDateISO(newDate));
+    }
+  };
+
+  // Format date for display
+  const formatDateDisplayLocalized = (dateStr: string): string => {
+    if (dateStr === today) return 'Today';
+    const yesterdayStr = formatDateISO(addDays(new Date(), -1));
+    if (dateStr === yesterdayStr) return 'Yesterday';
+    const date = parseDate(dateStr);
+    return date.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   const startRecording = useCallback(async () => {
     if (!currentProjectId) {
@@ -394,18 +435,6 @@ export default function Record() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString + 'T00:00:00');
-    const now = new Date();
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (dateString === yesterday.toISOString().split('T')[0]) {
-      return 'Yesterday';
-    }
-    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-  };
-
   const cleanTranscript = (rawText: string): string => {
     if (!rawText || rawText.trim().length === 0) return rawText || '';
     let cleaned = rawText;
@@ -474,9 +503,9 @@ export default function Record() {
     { icon: <AlertCircle size={18} />, label: 'Issues', categoryKey: 'Issues', color: 'text-red-500', bgActive: 'bg-red-100 dark:bg-red-900/40' },
   ];
 
-  // Get today's snippets to check which categories are covered
-  const todaySnippets = getSnippetsForDate(today, currentProjectId || undefined);
-  const coveredCategories = new Set(todaySnippets.map(s => s.category));
+  // Get selected date's snippets to check which categories are covered
+  const selectedDateSnippets = getSnippetsForDate(selectedDate, currentProjectId || undefined);
+  const coveredCategories = new Set(selectedDateSnippets.map(s => s.category));
 
   const handleStartEditing = (note: VoiceNote) => {
     setEditingNoteId(note.id);
@@ -643,7 +672,7 @@ export default function Record() {
         {/* Project Selector */}
         <button
           onClick={() => setShowProjectPicker(true)}
-          className={`flex items-center gap-3 p-4 rounded-xl mb-4 border transition-colors ${
+          className={`flex items-center gap-3 p-4 rounded-xl mb-3 border transition-colors ${
             currentProjectId
               ? 'border-primary-600 ' + (isDark ? 'bg-gray-900' : 'bg-white')
               : isDark
@@ -657,6 +686,39 @@ export default function Record() {
           </span>
           <ChevronDown size={20} className="text-gray-400" />
         </button>
+
+        {/* Date Navigation */}
+        {currentProjectId && (
+          <div className={`rounded-xl p-2 mb-4 ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handlePrevDay}
+                className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+              >
+                <ChevronLeft size={20} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <Calendar size={16} className="text-primary-600" />
+                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {formatDateDisplayLocalized(selectedDate)}
+                </span>
+              </div>
+
+              <button
+                onClick={handleNextDay}
+                disabled={isToday}
+                className={`p-2 rounded-lg ${
+                  isToday
+                    ? 'opacity-30'
+                    : isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                }`}
+              >
+                <ChevronRight size={20} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Main Record Button */}
         <div className="flex-1 flex flex-col items-center justify-center">
@@ -755,17 +817,19 @@ export default function Record() {
             >
               {showNotes ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
               <span className="font-medium">
-                View and Edit Notes {allProjectNotes.length > 0 && `(${allProjectNotes.length})`}
+                View and Edit Notes {sortedNotes.length > 0 && `(${sortedNotes.length})`}
               </span>
             </button>
 
             {/* Collapsible Notes Section */}
             {showNotes && (
               <div className="flex flex-col" style={{ maxHeight: '50vh' }}>
-                {allProjectNotes.length === 0 ? (
+                {sortedNotes.length === 0 ? (
                   <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                    <p className="text-gray-400 text-sm mb-3">No recordings yet</p>
-                    {!hasExampleData() && (
+                    <p className="text-gray-400 text-sm mb-3">
+                      No recordings on {formatDateDisplayLocalized(selectedDate)}
+                    </p>
+                    {isToday && !hasExampleData() && (
                       <button
                         onClick={() => {
                           if (currentProjectId) {
@@ -782,102 +846,93 @@ export default function Record() {
                 ) : (
                   <div className={`rounded-xl flex-1 overflow-y-auto ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
                     <div className="pb-32">
-                      {sortedDates.map((date) => (
-                        <div key={date}>
-                          {/* Date Header */}
-                          <div className={`sticky top-0 px-4 py-2 text-xs font-semibold ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
-                            {date === today ? 'Today' : formatDate(date)}
-                          </div>
-                          {/* Notes for this date */}
-                          {notesByDate[date].map((note, index) => (
-                            <div
-                              key={note.id}
-                              className={`p-4 ${
-                                index < notesByDate[date].length - 1 ? (isDark ? 'border-b border-gray-800' : 'border-b border-gray-100') : ''
-                              }`}
-                            >
-                              {editingNoteId === note.id ? (
-                                /* Editing Mode */
-                                <div>
-                                  <textarea
-                                    value={editedTranscript}
-                                    onChange={(e) => setEditedTranscript(e.target.value)}
-                                    rows={4}
-                                    autoFocus
-                                    className={`w-full p-3 rounded-lg text-sm ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'}`}
-                                  />
-                                  <div className="flex gap-2 mt-2">
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      disabled={isSavingEdit}
-                                      className={`flex-1 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'} disabled:opacity-50`}
-                                    >
-                                      Cancel
-                                    </button>
-                                    <button
-                                      onClick={() => handleSaveEdit(note.id)}
-                                      disabled={isSavingEdit}
-                                      className="flex-1 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white flex items-center justify-center gap-1 disabled:opacity-50"
-                                    >
-                                      {isSavingEdit ? (
-                                        <>
-                                          <Loader2 size={14} className="animate-spin" />
-                                          Saving...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Save size={14} />
-                                          Save
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                /* View Mode */
-                                <div>
-                                  <div className="flex items-start justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      {getStatusIcon(note.status)}
-                                      <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {note.status === 'error' ? note.errorMessage || 'Error' : note.title || generateTitle(note.transcriptText)}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        onClick={() => handleStartEditing(note)}
-                                        disabled={isRecording || note.status !== 'complete'}
-                                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
-                                      >
-                                        <Edit3 size={14} className="text-primary-600" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleReRecord(note.id)}
-                                        disabled={isRecording}
-                                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
-                                      >
-                                        <RefreshCw size={14} className="text-blue-500" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleDeleteNote(note.id)}
-                                        disabled={isRecording}
-                                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
-                                      >
-                                        <Trash2 size={14} className="text-red-500" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <p className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                                    {note.cleanedTranscript || note.transcriptText || 'Processing...'}
-                                  </p>
-                                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {formatTime(note.createdAt)} · {formatDuration(note.duration)}
-                                    {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
-                                  </p>
-                                </div>
-                              )}
+                      {sortedNotes.map((note, index) => (
+                        <div
+                          key={note.id}
+                          className={`p-4 ${
+                            index < sortedNotes.length - 1 ? (isDark ? 'border-b border-gray-800' : 'border-b border-gray-100') : ''
+                          }`}
+                        >
+                          {editingNoteId === note.id ? (
+                            /* Editing Mode */
+                            <div>
+                              <textarea
+                                value={editedTranscript}
+                                onChange={(e) => setEditedTranscript(e.target.value)}
+                                rows={4}
+                                autoFocus
+                                className={`w-full p-3 rounded-lg text-sm ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'}`}
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={handleCancelEdit}
+                                  disabled={isSavingEdit}
+                                  className={`flex-1 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'} disabled:opacity-50`}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleSaveEdit(note.id)}
+                                  disabled={isSavingEdit}
+                                  className="flex-1 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white flex items-center justify-center gap-1 disabled:opacity-50"
+                                >
+                                  {isSavingEdit ? (
+                                    <>
+                                      <Loader2 size={14} className="animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save size={14} />
+                                      Save
+                                    </>
+                                  )}
+                                </button>
+                              </div>
                             </div>
-                          ))}
+                          ) : (
+                            /* View Mode */
+                            <div>
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(note.status)}
+                                  <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {note.status === 'error' ? note.errorMessage || 'Error' : note.title || generateTitle(note.transcriptText)}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => handleStartEditing(note)}
+                                    disabled={isRecording || note.status !== 'complete'}
+                                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                                  >
+                                    <Edit3 size={14} className="text-primary-600" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleReRecord(note.id)}
+                                    disabled={isRecording}
+                                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                                  >
+                                    <RefreshCw size={14} className="text-blue-500" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteNote(note.id)}
+                                    disabled={isRecording}
+                                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30"
+                                  >
+                                    <Trash2 size={14} className="text-red-500" />
+                                  </button>
+                                </div>
+                              </div>
+                              <p className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                {note.cleanedTranscript || note.transcriptText || 'Processing...'}
+                              </p>
+                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                {formatTime(note.createdAt)} · {formatDuration(note.duration)}
+                                {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
