@@ -109,6 +109,12 @@ function cleanTextProfessional(text) {
     .replace(/\btheir\b/gi, 'the')
     .replace(/\bthem\b/gi, '');
 
+  // Clean up "make sure" phrases for concise follow-ups
+  cleaned = cleaned
+    .replace(/^(also\s+)?(so\s+)?(make\s+sure\s+(to\s+|that\s+)?)/gi, '')
+    .replace(/^(also\s+)?(need\s+to\s+)/gi, '')
+    .replace(/^(also\s+)?(have\s+to\s+)/gi, '');
+
   // Convert to action-oriented language
   cleaned = cleaned
     .replace(/\bneed\s+to\s+talk\s+to\b/gi, 'discuss with')
