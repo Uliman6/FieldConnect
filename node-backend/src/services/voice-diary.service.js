@@ -6,6 +6,40 @@
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const CHAT_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
+/**
+ * Fix common transcription typos (Whisper sometimes adds spaces in words)
+ */
+function fixTranscriptionTypos(text) {
+  if (!text) return text;
+
+  return text
+    // Fix split words (Whisper sometimes adds spaces)
+    .replace(/\bpl\s*u?\s*m?\s*bing\b/gi, 'plumbing')
+    .replace(/\bco\s*umns?\b/gi, 'columns')
+    .replace(/\bel\s*ectric\b/gi, 'electric')
+    .replace(/\bcon\s*crete\b/gi, 'concrete')
+    .replace(/\bin\s*spect\b/gi, 'inspect')
+    .replace(/\bfoun\s*dation\b/gi, 'foundation')
+    .replace(/\bswitch\s*board\b/gi, 'switchboard')
+    .replace(/\bswitch\s*gear\b/gi, 'switchgear')
+    .replace(/\bfire\s*(?:command|alarm)\s*(?:center|panel)\b/gi, 'fire command center')
+    .replace(/\bunder\s*ground\b/gi, 'underground')
+    .replace(/\bover\s*time\b/gi, 'overtime')
+    .replace(/\blight\s*ing\b/gi, 'lighting')
+    .replace(/\bcor\s*ridors?\b/gi, 'corridors')
+    .replace(/\btrench\s*ing\b/gi, 'trenching')
+    .replace(/\bbuild\s*ing\b/gi, 'building')
+    .replace(/\bsouth\s*east\b/gi, 'southeast')
+    .replace(/\bnorth\s*west\b/gi, 'northwest')
+    .replace(/\bnorth\s*east\b/gi, 'northeast')
+    .replace(/\bsouth\s*west\b/gi, 'southwest')
+    // Fix "CI Pl mbing" or "CI Pl bing" -> "CI Plumbing"
+    .replace(/\bCI\s+Pl\s*u?\s*m?\s*bing\b/gi, 'CI Plumbing')
+    // Fix common company name patterns
+    .replace(/\bABC\s+El\s*ectric\b/gi, 'ABC Electric')
+    .replace(/\bCBD\s+Con\s*crete\b/gi, 'CBD Concrete');
+}
+
 // LEARNING: These are the categories defined in the product requirements
 // They map to different aspects of construction daily work
 const VOICE_DIARY_CATEGORIES = [
@@ -110,64 +144,74 @@ async function categorizeTranscript(transcript) {
     return [];
   }
 
+  // Fix common transcription typos first
+  const cleanedTranscript = fixTranscriptionTypos(transcript);
+
   if (!OPENAI_API_KEY) {
     console.log('[voice-diary] No API key, using basic categorization');
-    return basicCategorization(transcript);
+    return basicCategorization(cleanedTranscript);
   }
 
   try {
-    const systemPrompt = `You are a construction site voice note processor. Your job is to DISSECT transcripts into individual, SHORT bullet points.
+    const systemPrompt = `You are a construction site voice note processor. DISSECT transcripts into individual facts.
 
-CRITICAL: EXTRACT SPECIFIC FACTS ONLY - DO NOT REPEAT THE WHOLE TRANSCRIPT
+CRITICAL RULES:
+1. Each "content" = ONE fact (5-20 words max)
+2. NEVER copy raw transcript - always rewrite professionally
+3. "make sure" / "need to" / "follow up" = ALWAYS a Follow-up Item
+4. NEVER use "General" as scope - always find specific company/trade
 
-Each "content" field should be ONE SPECIFIC FACT (5-15 words max), NOT the entire transcript repeated.
+CATEGORIES:
+- Work Completed: Tasks done today (scope = company doing work)
+- Work To Be Done: Upcoming tasks, scheduled work
+- Follow-up Items: ANYTHING with "make sure", "need to", "follow up", "check with", "confirm"
+- Issues: Problems, delays, concerns
+- Team: Worker counts - format: "[Company]: [X] workers, [Y] hours"
+- Safety: Hazards, PPE, incidents
+- Materials: Supplies, deliveries, orders
+- Logistics: Equipment, staging, access
+- Process: Coordination, sequencing
 
-CATEGORIES (use exactly these names):
-- Safety: Safety concerns, hazards, PPE, incidents, near-misses
-- Logistics: Deliveries, equipment moves, site access, staging
-- Process: Work methods, procedures, sequencing, coordination
-- Work Completed: Tasks finished today, areas completed
-- Work To Be Done: Upcoming tasks, planned work
-- Follow-up Items: Things to check on, pending decisions, callbacks
-- Issues: Problems, delays, defects, concerns
-- Team: Personnel, subcontractors, crew sizes, visitors
-- Materials: Supplies, inventory, orders, shortages
+SCOPE = COMPANY NAME (not generic trade):
+- If "ABC Electric" mentioned → scope: "ABC Electric"
+- If "CBD Concrete" mentioned → scope: "CBD Concrete"
+- If "CI Plumbing" mentioned → scope: "CI Plumbing"
+- Only use generic trade (Electrical, Plumbing) if NO company name given
+- For inspections → scope: "Inspections"
+- NEVER use "General"
 
-SCOPE FIELD: Identify the trade/company for each item:
-- Trades: Electrical, Plumbing, HVAC, Drywall, Concrete, Framing, Roofing, Painting, Flooring, Steel, Fire Protection
-- Or use company name if mentioned (e.g., "ABC Electric", "Smith Plumbing")
-- Or use: Site Work, Inspections, General, Coordination, Weather, Equipment
+TEAM ENTRIES (worker counts):
+When you see "[Company] with X workers/guys" or "worked X hours":
+→ {"category": "Team", "scope": "[Company]", "content": "[X] workers, [Y] hours."}
 
-EXTRACTION RULES:
-1. EACH item = ONE specific fact (5-15 words)
-2. NEVER copy the whole transcript into content
-3. SEPARATE different topics into different items
-4. NO pronouns (we/our/they/their/I)
-5. Professional third-person voice
+FOLLOW-UP ITEMS (capture ALL):
+- "make sure to..." → Follow-up Item
+- "need to check..." → Follow-up Item
+- "follow up with..." → Follow-up Item
+- "confirm that..." → Follow-up Item
 
-CORRECT EXAMPLE:
-Input: "So today electrical finished up on floor 3, we also had ABC Plumbing come out about that leak, need to follow up with them tomorrow. The concrete guys had 5 workers and got section B poured."
+EXAMPLE:
+Input: "ABC Electric working on second floor with three guys, worked eight hours. CBD Concrete on foundations northwest corner. Make sure to follow up with the lab tomorrow."
 
 Output:
 [
-  {"category": "Work Completed", "scope": "Electrical", "content": "Floor 3 electrical completed."},
-  {"category": "Work Completed", "scope": "Concrete", "content": "Section B concrete poured."},
-  {"category": "Team", "scope": "Concrete", "content": "5 workers on site."},
-  {"category": "Follow-up Items", "scope": "ABC Plumbing", "content": "Follow up about leak tomorrow."}
+  {"category": "Work Completed", "scope": "ABC Electric", "content": "Second floor electrical room work."},
+  {"category": "Team", "scope": "ABC Electric", "content": "3 workers, 8 hours."},
+  {"category": "Work Completed", "scope": "CBD Concrete", "content": "Foundation work, northwest corner."},
+  {"category": "Follow-up Items", "scope": "Inspections", "content": "Follow up with lab tomorrow."}
 ]
 
-WRONG (DO NOT DO THIS):
-[
-  {"category": "Work Completed", "scope": "General", "content": "So today electrical finished up on floor 3, we also had ABC Plumbing come out about that leak, need to follow up with them tomorrow. The concrete guys had 5 workers and got section B poured."}
-]
+OUTPUT: JSON array. Each item = one fact. Use company names as scope. Capture ALL "make sure" items.`;
 
-OUTPUT: JSON array with MULTIPLE SHORT items, NOT one item with the whole transcript.`;
+    const userPrompt = `DISSECT this transcript. For EACH company mentioned, extract: work done, worker count, hours. Capture ALL "make sure" items as Follow-up Items.
 
-    const userPrompt = `DISSECT this transcript into MULTIPLE SHORT items (5-15 words each). Do NOT return the whole transcript as one item.
+Transcript: "${cleanedTranscript}"
 
-Transcript: "${transcript}"
-
-Return JSON array with SEPARATE short items for each fact mentioned. Each content field = ONE fact only.`;
+IMPORTANT:
+- Use company names as scope (ABC Electric, CBD Concrete, CI Plumbing, etc.)
+- EVERY "make sure" = a separate Follow-up Item
+- Format Team entries as: "[X] workers, [Y] hours."
+- NEVER use "General" as scope`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -251,23 +295,64 @@ function normalizeCategory(category) {
 function basicCategorization(transcript) {
   const results = [];
 
+  // Extract company names from transcript
+  const companyNames = extractCompanyNames(transcript);
+
   // Split transcript into sentences - handle periods, and also common topic separators
   const sentences = transcript
     // First handle period/question/exclamation
     .replace(/([.!?])\s+/g, '$1|')
-    // Also split on "also", "and then", "then we" etc. (common in voice)
+    // Split on "also", "and then", "then we" etc. (common in voice)
     .replace(/,?\s+(also|and then|then we|then they|we also|they also|additionally)\s+/gi, '.|')
-    // Split on ", need to" / ", going to" (topic change)
-    .replace(/,\s+(need to|going to|have to|should|will)\s+/gi, '.|$1 ')
+    // Split on "make sure" (follow-up items)
+    .replace(/\.\s*(make sure|need to|have to|should)\s+/gi, '.|$1 ')
+    .replace(/,\s*(make sure|need to|have to|should)\s+/gi, '.|$1 ')
     .split('|')
     .map(s => s.trim())
     .filter(s => s.length > 5);
 
+  // Track last company mentioned (for context)
+  let lastCompanyScope = null;
+
   // Process each sentence individually
   for (const sentence of sentences) {
-    const lower = sentence.toLowerCase();
-    const scope = detectScope(lower);
-    const cleaned = cleanTextProfessional(sentence);
+    // Fix typos in sentence before processing
+    const fixedSentence = fixTranscriptionTypos(sentence);
+    const lower = fixedSentence.toLowerCase();
+
+    // Detect scope - prefer company name, fallback to trade
+    let scope = detectCompanyInText(fixedSentence, companyNames) || detectScope(lower);
+
+    // If we found a company, remember it for context
+    if (scope && companyNames.some(c => c.toLowerCase() === scope.toLowerCase())) {
+      lastCompanyScope = scope;
+    }
+
+    // If scope is generic trade (not a company name), try to find matching company
+    if (scope && !companyNames.some(c => c.toLowerCase() === scope.toLowerCase())) {
+      const tradeLower = scope.toLowerCase().replace(/^the\s+/, '');
+
+      // First, check if any extracted company name contains this trade
+      const matchingCompany = companyNames.find(c =>
+        c.toLowerCase().includes(tradeLower)
+      );
+
+      if (matchingCompany) {
+        scope = matchingCompany;
+      } else if (lastCompanyScope && lastCompanyScope.toLowerCase().includes(tradeLower)) {
+        scope = lastCompanyScope;
+      } else if (/^the\s+/i.test(scope)) {
+        scope = lastCompanyScope || scope.replace(/^the\s+/i, '');
+      }
+    }
+
+    // Never use "General" - default to last company or trade
+    if (scope === 'General') {
+      scope = lastCompanyScope || 'Site Work';
+    }
+
+    // Clean and fix any remaining typos in content
+    const cleaned = fixTranscriptionTypos(cleanTextProfessional(fixedSentence));
 
     // Skip if cleaned is too short
     if (cleaned.length < 10) continue;
@@ -275,42 +360,42 @@ function basicCategorization(transcript) {
     // Determine category for this sentence
     let category = null;
 
-    // Safety keywords
-    if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe/i.test(lower)) {
-      category = 'Safety';
-    }
-    // Follow-up items (check before issues)
-    else if (/follow.?up|check.?with|call|callback|need to talk|pending|waiting|get back/i.test(lower)) {
+    // PRIORITY 1: "Make sure" phrases = ALWAYS Follow-up Items
+    if (/make sure|need to|have to|follow.?up|check.?with|confirm|get back/i.test(lower)) {
       category = 'Follow-up Items';
+    }
+    // Safety keywords
+    else if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe/i.test(lower)) {
+      category = 'Safety';
     }
     // Issues keywords
     else if (/issue|problem|delay|concern|broken|damaged|wrong|missing|blocked/i.test(lower)) {
       category = 'Issues';
     }
     // Work completed
-    else if (/finished|completed|done|installed|poured|framed|painted|wrapped up/i.test(lower)) {
+    else if (/finished|completed|done|installed|poured|framed|painted|wrapped up|working on|worked/i.test(lower)) {
       category = 'Work Completed';
     }
     // Work to be done
-    else if (/tomorrow|next week|upcoming|will be|going to|start|starting|scheduled/i.test(lower)) {
+    else if (/tomorrow|next week|upcoming|will be|going to|start|starting|scheduled|come back/i.test(lower)) {
       category = 'Work To Be Done';
     }
     // Materials
-    else if (/material|delivery|delivered|supply|order|concrete|lumber|steel|shipment/i.test(lower)) {
+    else if (/material|delivery|delivered|supply|order|lumber|steel|shipment/i.test(lower)) {
       category = 'Materials';
     }
     // Team - including worker count extraction
-    else if (/crew|team|worker|subcontractor|visitor|meeting|personnel|guys|men|people/i.test(lower)) {
+    else if (/crew|team|worker|subcontractor|visitor|meeting|personnel|guys|men|people|\d+\s*(workers?|guys?|men)/i.test(lower)) {
       category = 'Team';
-      // Try to extract worker count
-      const workerCount = extractWorkerCount(sentence);
-      if (workerCount) {
-        results.push({ category: 'Team', scope, content: `${workerCount} workers on site.` });
+      // Try to extract worker count and hours
+      const workerInfo = extractWorkerInfo(sentence);
+      if (workerInfo) {
+        results.push({ category: 'Team', scope, content: workerInfo });
         continue;
       }
     }
     // Logistics
-    else if (/delivery|staging|access|parking|equipment|crane|lift/i.test(lower)) {
+    else if (/staging|access|parking|equipment|crane|lift/i.test(lower)) {
       category = 'Logistics';
     }
 
@@ -327,10 +412,116 @@ function basicCategorization(transcript) {
     const firstSentence = sentences[0] || transcript;
     const cleaned = cleanTextProfessional(firstSentence);
     const content = cleaned.length > 100 ? cleaned.substring(0, 97) + '...' : cleaned;
-    results.push({ category: 'Issues', scope: 'General', content });
+    results.push({ category: 'Issues', scope: 'Site Work', content });
   }
 
   return results;
+}
+
+/**
+ * Extract company names from transcript
+ */
+function extractCompanyNames(transcript) {
+  const companies = [];
+
+  // Fix typos first
+  const fixed = fixTranscriptionTypos(transcript);
+
+  // Pattern: [A-Z]+ [Trade] or [Name] [Trade] (case insensitive for trade)
+  const patterns = [
+    /\b([A-Z]{2,4})\s+(electric|plumbing|concrete|drywall|hvac|roofing|steel|framing)\b/gi,
+    /\b([A-Z][a-z]+)\s+(electric|plumbing|concrete|drywall|hvac|roofing|steel|framing)\b/gi,
+    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(construction|contractors?|inc\.?|llc)\b/gi,
+  ];
+
+  // Common articles/words that are NOT company names
+  const notCompanyNames = ['the', 'a', 'an', 'with', 'for', 'and', 'or', 'some'];
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(fixed)) !== null) {
+      const raw = match[0].trim();
+      const words = raw.split(' ');
+
+      // Skip if first word is an article/common word (not a company name)
+      if (notCompanyNames.includes(words[0].toLowerCase())) {
+        continue;
+      }
+
+      // Keep acronyms (2-4 uppercase letters) as-is, capitalize trade names
+      const normalized = words.map((w, i) => {
+        // First word might be an acronym (ABC, CBD, CI)
+        if (i === 0 && /^[A-Z]{2,4}$/.test(w)) {
+          return w; // Keep as-is
+        }
+        // Capitalize trade name
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      }).join(' ');
+      companies.push(normalized);
+    }
+  }
+
+  return [...new Set(companies)]; // Remove duplicates
+}
+
+/**
+ * Detect if a company name is mentioned in text
+ */
+function detectCompanyInText(text, companyNames) {
+  const lower = text.toLowerCase();
+  for (const company of companyNames) {
+    if (lower.includes(company.toLowerCase())) {
+      return company;
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract worker count and hours from text
+ */
+function extractWorkerInfo(text) {
+  const lower = text.toLowerCase();
+
+  let workers = null;
+  let hours = null;
+
+  // Extract worker count
+  const workerPatterns = [
+    /(\d+)\s*(?:workers?|guys?|men|people)/i,
+    /(?:with|had)\s*(\d+)\s*(?:workers?|guys?|men|people)/i,
+    /(three|four|five|six|seven|eight|nine|ten)\s*(?:workers?|guys?|men|people)/i,
+  ];
+
+  const wordToNum = {
+    'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+  };
+
+  for (const pattern of workerPatterns) {
+    const match = lower.match(pattern);
+    if (match) {
+      workers = wordToNum[match[1]] || parseInt(match[1], 10);
+      break;
+    }
+  }
+
+  // Extract hours
+  const hoursPattern = /(?:worked\s*)?(\d+|eight|six|ten|four)\s*hours?/i;
+  const hoursMatch = lower.match(hoursPattern);
+  if (hoursMatch) {
+    hours = wordToNum[hoursMatch[1]] || parseInt(hoursMatch[1], 10);
+  }
+
+  if (workers && hours) {
+    return `${workers} workers, ${hours} hours.`;
+  } else if (workers) {
+    return `${workers} workers on site.`;
+  } else if (hours) {
+    return `Worked ${hours} hours.`;
+  }
+
+  return null;
 }
 
 /**
