@@ -29,6 +29,13 @@ function fixTranscriptionTypos(text) {
     .replace(/\bcor\s*ridors?\b/gi, 'corridors')
     .replace(/\btrench\s*ing\b/gi, 'trenching')
     .replace(/\bbuild\s*ing\b/gi, 'building')
+    .replace(/\bp\s*u?\s*m?\s*p\b/gi, 'pump')
+    .replace(/\bp\s+p\s+/gi, 'pump ')
+    .replace(/\bpour\s*ing\b/gi, 'pouring')
+    .replace(/\bwork\s*ing\b/gi, 'working')
+    .replace(/\bstair\s*well\b/gi, 'stairwell')
+    .replace(/\bduct\s*work\b/gi, 'ductwork')
+    .replace(/\bsprin\s*kler\b/gi, 'sprinkler')
     .replace(/\bsouth\s*east\b/gi, 'southeast')
     .replace(/\bnorth\s*west\b/gi, 'northwest')
     .replace(/\bnorth\s*east\b/gi, 'northeast')
@@ -361,23 +368,23 @@ function basicCategorization(transcript) {
     let category = null;
 
     // PRIORITY 1: "Make sure" phrases = ALWAYS Follow-up Items
-    if (/make sure|need to|have to|follow.?up|check.?with|confirm|get back/i.test(lower)) {
+    if (/make sure|need to|have to|follow.?up|check.?with|confirm|get back|also need|coordinate with/i.test(lower)) {
       category = 'Follow-up Items';
     }
     // Safety keywords
-    else if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe/i.test(lower)) {
+    else if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe|exposed wiring/i.test(lower)) {
       category = 'Safety';
     }
-    // Issues keywords
-    else if (/issue|problem|delay|concern|broken|damaged|wrong|missing|blocked/i.test(lower)) {
+    // Issues keywords (check BEFORE work completed)
+    else if (/issue|problem|delay|concern|broken|damaged|wrong|missing|blocked|failed|conflict|weird noise/i.test(lower)) {
       category = 'Issues';
     }
-    // Work completed
-    else if (/finished|completed|done|installed|poured|framed|painted|wrapped up|working on|worked/i.test(lower)) {
+    // Work completed - ACTIVE work (started, doing, working, had)
+    else if (/finished|completed|done|installed|poured|framed|painted|wrapped up|working on|worked|started|doing|had\s+\w+\s+(working|doing)|pouring|rough-?in/i.test(lower)) {
       category = 'Work Completed';
     }
-    // Work to be done
-    else if (/tomorrow|next week|upcoming|will be|going to|start|starting|scheduled|come back/i.test(lower)) {
+    // Work to be done - FUTURE work
+    else if (/tomorrow|next week|upcoming|will be|going to|scheduled|come back|this weekend/i.test(lower)) {
       category = 'Work To Be Done';
     }
     // Materials
@@ -385,13 +392,21 @@ function basicCategorization(transcript) {
       category = 'Materials';
     }
     // Team - including worker count extraction
-    else if (/crew|team|worker|subcontractor|visitor|meeting|personnel|guys|men|people|\d+\s*(workers?|guys?|men)/i.test(lower)) {
-      category = 'Team';
+    else if (/crew|team|worker|subcontractor|visitor|meeting|personnel|guys|men|people|\d+\s*(workers?|guys?|men)|(two|three|four|five|six|seven|eight|nine|ten)\s*(workers?|guys?)/i.test(lower)) {
       // Try to extract worker count and hours
-      const workerInfo = extractWorkerInfo(sentence);
+      const workerInfo = extractWorkerInfo(fixedSentence);
       if (workerInfo) {
         results.push({ category: 'Team', scope, content: workerInfo });
         continue;
+      }
+      category = 'Team';
+    }
+    // Also check for worker counts in Work Completed or Work To Be Done sentences
+    if ((category === 'Work Completed' || category === 'Work To Be Done') &&
+        /(with|had|have|they'll have)\s+(two|three|four|five|six|seven|eight|nine|ten|\d+)\s*(workers?|guys?)|(two|three|four|five|six|seven|eight|nine|ten|\d+)\s+guys?\s+here/i.test(lower)) {
+      const workerInfo = extractWorkerInfo(fixedSentence);
+      if (workerInfo) {
+        results.push({ category: 'Team', scope, content: workerInfo });
       }
     }
     // Logistics
@@ -486,31 +501,43 @@ function extractWorkerInfo(text) {
   let workers = null;
   let hours = null;
 
-  // Extract worker count
-  const workerPatterns = [
-    /(\d+)\s*(?:workers?|guys?|men|people)/i,
-    /(?:with|had)\s*(\d+)\s*(?:workers?|guys?|men|people)/i,
-    /(three|four|five|six|seven|eight|nine|ten)\s*(?:workers?|guys?|men|people)/i,
-  ];
-
   const wordToNum = {
     'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
-    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'eleven': 11, 'twelve': 12
   };
+
+  // Extract worker count - multiple patterns
+  const workerPatterns = [
+    /(\d+)\s*(?:workers?|guys?|men|people)/i,
+    /(?:with|had|have)\s*(\d+)\s*(?:workers?|guys?|men|people)/i,
+    /(?:with|had|have)\s*(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*(?:workers?|guys?|men|people)/i,
+    /(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*(?:workers?|guys?|men|people)/i,
+    /(?:they'll|they|have|had|with)\s*(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+guys?/i,
+    /(?:they'll|they|have|had|with)\s*(\d+)\s+guys?/i,
+    /(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+guys?\s+(?:here|on|working)/i,
+  ];
 
   for (const pattern of workerPatterns) {
     const match = lower.match(pattern);
     if (match) {
       workers = wordToNum[match[1]] || parseInt(match[1], 10);
-      break;
+      if (!isNaN(workers)) break;
     }
   }
 
-  // Extract hours
-  const hoursPattern = /(?:worked\s*)?(\d+|eight|six|ten|four)\s*hours?/i;
-  const hoursMatch = lower.match(hoursPattern);
-  if (hoursMatch) {
-    hours = wordToNum[hoursMatch[1]] || parseInt(hoursMatch[1], 10);
+  // Extract hours - multiple patterns
+  const hoursPatterns = [
+    /(?:worked|working)?\s*(?:for\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s*hours?/i,
+    /(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s*hours?\s*(?:worked|working|on)/i,
+  ];
+
+  for (const pattern of hoursPatterns) {
+    const match = lower.match(pattern);
+    if (match) {
+      hours = wordToNum[match[1]] || parseInt(match[1], 10);
+      if (!isNaN(hours)) break;
+    }
   }
 
   if (workers && hours) {
