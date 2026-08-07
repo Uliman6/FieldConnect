@@ -681,9 +681,15 @@ BAD EXAMPLES (NEVER DO):
 • "resulting in a passing grade" (TOO WORDY)
 • "in the lobby area" when just "lobby" works (WORDY)`;
 
+    // Clean content before passing to AI
+    const cleanedGrouped = {};
+    for (const [cat, items] of Object.entries(grouped)) {
+      cleanedGrouped[cat] = items.map(i => cleanTextProfessional(i));
+    }
+
     const userPrompt = `Summarize these notes in 3-5 MINIMAL bullets (4-8 words each):
 
-${Object.entries(grouped).map(([cat, items]) =>
+${Object.entries(cleanedGrouped).map(([cat, items]) =>
   `${cat}:\n${items.map(i => `- ${i}`).join('\n')}`
 ).join('\n\n')}
 
