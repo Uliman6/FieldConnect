@@ -242,6 +242,7 @@ export default function RecordScreen() {
       const existingSnippets = getSnippetsForDate(today, currentProjectId || undefined).map((s) => ({
         category: s.category,
         content: s.content,
+        scope: s.scope,
       }));
       const noteCount = getVoiceNotesForDate(today, currentProjectId || undefined).length;
       console.log('[voice-diary] Existing snippets:', existingSnippets.length, 'Note count:', noteCount);
@@ -270,7 +271,7 @@ export default function RecordScreen() {
           if (processResult.newSnippets && processResult.newSnippets.length > 0) {
             console.log('[voice-diary] Adding', processResult.newSnippets.length, 'snippets');
             for (const snippet of processResult.newSnippets) {
-              addSnippet(noteId, snippet.category as any, snippet.content);
+              addSnippet(noteId, snippet.category as any, snippet.content, snippet.scope);
             }
             // Get the IDs of snippets we just created (they're at the front of the array)
             const allSnippets = useVoiceDiaryStore.getState().categorizedSnippets;

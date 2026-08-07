@@ -3185,6 +3185,7 @@ export const queryKeys = {
 export interface VoiceDiarySnippet {
   category: string;
   content: string;
+  scope?: string;
 }
 
 export interface VoiceDiaryFormSuggestion {

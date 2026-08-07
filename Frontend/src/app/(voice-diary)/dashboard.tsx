@@ -5,6 +5,9 @@ import {
   ScrollView,
   Pressable,
   Modal,
+  TextInput,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -23,6 +26,9 @@ import {
   Clock,
   Building2,
   User,
+  Pencil,
+  Trash2,
+  Check,
 } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import {
@@ -74,6 +80,8 @@ export default function DashboardScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState<VoiceDiaryCategory | null>(null);
   const [selectedForm, setSelectedForm] = useState<ValidFormSuggestion | null>(null);
+  const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
 
   // Get project and user context
   const { projects } = useDailyLogStore();
@@ -89,6 +97,8 @@ export default function DashboardScreen() {
     clearOrphanedFormSuggestions,
     getTodayDate,
     currentProjectId,
+    updateSnippet,
+    deleteSnippet,
   } = useVoiceDiaryStore();
 
   const today = getTodayDate();
@@ -131,6 +141,51 @@ export default function DashboardScreen() {
 
   // Show appropriate summary (user's if available, otherwise project)
   const displaySummary = userSummary || projectSummary;
+
+  const startEditingSnippet = (snippet: CategorizedSnippet) => {
+    setEditingSnippetId(snippet.id);
+    setEditingText(snippet.content);
+  };
+
+  const cancelEditingSnippet = () => {
+    setEditingSnippetId(null);
+    setEditingText('');
+  };
+
+  const saveEditingSnippet = () => {
+    if (editingSnippetId && editingText.trim().length > 0) {
+      updateSnippet(editingSnippetId, editingText.trim());
+    }
+    setEditingSnippetId(null);
+    setEditingText('');
+  };
+
+  const closeCategoryModal = () => {
+    setSelectedCategory(null);
+    setEditingSnippetId(null);
+    setEditingText('');
+  };
+
+  const handleDeleteSnippet = (snippetId: string) => {
+    const doDelete = () => {
+      if (editingSnippetId === snippetId) {
+        setEditingSnippetId(null);
+        setEditingText('');
+      }
+      deleteSnippet(snippetId);
+    };
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Remove this item?')) {
+        doDelete();
+      }
+    } else {
+      Alert.alert('Remove Item', 'Are you sure you want to remove this item?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: doDelete },
+      ]);
+    }
+  };
 
   // If no project selected, show message
   if (!currentProjectId) {
@@ -484,7 +539,7 @@ export default function DashboardScreen() {
         visible={selectedCategory !== null}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setSelectedCategory(null)}
+        onRequestClose={closeCategoryModal}
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#F9FAFB' }}>
           <View
@@ -496,7 +551,7 @@ export default function DashboardScreen() {
               borderBottomColor: isDark ? '#1F2937' : '#E5E7EB',
             }}
           >
-            <Pressable onPress={() => setSelectedCategory(null)} style={{ padding: 4 }}>
+            <Pressable onPress={closeCategoryModal} style={{ padding: 4 }}>
               <X size={24} color={isDark ? '#FFF' : '#111'} />
             </Pressable>
             <View style={{ flex: 1, marginLeft: 12 }}>
@@ -526,39 +581,123 @@ export default function DashboardScreen() {
                 No items in this category yet
               </Text>
             ) : (
-              selectedSnippets.map((snippet, index) => (
-                <View
-                  key={snippet.id}
-                  style={{
-                    backgroundColor: isDark ? '#1F2937' : '#FFF',
-                    borderRadius: 12,
-                    padding: 16,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Text
+              selectedSnippets.map((snippet, index) => {
+                const isEditing = editingSnippetId === snippet.id;
+                return (
+                  <View
+                    key={snippet.id}
                     style={{
-                      fontSize: 15,
-                      color: isDark ? '#E5E7EB' : '#374151',
-                      lineHeight: 22,
+                      backgroundColor: isDark ? '#1F2937' : '#FFF',
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 12,
                     }}
                   >
-                    {snippet.content}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: isDark ? '#6B7280' : '#9CA3AF',
-                      marginTop: 8,
-                    }}
-                  >
-                    {new Date(snippet.createdAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </Text>
-                </View>
-              ))
+                    {snippet.scope && snippet.scope !== 'General' && (
+                      <View
+                        style={{
+                          backgroundColor: isDark ? '#111827' : '#F3F4F6',
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          borderRadius: 6,
+                          alignSelf: 'flex-start',
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                          {snippet.scope}
+                        </Text>
+                      </View>
+                    )}
+
+                    {isEditing ? (
+                      <View>
+                        <TextInput
+                          value={editingText}
+                          onChangeText={setEditingText}
+                          multiline
+                          autoFocus
+                          style={{
+                            fontSize: 15,
+                            color: isDark ? '#E5E7EB' : '#374151',
+                            lineHeight: 22,
+                            borderWidth: 1,
+                            borderColor: isDark ? '#374151' : '#D1D5DB',
+                            borderRadius: 8,
+                            padding: 10,
+                            minHeight: 60,
+                            textAlignVertical: 'top',
+                          }}
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10, gap: 12 }}>
+                          <Pressable onPress={cancelEditingSnippet} style={{ paddingVertical: 6, paddingHorizontal: 10 }}>
+                            <Text style={{ fontSize: 14, color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: '600' }}>
+                              Cancel
+                            </Text>
+                          </Pressable>
+                          <Pressable
+                            onPress={saveEditingSnippet}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              backgroundColor: '#1F5C1A',
+                              paddingVertical: 6,
+                              paddingHorizontal: 12,
+                              borderRadius: 8,
+                            }}
+                          >
+                            <Check size={14} color="#FFF" />
+                            <Text style={{ fontSize: 14, color: '#FFF', fontWeight: '600', marginLeft: 4 }}>
+                              Save
+                            </Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    ) : (
+                      <View>
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            color: isDark ? '#E5E7EB' : '#374151',
+                            lineHeight: 22,
+                          }}
+                        >
+                          {snippet.content}
+                        </Text>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginTop: 8,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: isDark ? '#6B7280' : '#9CA3AF',
+                            }}
+                          >
+                            {new Date(snippet.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                            {snippet.edited ? ' · edited' : ''}
+                          </Text>
+                          <View style={{ flexDirection: 'row', gap: 16 }}>
+                            <Pressable onPress={() => startEditingSnippet(snippet)} hitSlop={8}>
+                              <Pencil size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                            </Pressable>
+                            <Pressable onPress={() => handleDeleteSnippet(snippet.id)} hitSlop={8}>
+                              <Trash2 size={16} color="#EF4444" />
+                            </Pressable>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                );
+              })
             )}
           </ScrollView>
         </SafeAreaView>

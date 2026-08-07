@@ -41,7 +41,9 @@ export interface CategorizedSnippet {
   voiceNoteId: string;
   category: VoiceDiaryCategory;
   content: string;
+  scope?: string; // Company/trade this item is tied to (e.g. "ABC Concrete")
   createdAt: string;
+  edited?: boolean; // True if the user manually edited the AI-generated content
 }
 
 // Daily summary for a specific date (per-user, per-project)
@@ -95,7 +97,9 @@ interface VoiceDiaryStore {
   getVoiceNotesForProject: (projectId: string) => VoiceNote[];
 
   // Actions - Snippets
-  addSnippet: (voiceNoteId: string, category: VoiceDiaryCategory, content: string) => void;
+  addSnippet: (voiceNoteId: string, category: VoiceDiaryCategory, content: string, scope?: string) => void;
+  updateSnippet: (id: string, content: string) => void;
+  deleteSnippet: (id: string) => void;
   getSnippetsForCategory: (category: VoiceDiaryCategory, date?: string, projectId?: string) => CategorizedSnippet[];
   getSnippetsForDate: (date: string, projectId?: string) => CategorizedSnippet[];
   clearSnippetsForNote: (voiceNoteId: string) => void;
@@ -234,16 +238,31 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
       },
 
       // Snippets
-      addSnippet: (voiceNoteId, category, content) => {
+      addSnippet: (voiceNoteId, category, content, scope) => {
         const snippet: CategorizedSnippet = {
           id: generateId(),
           voiceNoteId,
           category,
           content,
+          scope,
           createdAt: new Date().toISOString(),
         };
         set((state) => ({
           categorizedSnippets: [snippet, ...state.categorizedSnippets],
+        }));
+      },
+
+      updateSnippet: (id, content) => {
+        set((state) => ({
+          categorizedSnippets: state.categorizedSnippets.map((snippet) =>
+            snippet.id === id ? { ...snippet, content, edited: true } : snippet
+          ),
+        }));
+      },
+
+      deleteSnippet: (id) => {
+        set((state) => ({
+          categorizedSnippets: state.categorizedSnippets.filter((snippet) => snippet.id !== id),
         }));
       },
 

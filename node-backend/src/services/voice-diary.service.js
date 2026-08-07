@@ -155,6 +155,47 @@ function cleanTextProfessional(text) {
 }
 
 /**
+ * Light cleanup for text that was ALREADY rewritten professionally by the AI.
+ * Unlike cleanTextProfessional(), this does NOT run blind phrase-stripping regexes -
+ * those mangle sentences that the AI already made standalone (e.g. stripping "make sure"
+ * out of the middle of a sentence can turn a clear instruction into a context-free fragment).
+ * Only does safe, structural cleanup: whitespace, capitalization, ending punctuation.
+ */
+function lightCleanupAiContent(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let cleaned = text.trim().replace(/\s+/g, ' ');
+
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+
+  if (cleaned && !/[.!?]$/.test(cleaned)) {
+    cleaned += '.';
+  }
+
+  return cleaned;
+}
+
+/**
+ * Ensure content that should be tied to a company/scope actually names it,
+ * so items like Team entries make sense on their own (e.g. "ABC Concrete: 4 workers, 8 hours."
+ * instead of a bare "4 workers, 8 hours." that loses which crew it refers to).
+ */
+function ensureScopePrefix(content, scope) {
+  if (!content) return content;
+  if (!scope || scope === 'General' || scope === 'Site Work') return content;
+  if (content.toLowerCase().includes(scope.toLowerCase())) return content;
+
+  const firstChar = content.charAt(0);
+  const rest = /[A-Za-z]/.test(firstChar)
+    ? firstChar.toLowerCase() + content.slice(1)
+    : content;
+
+  return `${scope}: ${rest}`;
+}
+
+/**
  * Categorize a voice note transcript into relevant categories
  * Returns snippets with their assigned categories
  * @param {string} transcript - The transcribed voice note text
@@ -178,17 +219,17 @@ async function categorizeTranscript(transcript) {
     const systemPrompt = `You are a construction site voice note processor. DISSECT transcripts into individual facts.
 
 CRITICAL RULES:
-1. Each "content" = ONE fact (5-20 words max)
+1. Each "content" = ONE complete, standalone sentence a reader could understand with ZERO other context (5-25 words)
 2. NEVER copy raw transcript - always rewrite professionally
-3. "make sure" / "need to" / "follow up" = ALWAYS a Follow-up Item
-4. NEVER use "General" as scope - always find specific company/trade
+3. NEVER use "General" as scope - always find specific company/trade
+4. Judge Follow-up Items case by case - do NOT mechanically split one instruction into multiple items
 
 CATEGORIES:
 - Work Completed: Tasks done today (scope = company doing work)
 - Work To Be Done: Upcoming tasks, scheduled work
-- Follow-up Items: ANYTHING with "make sure", "need to", "follow up", "check with", "confirm"
+- Follow-up Items: Actions someone needs to take, check, or confirm later
 - Issues: Problems, delays, concerns
-- Team: Worker counts - format: "[Company]: [X] workers, [Y] hours"
+- Team: Worker counts, always naming the company - format: "[Company]: [X] workers, [Y] hours."
 - Safety: Hazards, PPE, incidents
 - Materials: Supplies, deliveries, orders
 - Logistics: Equipment, staging, access
@@ -202,37 +243,45 @@ SCOPE = COMPANY NAME (not generic trade):
 - For inspections → scope: "Inspections"
 - NEVER use "General"
 
-TEAM ENTRIES (worker counts):
+TEAM ENTRIES (worker counts) - ALWAYS name the company in the content itself, not just scope:
 When you see "[Company] with X workers/guys" or "worked X hours":
-→ {"category": "Team", "scope": "[Company]", "content": "[X] workers, [Y] hours."}
+→ {"category": "Team", "scope": "[Company]", "content": "[Company]: [X] workers, [Y] hours."}
+This is how crew size and hours get tied directly to who did the work, so the item makes sense on its own without needing the scope field.
 
-FOLLOW-UP ITEMS (capture ALL):
-- "make sure to..." → Follow-up Item
-- "need to check..." → Follow-up Item
-- "follow up with..." → Follow-up Item
-- "confirm that..." → Follow-up Item
+FOLLOW-UP ITEMS - write each as ONE complete, standalone sentence. Use judgment, not a mechanical rule:
+- Figure out WHO the follow-up is with and WHAT needs to be confirmed or done.
+- If a single instruction has a compound purpose about the SAME person/topic (e.g. "follow up with X to make sure he knows about Y and checks Z"), that is ONE Follow-up Item covering the full purpose - do NOT split the purpose clause into a second, context-free item.
+- Only create separate items when the transcript actually describes separate, unrelated actions.
+- Every Follow-up Item must be readable on its own, with no dangling pronoun ("he"/"they") and no missing subject.
 
-EXAMPLE:
+FOLLOW-UP EXAMPLE (read carefully - this is a common mistake to avoid):
+Input: "follow up with the special inspector to make sure he is aware of the Saturday work and checks the welds"
+This is ONE instruction with a compound purpose (both things are for the same follow-up with the same person) →
+CORRECT (one item): {"category": "Follow-up Items", "scope": "Inspections", "content": "Follow up with special inspector to confirm awareness of Saturday work and to check the welds."}
+WRONG (do not do this - the second item has no subject and no context):
+[{"content": "Follow up with special inspector."}, {"content": "Special inspector attends and checks the welds."}]
+
+FULL EXAMPLE:
 Input: "ABC Electric working on second floor with three guys, worked eight hours. CBD Concrete on foundations northwest corner. Make sure to follow up with the lab tomorrow."
 
 Output:
 [
   {"category": "Work Completed", "scope": "ABC Electric", "content": "Second floor electrical room work."},
-  {"category": "Team", "scope": "ABC Electric", "content": "3 workers, 8 hours."},
+  {"category": "Team", "scope": "ABC Electric", "content": "ABC Electric: 3 workers, 8 hours."},
   {"category": "Work Completed", "scope": "CBD Concrete", "content": "Foundation work, northwest corner."},
   {"category": "Follow-up Items", "scope": "Inspections", "content": "Follow up with lab tomorrow."}
 ]
 
-OUTPUT: JSON array. Each item = one fact. Use company names as scope. Capture ALL "make sure" items.`;
+OUTPUT: JSON array. Each item = one standalone fact. Use company names as scope, and in Team content.`;
 
-    const userPrompt = `DISSECT this transcript. For EACH company mentioned, extract: work done, worker count, hours. Capture ALL "make sure" items as Follow-up Items.
+    const userPrompt = `DISSECT this transcript. For EACH company mentioned, extract: work done, worker count, hours.
 
 Transcript: "${cleanedTranscript}"
 
 IMPORTANT:
 - Use company names as scope (ABC Electric, CBD Concrete, CI Plumbing, etc.)
-- EVERY "make sure" = a separate Follow-up Item
-- Format Team entries as: "[X] workers, [Y] hours."
+- Team entries must name the company IN THE CONTENT: "[Company]: [X] workers, [Y] hours."
+- For Follow-up Items, write ONE standalone sentence per distinct action. If a single instruction has a compound purpose about the same person/topic, keep it as ONE item - do not split it into a second item that loses context (no dangling "he"/"they" with nothing to refer to).
 - NEVER use "General" as scope`;
 
     const response = await fetch(CHAT_ENDPOINT, {
@@ -269,15 +318,22 @@ IMPORTANT:
 
     const items = JSON.parse(jsonMatch[0]);
 
-    // Validate, normalize categories, include scope, and clean content
+    // Validate, normalize categories, include scope, and lightly clean content.
+    // We do NOT run the heavy phrase-stripping cleanup here - the AI was already
+    // instructed to write standalone, professional sentences, and re-running blind
+    // regex substitutions on top of that can strip words mid-sentence and turn a
+    // clear instruction into a context-free fragment.
     return items
       .filter(item => item.category && item.content)
-      .map(item => ({
-        category: normalizeCategory(item.category),
-        scope: item.scope || 'General',
-        // Apply additional cleanup in case AI didn't fully follow instructions
-        content: cleanTextProfessional(item.content),
-      }))
+      .map(item => {
+        const category = normalizeCategory(item.category);
+        const scope = item.scope || 'General';
+        let content = lightCleanupAiContent(item.content);
+        if (category === 'Team') {
+          content = ensureScopePrefix(content, scope);
+        }
+        return { category, scope, content };
+      })
       .filter(item => VOICE_DIARY_CATEGORIES.includes(item.category) && item.content.length > 5);
 
   } catch (error) {
@@ -326,9 +382,6 @@ function basicCategorization(transcript) {
     .replace(/([.!?])\s+/g, '$1|')
     // Split on "also", "and then", "then we" etc. (common in voice)
     .replace(/,?\s+(also|and then|then we|then they|we also|they also|additionally)\s+/gi, '.|')
-    // Split on "make sure" (follow-up items)
-    .replace(/\.\s*(make sure|need to|have to|should)\s+/gi, '.|$1 ')
-    .replace(/,\s*(make sure|need to|have to|should)\s+/gi, '.|$1 ')
     .split('|')
     .map(s => s.trim())
     .filter(s => s.length > 5);
@@ -411,7 +464,7 @@ function basicCategorization(transcript) {
       // Try to extract worker count and hours
       const workerInfo = extractWorkerInfo(fixedSentence);
       if (workerInfo) {
-        results.push({ category: 'Team', scope, content: workerInfo });
+        results.push({ category: 'Team', scope, content: ensureScopePrefix(workerInfo, scope) });
         continue;
       }
       category = 'Team';
@@ -421,7 +474,7 @@ function basicCategorization(transcript) {
         /(with|had|have|they'll have)\s+(two|three|four|five|six|seven|eight|nine|ten|\d+)\s*(workers?|guys?)|(two|three|four|five|six|seven|eight|nine|ten|\d+)\s+guys?\s+here/i.test(lower)) {
       const workerInfo = extractWorkerInfo(fixedSentence);
       if (workerInfo) {
-        results.push({ category: 'Team', scope, content: workerInfo });
+        results.push({ category: 'Team', scope, content: ensureScopePrefix(workerInfo, scope) });
       }
     }
     // Logistics
@@ -681,10 +734,12 @@ BAD EXAMPLES (NEVER DO):
 • "resulting in a passing grade" (TOO WORDY)
 • "in the lobby area" when just "lobby" works (WORDY)`;
 
-    // Clean content before passing to AI
+    // Light cleanup before passing to AI - content here already went through
+    // categorization cleanup, so this just normalizes whitespace/punctuation
+    // instead of re-running heavy phrase-stripping on already-clean sentences.
     const cleanedGrouped = {};
     for (const [cat, items] of Object.entries(grouped)) {
-      cleanedGrouped[cat] = items.map(i => cleanTextProfessional(i));
+      cleanedGrouped[cat] = items.map(i => lightCleanupAiContent(i));
     }
 
     const userPrompt = `Summarize these notes in 3-5 MINIMAL bullets (4-8 words each):
@@ -953,8 +1008,9 @@ Return JSON with title (2-5 word topic) and cleanedTranscript (no pronouns).`;
     const result = JSON.parse(jsonMatch[0]);
     return {
       title: result.title || fallbackTitle,
-      // Apply cleanup to ensure no pronouns slip through
-      cleanedTranscript: cleanTextProfessional(result.cleanedTranscript) || fallbackCleaned,
+      // Light cleanup only - the AI prompt already instructs pronoun-free,
+      // standalone phrasing, so we avoid re-running heavy regex stripping on it.
+      cleanedTranscript: lightCleanupAiContent(result.cleanedTranscript) || fallbackCleaned,
     };
 
   } catch (error) {
