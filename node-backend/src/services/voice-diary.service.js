@@ -36,6 +36,15 @@ function fixTranscriptionTypos(text) {
     .replace(/\bstair\s*well\b/gi, 'stairwell')
     .replace(/\bduct\s*work\b/gi, 'ductwork')
     .replace(/\bsprin\s*kler\b/gi, 'sprinkler')
+    .replace(/\bdoc\s*u?\s*m?\s*ent\b/gi, 'document')
+    .replace(/\bsome\s*thing\b/gi, 'something')
+    .replace(/\bso\s+me\s*thing\b/gi, 'something')
+    .replace(/\bany\s*thing\b/gi, 'anything')
+    .replace(/\bevery\s*thing\b/gi, 'everything')
+    .replace(/\bin\s*spector\b/gi, 'inspector')
+    .replace(/\bsched\s*ul\w*\b/gi, 'scheduled')
+    .replace(/\bmain\s*ten\s*ance\b/gi, 'maintenance')
+    .replace(/\bcer\s*tif\s*icate\b/gi, 'certificate')
     .replace(/\bsouth\s*east\b/gi, 'southeast')
     .replace(/\bnorth\s*west\b/gi, 'northwest')
     .replace(/\bnorth\s*east\b/gi, 'northeast')
@@ -70,9 +79,9 @@ function cleanTextProfessional(text) {
 
   let cleaned = text.trim();
 
-  // Remove filler words and conversational phrases
+  // Remove filler words and conversational phrases (require word boundary or comma after)
   cleaned = cleaned
-    .replace(/^(so,?\s*|um,?\s*|uh,?\s*|well,?\s*|basically,?\s*|actually,?\s*|and then,?\s*)/gi, '')
+    .replace(/^(so,\s*|so\s+|um,?\s*|uh,?\s*|well,?\s*|basically,?\s*|actually,?\s*|and then,?\s*)/gi, '')
     .replace(/,?\s*(um|uh|you know|basically|actually|kind of|sort of|like)\s*,?/gi, ' ')
     .replace(/\bfor the most part\b/gi, '')
     .replace(/\bas well as\b/gi, 'and')
