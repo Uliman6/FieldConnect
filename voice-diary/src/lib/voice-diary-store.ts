@@ -35,7 +35,7 @@ interface VoiceDiaryStore {
   getVoiceNotesForProject: (projectId: string) => VoiceNote[];
 
   // Actions - Snippets
-  addSnippet: (voiceNoteId: string, category: VoiceDiaryCategory, content: string) => void;
+  addSnippet: (voiceNoteId: string, category: VoiceDiaryCategory, content: string, scope?: string) => void;
   updateSnippet: (snippetId: string, content: string) => void;
   getSnippetsForCategory: (category: VoiceDiaryCategory, date?: string, projectId?: string) => CategorizedSnippet[];
   getSnippetsForDate: (date: string, projectId?: string) => CategorizedSnippet[];
@@ -205,11 +205,12 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
       },
 
       // Snippets
-      addSnippet: (voiceNoteId, category, content) => {
+      addSnippet: (voiceNoteId, category, content, scope) => {
         const snippet: CategorizedSnippet = {
           id: generateId(),
           voiceNoteId,
           category,
+          scope: scope || 'General',
           content,
           createdAt: new Date().toISOString(),
         };

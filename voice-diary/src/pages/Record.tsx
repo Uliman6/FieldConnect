@@ -321,7 +321,7 @@ export default function Record() {
           const createdSnippetIds: string[] = [];
           if (processResult.newSnippets && processResult.newSnippets.length > 0) {
             for (const snippet of processResult.newSnippets) {
-              addSnippet(noteId, snippet.category, snippet.content);
+              addSnippet(noteId, snippet.category, snippet.content, snippet.scope);
             }
             const allSnippets = useVoiceDiaryStore.getState().categorizedSnippets;
             const noteSnippets = allSnippets.filter(s => s.voiceNoteId === noteId);
@@ -549,7 +549,7 @@ export default function Record() {
           // Add new snippets from the re-processed content
           if (processResult.newSnippets && processResult.newSnippets.length > 0) {
             for (const snippet of processResult.newSnippets) {
-              addSnippet(noteId, snippet.category, snippet.content);
+              addSnippet(noteId, snippet.category, snippet.content, snippet.scope);
             }
             console.log('[Edit] Added', processResult.newSnippets.length, 'new snippets');
           }

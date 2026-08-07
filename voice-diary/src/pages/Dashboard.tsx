@@ -126,102 +126,10 @@ export default function Dashboard() {
     ? getSnippetsForCategory(selectedCategory, selectedDate, currentProjectId || undefined)
     : [];
 
-  // Topic/trade keywords for detection
-  const TOPIC_KEYWORDS: Record<string, { keywords: string[]; label: string; labelEs: string }> = {
-    'electrical': {
-      keywords: ['electrical', 'electric', 'wiring', 'wire', 'outlet', 'switch', 'panel', 'conduit', 'breaker', 'voltage', 'electrician'],
-      label: 'Electrical Work',
-      labelEs: 'Trabajo Eléctrico'
-    },
-    'structural': {
-      keywords: ['structural', 'structure', 'beam', 'column', 'foundation', 'framing', 'frame', 'load-bearing', 'steel', 'rebar'],
-      label: 'Structural Work',
-      labelEs: 'Trabajo Estructural'
-    },
-    'concrete': {
-      keywords: ['concrete', 'cement', 'pour', 'slab', 'footing', 'curing', 'rebar', 'formwork'],
-      label: 'Concrete Work',
-      labelEs: 'Trabajo de Concreto'
-    },
-    'plumbing': {
-      keywords: ['plumbing', 'plumber', 'pipe', 'pipes', 'water', 'drain', 'sewer', 'valve', 'faucet', 'toilet', 'sink'],
-      label: 'Plumbing Work',
-      labelEs: 'Trabajo de Plomería'
-    },
-    'hvac': {
-      keywords: ['hvac', 'heating', 'cooling', 'air conditioning', 'ac', 'duct', 'ventilation', 'furnace', 'thermostat'],
-      label: 'HVAC Work',
-      labelEs: 'Trabajo HVAC'
-    },
-    'drywall': {
-      keywords: ['drywall', 'sheetrock', 'gypsum', 'taping', 'mudding', 'finishing'],
-      label: 'Drywall Work',
-      labelEs: 'Trabajo de Tablaroca'
-    },
-    'roofing': {
-      keywords: ['roof', 'roofing', 'shingles', 'membrane', 'flashing', 'gutter'],
-      label: 'Roofing Work',
-      labelEs: 'Trabajo de Techado'
-    },
-    'painting': {
-      keywords: ['paint', 'painting', 'primer', 'coat', 'spray', 'brush', 'roller'],
-      label: 'Painting Work',
-      labelEs: 'Trabajo de Pintura'
-    },
-    'flooring': {
-      keywords: ['floor', 'flooring', 'tile', 'tiles', 'carpet', 'hardwood', 'vinyl', 'laminate'],
-      label: 'Flooring Work',
-      labelEs: 'Trabajo de Pisos'
-    },
-    'delivery': {
-      keywords: ['delivery', 'delivered', 'truck', 'shipment', 'arrived', 'arriving', 'pickup', 'drop-off'],
-      label: 'Deliveries',
-      labelEs: 'Entregas'
-    },
-    'inspection': {
-      keywords: ['inspection', 'inspector', 'inspected', 'code', 'permit', 'compliance', 'passed', 'failed'],
-      label: 'Inspections',
-      labelEs: 'Inspecciones'
-    },
-    'weather': {
-      keywords: ['weather', 'rain', 'storm', 'wind', 'cold', 'hot', 'snow', 'delay'],
-      label: 'Weather Impact',
-      labelEs: 'Impacto del Clima'
-    },
-    'equipment': {
-      keywords: ['equipment', 'crane', 'excavator', 'loader', 'forklift', 'scaffold', 'scaffolding', 'tool', 'machine'],
-      label: 'Equipment',
-      labelEs: 'Equipo'
-    },
-    'personnel': {
-      keywords: ['personnel', 'crew', 'workers', 'team', 'manpower', 'staff', 'guys', 'men', 'people', 'trabajadores'],
-      label: 'Personnel',
-      labelEs: 'Personal'
-    },
-    'safety': {
-      keywords: ['safety', 'hazard', 'ppe', 'incident', 'accident', 'injury', 'osha', 'caution', 'warning'],
-      label: 'Safety',
-      labelEs: 'Seguridad'
-    },
-  };
-
-  // Detect topic from snippet content
-  function detectTopic(content: string): string {
-    const lower = content.toLowerCase();
-    for (const [topicKey, { keywords }] of Object.entries(TOPIC_KEYWORDS)) {
-      for (const keyword of keywords) {
-        if (lower.includes(keyword)) {
-          return topicKey;
-        }
-      }
-    }
-    return 'general';
-  }
-
-  // Group snippets by detected topic - each snippet can only belong to one group
-  const topicGroups = useMemo(() => {
+  // Group snippets by AI-detected scope (trade/company/work area)
+  const scopeGroups = useMemo(() => {
     const groups: Array<{
-      topicKey: string;
+      scope: string;
       title: string;
       primaryCategory: VoiceDiaryCategory;
       snippets: CategorizedSnippet[];
@@ -231,19 +139,19 @@ export default function Dashboard() {
     // Get snippets for selected date, excluding Follow-up Items
     const snippetsForDate = selectedDateSnippets.filter(s => s.category !== 'Follow-up Items');
 
-    // Group snippets by detected topic
-    const topicMap = new Map<string, CategorizedSnippet[]>();
+    // Group snippets by their AI-detected scope
+    const scopeMap = new Map<string, CategorizedSnippet[]>();
 
     for (const snippet of snippetsForDate) {
-      const topic = detectTopic(snippet.content);
-      if (!topicMap.has(topic)) {
-        topicMap.set(topic, []);
+      const scope = snippet.scope || 'General';
+      if (!scopeMap.has(scope)) {
+        scopeMap.set(scope, []);
       }
-      topicMap.get(topic)!.push(snippet);
+      scopeMap.get(scope)!.push(snippet);
     }
 
     // Convert map to array of groups
-    for (const [topicKey, snippets] of topicMap) {
+    for (const [scope, snippets] of scopeMap) {
       if (snippets.length === 0) continue;
 
       // Sort snippets by time
@@ -257,18 +165,12 @@ export default function Dashboard() {
       const primaryCategory = Object.entries(categoryCount)
         .sort((a, b) => b[1] - a[1])[0]?.[0] as VoiceDiaryCategory || snippets[0].category;
 
-      // Get title based on topic
-      const topicInfo = TOPIC_KEYWORDS[topicKey];
-      const title = topicInfo
-        ? (language === 'es' ? topicInfo.labelEs : topicInfo.label)
-        : (language === 'es' ? 'General' : 'General Notes');
-
       // Get earliest time
       const earliestTime = new Date(snippets[0].createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       groups.push({
-        topicKey,
-        title,
+        scope,
+        title: scope,
         primaryCategory,
         snippets,
         time: earliestTime,
@@ -284,7 +186,7 @@ export default function Dashboard() {
     });
 
     return groups;
-  }, [selectedDateSnippets, language]);
+  }, [selectedDateSnippets]);
 
   // Date navigation handlers
   const handlePrevDay = () => {
@@ -515,31 +417,31 @@ export default function Dashboard() {
             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
               {t('dashboard.noNotes')} {formatDateShortLocalized(selectedDate)}.
             </p>
-          ) : topicGroups.length === 0 ? (
+          ) : scopeGroups.length === 0 ? (
             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
               {selectedDateNotes.length} {t('dashboard.notesRecorded')}
             </p>
           ) : (
             <div className="space-y-2">
-              {topicGroups.map((topic) => (
-                <div key={topic.topicKey}>
-                  {/* Topic Header - Clickable */}
+              {scopeGroups.map((group) => (
+                <div key={group.scope}>
+                  {/* Scope Header - Clickable */}
                   <button
-                    onClick={() => setExpandedTopic(expandedTopic === topic.topicKey ? null : topic.topicKey)}
+                    onClick={() => setExpandedTopic(expandedTopic === group.scope ? null : group.scope)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      CATEGORY_COLORS[topic.primaryCategory]
-                    } ${expandedTopic === topic.topicKey ? 'ring-2 ring-primary-500' : ''}`}
+                      CATEGORY_COLORS[group.primaryCategory]
+                    } ${expandedTopic === group.scope ? 'ring-2 ring-primary-500' : ''}`}
                   >
-                    {CATEGORY_ICONS[topic.primaryCategory]}
+                    {CATEGORY_ICONS[group.primaryCategory]}
                     <div className="flex-1 text-left">
                       <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {topic.title}
+                        {group.title}
                       </p>
                       <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {topic.snippets.length} {topic.snippets.length !== 1 ? t('dashboard.items') : t('dashboard.item')} · {topic.time}
+                        {group.snippets.length} {group.snippets.length !== 1 ? t('dashboard.items') : t('dashboard.item')} · {group.time}
                       </p>
                     </div>
-                    {expandedTopic === topic.topicKey ? (
+                    {expandedTopic === group.scope ? (
                       <ChevronUp size={18} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
                     ) : (
                       <ChevronDown size={18} className={isDark ? 'text-gray-400' : 'text-gray-500'} />
@@ -547,9 +449,9 @@ export default function Dashboard() {
                   </button>
 
                   {/* Expanded Content */}
-                  {expandedTopic === topic.topicKey && (
+                  {expandedTopic === group.scope && (
                     <div className={`mt-2 ml-4 pl-4 border-l-2 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                      {topic.snippets.map((snippet) => (
+                      {group.snippets.map((snippet) => (
                         <div key={snippet.id} className="py-2">
                           <div className="flex items-start gap-2">
                             <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded ${CATEGORY_COLORS[snippet.category]}`}>

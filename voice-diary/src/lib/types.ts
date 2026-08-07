@@ -54,6 +54,7 @@ export interface CategorizedSnippet {
   id: string;
   voiceNoteId: string;
   category: VoiceDiaryCategory;
+  scope?: string; // Trade, company, or work area (e.g., "Electrical", "ABC Plumbing", "Inspections")
   content: string;
   createdAt: string;
 }
@@ -243,6 +244,7 @@ export interface VoiceDiaryProcessResult {
   success: boolean;
   newSnippets?: Array<{
     category: VoiceDiaryCategory;
+    scope?: string;
     content: string;
   }>;
   summary?: string;

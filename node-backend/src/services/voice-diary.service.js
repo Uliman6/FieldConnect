@@ -124,51 +124,48 @@ CATEGORIES (use exactly these names):
 - Process: Work methods, procedures, sequencing, coordination between trades
 - Work Completed: Tasks finished today, areas completed, milestones reached
 - Work To Be Done: Upcoming tasks, planned work, scheduled activities
-- Follow-up Items: Things to check on, pending decisions, items needing response
+- Follow-up Items: Things to check on, pending decisions, items needing response, callbacks
 - Issues: Problems, delays, defects, concerns, blockers
 - Team: Personnel, subcontractors, crew sizes, visitors, meetings
 - Materials: Supplies, inventory, orders, shortages, deliveries
 
-CRITICAL RULES FOR CONTENT:
-1. NEVER use "we", "our", "us", "they", "their", "I" - write in third person or imperative
-2. Each item must be a STANDALONE professional statement
-3. PRESERVE COMPANY/CONTRACTOR NAMES exactly as mentioned (e.g., "Sprigg Electric", "ABC Drywall")
-4. Include SPECIFIC context - names, locations, quantities
-5. Keep concise: WHAT + WHERE or WHAT + WHO format
-6. NO added interpretation or adjectives not in original
+SCOPE/TRADE DETECTION (CRITICAL):
+Each item MUST have a "scope" field identifying the trade, company, or work area:
+- TRADE SCOPES: Electrical, Plumbing, HVAC, Drywall, Concrete, Framing, Roofing, Painting, Flooring, Masonry, Steel, Fire Protection, Landscaping, Demolition
+- COMPANY NAMES: If a specific company is mentioned (e.g., "ABC Electric", "Smith Plumbing"), use that as the scope
+- GENERAL SCOPES: Site Work, Inspections, General, Coordination, Weather, Equipment, Manpower
+- When the same voice note mentions DIFFERENT trades/scopes, create SEPARATE items for each
 
-WORKER/PERSONNEL COUNT EXTRACTION:
-- When numbers of workers, crew members, or personnel are mentioned, ALWAYS create a Team category entry
-- Look for phrases like "4 guys", "three workers", "crew of 5", "four personnel", "ten men"
-- Convert word numbers to digits: "four" → 4, "ten" → 10
-- Format: "[Number] workers/crew on site" or "[Company] - [Number] workers"
-- Examples:
-  - "we had four personnel today" → {"category": "Team", "content": "4 personnel on site."}
-  - "ABC had 3 guys here" → {"category": "Team", "content": "ABC - 3 workers on site."}
-  - "crew of ten on the second floor" → {"category": "Team", "content": "10 workers - second floor."}
+CRITICAL RULES:
+1. SEPARATE items by scope - if electrical AND plumbing are mentioned, create 2 separate items
+2. NEVER use "we", "our", "us", "they", "their", "I" - write in third person or imperative
+3. Each item must be STANDALONE with its own scope
+4. PRESERVE company names exactly (e.g., "Sprigg Electric" → scope: "Sprigg Electric")
+5. Follow-up items MUST be captured - anything needing callback, decision, or response
 
-COMPANY NAME DETECTION:
-- Look for patterns like "[Name] Electric/Plumbing/Drywall/Mechanical/HVAC/Roofing"
-- Look for "with [Company]", "from [Company]", "[Company] crew"
-- Preserve the company name in the output statement
+WORKER/PERSONNEL COUNT:
+- When crew counts are mentioned, create Team entry with scope as the company/trade
+- "ABC had 3 guys" → {"category": "Team", "scope": "ABC", "content": "3 workers on site."}
 
 EXAMPLES:
-- BAD: "We need to talk to Sprigg Electric about the inspection findings"
-- GOOD: "Follow up with Sprigg Electric - inspection findings."
-
-- BAD: "We had electrical inspection today"
-- GOOD: "Electrical inspection passed."
-
-- BAD: "ABC Drywall is doing the framing on level 4 today and it looks good"
-- GOOD: "ABC Drywall - framing level 4."
-
-- BAD: "We have to check in with the electrical inspector next week"
-- GOOD: "Electrical inspector follow-up - next week."
-
-OUTPUT FORMAT (JSON array):
+Input: "Electrical is done on floor 3, and we need to follow up with ABC Plumbing about the leak"
+Output:
 [
-  {"category": "Category Name", "content": "Professional standalone statement."},
-  {"category": "Category Name", "content": "Professional standalone statement."}
+  {"category": "Work Completed", "scope": "Electrical", "content": "Floor 3 electrical completed."},
+  {"category": "Follow-up Items", "scope": "ABC Plumbing", "content": "Follow up about leak."}
+]
+
+Input: "Had the concrete pour today, went well. Roofers start tomorrow. Need to check with inspector on Monday."
+Output:
+[
+  {"category": "Work Completed", "scope": "Concrete", "content": "Concrete pour completed successfully."},
+  {"category": "Work To Be Done", "scope": "Roofing", "content": "Roofers starting tomorrow."},
+  {"category": "Follow-up Items", "scope": "Inspections", "content": "Check with inspector Monday."}
+]
+
+OUTPUT FORMAT (JSON array with scope field):
+[
+  {"category": "Category Name", "scope": "Trade/Company", "content": "Professional statement."}
 ]`;
 
     const userPrompt = `Extract and categorize this construction voice note into professional, standalone statements:
@@ -211,11 +208,12 @@ Return a JSON array. Remember: NO pronouns (we/they/I), include specific context
 
     const items = JSON.parse(jsonMatch[0]);
 
-    // Validate, normalize categories, and clean content
+    // Validate, normalize categories, include scope, and clean content
     return items
       .filter(item => item.category && item.content)
       .map(item => ({
         category: normalizeCategory(item.category),
+        scope: item.scope || 'General',
         // Apply additional cleanup in case AI didn't fully follow instructions
         content: cleanTextProfessional(item.content),
       }))
@@ -259,24 +257,32 @@ function basicCategorization(transcript) {
   const results = [];
   const cleaned = cleanTextProfessional(transcript);
 
+  // Detect scope from transcript
+  const scope = detectScope(lower);
+
   // Safety keywords
   if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe/i.test(lower)) {
-    results.push({ category: 'Safety', content: cleaned });
+    results.push({ category: 'Safety', scope: 'Safety', content: cleaned });
   }
 
   // Issues keywords
   if (/issue|problem|delay|concern|broken|damaged|wrong|missing|blocked/i.test(lower)) {
-    results.push({ category: 'Issues', content: cleaned });
+    results.push({ category: 'Issues', scope, content: cleaned });
   }
 
   // Work completed
   if (/finished|completed|done|installed|poured|framed|painted/i.test(lower)) {
-    results.push({ category: 'Work Completed', content: cleaned });
+    results.push({ category: 'Work Completed', scope, content: cleaned });
   }
 
   // Materials
   if (/material|delivery|delivered|supply|order|concrete|lumber|steel/i.test(lower)) {
-    results.push({ category: 'Materials', content: cleaned });
+    results.push({ category: 'Materials', scope, content: cleaned });
+  }
+
+  // Follow-up items
+  if (/follow.?up|check.?with|call|callback|need to|have to|pending|waiting/i.test(lower)) {
+    results.push({ category: 'Follow-up Items', scope, content: cleaned });
   }
 
   // Team - including worker count extraction
@@ -284,18 +290,39 @@ function basicCategorization(transcript) {
     // Try to extract worker count
     const workerCount = extractWorkerCount(transcript);
     if (workerCount) {
-      results.push({ category: 'Team', content: `${workerCount} workers on site.` });
+      results.push({ category: 'Team', scope, content: `${workerCount} workers on site.` });
     } else {
-      results.push({ category: 'Team', content: cleaned });
+      results.push({ category: 'Team', scope, content: cleaned });
     }
   }
 
   // Default to Issues if nothing matched
   if (results.length === 0) {
-    results.push({ category: 'Issues', content: cleaned });
+    results.push({ category: 'Issues', scope, content: cleaned });
   }
 
   return results;
+}
+
+/**
+ * Detect scope/trade from transcript text
+ */
+function detectScope(lower) {
+  // Check for specific trades
+  if (/electrical|electric|wiring|panel|breaker/i.test(lower)) return 'Electrical';
+  if (/plumbing|plumber|pipe|drain|water line/i.test(lower)) return 'Plumbing';
+  if (/hvac|heating|cooling|air conditioning|ductwork/i.test(lower)) return 'HVAC';
+  if (/concrete|cement|pour|slab|footing/i.test(lower)) return 'Concrete';
+  if (/drywall|sheetrock|taping|mudding/i.test(lower)) return 'Drywall';
+  if (/framing|frame|stud|joist/i.test(lower)) return 'Framing';
+  if (/roof|roofing|shingle/i.test(lower)) return 'Roofing';
+  if (/paint|painting|primer/i.test(lower)) return 'Painting';
+  if (/floor|flooring|tile|carpet/i.test(lower)) return 'Flooring';
+  if (/steel|iron|welding/i.test(lower)) return 'Steel';
+  if (/masonry|brick|block/i.test(lower)) return 'Masonry';
+  if (/inspection|inspector/i.test(lower)) return 'Inspections';
+  if (/safety|hazard|ppe/i.test(lower)) return 'Safety';
+  return 'General';
 }
 
 /**
