@@ -116,63 +116,58 @@ async function categorizeTranscript(transcript) {
   }
 
   try {
-    const systemPrompt = `You are a construction site voice note processor. Extract and categorize information from voice recordings into professional, standalone statements.
+    const systemPrompt = `You are a construction site voice note processor. Your job is to DISSECT transcripts into individual, SHORT bullet points.
+
+CRITICAL: EXTRACT SPECIFIC FACTS ONLY - DO NOT REPEAT THE WHOLE TRANSCRIPT
+
+Each "content" field should be ONE SPECIFIC FACT (5-15 words max), NOT the entire transcript repeated.
 
 CATEGORIES (use exactly these names):
-- Safety: Safety concerns, hazards, PPE, incidents, near-misses, OSHA
-- Logistics: Deliveries, equipment moves, site access, parking, staging areas
-- Process: Work methods, procedures, sequencing, coordination between trades
-- Work Completed: Tasks finished today, areas completed, milestones reached
-- Work To Be Done: Upcoming tasks, planned work, scheduled activities
-- Follow-up Items: Things to check on, pending decisions, items needing response, callbacks
-- Issues: Problems, delays, defects, concerns, blockers
-- Team: Personnel, subcontractors, crew sizes, visitors, meetings
-- Materials: Supplies, inventory, orders, shortages, deliveries
+- Safety: Safety concerns, hazards, PPE, incidents, near-misses
+- Logistics: Deliveries, equipment moves, site access, staging
+- Process: Work methods, procedures, sequencing, coordination
+- Work Completed: Tasks finished today, areas completed
+- Work To Be Done: Upcoming tasks, planned work
+- Follow-up Items: Things to check on, pending decisions, callbacks
+- Issues: Problems, delays, defects, concerns
+- Team: Personnel, subcontractors, crew sizes, visitors
+- Materials: Supplies, inventory, orders, shortages
 
-SCOPE/TRADE DETECTION (CRITICAL):
-Each item MUST have a "scope" field identifying the trade, company, or work area:
-- TRADE SCOPES: Electrical, Plumbing, HVAC, Drywall, Concrete, Framing, Roofing, Painting, Flooring, Masonry, Steel, Fire Protection, Landscaping, Demolition
-- COMPANY NAMES: If a specific company is mentioned (e.g., "ABC Electric", "Smith Plumbing"), use that as the scope
-- GENERAL SCOPES: Site Work, Inspections, General, Coordination, Weather, Equipment, Manpower
-- When the same voice note mentions DIFFERENT trades/scopes, create SEPARATE items for each
+SCOPE FIELD: Identify the trade/company for each item:
+- Trades: Electrical, Plumbing, HVAC, Drywall, Concrete, Framing, Roofing, Painting, Flooring, Steel, Fire Protection
+- Or use company name if mentioned (e.g., "ABC Electric", "Smith Plumbing")
+- Or use: Site Work, Inspections, General, Coordination, Weather, Equipment
 
-CRITICAL RULES:
-1. SEPARATE items by scope - if electrical AND plumbing are mentioned, create 2 separate items
-2. NEVER use "we", "our", "us", "they", "their", "I" - write in third person or imperative
-3. Each item must be STANDALONE with its own scope
-4. PRESERVE company names exactly (e.g., "Sprigg Electric" → scope: "Sprigg Electric")
-5. Follow-up items MUST be captured - anything needing callback, decision, or response
+EXTRACTION RULES:
+1. EACH item = ONE specific fact (5-15 words)
+2. NEVER copy the whole transcript into content
+3. SEPARATE different topics into different items
+4. NO pronouns (we/our/they/their/I)
+5. Professional third-person voice
 
-WORKER/PERSONNEL COUNT:
-- When crew counts are mentioned, create Team entry with scope as the company/trade
-- "ABC had 3 guys" → {"category": "Team", "scope": "ABC", "content": "3 workers on site."}
+CORRECT EXAMPLE:
+Input: "So today electrical finished up on floor 3, we also had ABC Plumbing come out about that leak, need to follow up with them tomorrow. The concrete guys had 5 workers and got section B poured."
 
-EXAMPLES:
-Input: "Electrical is done on floor 3, and we need to follow up with ABC Plumbing about the leak"
 Output:
 [
   {"category": "Work Completed", "scope": "Electrical", "content": "Floor 3 electrical completed."},
-  {"category": "Follow-up Items", "scope": "ABC Plumbing", "content": "Follow up about leak."}
+  {"category": "Work Completed", "scope": "Concrete", "content": "Section B concrete poured."},
+  {"category": "Team", "scope": "Concrete", "content": "5 workers on site."},
+  {"category": "Follow-up Items", "scope": "ABC Plumbing", "content": "Follow up about leak tomorrow."}
 ]
 
-Input: "Had the concrete pour today, went well. Roofers start tomorrow. Need to check with inspector on Monday."
-Output:
+WRONG (DO NOT DO THIS):
 [
-  {"category": "Work Completed", "scope": "Concrete", "content": "Concrete pour completed successfully."},
-  {"category": "Work To Be Done", "scope": "Roofing", "content": "Roofers starting tomorrow."},
-  {"category": "Follow-up Items", "scope": "Inspections", "content": "Check with inspector Monday."}
+  {"category": "Work Completed", "scope": "General", "content": "So today electrical finished up on floor 3, we also had ABC Plumbing come out about that leak, need to follow up with them tomorrow. The concrete guys had 5 workers and got section B poured."}
 ]
 
-OUTPUT FORMAT (JSON array with scope field):
-[
-  {"category": "Category Name", "scope": "Trade/Company", "content": "Professional statement."}
-]`;
+OUTPUT: JSON array with MULTIPLE SHORT items, NOT one item with the whole transcript.`;
 
-    const userPrompt = `Extract and categorize this construction voice note into professional, standalone statements:
+    const userPrompt = `DISSECT this transcript into MULTIPLE SHORT items (5-15 words each). Do NOT return the whole transcript as one item.
 
-"${transcript}"
+Transcript: "${transcript}"
 
-Return a JSON array. Remember: NO pronouns (we/they/I), include specific context, action-oriented language.`;
+Return JSON array with SEPARATE short items for each fact mentioned. Each content field = ONE fact only.`;
 
     const response = await fetch(CHAT_ENDPOINT, {
       method: 'POST',
@@ -251,54 +246,88 @@ function normalizeCategory(category) {
 
 /**
  * Basic keyword-based categorization fallback
+ * Extracts RELEVANT SENTENCES only, not the whole transcript
  */
 function basicCategorization(transcript) {
-  const lower = transcript.toLowerCase();
   const results = [];
-  const cleaned = cleanTextProfessional(transcript);
 
-  // Detect scope from transcript
-  const scope = detectScope(lower);
+  // Split transcript into sentences - handle periods, and also common topic separators
+  const sentences = transcript
+    // First handle period/question/exclamation
+    .replace(/([.!?])\s+/g, '$1|')
+    // Also split on "also", "and then", "then we" etc. (common in voice)
+    .replace(/,?\s+(also|and then|then we|then they|we also|they also|additionally)\s+/gi, '.|')
+    // Split on ", need to" / ", going to" (topic change)
+    .replace(/,\s+(need to|going to|have to|should|will)\s+/gi, '.|$1 ')
+    .split('|')
+    .map(s => s.trim())
+    .filter(s => s.length > 5);
 
-  // Safety keywords
-  if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe/i.test(lower)) {
-    results.push({ category: 'Safety', scope: 'Safety', content: cleaned });
-  }
+  // Process each sentence individually
+  for (const sentence of sentences) {
+    const lower = sentence.toLowerCase();
+    const scope = detectScope(lower);
+    const cleaned = cleanTextProfessional(sentence);
 
-  // Issues keywords
-  if (/issue|problem|delay|concern|broken|damaged|wrong|missing|blocked/i.test(lower)) {
-    results.push({ category: 'Issues', scope, content: cleaned });
-  }
+    // Skip if cleaned is too short
+    if (cleaned.length < 10) continue;
 
-  // Work completed
-  if (/finished|completed|done|installed|poured|framed|painted/i.test(lower)) {
-    results.push({ category: 'Work Completed', scope, content: cleaned });
-  }
+    // Determine category for this sentence
+    let category = null;
 
-  // Materials
-  if (/material|delivery|delivered|supply|order|concrete|lumber|steel/i.test(lower)) {
-    results.push({ category: 'Materials', scope, content: cleaned });
-  }
+    // Safety keywords
+    if (/safety|hazard|ppe|incident|injury|osha|fall|protection|unsafe/i.test(lower)) {
+      category = 'Safety';
+    }
+    // Follow-up items (check before issues)
+    else if (/follow.?up|check.?with|call|callback|need to talk|pending|waiting|get back/i.test(lower)) {
+      category = 'Follow-up Items';
+    }
+    // Issues keywords
+    else if (/issue|problem|delay|concern|broken|damaged|wrong|missing|blocked/i.test(lower)) {
+      category = 'Issues';
+    }
+    // Work completed
+    else if (/finished|completed|done|installed|poured|framed|painted|wrapped up/i.test(lower)) {
+      category = 'Work Completed';
+    }
+    // Work to be done
+    else if (/tomorrow|next week|upcoming|will be|going to|start|starting|scheduled/i.test(lower)) {
+      category = 'Work To Be Done';
+    }
+    // Materials
+    else if (/material|delivery|delivered|supply|order|concrete|lumber|steel|shipment/i.test(lower)) {
+      category = 'Materials';
+    }
+    // Team - including worker count extraction
+    else if (/crew|team|worker|subcontractor|visitor|meeting|personnel|guys|men|people/i.test(lower)) {
+      category = 'Team';
+      // Try to extract worker count
+      const workerCount = extractWorkerCount(sentence);
+      if (workerCount) {
+        results.push({ category: 'Team', scope, content: `${workerCount} workers on site.` });
+        continue;
+      }
+    }
+    // Logistics
+    else if (/delivery|staging|access|parking|equipment|crane|lift/i.test(lower)) {
+      category = 'Logistics';
+    }
 
-  // Follow-up items
-  if (/follow.?up|check.?with|call|callback|need to|have to|pending|waiting/i.test(lower)) {
-    results.push({ category: 'Follow-up Items', scope, content: cleaned });
-  }
-
-  // Team - including worker count extraction
-  if (/crew|team|worker|subcontractor|visitor|meeting|personnel|guys|men|people/i.test(lower)) {
-    // Try to extract worker count
-    const workerCount = extractWorkerCount(transcript);
-    if (workerCount) {
-      results.push({ category: 'Team', scope, content: `${workerCount} workers on site.` });
-    } else {
-      results.push({ category: 'Team', scope, content: cleaned });
+    // Add result if category found
+    if (category) {
+      // Truncate to reasonable length
+      const content = cleaned.length > 100 ? cleaned.substring(0, 97) + '...' : cleaned;
+      results.push({ category, scope, content });
     }
   }
 
-  // Default to Issues if nothing matched
+  // If nothing matched, create a single generic entry
   if (results.length === 0) {
-    results.push({ category: 'Issues', scope, content: cleaned });
+    const firstSentence = sentences[0] || transcript;
+    const cleaned = cleanTextProfessional(firstSentence);
+    const content = cleaned.length > 100 ? cleaned.substring(0, 97) + '...' : cleaned;
+    results.push({ category: 'Issues', scope: 'General', content });
   }
 
   return results;
