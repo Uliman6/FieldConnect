@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronRight,
   Shield,
@@ -23,7 +24,6 @@ import {
   ArrowRight,
   FileText,
   X,
-  Clock,
   Building2,
   User,
   Pencil,
@@ -31,14 +31,19 @@ import {
   Check,
 } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
-import {
-  useVoiceDiaryStore,
-  VOICE_DIARY_CATEGORIES,
-  VoiceDiaryCategory,
-  CategorizedSnippet,
-} from '@/lib/voice-diary-store';
+import { useVoiceDiaryStore, VOICE_DIARY_CATEGORIES, VoiceDiaryCategory } from '@/lib/voice-diary-store';
 import { useDailyLogStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
+import {
+  getVoiceDiaryNotes,
+  getVoiceDiarySummary,
+  matchVoiceDiaryForms,
+  updateVoiceDiarySnippet,
+  deleteVoiceDiarySnippet,
+  queryKeys,
+  VoiceDiaryPersistedSnippet,
+  VoiceDiaryFormSuggestion,
+} from '@/lib/api';
 
 // LEARNING: We map categories to icons for visual recognition
 // This pattern is common in React - creating a lookup object for configuration
@@ -66,12 +71,9 @@ const CATEGORY_COLORS: Record<VoiceDiaryCategory, string> = {
   'Materials': '#F5F5F4',
 };
 
-// Type for deduplicated form suggestion with snippets
-interface ValidFormSuggestion {
-  formType: string;
-  formName: string;
-  snippetIds: string[];
-  snippets: CategorizedSnippet[];
+// Type for a form suggestion together with the actual snippets it matched
+interface ValidFormSuggestion extends VoiceDiaryFormSuggestion {
+  snippets: VoiceDiaryPersistedSnippet[];
 }
 
 export default function DashboardScreen() {
@@ -86,63 +88,99 @@ export default function DashboardScreen() {
   // Get project and user context
   const { projects } = useDailyLogStore();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
-  const {
-    getDailySummary,
-    getProjectSummary,
-    getSnippetsForDate,
-    getSnippetsForCategory,
-    getVoiceNotesForDate,
-    getValidFormSuggestions,
-    clearOrphanedFormSuggestions,
-    getTodayDate,
-    currentProjectId,
-    updateSnippet,
-    deleteSnippet,
-  } = useVoiceDiaryStore();
+  const { getTodayDate, currentProjectId } = useVoiceDiaryStore();
 
   const today = getTodayDate();
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
-  // Clear orphaned form suggestions on mount (suggestions for deleted snippets)
-  useEffect(() => {
-    clearOrphanedFormSuggestions();
-  }, []);
+  // Notes (with their categorized snippets) and the daily summary both come
+  // from the backend, scoped strictly to the selected project. With no
+  // project selected these queries never run, so there is nothing to leak.
+  const notesQuery = useQuery({
+    queryKey: queryKeys.voiceDiaryNotes(currentProjectId || '', today),
+    queryFn: () => getVoiceDiaryNotes(currentProjectId!, today),
+    enabled: !!currentProjectId,
+  });
+  const todayNotes = notesQuery.data?.notes ?? [];
 
-  // LEARNING: We now filter by project - each user sees their own summary
-  // and there's also a project-level summary combining all users
-  const userSummary = currentProjectId ? getDailySummary(today, currentProjectId, user?.id) : undefined;
-  const projectSummary = currentProjectId ? getProjectSummary(today, currentProjectId) : undefined;
-  const todaySnippets = getSnippetsForDate(today, currentProjectId || undefined);
-  const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
+  const todaySnippets = useMemo<VoiceDiaryPersistedSnippet[]>(
+    () => todayNotes.flatMap((n) => n.snippets),
+    [todayNotes]
+  );
 
-  // Get deduplicated form suggestions with their snippets (filtered by project)
-  const validFormSuggestions = useMemo(() => {
-    return getValidFormSuggestions(currentProjectId || undefined);
-  }, [currentProjectId, todaySnippets]);
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.voiceDiarySummary(currentProjectId || '', today, user?.id),
+    queryFn: () => getVoiceDiarySummary(currentProjectId!, today, user?.id),
+    enabled: !!currentProjectId,
+  });
+  const displaySummary = summaryQuery.data;
 
-  // Count snippets per category (filtered by project)
+  // Form suggestions are recomputed from the live snippet list rather than
+  // stored, so they can never go stale as items are edited/deleted.
+  const formsQuery = useQuery({
+    queryKey: [
+      'voice-diary',
+      'match-forms',
+      currentProjectId,
+      today,
+      // Include content, not just ids, so an edit (same id, new text)
+      // actually triggers a recomputed set of suggestions.
+      todaySnippets.map((s) => `${s.id}:${s.content}`).join('|'),
+    ],
+    queryFn: () =>
+      matchVoiceDiaryForms(
+        todaySnippets.map((s) => ({
+          id: s.id,
+          category: s.category,
+          content: s.content,
+          scope: s.scope ?? undefined,
+        }))
+      ),
+    enabled: !!currentProjectId && todaySnippets.length > 0,
+  });
+
+  const validFormSuggestions = useMemo<ValidFormSuggestion[]>(() => {
+    const suggestions = formsQuery.data?.suggestions ?? [];
+    return suggestions.map((s) => ({
+      ...s,
+      snippets: todaySnippets.filter((sn) => s.snippetIds.includes(sn.id)),
+    }));
+  }, [formsQuery.data, todaySnippets]);
+
+  // Count snippets per category
   const categoryCounts = useMemo(() => {
     const counts: Record<VoiceDiaryCategory, number> = {} as any;
     VOICE_DIARY_CATEGORIES.forEach((cat) => {
-      counts[cat] = getSnippetsForCategory(cat, today, currentProjectId || undefined).length;
+      counts[cat] = todaySnippets.filter((s) => s.category === cat).length;
     });
     return counts;
-  }, [todaySnippets, today, currentProjectId]);
-
-  // Categories with content
-  const activeCategories = VOICE_DIARY_CATEGORIES.filter(
-    (cat) => categoryCounts[cat] > 0
-  );
+  }, [todaySnippets]);
 
   const selectedSnippets = selectedCategory
-    ? getSnippetsForCategory(selectedCategory, today, currentProjectId || undefined)
+    ? todaySnippets.filter((s) => s.category === selectedCategory)
     : [];
 
-  // Show appropriate summary (user's if available, otherwise project)
-  const displaySummary = userSummary || projectSummary;
+  const updateSnippetMutation = useMutation({
+    mutationFn: ({ id, content }: { id: string; content: string }) => updateVoiceDiarySnippet(id, content),
+    onSuccess: () => {
+      if (currentProjectId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.voiceDiaryNotes(currentProjectId, today) });
+      }
+    },
+  });
 
-  const startEditingSnippet = (snippet: CategorizedSnippet) => {
+  const deleteSnippetMutation = useMutation({
+    mutationFn: (id: string) => deleteVoiceDiarySnippet(id),
+    onSuccess: () => {
+      if (currentProjectId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.voiceDiaryNotes(currentProjectId, today) });
+      }
+    },
+  });
+
+  const startEditingSnippet = (snippet: VoiceDiaryPersistedSnippet) => {
     setEditingSnippetId(snippet.id);
     setEditingText(snippet.content);
   };
@@ -154,7 +192,7 @@ export default function DashboardScreen() {
 
   const saveEditingSnippet = () => {
     if (editingSnippetId && editingText.trim().length > 0) {
-      updateSnippet(editingSnippetId, editingText.trim());
+      updateSnippetMutation.mutate({ id: editingSnippetId, content: editingText.trim() });
     }
     setEditingSnippetId(null);
     setEditingText('');
@@ -172,7 +210,7 @@ export default function DashboardScreen() {
         setEditingSnippetId(null);
         setEditingText('');
       }
-      deleteSnippet(snippetId);
+      deleteSnippetMutation.mutate(snippetId);
     };
 
     if (Platform.OS === 'web') {
@@ -187,7 +225,9 @@ export default function DashboardScreen() {
     }
   };
 
-  // If no project selected, show message
+  // If no project selected, show message. No voice-diary query above ever
+  // runs without a projectId, so this guard is defense in depth, not the
+  // only thing preventing cross-project data from showing.
   if (!currentProjectId) {
     return (
       <SafeAreaView
@@ -342,7 +382,7 @@ export default function DashboardScreen() {
             </View>
           )}
 
-          {displaySummary?.lastUpdatedAt && (
+          {displaySummary?.updatedAt && (
             <Text
               style={{
                 fontSize: 12,
@@ -351,7 +391,7 @@ export default function DashboardScreen() {
               }}
             >
               Last updated:{' '}
-              {new Date(displaySummary.lastUpdatedAt).toLocaleTimeString([], {
+              {new Date(displaySummary.updatedAt).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
@@ -359,7 +399,7 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* Form Suggestions - deduplicated by form type */}
+        {/* Form Suggestions */}
         {validFormSuggestions.length > 0 && (
           <View style={{ marginBottom: 20 }}>
             <Text
@@ -494,7 +534,7 @@ export default function DashboardScreen() {
               >
                 <View
                   style={{
-                    backgroundColor: CATEGORY_COLORS[snippet.category] || '#E5E7EB',
+                    backgroundColor: CATEGORY_COLORS[snippet.category as VoiceDiaryCategory] || '#E5E7EB',
                     paddingHorizontal: 8,
                     paddingVertical: 4,
                     borderRadius: 6,
@@ -581,7 +621,7 @@ export default function DashboardScreen() {
                 No items in this category yet
               </Text>
             ) : (
-              selectedSnippets.map((snippet, index) => {
+              selectedSnippets.map((snippet) => {
                 const isEditing = editingSnippetId === snippet.id;
                 return (
                   <View
@@ -766,7 +806,7 @@ export default function DashboardScreen() {
               >
                 <View
                   style={{
-                    backgroundColor: CATEGORY_COLORS[snippet.category] || '#E5E7EB',
+                    backgroundColor: CATEGORY_COLORS[snippet.category as VoiceDiaryCategory] || '#E5E7EB',
                     paddingHorizontal: 8,
                     paddingVertical: 4,
                     borderRadius: 6,

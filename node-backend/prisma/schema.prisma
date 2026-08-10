@@ -174,6 +174,7 @@ model Project {
   templates       PdfTemplate[]
   documentSchemas DocumentSchema[]
   voiceLists      VoiceList[]
+  voiceDiaryNotes VoiceDiaryNote[]
 
   @@index([name])
   @@index([number])
@@ -1193,35 +1194,69 @@ model VoiceDiaryFeedback {
 }
 
 // ============================================
-// VOICE DIARY ENTRIES
+// VOICE DIARY NOTES
 // ============================================
-// Tracks all voice diary entries across users
+// Project-scoped voice diary notes, categorized snippets, and daily
+// summaries. No audio is stored - transcript text is the record. Every
+// row carries projectId so reads/writes can be scoped and access-checked
+// directly, without joins, the same way voice_lists is scoped.
 
-model VoiceDiaryEntry {
-  id             String    @id @default(uuid())
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+model VoiceDiaryNote {
+  id                String   @id @default(uuid())
+  createdAt         DateTime @default(now()) @map("created_at")
 
-  // User info
-  userId         String    @map("user_id")
-  userName       String?   @map("user_name")
+  projectId         String   @map("project_id")
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  // Project info
-  projectId      String?   @map("project_id")
-  projectName    String?   @map("project_name")
+  userId            String   @map("user_id")
+  userName          String?  @map("user_name")
 
-  // Entry content
-  transcriptText String?   @map("transcript_text") @db.Text
-  cleanedText    String?   @map("cleaned_text") @db.Text
-  category       String?
+  title             String?
+  transcriptText    String   @map("transcript_text") @db.Text
+  cleanedTranscript String?  @map("cleaned_transcript") @db.Text
 
-  // Audio file
-  audioUrl       String?   @map("audio_url")
-  audioDuration  Int?      @map("audio_duration") // seconds
+  duration          Int?     // seconds, metadata only - no audio file stored
+  version           Int      @default(1)
+  previousVersionId String?  @map("previous_version_id")
 
+  snippets          VoiceDiarySnippet[]
+
+  @@index([projectId, createdAt])
   @@index([userId])
-  @@index([projectId])
-  @@index([category])
-  @@index([createdAt])
-  @@map("voice_diary_entries")
+  @@map("voice_diary_notes")
+}
+
+model VoiceDiarySnippet {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  noteId    String         @map("note_id")
+  note      VoiceDiaryNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  // Denormalized so access checks and list queries never need a join
+  projectId String   @map("project_id")
+  userId    String   @map("user_id")
+
+  category  String
+  scope     String?
+  content   String   @db.Text
+  edited    Boolean  @default(false)
+
+  @@index([projectId, createdAt])
+  @@index([noteId])
+  @@map("voice_diary_snippets")
+}
+
+model VoiceDiaryDailySummary {
+  id             String   @id @default(uuid())
+  date           String   // YYYY-MM-DD
+  projectId      String   @map("project_id")
+  userId         String?  @map("user_id") // null = combined project-level summary
+  summary        String   @db.Text
+  hasMinimumInfo Boolean  @default(false) @map("has_minimum_info")
+  voiceNoteCount Int      @default(0) @map("voice_note_count")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId, date])
+  @@map("voice_diary_daily_summaries")
 }

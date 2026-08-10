@@ -20,11 +20,8 @@ async function clearUserStores(): Promise<void> {
     currentUserId: null,
   });
   useVoiceDiaryStore.setState({
-    voiceNotes: [],
-    categorizedSnippets: [],
-    dailySummaries: [],
     notifications: [],
-    formSuggestions: [],
+    dismissedSuggestionKeys: [],
     currentProjectId: null,
     currentUserId: null,
   });

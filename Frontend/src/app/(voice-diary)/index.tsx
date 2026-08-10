@@ -11,12 +11,12 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Mic,
   Square,
   Check,
   AlertCircle,
-  Clock,
   Loader2,
   ChevronDown,
   Plus,
@@ -25,11 +25,23 @@ import {
   Building2,
 } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useVoiceDiaryStore, VoiceNote, CategorizedSnippet } from '@/lib/voice-diary-store';
+import { useVoiceDiaryStore } from '@/lib/voice-diary-store';
 import { useDailyLogStore } from '@/lib/store';
 import { transcribeAudio } from '@/lib/transcription';
-import { processVoiceNote as processVoiceNoteApi } from '@/lib/api';
+import {
+  processVoiceNote as processVoiceNoteApi,
+  getVoiceDiaryNotes,
+  deleteVoiceDiaryNote,
+  queryKeys,
+  VoiceDiaryNote,
+} from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+
+interface PendingNote {
+  status: 'transcribing' | 'processing' | 'error';
+  errorMessage?: string;
+  duration: number;
+}
 
 // LEARNING: We use a ref for the MediaRecorder because it doesn't trigger re-renders
 // and we need to access it in callbacks. See: https://react.dev/reference/react/useRef
@@ -42,7 +54,11 @@ export default function RecordScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [reRecordingNoteId, setReRecordingNoteId] = useState<string | null>(null);
-  const [selectedNote, setSelectedNote] = useState<VoiceNote | null>(null);
+  const [selectedNote, setSelectedNote] = useState<VoiceDiaryNote | null>(null);
+  // Tracks the note currently being transcribed/processed - it isn't
+  // persisted server-side until the pipeline finishes, so it's shown as a
+  // synthetic row at the top of the list in the meantime.
+  const [pendingNote, setPendingNote] = useState<PendingNote | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -52,39 +68,40 @@ export default function RecordScreen() {
   // Get projects from main store
   const { projects, addProject } = useDailyLogStore();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
   // State for creating new project
   const [newProjectName, setNewProjectName] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const {
-    addVoiceNote,
-    updateVoiceNote,
-    deleteVoiceNote,
-    reRecordVoiceNote,
     addNotification,
-    addSnippet,
-    updateDailySummary,
-    addFormSuggestion,
-    getVoiceNotesForDate,
-    getSnippetsForDate,
     getTodayDate,
     currentProjectId,
     setCurrentProject,
-    clearSnippetsForNote,
-    categorizedSnippets,
-    seedExampleData,
-    hasExampleData,
   } = useVoiceDiaryStore();
 
-  // Get snippets for a specific note
-  const getSnippetsForNote = (noteId: string): CategorizedSnippet[] => {
-    return categorizedSnippets.filter((s) => s.voiceNoteId === noteId);
-  };
-
   const today = getTodayDate();
-  const todayNotes = getVoiceNotesForDate(today, currentProjectId || undefined);
   const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  // Notes (with their categorized snippets) come from the backend, scoped
+  // strictly to the selected project. With no project selected the query
+  // never runs, so there is nothing to leak.
+  const notesQuery = useQuery({
+    queryKey: queryKeys.voiceDiaryNotes(currentProjectId || '', today),
+    queryFn: () => getVoiceDiaryNotes(currentProjectId!, today),
+    enabled: !!currentProjectId,
+  });
+  const todayNotes = notesQuery.data?.notes ?? [];
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: (id: string) => deleteVoiceDiaryNote(id),
+    onSuccess: () => {
+      if (currentProjectId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.voiceDiaryNotes(currentProjectId, today) });
+      }
+    },
+  });
 
   // Pulse animation while recording
   useEffect(() => {
@@ -143,7 +160,7 @@ export default function RecordScreen() {
         }
       };
 
-      mediaRecorder.onstop = async () => {
+      mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: mimeType });
         stream.getTracks().forEach((track) => track.stop());
 
@@ -155,22 +172,11 @@ export default function RecordScreen() {
           return;
         }
 
+        // audioUrl is only used transiently to upload for transcription -
+        // no audio is stored, on-device or on the server.
         const audioUrl = URL.createObjectURL(blob);
         const duration = recordingDuration;
-
-        // Check if this is a re-record or new note
-        let note: VoiceNote;
-        if (reRecordingNoteId) {
-          note = reRecordVoiceNote(reRecordingNoteId, audioUrl, duration);
-          addNotification('success', `Recording updated (v${note.version})`);
-          setReRecordingNoteId(null);
-        } else {
-          note = addVoiceNote(currentProjectId!, audioUrl, duration, user?.id);
-          addNotification('success', 'Note captured!');
-        }
-
-        // Start transcription and processing
-        processVoiceNoteAsync(note.id, audioUrl);
+        processVoiceNoteAsync(audioUrl, duration);
       };
 
       mediaRecorder.start(1000); // Collect data every second
@@ -191,7 +197,7 @@ export default function RecordScreen() {
       addNotification('error', 'Recording failed');
       setReRecordingNoteId(null);
     }
-  }, [currentProjectId, addVoiceNote, reRecordVoiceNote, addNotification, recordingDuration, reRecordingNoteId, user?.id]);
+  }, [currentProjectId, addNotification, recordingDuration, reRecordingNoteId]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -205,143 +211,86 @@ export default function RecordScreen() {
     }
   }, [isRecording]);
 
-  const processVoiceNoteAsync = async (noteId: string, audioUri: string) => {
-    updateVoiceNote(noteId, { status: 'transcribing' });
+  const processVoiceNoteAsync = async (audioUri: string, duration: number) => {
+    if (!currentProjectId) return;
+
+    setPendingNote({ status: 'transcribing', duration });
 
     try {
-      // Step 1: Transcribe audio
+      // Step 1: Transcribe audio (backend uploads it transiently to
+      // Whisper and discards it - nothing is stored)
       console.log('[voice-diary] Starting transcription...');
-      console.log('[voice-diary] API URL:', process.env.EXPO_PUBLIC_API_URL || 'NOT SET - using localhost');
-
       const result = await transcribeAudio(audioUri);
 
       if (!result.success || !result.text) {
         const errorMsg = result.error || 'Could not transcribe audio';
         console.error('[voice-diary] Transcription failed:', errorMsg);
-        updateVoiceNote(noteId, {
-          status: 'error',
-          errorMessage: errorMsg,
-        });
+        setPendingNote({ status: 'error', errorMessage: errorMsg, duration });
         addNotification('error', errorMsg);
         return;
       }
 
       console.log('[voice-diary] Transcription success, length:', result.text.length);
-
-      // Clean up the transcript for display
       const cleanedText = cleanTranscript(result.text);
-      console.log('[voice-diary] Cleaned text length:', cleanedText.length);
+      setPendingNote({ status: 'processing', duration });
 
-      updateVoiceNote(noteId, {
-        transcriptText: cleanedText,
-        status: 'processing',
-      });
-
-      // Step 2: Send to backend for categorization + summarization
-      console.log('[voice-diary] Sending to API for processing...');
-      const existingSnippets = getSnippetsForDate(today, currentProjectId || undefined).map((s) => ({
-        category: s.category,
-        content: s.content,
-        scope: s.scope,
-      }));
-      const noteCount = getVoiceNotesForDate(today, currentProjectId || undefined).length;
-      console.log('[voice-diary] Existing snippets:', existingSnippets.length, 'Note count:', noteCount);
-
+      // Step 2: Persist + categorize + summarize on the backend, scoped to
+      // this project
       try {
-        const processResult = await processVoiceNoteApi(
-          cleanedText,
-          existingSnippets,
-          noteCount
-        );
-
-        console.log('[voice-diary] API response:', JSON.stringify(processResult, null, 2));
+        const processResult = await processVoiceNoteApi(currentProjectId, cleanedText, duration);
 
         if (processResult.success) {
-          // Update note with AI-generated title and cleaned transcript
-          const noteUpdates: any = { status: 'complete' };
-          if (processResult.title) {
-            noteUpdates.title = processResult.title;
-          }
-          if (processResult.cleanedTranscript) {
-            noteUpdates.cleanedTranscript = processResult.cleanedTranscript;
-          }
-
-          // Add new snippets to store and collect their IDs
-          const createdSnippetIds: string[] = [];
-          if (processResult.newSnippets && processResult.newSnippets.length > 0) {
-            console.log('[voice-diary] Adding', processResult.newSnippets.length, 'snippets');
-            for (const snippet of processResult.newSnippets) {
-              addSnippet(noteId, snippet.category as any, snippet.content, snippet.scope);
+          // If this was a re-record, remove the original note now that the
+          // replacement has been saved successfully
+          if (reRecordingNoteId) {
+            try {
+              await deleteVoiceDiaryNote(reRecordingNoteId);
+            } catch (e) {
+              console.error('[voice-diary] Failed to remove original note after re-record:', e);
             }
-            // Get the IDs of snippets we just created (they're at the front of the array)
-            const allSnippets = useVoiceDiaryStore.getState().categorizedSnippets;
-            const noteSnippets = allSnippets.filter(s => s.voiceNoteId === noteId);
-            createdSnippetIds.push(...noteSnippets.map(s => s.id));
+            setReRecordingNoteId(null);
           }
 
-          // Update daily summary (user-specific)
-          if (currentProjectId && processResult.summary) {
-            console.log('[voice-diary] Updating summary:', processResult.summary.substring(0, 100));
-            updateDailySummary(
-              today,
-              currentProjectId,
-              processResult.summary,
-              processResult.hasMinimumInfo || false,
-              user?.id
-            );
-          }
+          queryClient.invalidateQueries({ queryKey: queryKeys.voiceDiaryNotes(currentProjectId, today) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.voiceDiarySummary(currentProjectId, today, user?.id) });
 
-          // Add form suggestions with the ACTUAL snippet IDs we created
-          if (processResult.formSuggestions && createdSnippetIds.length > 0) {
-            for (const suggestion of processResult.formSuggestions) {
-              addFormSuggestion(
-                suggestion.formType,
-                suggestion.formName,
-                suggestion.reason,
-                createdSnippetIds // Use our created snippet IDs, not backend's
-              );
-            }
-          }
-
-          updateVoiceNote(noteId, noteUpdates);
-          const snippetCount = processResult.newSnippets?.length || 0;
+          const snippetCount = processResult.snippets?.length || 0;
           addNotification('info', snippetCount > 0 ? `Added ${snippetCount} items` : 'Note saved');
         } else {
-          // API returned but failed - still complete
-          console.log('[voice-diary] API returned no success, marking complete');
-          updateVoiceNote(noteId, { status: 'complete' });
-          addNotification('success', 'Note saved');
+          addNotification('error', 'Could not save note - please try again');
         }
+        setPendingNote(null);
       } catch (apiError: any) {
-        // API call failed - still save the transcript but log the error
+        // Nothing is saved locally anymore - if this call fails, the note
+        // genuinely isn't saved, so surface that clearly instead of
+        // claiming it was kept.
         console.error('[voice-diary] API processing failed:', apiError.message || apiError);
-        updateVoiceNote(noteId, { status: 'complete' });
-        // Show more helpful message
+        setPendingNote({ status: 'error', errorMessage: apiError.message || 'Could not save note', duration });
         if (apiError.message?.includes('401') || apiError.message?.includes('expired')) {
-          addNotification('warning', 'Session expired - please log in again');
-        } else if (apiError.message?.includes('network') || apiError.message?.includes('fetch')) {
-          addNotification('warning', 'Network error - note saved locally');
+          addNotification('error', 'Session expired - please log in again');
         } else {
-          addNotification('info', 'Note saved (categorization unavailable)');
+          addNotification('error', 'Could not save note - please try again');
         }
       }
     } catch (err: any) {
       console.error('[voice-diary] Processing error:', err.message || err);
-      updateVoiceNote(noteId, {
-        status: 'error',
-        errorMessage: err.message || 'Processing failed',
-      });
+      setPendingNote({ status: 'error', errorMessage: err.message || 'Processing failed', duration });
       addNotification('error', err.message || 'Processing failed');
     }
   };
 
   const handleDeleteNote = (noteId: string) => {
+    const doDelete = () => {
+      deleteNoteMutation.mutate(noteId, {
+        onSuccess: () => addNotification('info', 'Recording deleted'),
+        onError: () => addNotification('error', 'Could not delete recording'),
+      });
+    };
+
     // Use window.confirm for web since Alert.alert doesn't work
     if (typeof window !== 'undefined' && window.confirm) {
       if (window.confirm('Are you sure you want to delete this recording?')) {
-        deleteVoiceNote(noteId);
-        clearSnippetsForNote(noteId);
-        addNotification('info', 'Recording deleted');
+        doDelete();
       }
     } else {
       // Fallback for native
@@ -350,15 +299,7 @@ export default function RecordScreen() {
         'Are you sure you want to delete this recording?',
         [
           { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => {
-              deleteVoiceNote(noteId);
-              clearSnippetsForNote(noteId);
-              addNotification('info', 'Recording deleted');
-            },
-          },
+          { text: 'Delete', style: 'destructive', onPress: doDelete },
         ]
       );
     }
@@ -366,9 +307,9 @@ export default function RecordScreen() {
 
   const handleReRecord = (noteId: string) => {
     setReRecordingNoteId(noteId);
-    // Clear existing snippets for this note since we're re-recording
-    clearSnippetsForNote(noteId);
-    // Start recording immediately
+    // The original note stays until the replacement recording has been
+    // successfully saved (see processVoiceNoteAsync), so a failed
+    // re-record doesn't lose the existing note.
     startRecording();
   };
 
@@ -446,8 +387,9 @@ export default function RecordScreen() {
   };
 
   // Generate a topic-based title from transcript (not transcript excerpt)
-  const generateTitle = (transcript: string | null): string => {
-    if (!transcript) return 'Processing...';
+  // Used only as a fallback - the backend normally already provides a title.
+  const generateTitle = (transcript: string | null | undefined): string => {
+    if (!transcript) return 'Voice Note';
 
     const lower = transcript.toLowerCase();
 
@@ -541,17 +483,14 @@ export default function RecordScreen() {
     return 'Voice Note';
   };
 
-  const getStatusIcon = (status: VoiceNote['status']) => {
+  const getPendingStatusIcon = (status: PendingNote['status']) => {
     switch (status) {
-      case 'complete':
-        return <Check size={16} color="#10B981" />;
       case 'error':
         return <AlertCircle size={16} color="#EF4444" />;
       case 'transcribing':
       case 'processing':
-        return <Loader2 size={16} color="#F59E0B" />;
       default:
-        return <Clock size={16} color="#6B7280" />;
+        return <Loader2 size={16} color="#F59E0B" />;
     }
   };
 
@@ -684,7 +623,7 @@ export default function RecordScreen() {
               letterSpacing: 0.5,
             }}
           >
-            Today's Notes ({todayNotes.length})
+            Today's Notes ({todayNotes.length + (pendingNote ? 1 : 0)})
           </Text>
 
           {!currentProjectId ? (
@@ -700,7 +639,7 @@ export default function RecordScreen() {
                 Select a project to see recordings
               </Text>
             </View>
-          ) : todayNotes.length === 0 ? (
+          ) : notesQuery.isLoading ? (
             <View
               style={{
                 padding: 20,
@@ -709,29 +648,20 @@ export default function RecordScreen() {
                 alignItems: 'center',
               }}
             >
-              <Text style={{ color: isDark ? '#6B7280' : '#9CA3AF', fontSize: 14, marginBottom: 12 }}>
+              <ActivityIndicator color={isDark ? '#9CA3AF' : '#6B7280'} />
+            </View>
+          ) : todayNotes.length === 0 && !pendingNote ? (
+            <View
+              style={{
+                padding: 20,
+                backgroundColor: isDark ? '#1F2937' : '#FFF',
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: isDark ? '#6B7280' : '#9CA3AF', fontSize: 14 }}>
                 No recordings yet today
               </Text>
-              {!hasExampleData() && (
-                <Pressable
-                  onPress={() => {
-                    if (currentProjectId) {
-                      seedExampleData(currentProjectId, user?.id);
-                      addNotification('success', 'Loaded 5 example recordings');
-                    }
-                  }}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    backgroundColor: isDark ? '#374151' : '#E5E7EB',
-                    borderRadius: 8,
-                  }}
-                >
-                  <Text style={{ color: isDark ? '#FFF' : '#374151', fontSize: 13, fontWeight: '500' }}>
-                    Load Example Data
-                  </Text>
-                </Pressable>
-              )}
             </View>
           ) : (
             <ScrollView
@@ -741,6 +671,44 @@ export default function RecordScreen() {
               }}
               showsVerticalScrollIndicator={false}
             >
+              {pendingNote && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 14,
+                    borderBottomWidth: todayNotes.length > 0 ? 1 : 0,
+                    borderBottomColor: isDark ? '#374151' : '#E5E7EB',
+                  }}
+                >
+                  {getPendingStatusIcon(pendingNote.status)}
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: isDark ? '#FFF' : '#111',
+                        fontWeight: '500',
+                      }}
+                      numberOfLines={1}
+                    >
+                      {pendingNote.status === 'error'
+                        ? pendingNote.errorMessage || 'Could not save note'
+                        : pendingNote.status === 'transcribing'
+                        ? 'Transcribing...'
+                        : 'Processing...'}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: isDark ? '#6B7280' : '#9CA3AF',
+                        marginTop: 2,
+                      }}
+                    >
+                      {formatDuration(pendingNote.duration)}
+                    </Text>
+                  </View>
+                </View>
+              )}
               {todayNotes.map((note, index) => (
                 <Pressable
                   key={note.id}
@@ -753,7 +721,7 @@ export default function RecordScreen() {
                     borderBottomColor: isDark ? '#374151' : '#E5E7EB',
                   }}
                 >
-                  {getStatusIcon(note.status)}
+                  <Check size={16} color="#10B981" />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Text
@@ -765,9 +733,7 @@ export default function RecordScreen() {
                         }}
                         numberOfLines={1}
                       >
-                        {note.status === 'error'
-                          ? note.errorMessage || 'Error'
-                          : note.title || generateTitle(note.transcriptText)}
+                        {note.title || generateTitle(note.transcriptText)}
                       </Text>
                       {note.version > 1 && (
                         <View
@@ -792,8 +758,8 @@ export default function RecordScreen() {
                         marginTop: 2,
                       }}
                     >
-                      {formatTime(note.createdAt)} · {formatDuration(note.duration)}
-                      {getSnippetsForNote(note.id).length > 0 && ` · ${getSnippetsForNote(note.id).length} items`}
+                      {formatTime(note.createdAt)} · {formatDuration(note.duration ?? 0)}
+                      {note.snippets.length > 0 && ` · ${note.snippets.length} items`}
                     </Text>
                   </View>
 
@@ -886,7 +852,7 @@ export default function RecordScreen() {
               {/* Time and Duration */}
               <View style={{ flexDirection: 'row', marginBottom: 16 }}>
                 <Text style={{ fontSize: 14, color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  {formatTime(selectedNote.createdAt)} · {formatDuration(selectedNote.duration)}
+                  {formatTime(selectedNote.createdAt)} · {formatDuration(selectedNote.duration ?? 0)}
                   {selectedNote.version > 1 && ` · Version ${selectedNote.version}`}
                 </Text>
               </View>
@@ -958,7 +924,7 @@ export default function RecordScreen() {
               )}
 
               {/* Categorized Items */}
-              {getSnippetsForNote(selectedNote.id).length > 0 && (
+              {selectedNote.snippets.length > 0 && (
                 <View>
                   <Text
                     style={{
@@ -969,9 +935,9 @@ export default function RecordScreen() {
                       marginBottom: 12,
                     }}
                   >
-                    Extracted Items ({getSnippetsForNote(selectedNote.id).length})
+                    Extracted Items ({selectedNote.snippets.length})
                   </Text>
-                  {getSnippetsForNote(selectedNote.id).map((snippet) => (
+                  {selectedNote.snippets.map((snippet) => (
                     <View
                       key={snippet.id}
                       style={{

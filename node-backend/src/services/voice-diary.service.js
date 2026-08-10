@@ -842,7 +842,10 @@ function matchFormTemplates(snippets, templates = []) {
         formType: 'rfi',
         formName: 'Request for Information (RFI)',
         reason: 'Question requiring architect/engineer clarification',
-        snippetIds: [],
+        // .id is present when snippets come from persisted data (has real
+        // ids); absent for ad-hoc/stateless callers, in which case this is
+        // just an empty array as before.
+        snippetIds: matchedSnippets.map(s => s.id).filter(Boolean),
       });
     }
   }
@@ -862,7 +865,10 @@ function matchFormTemplates(snippets, templates = []) {
         formType: 'safety_report',
         formName: 'Safety Incident Report',
         reason: 'Safety incident requiring documentation',
-        snippetIds: [],
+        // .id is present when snippets come from persisted data (has real
+        // ids); absent for ad-hoc/stateless callers, in which case this is
+        // just an empty array as before.
+        snippetIds: matchedSnippets.map(s => s.id).filter(Boolean),
       });
     }
   }
@@ -883,7 +889,10 @@ function matchFormTemplates(snippets, templates = []) {
         formType: 'punch_list',
         formName: 'Punch List',
         reason: 'Defect or incomplete work item',
-        snippetIds: [],
+        // .id is present when snippets come from persisted data (has real
+        // ids); absent for ad-hoc/stateless callers, in which case this is
+        // just an empty array as before.
+        snippetIds: matchedSnippets.map(s => s.id).filter(Boolean),
       });
     }
   }
@@ -902,7 +911,10 @@ function matchFormTemplates(snippets, templates = []) {
         formType: 'material_order',
         formName: 'Material Order',
         reason: 'Material shortage requiring order',
-        snippetIds: [],
+        // .id is present when snippets come from persisted data (has real
+        // ids); absent for ad-hoc/stateless callers, in which case this is
+        // just an empty array as before.
+        snippetIds: matchedSnippets.map(s => s.id).filter(Boolean),
       });
     }
   }

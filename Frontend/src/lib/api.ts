@@ -3176,6 +3176,9 @@ export const queryKeys = {
   voiceList: (id: string) => ['voice-lists', id] as const,
   // Voice diary
   voiceDiaryCategories: ['voice-diary', 'categories'] as const,
+  voiceDiaryNotes: (projectId: string, date: string) => ['voice-diary', 'notes', projectId, date] as const,
+  voiceDiarySummary: (projectId: string, date: string, userId?: string) =>
+    ['voice-diary', 'summary', projectId, date, userId] as const,
 };
 
 // ============================================
@@ -3195,29 +3198,136 @@ export interface VoiceDiaryFormSuggestion {
   snippetIds: string[];
 }
 
+// A snippet as persisted server-side (project-scoped, has a real id)
+export interface VoiceDiaryPersistedSnippet {
+  id: string;
+  noteId: string;
+  category: string;
+  scope?: string | null;
+  content: string;
+  edited: boolean;
+  createdAt: string;
+}
+
+// A voice note as persisted server-side. No audio - transcript only.
+export interface VoiceDiaryNote {
+  id: string;
+  projectId: string;
+  userId: string;
+  userName?: string | null;
+  title?: string | null;
+  transcriptText: string;
+  cleanedTranscript?: string | null;
+  duration?: number | null;
+  version: number;
+  previousVersionId?: string | null;
+  createdAt: string;
+  snippets: VoiceDiaryPersistedSnippet[];
+}
+
 export interface VoiceDiaryProcessResult {
   success: boolean;
-  newSnippets: VoiceDiarySnippet[];
+  note: VoiceDiaryNote;
+  snippets: VoiceDiaryPersistedSnippet[];
   summary: string;
   hasMinimumInfo: boolean;
   formSuggestions: VoiceDiaryFormSuggestion[];
 }
 
 /**
- * Process a voice note transcript - categorize, summarize, and match forms
+ * Process a voice note transcript for a project - categorizes, titles,
+ * PERSISTS the note + snippets to the backend, recomputes the daily
+ * summary, and returns form suggestions. projectId is required: there is
+ * no server-side path that writes voice diary data without a project.
  */
 export async function processVoiceNote(
+  projectId: string,
   transcript: string,
-  existingSnippets: VoiceDiarySnippet[] = [],
-  noteCount: number = 1
+  durationSec?: number
 ): Promise<VoiceDiaryProcessResult> {
   return apiFetch('/api/voice-diary/process', {
     method: 'POST',
     body: JSON.stringify({
+      projectId,
       transcript,
-      existingSnippets,
-      noteCount,
+      duration: durationSec,
     }),
+  });
+}
+
+/**
+ * List a project's voice diary notes (with their snippets), optionally
+ * filtered to a single date (YYYY-MM-DD). projectId is required.
+ */
+export async function getVoiceDiaryNotes(
+  projectId: string,
+  date?: string
+): Promise<{ success: boolean; notes: VoiceDiaryNote[] }> {
+  const params = new URLSearchParams({ projectId });
+  if (date) params.append('date', date);
+  return apiFetch(`/api/voice-diary/notes?${params.toString()}`);
+}
+
+/**
+ * Delete a voice diary note (and its snippets).
+ */
+export async function deleteVoiceDiaryNote(id: string): Promise<{ success: boolean }> {
+  return apiFetch(`/api/voice-diary/notes/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Get a project's daily summary. Omit userId for the project-level
+ * summary, or pass a userId for that user's personal summary.
+ */
+export async function getVoiceDiarySummary(
+  projectId: string,
+  date: string,
+  userId?: string
+): Promise<{
+  success: boolean;
+  summary: string;
+  hasMinimumInfo: boolean;
+  voiceNoteCount: number;
+  updatedAt: string | null;
+}> {
+  const params = new URLSearchParams({ projectId, date });
+  if (userId) params.append('userId', userId);
+  return apiFetch(`/api/voice-diary/summary?${params.toString()}`);
+}
+
+/**
+ * Edit a snippet's content.
+ */
+export async function updateVoiceDiarySnippet(
+  id: string,
+  content: string
+): Promise<{ success: boolean; snippet: VoiceDiaryPersistedSnippet }> {
+  return apiFetch(`/api/voice-diary/snippets/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ content }),
+  });
+}
+
+/**
+ * Remove a snippet.
+ */
+export async function deleteVoiceDiarySnippet(id: string): Promise<{ success: boolean }> {
+  return apiFetch(`/api/voice-diary/snippets/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Match a set of snippets against form templates (RFI, safety report, etc.)
+ * Stateless - recompute this whenever the snippet list changes rather than
+ * caching suggestions, so it never goes stale as items are edited/deleted.
+ * Pass persisted snippets (with real ids) so the returned suggestions can
+ * be matched back to the actual VoiceDiaryPersistedSnippet objects.
+ */
+export async function matchVoiceDiaryForms(
+  snippets: (VoiceDiarySnippet & { id?: string })[]
+): Promise<{ success: boolean; suggestions: VoiceDiaryFormSuggestion[] }> {
+  return apiFetch('/api/voice-diary/match-forms', {
+    method: 'POST',
+    body: JSON.stringify({ snippets }),
   });
 }
 

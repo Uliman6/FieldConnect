@@ -1,6 +1,6 @@
 /**
  * Voice Diary Controller
- * Handles API endpoints for voice note processing
+ * Handles API endpoints for voice note processing and project-scoped persistence
  */
 
 const voiceDiaryService = require('../services/voice-diary.service');
@@ -8,7 +8,58 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
+/**
+ * UTC day boundaries for a YYYY-MM-DD date string, used to filter
+ * createdAt ranges. Matches the frontend's getTodayDate(), which is
+ * also a UTC date string.
+ */
+function dayRange(dateStr) {
+  const start = new Date(`${dateStr}T00:00:00.000Z`);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  return { gte: start, lt: end };
+}
+
+function serializeSnippet(s) {
+  return {
+    id: s.id,
+    noteId: s.noteId,
+    category: s.category,
+    scope: s.scope,
+    content: s.content,
+    edited: s.edited,
+    createdAt: s.createdAt.toISOString(),
+  };
+}
+
+function serializeNote(n) {
+  return {
+    id: n.id,
+    projectId: n.projectId,
+    userId: n.userId,
+    userName: n.userName,
+    title: n.title,
+    transcriptText: n.transcriptText,
+    cleanedTranscript: n.cleanedTranscript,
+    duration: n.duration,
+    version: n.version,
+    previousVersionId: n.previousVersionId,
+    createdAt: n.createdAt.toISOString(),
+    snippets: (n.snippets || []).map(serializeSnippet),
+  };
+}
+
 const voiceDiaryController = {
+  /**
+   * Whether the authenticated user has access to a project.
+   * req.accessibleProjectIds is set by the loadAccessibleProjects middleware
+   * (null means system admin - access to everything).
+   */
+  _checkProjectAccess(req, projectId) {
+    if (!projectId) return false;
+    if (req.accessibleProjectIds === null) return true;
+    return Array.isArray(req.accessibleProjectIds) && req.accessibleProjectIds.includes(projectId);
+  },
+
   async categorize(req, res, next) {
     try {
       const { transcript } = req.body;
@@ -55,33 +106,272 @@ const voiceDiaryController = {
     }
   },
 
+  /**
+   * Full processing pipeline: categorize + title the transcript, persist the
+   * note and its snippets, recompute the user's daily summary for the
+   * project, and return form suggestions. Requires a projectId the caller
+   * has access to - this is the only way voice diary data gets written, so
+   * every write is project-scoped by construction.
+   */
   async process(req, res, next) {
     try {
-      const { transcript, existingSnippets = [], noteCount = 1 } = req.body;
+      const { transcript, projectId, duration } = req.body;
       if (!transcript) {
         return res.status(400).json({ error: 'Validation Error', message: 'transcript is required' });
       }
-      console.log('[voice-diary] Full processing pipeline starting...');
+      if (!projectId) {
+        return res.status(400).json({ error: 'Validation Error', message: 'projectId is required' });
+      }
+      if (!this._checkProjectAccess(req, projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
+      }
+
+      const userId = req.user.id;
+      const userName = req.user.name;
+
+      console.log('[voice-diary] Full processing pipeline starting for project:', projectId);
       const newSnippets = await voiceDiaryService.categorizeTranscript(transcript);
       console.log('[voice-diary] New snippets:', newSnippets.length);
       const { title, cleanedTranscript } = await voiceDiaryService.generateNoteTitle(transcript, newSnippets);
       console.log('[voice-diary] Generated title:', title);
-      const allSnippets = [...existingSnippets, ...newSnippets];
-      const summary = await voiceDiaryService.generateDailySummary(allSnippets, noteCount);
-      console.log('[voice-diary] Summary generated, hasMinimumInfo:', summary.hasMinimumInfo);
-      const formSuggestions = voiceDiaryService.matchFormTemplates(allSnippets);
+
+      const note = await prisma.$transaction(async (tx) => {
+        const createdNote = await tx.voiceDiaryNote.create({
+          data: {
+            projectId,
+            userId,
+            userName,
+            title,
+            transcriptText: transcript,
+            cleanedTranscript,
+            duration: Number.isFinite(duration) ? Math.round(duration) : null,
+          },
+        });
+
+        if (newSnippets.length > 0) {
+          await tx.voiceDiarySnippet.createMany({
+            data: newSnippets.map((s) => ({
+              noteId: createdNote.id,
+              projectId,
+              userId,
+              category: s.category,
+              scope: s.scope || null,
+              content: s.content,
+            })),
+          });
+        }
+
+        return createdNote;
+      });
+
+      const savedSnippets = await prisma.voiceDiarySnippet.findMany({
+        where: { noteId: note.id },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      // Recompute this user's daily summary for the project using ALL of
+      // today's snippets (not just this note's), same as before.
+      const dateStr = note.createdAt.toISOString().split('T')[0];
+      const { gte, lt } = dayRange(dateStr);
+
+      const [daySnippets, dayNoteCount] = await Promise.all([
+        prisma.voiceDiarySnippet.findMany({
+          where: { projectId, userId, createdAt: { gte, lt } },
+          select: { id: true, category: true, scope: true, content: true },
+          orderBy: { createdAt: 'asc' },
+        }),
+        prisma.voiceDiaryNote.count({ where: { projectId, userId, createdAt: { gte, lt } } }),
+      ]);
+
+      const summaryResult = await voiceDiaryService.generateDailySummary(daySnippets, dayNoteCount);
+      console.log('[voice-diary] Summary generated, hasMinimumInfo:', summaryResult.hasMinimumInfo);
+
+      const existingSummary = await prisma.voiceDiaryDailySummary.findFirst({
+        where: { date: dateStr, projectId, userId },
+      });
+      const summaryRow = existingSummary
+        ? await prisma.voiceDiaryDailySummary.update({
+            where: { id: existingSummary.id },
+            data: {
+              summary: summaryResult.summary,
+              hasMinimumInfo: summaryResult.hasMinimumInfo,
+              voiceNoteCount: dayNoteCount,
+            },
+          })
+        : await prisma.voiceDiaryDailySummary.create({
+            data: {
+              date: dateStr,
+              projectId,
+              userId,
+              summary: summaryResult.summary,
+              hasMinimumInfo: summaryResult.hasMinimumInfo,
+              voiceNoteCount: dayNoteCount,
+            },
+          });
+
+      const formSuggestions = voiceDiaryService.matchFormTemplates(daySnippets);
       console.log('[voice-diary] Form suggestions:', formSuggestions.length);
+
       res.json({
         success: true,
-        newSnippets,
-        title,
-        cleanedTranscript,
-        summary: summary.summary,
-        hasMinimumInfo: summary.hasMinimumInfo,
+        note: serializeNote({ ...note, snippets: savedSnippets }),
+        snippets: savedSnippets.map(serializeSnippet),
+        summary: summaryRow.summary,
+        hasMinimumInfo: summaryRow.hasMinimumInfo,
         formSuggestions,
       });
     } catch (error) {
       console.error('[voice-diary] Processing error:', error);
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/voice-diary/notes?projectId=&date=
+   * Requires projectId - there is no "list everything" mode for this
+   * endpoint, so a missing/unselected project can never leak other
+   * projects' notes.
+   */
+  async listNotes(req, res, next) {
+    try {
+      const projectId = req.query.projectId || req.query.project_id;
+      if (!projectId) {
+        return res.status(400).json({ error: 'Validation Error', message: 'projectId is required' });
+      }
+      if (!this._checkProjectAccess(req, projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
+      }
+
+      const where = { projectId };
+      const date = req.query.date;
+      if (date) {
+        const { gte, lt } = dayRange(date);
+        where.createdAt = { gte, lt };
+      }
+
+      const notes = await prisma.voiceDiaryNote.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: { snippets: { orderBy: { createdAt: 'asc' } } },
+      });
+
+      res.json({ success: true, notes: notes.map(serializeNote) });
+    } catch (error) {
+      console.error('[voice-diary] List notes error:', error);
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/voice-diary/summary?projectId=&date=&userId=
+   * userId omitted = project-level combined summary (currently unused by
+   * the client, but supported); userId set = that user's personal summary.
+   */
+  async getSummary(req, res, next) {
+    try {
+      const projectId = req.query.projectId || req.query.project_id;
+      const date = req.query.date;
+      if (!projectId || !date) {
+        return res.status(400).json({ error: 'Validation Error', message: 'projectId and date are required' });
+      }
+      if (!this._checkProjectAccess(req, projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
+      }
+
+      const userId = req.query.userId || req.query.user_id || null;
+      const row = await prisma.voiceDiaryDailySummary.findFirst({ where: { date, projectId, userId } });
+
+      if (!row) {
+        return res.json({ success: true, summary: '', hasMinimumInfo: false, voiceNoteCount: 0, updatedAt: null });
+      }
+
+      res.json({
+        success: true,
+        summary: row.summary,
+        hasMinimumInfo: row.hasMinimumInfo,
+        voiceNoteCount: row.voiceNoteCount,
+        updatedAt: row.updatedAt.toISOString(),
+      });
+    } catch (error) {
+      console.error('[voice-diary] Get summary error:', error);
+      next(error);
+    }
+  },
+
+  /**
+   * PATCH /api/voice-diary/snippets/:id
+   */
+  async updateSnippetContent(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
+      if (!content || typeof content !== 'string' || !content.trim()) {
+        return res.status(400).json({ error: 'Validation Error', message: 'content is required' });
+      }
+
+      const snippet = await prisma.voiceDiarySnippet.findUnique({ where: { id }, select: { projectId: true } });
+      if (!snippet) {
+        return res.status(404).json({ error: 'Snippet not found' });
+      }
+      if (!this._checkProjectAccess(req, snippet.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
+      }
+
+      const updated = await prisma.voiceDiarySnippet.update({
+        where: { id },
+        data: { content: content.trim(), edited: true },
+      });
+
+      res.json({ success: true, snippet: serializeSnippet(updated) });
+    } catch (error) {
+      console.error('[voice-diary] Update snippet error:', error);
+      next(error);
+    }
+  },
+
+  /**
+   * DELETE /api/voice-diary/snippets/:id
+   */
+  async deleteSnippetById(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const snippet = await prisma.voiceDiarySnippet.findUnique({ where: { id }, select: { projectId: true } });
+      if (!snippet) {
+        return res.status(404).json({ error: 'Snippet not found' });
+      }
+      if (!this._checkProjectAccess(req, snippet.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
+      }
+
+      await prisma.voiceDiarySnippet.delete({ where: { id } });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[voice-diary] Delete snippet error:', error);
+      next(error);
+    }
+  },
+
+  /**
+   * DELETE /api/voice-diary/notes/:id
+   * Snippets cascade-delete via the FK.
+   */
+  async deleteNoteById(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const note = await prisma.voiceDiaryNote.findUnique({ where: { id }, select: { projectId: true } });
+      if (!note) {
+        return res.status(404).json({ error: 'Note not found' });
+      }
+      if (!this._checkProjectAccess(req, note.projectId)) {
+        return res.status(403).json({ error: 'You do not have access to this project' });
+      }
+
+      await prisma.voiceDiaryNote.delete({ where: { id } });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[voice-diary] Delete note error:', error);
       next(error);
     }
   },
@@ -110,25 +400,6 @@ const voiceDiaryController = {
     }
   },
 
-  async saveEntry(req, res, next) {
-    try {
-      const { projectId, projectName, transcriptText, cleanedText, category, audioUrl, audioDuration } = req.body;
-      const userId = req.user && req.user.id;
-      const userName = req.user && req.user.name;
-      if (!transcriptText) {
-        return res.status(400).json({ error: 'Validation Error', message: 'transcriptText is required' });
-      }
-      console.log('[voice-diary] Saving entry for user:', userName || userId);
-      const entry = await prisma.voiceDiaryEntry.create({
-        data: { userId, userName, projectId, projectName, transcriptText, cleanedText, category, audioUrl, audioDuration },
-      });
-      res.json({ success: true, id: entry.id });
-    } catch (error) {
-      console.error('[voice-diary] Entry save error:', error);
-      next(error);
-    }
-  },
-
   async getAllFeedback(req, res, next) {
     try {
       console.log('[voice-diary] Admin fetching all feedback');
@@ -143,25 +414,6 @@ const voiceDiaryController = {
       res.json(transformedFeedback);
     } catch (error) {
       console.error('[voice-diary] Admin feedback fetch error:', error);
-      next(error);
-    }
-  },
-
-  async getAllEntries(req, res, next) {
-    try {
-      console.log('[voice-diary] Admin fetching all entries');
-      const entries = await prisma.voiceDiaryEntry.findMany({ orderBy: { createdAt: 'desc' }, take: 100 });
-      const transformedEntries = entries.map(e => ({
-        id: e.id,
-        userId: e.userId,
-        userName: e.userName,
-        projectName: e.projectName,
-        transcriptText: e.transcriptText,
-        createdAt: e.createdAt.toISOString(),
-      }));
-      res.json(transformedEntries);
-    } catch (error) {
-      console.error('[voice-diary] Admin entries fetch error:', error);
       next(error);
     }
   },
@@ -205,37 +457,6 @@ const voiceDiaryController = {
       });
     } catch (error) {
       console.error('[voice-diary] Translation error:', error);
-      next(error);
-    }
-  },
-
-  // Get entries for current user only (user-scoped)
-  async getMyEntries(req, res, next) {
-    try {
-      const userId = req.user && req.user.id;
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-      console.log('[voice-diary] Fetching entries for user:', userId);
-      const entries = await prisma.voiceDiaryEntry.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-      });
-      const transformedEntries = entries.map(e => ({
-        id: e.id,
-        userId: e.userId,
-        userName: e.userName,
-        projectId: e.projectId,
-        projectName: e.projectName,
-        transcriptText: e.transcriptText,
-        cleanedText: e.cleanedText,
-        category: e.category,
-        createdAt: e.createdAt.toISOString(),
-      }));
-      res.json(transformedEntries);
-    } catch (error) {
-      console.error('[voice-diary] User entries fetch error:', error);
       next(error);
     }
   },
