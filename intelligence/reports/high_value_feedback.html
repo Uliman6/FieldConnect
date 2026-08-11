@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>High-Value RFIs - Feedback</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #fff; margin-bottom: 10px; }
+        .subtitle { color: #94a3b8; margin-bottom: 20px; }
+
+        .stats-bar { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 30px; flex-wrap: wrap; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; }
+        .stat-label { font-size: 11px; opacity: 0.9; }
+
+        .validated-box { background: #166534; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; }
+        .validated-box h3 { color: #86efac; font-size: 14px; margin-bottom: 8px; }
+        .validated-list { display: flex; gap: 10px; flex-wrap: wrap; }
+        .validated-item { background: #14532d; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+
+        .section-header { padding: 12px 15px; border-radius: 6px; font-weight: bold; color: white; margin-top: 25px; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        .section-header.score-5 { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); }
+        .section-header.score-45 { background: linear-gradient(135deg, #ea580c 0%, #9a3412 100%); }
+        .section-header.score-4 { background: linear-gradient(135deg, #ca8a04 0%, #854d0e 100%); }
+
+        .rfi-card { background: #1e293b; border-radius: 8px; margin-bottom: 12px; overflow: hidden; border-left: 4px solid #475569; }
+        .rfi-card.score-5 { border-left-color: #ef4444; }
+        .rfi-card.score-45 { border-left-color: #f97316; }
+        .rfi-card.score-4 { border-left-color: #eab308; }
+
+        .rfi-header { background: #0f172a; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; cursor: pointer; }
+        .rfi-header:hover { background: #1e293b; }
+        .rfi-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .co-amount { font-size: 15px; font-weight: bold; color: #22c55e; min-width: 90px; }
+        .rfi-id { font-weight: bold; color: #fff; }
+        .rfi-project { background: #334155; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #94a3b8; }
+        .lesson-type { padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; text-transform: uppercase; background: #374151; color: #9ca3af; }
+        .lesson-type.code_violation, .lesson-type.safety_issue { background: #7f1d1d; color: #fecaca; }
+        .lesson-type.damage_occurred { background: #7c2d12; color: #fed7aa; }
+
+        .score-badge { padding: 4px 10px; border-radius: 10px; font-weight: bold; font-size: 12px; color: white; }
+        .score-badge.score-5 { background: #dc2626; }
+        .score-badge.score-45 { background: #ea580c; }
+        .score-badge.score-4 { background: #ca8a04; }
+
+        .rfi-content { padding: 15px; display: none; }
+        .rfi-content.open { display: block; }
+
+        .text-box { background: #0f172a; padding: 10px; border-radius: 4px; font-size: 13px; margin-bottom: 10px; border: 1px solid #334155; max-height: 120px; overflow-y: auto; white-space: pre-wrap; }
+        .text-label { font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 3px; text-transform: uppercase; }
+
+        .summary-box { background: #312e81; border: 1px solid #4338ca; border-radius: 6px; padding: 10px; margin: 10px 0; }
+        .summary-label { font-size: 9px; color: #a5b4fc; text-transform: uppercase; }
+        .summary-text { font-size: 13px; color: #e0e7ff; margin-top: 3px; }
+
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+        .info-box { background: #0f172a; padding: 8px; border-radius: 4px; border: 1px solid #334155; }
+        .info-label { font-size: 9px; color: #64748b; text-transform: uppercase; }
+        .info-value { font-size: 12px; color: #e2e8f0; margin-top: 2px; }
+
+        .reasoning-box { background: #1e1b4b; border: 1px solid #4338ca; border-radius: 6px; padding: 10px; margin: 10px 0; }
+        .reasoning-label { font-size: 9px; color: #a5b4fc; text-transform: uppercase; }
+        .reasoning-text { font-size: 12px; color: #c7d2fe; margin-top: 3px; }
+
+        .feedback-section { background: #1e3a5f; border: 2px solid #3b82f6; border-radius: 6px; padding: 12px; margin-top: 12px; }
+        .feedback-section h4 { color: #93c5fd; margin-bottom: 10px; font-size: 12px; }
+        .agree-row { display: flex; gap: 6px; margin-bottom: 10px; }
+        .agree-btn { flex: 1; padding: 8px; border: 2px solid #475569; border-radius: 4px; background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 12px; }
+        .agree-btn:hover { border-color: #3b82f6; }
+        .agree-btn.selected.agree { background: #166534; border-color: #22c55e; }
+        .agree-btn.selected.disagree { background: #7f1d1d; border-color: #ef4444; }
+        .agree-btn.selected.partial { background: #713f12; border-color: #f59e0b; }
+
+        .feedback-row { display: flex; gap: 10px; }
+        .feedback-group { flex: 1; }
+        .feedback-group label { display: block; font-size: 11px; color: #93c5fd; margin-bottom: 3px; }
+        .feedback-group select, .feedback-group textarea { width: 100%; padding: 6px; border: 1px solid #475569; border-radius: 4px; background: #0f172a; color: #e2e8f0; font-size: 12px; }
+        .feedback-group textarea { min-height: 40px; }
+
+        .export-bar { background: #1e293b; border-radius: 8px; padding: 12px 15px; margin-top: 25px; position: sticky; bottom: 15px; display: flex; gap: 8px; align-items: center; }
+        .export-btn { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .export-btn:hover { background: #2563eb; }
+        .export-btn.secondary { background: #475569; }
+        .output-area { flex: 1; background: #0f172a; color: #94a3b8; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px; max-height: 80px; overflow-y: auto; display: none; }
+        .output-area.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>High-Value RFIs - Targeted Search</h1>
+        <p class="subtitle">RFIs with patterns indicating critical issues, damage, or safety concerns</p>
+
+        <div class="stats-bar">
+            <div class="stat"><div class="stat-value">75</div><div class="stat-label">Searched</div></div>
+            <div class="stat"><div class="stat-value" style="color:#fecaca;">0</div><div class="stat-label">NEW Score 5</div></div>
+            <div class="stat"><div class="stat-value" style="color:#fed7aa;">15</div><div class="stat-label">Score 4.5</div></div>
+            <div class="stat"><div class="stat-value" style="color:#fef08a;">15</div><div class="stat-label">Score 4</div></div>
+        </div>
+
+        <div class="validated-box">
+            <h3>Already Validated Score 5s (Excluded)</h3>
+            <div class="validated-list">
+                <span class="validated-item">RFI-2028 (Southline Office)</span>
+                <span class="validated-item">RFI-1268 (Southline Office)</span>
+                <span class="validated-item">RFI-1993 (Southline Office)</span>
+                <span class="validated-item">RFI-2119 (Southline Office)</span>
+            </div>
+        </div>
+
+        <div id="rfi-container">
+<div class="section-header score-45">IMPORTANT CHECKS (Score 4.5) <span>15</span></div>
+
+            <div class="rfi-card score-45" data-i="0">
+                <div class="rfi-header" onclick="toggle(0)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$59,210</span>
+                        <span class="rfi-id">RFI-1586</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c0">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Ref: A2.02S, A8.21, Submittal 4212-07-5419 During previous rounds of shop drawing review for 4212:B2 PVC Membrane Roofing Product Data and Taper Plan, it was noted that a 30”x30” roof hatch was called out in the architectural drawings and that contractor was to coordinate the location of the sub-beam and ensure no conflicts are encountered. Upon further review of the approved 30”x30” roof hatch size, the following items need clarification from DES: 1) The CLT deck opening is 3’x3’ (36”x36”), the approved roof hatch has an opening of 30”x30” and the outer mounting flange dimensions are 36-7/8”x</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals critical coordination gaps that could lead to significant rework and potential code violations.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement a more rigorous review process for shop drawings and coordination among trades to prevent </div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights significant coordination gaps regarding the roof hatch dimensions and installation details, which could have led to a code violation if not addressed. The issues raised indicate a potential for costly rework and emphasize the importance of thorough review and coordination among trades, making it a valuable learning opportunity for future projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(0,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(0,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(0,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s0">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n0" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="1">
+                <div class="rfi-header" onclick="toggle(1)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$37,319</span>
+                        <span class="rfi-id">RFI-2087</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type field_discovery">field discovery</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c1">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 2087 - PSD Stair 2 Concrete Landing Cracking Remediation Confirmation Sheet A7.02, E0.02, E2.03 Submittal 3472 - PSD Light Fixture (Product Data) Attached Pictures Background: At the Stair 2 concrete landings of Tiers 3-5, it is being noticed that water is seeping through the cracks and into the installed light fixture below. Per conversations with the SEOR, these cracks appear to be due to shrinkage and temperature and do not raise structural concerns. The installed light fixtures are "wet location rated". "Wet Location Rated" is defined as an electrical enclosure that i</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Water intrusion through concrete cracks poses a significant preventable issue for light fixtures rated for wet locations.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement preventive measures for water intrusion in future designs and installations.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The issue of water intrusion through cracks in the concrete landings, while not raising structural concerns, highlights a significant preventable issue that could lead to broader implications if not addressed. The fact that the installed light fixtures are rated for wet locations but are still experiencing issues due to excessive water exposure indicates a potential oversight in the design or installation process. This scenario serves as a critical reminder for future projects to ensure that all components are adequately protected against environmental factors, especially in areas prone to water exposure.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(1,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(1,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(1,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s1">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n1" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="2">
+                <div class="rfi-header" onclick="toggle(2)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-146</span>
+                        <span class="rfi-project">CoreSite Data Center</span>
+                        <span class="lesson-type safety_issue">safety issue</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c2">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Per the contract documents, the current design specifies that MV-250-AL and MV-200-AL conductors be run in 6" conduit from the underground sections to the second-story generators (Gens 04, 10, and 12) and to Chiller 05 from the USS. CEI would like to request approval to revise this design to use 6" GRC from the underground up to the bottom of the pull can, located approximately two feet above the generator slabs, and then transition to 4" GRC for the exposed portion of the raceway. The proposed 4" GRC remains under the 40% conduit fill limit and aligns with the manufacturer’s recommendation of</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Matthew Fagert (kW Engineering, Inc. - 10067687): KW Response
+No exceptions taken to match the existing conditions.
+Ashley Hill (Corgan - 10059759): GC to refer to KW.
+CS - CORGAN - 9.12.25</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI addresses a critical safety concern regarding heavy conduit handling, leading to a proposed design change that enhances safety and aligns with best practices.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement guidelines for conduit weight considerations and safety protocols during installation.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant safety concern regarding the handling of heavy conduit at elevated positions, which could lead to potential injuries. Additionally, the proposed change aligns with manufacturer recommendations and maintains consistency with prior project phases, indicating a broader lesson on the importance of safety and adherence to best practices in conduit installation.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(2,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(2,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(2,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s2">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n2" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="3">
+                <div class="rfi-header" onclick="toggle(3)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1685</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c3">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1685 - PSD Coring at PT Beams for ERRCS and Security Pathways Confirmation Pre-pour pictures X-ray scanning pictures PSD PT Cables Shop Drawing S2.03 and S2.06 Background: Due to missed/damaged sleeves prior to the deck pours, Sprig electric will need to core through PT Beams to complete their conduit pathways. Two (2) locations will be for security and two (2) will be for ERRCS. DPR engaged Digital Concrete Scanning to perform x-ray scanning at the four (4) locations where coring will be needed. As shown in the pictures. PT cables and rebar have been clearly marked and t</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination gaps regarding sleeve placements led to necessary coring through PT beams, highlighting the need for improved pre-pour checks.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter pre-pour checks and coordination meetings among trades to ensure all sleeves and </div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant coordination gap regarding the missed/damaged sleeves prior to deck pours, which necessitated coring through PT beams. This situation could have led to a code violation if not addressed, and it serves as a reminder of the importance of thorough pre-pour checks and coordination among trades to prevent similar issues in future projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(3,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(3,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(3,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s3">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n3" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="4">
+                <div class="rfi-header" onclick="toggle(4)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1853</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type field_discovery">field discovery</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c4">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1853 - PSD Freas Plastering Water Test Confirmation Southline - PSD Freas Plastering Test Report_20240403 Background: At the parking structure, Freas Plastering installed the approved GE Elemax waterproofing membrane as part of their complete plastering system. In an attempt to ensure that the system is watertight at the NE and NW storage (tiers 3-5), DPR decided to perform a field water test. Due to the project specifications not requiring a field test, DPR performed the test(s) to the best of our ability using the test methods described in the report (ref. attached repo</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals critical insights into the importance of proactive waterproofing testing to prevent water intrusion issues.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement mandatory field testing for waterproofing systems in similar projects to prevent water int</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights significant issues with water intrusion that, while addressed, could have led to major problems if not caught early. The testing revealed potential weaknesses in the waterproofing system that could have resulted in costly damage and safety concerns if left unaddressed. This situation serves as an important reminder of the necessity for thorough testing and verification of waterproofing systems, which is a common issue across many projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(4,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(4,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(4,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s4">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n4" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="5">
+                <div class="rfi-header" onclick="toggle(5)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-0680</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c5">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI0680 - PSD Tier 1 BE Added Cross Ties - SOG and Exposed Section Confirmation Post on: Detail 4/S4.02 The stirrups of the eight C4 and C4A boundary elements on Tier 1 do not comply with the 14" maximum distance required between cross ties. Additionally, detail 4/S4.02 is incorectly shown on the SI-04 set. See attached markups for reference. 1. Please confirm that the attached remediation for the area at the slab on grade turndown is acceptable. 2. Please confirm that the attached remediation for the area at the top where the concrete has not yet been shot and the rebar is e</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a critical design error in cross tie spacing that could have led to code violations if not addressed.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement a more rigorous review process for design documents to catch spacing and compliance issues</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI identifies a significant design error regarding the spacing of cross ties, which, if not caught, could have led to a code violation. This issue highlights the importance of thorough review and coordination in design documents, as similar errors could potentially occur in other projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(5,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(5,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(5,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s5">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n5" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="6">
+                <div class="rfi-header" onclick="toggle(6)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1779</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c6">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1779 - PSD Spandrel Swale Remediation Confirmation Attached Markup Background: The perimeter spandrel rails have been installed to have the required 44” clearance from the top of the rails to the top of slab. However, with the way the spandrels and upturned beams were poured, the swales where the spandrels meet the slab vary in height. This caused some of the rails to be at the 42” ADA required height and per detail 19/A8.10, but most of them are under the required height. Question: Per the attached markup, please confirm if it is required to bush down the swales to reach</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a critical height compliance issue that could have resulted in a code violation, emphasizing the need for improved coordination.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter height verification protocols during installation.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant issue with the installation height of the spandrel rails, which could have led to a code violation if not addressed. The variation in height due to the pouring of the spandrels and beams indicates a broader lesson about the importance of precise coordination and communication during the construction process to prevent such discrepancies.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(6,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(6,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(6,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s6">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n6" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="7">
+                <div class="rfi-header" onclick="toggle(7)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1062</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c7">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI1062 - PSD Post Installation for Missed Termination Embed for Cable Barrier Confirmation Post On: A2.02 and A2.03 Background: On the ramp side along gridline GC on column G8/GC, a vehicular cable termination embed was missed prior to pouring the column. DPR Concrete tried to wet set the embed but were asked to stop to avoid hitting any boundary rebar. Cable Moore/Glazier have provided a post installed solution to add a termination embed wherever an embed got missed prior to the pour. The following remediation process is being proposed by DPR Concrete: 1. Grout and finish t</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The missed embed highlights a critical need for improved coordination and pre-pour checks to avoid future issues.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement a checklist for embed installations and pre-pour inspections to prevent missed embeds.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The missed termination embed represents a significant coordination gap that could have led to a code violation if not addressed. The proposed remediation process highlights the importance of thorough pre-pour checks and the need for clear communication among trades to prevent similar issues in the future.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(7,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(7,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(7,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s7">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n7" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="8">
+                <div class="rfi-header" onclick="toggle(8)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1975</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c8">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1975 - PSD Tier 2 GB Curb Concrete Clearance from SD Confirmation Email Correspondence between GPLA and DPRC Marked Up Pictures Background: At Tier 2 GB curb, between G15 and G16 gridlines, when the formwork got stripped, it was noticed that the concrete coverage was not adequate around the storm drainpipe that passes through the curb, as shown in the picture markup. Per conversations with GPLA, the recommended remediation would be to install wire mesh as reinforcement and roughening the interface with 1/4" amplitude prior to applying a bonding agent (such as Weld-Crete).</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a critical oversight in concrete coverage that could lead to structural issues, emphasizing the need for thorough inspections.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement thorough inspections of concrete coverage around penetrations in future projects.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant issue with concrete coverage around a storm drainpipe that could have led to a code violation if not addressed. The proposed remediation plan indicates a proactive approach to prevent potential structural issues, which reflects a broader lesson in ensuring adequate concrete coverage in similar situations.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(8,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(8,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(8,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s8">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n8" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="9">
+                <div class="rfi-header" onclick="toggle(9)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-0887</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c9">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: Detail 10/A9.52 Detail 8/A9.51 Question: Building 2 slab is 5" thick. Minimum distance between bottom of anchors to bottom of slab is 3" to avoid spalling. There are various locations where the distance between the end of anchor to slab is at or exceeds this tolerance. 1. Please confirm 4" embedment per Detail 10/A9.52 and 2" embed per Detail 8/9.51 are structurally acceptable. 2. If expansion anchor embed length is not acceptable, please confirm thickened slab extent or similar remediation measure to avoid spalling. 3. Please confirm any additional locations where exceeding minimum</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a critical issue with anchor embedment that could lead to structural spalling, emphasizing the need for improved coordination in design.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Review and revise anchor embedment specifications and detailing to ensure compliance with structural</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a potential issue with anchor embedment that could lead to spalling, which is a significant concern in structural integrity. The fact that the embedment depth may not meet the minimum requirements indicates a pattern that could repeat across multiple projects if not addressed. This RFI serves as an important check to prevent future violations and emphasizes the need for careful coordination in structural detailing.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(9,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(9,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(9,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s9">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n9" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="10">
+                <div class="rfi-header" onclick="toggle(10)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1765</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c10">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1765 - PSD Top of Ramp Rebar Clearance Remediation at Tiers 2-6 Confirmation Attached Email Correspondence between DPRC and GPLA Attached markups of S2.302 and S2.04 Attached Sealer Product Data Background: At the top of ramp on tier 2 there is a tendon and horizontal strand of rebar exposed from bushing down 1/4". After this was discovered, G14 was scanned from GB to GC on tiers 3-6 and a minimum coverage of 1/2" was identified at these locations (see attached markup). 1) Condition 1: Please confirm if it is acceptable to apply a zinc rich paint around the exposed rebar </div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a critical oversight in rebar coverage that could lead to code violations, emphasizing the need for improved design and inspection practices.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter inspection protocols for rebar coverage and develop guidelines for addressing sim</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant issue regarding rebar coverage that, if not addressed, could lead to a code violation. The discovery of insufficient coverage at multiple tiers indicates a potential pattern that could affect future projects. The proposed remediation actions also suggest a need for better coordination and preventive measures in design and construction practices.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(10,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(10,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(10,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s10">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n10" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="11">
+                <div class="rfi-header" onclick="toggle(11)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1829</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c11">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1829 - PSD Shear Wall Overlay Confirmation Master Emaco Product Data Vandex Super/Super White Product Data Sheet S3.40 Markup Email Between DPR Concrete, DES, GPLA Background: The clearance between the face of concrete and rebar is not sufficient on the north ramp shear walls (GB Line) from tiers 4-5 at the locations shown in the attached markup. 1) Please confirm if the proposed remediation plan is acceptable. 2) Please confirm if the proposed products are acceptable (product data attached).</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Insufficient clearance between concrete and rebar identified, highlighting a critical need for improved design coordination.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter inspection protocols and design reviews to ensure compliance with clearance requi</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant issue regarding insufficient clearance between concrete and rebar, which could have led to a code violation if not addressed. This situation underscores the importance of thorough inspections and coordination in the design phase to prevent similar issues in future projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(11,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(11,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(11,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s11">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n11" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="12">
+                <div class="rfi-header" onclick="toggle(12)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1145</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c12">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 -RFI1145 - PSD L3A3 PT Cable Stressing Out of Tolerance Remediation Confirmation Email Correspondence between GPLA and DPR Concrete CTS Report Dated 10.21.23 Sheet S2.03A Background: Please see attached CTS report for the PT stressing on L3A3. 15 cables shown in red are out of tolerance. Question 1: Per conversation with GPLA, cables with a positive deviation are to be left in their current condition. Please confirm this is acceptable. Question 2: There are (4) cables that have a negative deviation below -7% (uniform cable number's 27, 31, 41, and 44). Please confirm restressin</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals critical issues with post-tensioning cable stress levels that require immediate attention to prevent structural concerns.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter monitoring and verification processes for post-tensioning cable stressing.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant issue with post-tensioning cable stress levels, which, if not addressed, could lead to structural integrity concerns. The need for remediation indicates a potential pattern of oversight in cable stressing that could affect multiple projects, making it a critical learning point for future work.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(12,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(12,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(12,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s12">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n12" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="13">
+                <div class="rfi-header" onclick="toggle(13)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-0987</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c13">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI0987 - PSD Tier 2 Area 4 PT Cable Dead Ends Popping Out During Stressing Confirmations Post on: S2.02, S2.02A Background: 3 PT cable dead ends within the North side of Beam PB14 (Gridline 8) popped out of the concrete during stressing. Per email correspondence with GPLA, please confirm it is acceptable to: 1. De-stress Beam PB14. 2. Chip the concrete at PT dead ends to get cables to right elevations. 3. Replace the PT cable heads with new ones. If these remediation's are acceptable, we will shotcrete the North shearwall tomorrow (09/26/23), which will encase the new heads.</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">PT cable dead ends popping out during stressing highlights critical installation and monitoring issues.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter monitoring and quality control measures during the stressing process of PT cables</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The issue of PT cable dead ends popping out during stressing indicates a significant oversight in the installation or stressing process that could have led to a code violation if not addressed. This situation highlights the importance of proper installation techniques and monitoring during stressing, which are critical lessons for future projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(13,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(13,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(13,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s13">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n13" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-45" data-i="14">
+                <div class="rfi-header" onclick="toggle(14)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-0887</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-45">Score 4.5</span>
+                </div>
+                <div class="rfi-content" id="c14">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: Detail 10/A9.52 Detail 8/A9.51 Question: Building 2 slab is 5" thick. Minimum distance between bottom of anchors to bottom of slab is 3" to avoid spalling. There are various locations where the distance between the end of anchor to slab is at or exceeds this tolerance. 1. Please confirm 4" embedment per Detail 10/A9.52 and 2" embed per Detail 8/9.51 are structurally acceptable. 2. If expansion anchor embed length is not acceptable, please confirm thickened slab extent or similar remediation measure to avoid spalling. 3. Please confirm any additional locations where exceeding minimum</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">RFI reveals potential anchor embedment issues that could lead to spalling, emphasizing the need for thorough verification of structural details.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Review and confirm anchor embedment requirements and potential remediation measures.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a potential issue with anchor embedment that could lead to spalling, which is a significant concern in structural integrity. While no actual damage has occurred yet, the situation presents a near-miss safety concern that could have resulted in a code violation if not addressed. The need for clarification on embedment depth and potential remediation measures indicates a broader lesson on the importance of verifying structural details during construction.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(14,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(14,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(14,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s14">
+                                    <option value="">Keep 4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n14" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<div class="section-header score-4">NOTABLE (Score 4) <span>15</span></div>
+
+            <div class="rfi-card score-4" data-i="15">
+                <div class="rfi-header" onclick="toggle(15)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-0121</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c15">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference attachment. 1a. Referencing detail 17/S3.00 - please confirm it is acceptable to replace the standard hook at the sloped area with a 45 degree bend that extends up the slope. This is requested due to safety concerns and is requested at all typical locations. 1b. If acceptable please advise on the development length of the rebar that will be bent. -- 2. Referencing detail 19 &amp; 15/S.300At the thickened mat slab locations underneath the columns, please advise if it acceptable to substitute HRC 555 T-heads at all of the horizontal top bars (E/W &amp; N/S) in lieu of the hooked tail. This is </div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">please see attached.
+Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655) - Nov 22, 2022, 5:28 PM PST
+
+D0-A20007-00 LPSC Phase 1
+0121 Detail report
+Created</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals significant coordination gaps and design errors that could impact safety and efficiency.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement improved coordination protocols and design reviews to prevent similar issues.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights notable coordination gaps and design errors that could lead to significant congestion and safety concerns if not addressed. The issues raised indicate a need for better planning and communication among trades to avoid similar problems in future projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(15,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(15,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(15,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s15">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n15" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="16">
+                <div class="rfi-header" onclick="toggle(16)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-163</span>
+                        <span class="rfi-project">CoreSite Data Center</span>
+                        <span class="lesson-type unknown">unknown</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c16">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">In reference to RFI #146 – MV Conduit Sizing (attached), CEI is requesting confirmation on whether it is acceptable to install 4" GRC for the Chiller 05 conduit run from the USS. The proposed 4" GRC remains within the 40% conduit fill requirement and aligns with the conductor manufacturer’s recommendation of a 3.5" minimum conduit size. In addition, similar to what was approved for the generator yard, we would like to note that handling and installing 6" GRC at these locations poses increased safety concerns due to its significant weight, which creates greater risk during lifting and placement</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Garret Gross (KW Engineering - 10059720): 1. KW takes no exceptions to using 4” GRC for chiller conduits 
+provided passing conductor pull and
+fill calculations are performed and separate feeders do not share pull boxes.
+Ashley Hill (Corgan - 10059759): GC to refer to KW.
+CS - CORGAN - 10.13.25</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text"></div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">?</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">?</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">?</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value"></div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a notable coordination gap regarding conduit sizing and installation practices. While the resolution confirms the use of 4" GRC, it emphasizes the importance of ensuring proper calculations and handling procedures to mitigate safety risks. This situation reflects a design error that was caught in the field, which could have led to significant safety concerns if not addressed.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(16,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(16,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(16,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s16">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n16" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="17">
+                <div class="rfi-header" onclick="toggle(17)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-14</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c17">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">OR 18 BARS ............................................... 1 1/2" #11 OR SMALLER ............................................. 3/4" BEAMS (STIRRUPS AND MAIN REINF) ........... 1 1/2" 4. AT CONCRETE CONSTRUCTION JOINTS, WHERE CONCRETE IS PLACED AGAINST PREVIOUSLY HARDENED CONCRETE, THE INTERFACE SHALL BE ROUGHENED TO A FULL AMPLITUDE OF APPROXIMATELY 1/4 IN. DIMENSIONS REINFORCING STEEL CONCRETE STRUCTURAL STEEL FOUNDATIONS GENERAL 1. 2. REINFORCING STEEL: A. DEFORMED BARS: ASTM A615, GRADE 60 U.O.N. B. DEFORMED BARS: (SHEAR WALL BOUNDARY ELEMENTS AND WELDED REBAR) ASTM 706, GRADE 60 U.O.N. 3. </div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">N/A</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals significant coordination gaps in construction documentation that could lead to rework.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Enhance clarity in construction documents and ensure comprehensive training for contractors on inter</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights notable coordination gaps regarding the specifications and requirements for various materials and construction methods. It indicates a lack of clarity in the drawings and the need for comprehensive understanding of the entire set of documents, which could lead to significant rework if not addressed.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(17,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(17,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(17,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s17">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n17" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="18">
+                <div class="rfi-header" onclick="toggle(18)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-14</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c18">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">OR 18 BARS ............................................... 1 1/2" #11 OR SMALLER ............................................. 3/4" BEAMS (STIRRUPS AND MAIN REINF) ........... 1 1/2" MINIMUM CLEARANCE BETWEEN BARS SHALL BE 2", UNLESS OTHERWISE NOTED ON PLANS. FOR TYPICAL HOOKS, BENDS, AND LAYOUT DIAGRAM, SEE DETAIL 1. ALL STRUCTURAL AND MISCELLANEOUS STEEL SHALL BE DETAILED, FABRICATED AND ERECTED IN ACCORDANCE WITH THE AISC SPECIFICATIONS, LATEST EDITION. ALL WELDING SHALL BE PERFORMED BY CERTIFIED WELDERS AND SHALL BE IN ACCORDANCE WITH THE AWS WELDING CODE, LATEST EDITION. STRUCTURAL STEEL </div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">N/A</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination gaps in detailing and inspection processes could lead to significant issues if not addressed.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">PARTIAL</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Enhance communication protocols and clarify roles in detailing and inspection processes.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights notable coordination gaps regarding the detailing, fabrication, and inspection of structural steel, which could lead to significant issues if not addressed. The lack of specified trade and the absence of a resolution indicate a potential for confusion and miscommunication among trades, which is a common issue in construction projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(18,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(18,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(18,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s18">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n18" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="19">
+                <div class="rfi-header" onclick="toggle(19)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1367</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c19">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1367 - PSD Tier 4 Curb &amp; CMU Dowel Remediation Plan Confirmation SLP1 - RFI 1155.1 - Tier 2 CMU Dowels Corrective Actions Confirmation_R1 SLP1 - RFI 1236 - Tier 3 CMU Curb Dowel Remediation Confirmation Sheet S2.04 Background: Some of the CMU dowels on level 4 were damaged during construction. See attached markup for reference. Question: Similar to RFI 1155 and 1236, please confirm it is acceptable to replace the missing dowels with #5 90 bars and add weldcrete at the bottom of the curb with the missing dowels.</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI highlights a significant design error regarding CMU dowels that requires corrective action.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">PARTIAL</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement a review process for dowel installation and damage prevention measures.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI addresses a notable design error related to the CMU dowels, which were damaged during construction. The proposed solution indicates a significant coordination gap in the original design and construction process, as it highlights the need for corrective actions to prevent similar issues in the future.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(19,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(19,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(19,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s19">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n19" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="20">
+                <div class="rfi-header" onclick="toggle(20)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-2039</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c20">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">REF: Site - Onsite Current Set: C3.3 POST TO: Site - Onsite Current Set: C3.3 Please review the attached file. Per the response to RFI 2026, DES expressed concerns with the western flush curb that connected to the PSD east entrance. The curb was built per civil plan C3.3. Please confirm if the curb design is to be changed, which will require rework. Suggested answer DPR does not recommend redesigning the curb and leaving it installed per plan. If vehicular damage is a concern, the light pole base in the adjacent bioretention area should provide sufficient protection.</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination gap identified regarding curb design and vehicular safety, emphasizing the need for improved design reviews.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Enhance design review processes to include site-specific risk assessments.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a notable coordination gap between the design and the construction regarding the flush curb and its potential for vehicular damage. While the design was followed, the concerns raised indicate a need for better communication and foresight in anticipating site conditions and potential impacts on safety and functionality.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(20,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(20,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(20,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s20">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n20" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="21">
+                <div class="rfi-header" onclick="toggle(21)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1055</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c21">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI1055 - PSD Popped Cable on Tier 3 PB13 Beam on Grid Line G9 Confirmation Post On: S2.03 Background: The concrete at the north end of the PB13 beam on Tier 3 grid line G9 was poured 1" low, causing one of the dead ends of the beam PT cables to pop out of the concrete while stressing. The cable did not suffer any damage, however some of the sheathing needs to be taped and the head needs to be replaced. Question: Please confirm the following procedure is acceptable for replacing the head: 1. The cable group has already been de-stressed. 2. Chip around the cable that popped ou</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a design error in concrete pouring that led to a PT cable issue, highlighting a significant coordination gap.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter quality control measures during concrete pouring to ensure adherence to design sp</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a notable design error where the concrete was poured 1" low, leading to a situation where the PT cable popped out during stressing. This indicates a significant coordination gap between the design and execution phases, which could have been prevented with better oversight and communication. While the cable did not suffer damage, the incident required corrective action, making it a notable issue that could inform future projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(21,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(21,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(21,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s21">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n21" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="22">
+                <div class="rfi-header" onclick="toggle(22)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-181</span>
+                        <span class="rfi-project">Silicon Valley Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c22">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Damage to MT during Offload - Remediation</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Jordan Koop (SmithGroup, Inc - 10017650): DPR Team,
+Please see attached 'RFI 0181 - Damage to MT during Offload-Remediation-2025-0131 SG'.
+Thanks,
+Jordan</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Damage to MT during offload highlights a significant coordination gap.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">PARTIAL</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement improved offloading procedures and training for personnel.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI indicates damage to the MT (material/tool) during offloading, which suggests a notable coordination gap in the logistics and handling processes. While it does not specify the extent of the damage or if it led to safety violations, the incident highlights the need for improved coordination and preventive measures during offloading activities.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(22,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(22,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(22,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s22">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n22" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="23">
+                <div class="rfi-header" onclick="toggle(23)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1044</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c23">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI1044 - PSD Damaged PT Heads on PB20 Confirmation Post on: S2.03 Background: The concrete north end of the PB20 beam on Tier 3 was poured higher than needed and it impeded the installation of the bottom bars of the PB21 beam at the north. In an effort to correct this and fit the bottom bars of the PB21 beam, DPR Concrete chipped the extra concrete. However, the top three dead ends of the PT cables of the P20 beam got damaged in the process and the PT heads shifted 4" approximately. Questions: Per conversation with GPLA, please confirm it is acceptable to remove and replace </div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination issues led to damage of PT cables during concrete work, highlighting the need for improved trade communication.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Improve coordination and communication protocols between trades during installation phases.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant coordination gap between the concrete pouring and the installation of the PT cables, leading to damage that required corrective action. This indicates a notable issue in the construction process that could be prevented with better planning and communication among trades.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(23,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(23,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(23,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s23">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n23" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="24">
+                <div class="rfi-header" onclick="toggle(24)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-0595</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c24">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI0595 - PSD Drill and Epoxy Slab Dowels Confirmation There are slab dowels that have been damaged during construction. Q1: Please confirm it is acceptable to replace the damaged dowels with drill &amp; epoxy dowels. The epoxy adhesive to be used is the Hilti HIT-RE 500 V3. Q2: If so, please confirm it is acceptable to follow the embedment lengths provided by the manufacturer found on the last sheet of this RFI or please provide new embedment lengths.</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.
+Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655) - Jun 16, 2023, 4:26 PM PDT
+•
+•
+References
+Files (2)
+SLP1 - RFI0595 - PSD Drill and Epoxy Slab Dowels Confirmation.pdf
+SLP1 - RFI-0595 - PSD Drill and Epoxy Slab Dowels Confirmation.pdf</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a significant coordination gap in the handling of slab dowels, leading to damage that necessitates corrective action.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">CATEGORY_SPECIFIC</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">PARTIAL</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter guidelines and training for handling and installing slab dowels to prevent damage</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a notable coordination gap regarding the handling of damaged slab dowels. While the resolution involves a standard procedure for replacing dowels, the fact that damage occurred during construction suggests a lack of oversight or communication regarding the handling and installation of these components. This situation could lead to rework and additional costs, which are significant concerns in construction projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(24,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(24,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(24,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s24">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n24" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="25">
+                <div class="rfi-header" onclick="toggle(25)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$0</span>
+                        <span class="rfi-id">RFI-1262</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c25">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI1262 - PSD Bus Duct Opening Remediation on Level 2 and Level 3 Confirmation SLP1 - RFI0931.1 - PSD L2-L5 Housekeeping Curb for Busduct Background: The opening of the bus ducts on levels 2 and 3 do not follow the dimensions or layout provided by the electrical subcontractor. Please see the attached markup for the as-built dimensions. The 6" curb around the bus duct has not been poured yet. Since the bus duct has no tolerance, the openings on levels 2 and 3 will have to be modified so that the opening matches on all levels. Per conversation with the electrical subcontractor,</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination gap identified in bus duct opening dimensions necessitates corrective action.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter review processes for shop drawings and on-site dimensions to prevent similar issu</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant coordination gap between the electrical subcontractor's shop drawings and the actual dimensions of the bus duct openings. This issue necessitates modifications to ensure compliance across multiple levels, indicating a notable design error that was caught in the field. The potential for damage to existing reinforcement during the widening process adds to the importance of this learning opportunity.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(25,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(25,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(25,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s25">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n25" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="26">
+                <div class="rfi-header" onclick="toggle(26)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$43,350</span>
+                        <span class="rfi-id">RFI-1959</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c26">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Referenced Documents: A2.01, 14/A9.12 Question: Fire sprinklers are currently penetrating RipTrack rips of drywall at different elevations at front of house locations. Both the Fire Sprinkler system and the Rips of Drywall are installed per plan however in order to remediate the aesthetic component, as requested in DES Field walks, there is a potential solution to increase the rips of drywall from 5 1/2" to 7 1/2". This would allow for most of the fire sprinkler branch lines to land fully in the rips of drywall instead of partially. Please note the elevations of the sprinklers would remain the</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination gap identified between fire sprinkler installation and drywall design requiring adjustment.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement improved coordination protocols between architectural and MEP teams during design phase.</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">This RFI highlights a notable coordination gap between the fire sprinkler system and the drywall installation. The need to adjust the drywall rips to accommodate the sprinkler lines indicates a design oversight that could have been prevented with better initial planning and coordination. While it does not represent a critical safety violation or damage, it does point to a significant design error that necessitates rework and could have broader implications for similar projects.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(26,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(26,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(26,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s26">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n26" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="27">
+                <div class="rfi-header" onclick="toggle(27)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$35,997</span>
+                        <span class="rfi-id">RFI-0928.2</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c27">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Referenced Documents: RFI 0928.1 Response, S2.2 Question: Per RFI 0928.1 Response, #5 DBAs at each vertical plate were called out to be installed towards the North end of GL 9 Shear Wall in order to support the roof screen wall HSS post. Since DBAs were not installed prior to the TOW embed remediation, please confirm it is acceptable to eliminate installation of DBAs and provide a solution to properly support the roof screen wall HSS post without drilling into existing conditions.</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination gap in the installation of DBAs could impact structural integrity.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">MEDIUM</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement a review process for sequencing and installation of critical structural components to prev</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant coordination gap regarding the installation of DBAs, which were not installed prior to the embed remediation. This gap could lead to structural support issues for the roof screen wall HSS post, indicating a notable oversight in project sequencing and planning.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(27,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(27,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(27,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s27">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n27" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="28">
+                <div class="rfi-header" onclick="toggle(28)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$26,621</span>
+                        <span class="rfi-id">RFI-2079</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c28">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 2079 - B1 - Loading Dock Concrete Remediation Confirmation Punch Items #5360 and #5966 Attached Pictures and Markups Ardex ERM Product and Technical Data DPR proposes to provide new skim coat at the location of the stained concrete. Additionally, a buildup would be provided where the coiling door is not fully closing due to the sloping of the concrete. 1) Please confirm skim coat is acceptable and will not require additional reinforcement (this is an area with heavy vehicles and equipment) 2) Please confirm if the buildup detail for the loading dock door remediation will </div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">The RFI reveals a significant coordination gap regarding structural reinforcement for loading dock remediation.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Ensure reinforcement details are clarified and incorporated into the design to prevent future issues</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a notable coordination gap regarding the structural integrity of the loading dock area, specifically concerning the need for reinforcement in a high-load environment. The questions raised indicate a potential design oversight that could lead to significant issues if not addressed properly, particularly with heavy vehicles and equipment using the area.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(28,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(28,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(28,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s28">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n28" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-i="29">
+                <div class="rfi-header" onclick="toggle(29)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$22,490</span>
+                        <span class="rfi-id">RFI-1447</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="c29">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI 1447 - PSD Elevator Steel Tier 6 Misplaced Embed Remediation Confirmation Glazier Steel Shop Drawing Sheet AB2015 and AB2016 Email Correspondence between GPLA/Armando and DPR/Luis Background: In the returned submittal 2917, embed at Tier 6 for the elevator steel was to get relocated 10'- 2 3/4" from grid line. The comment however did not get captured in a new revision of submittal 3873, which was the submittal the DPR Concrete used to install the embeds. Due to this, the embed got located at the wrong location. Question: Per conversations with Armando/GPLA, please confirm</div>
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="summary-box">
+                        <div class="summary-label">Summary</div>
+                        <div class="summary-text">Coordination gap led to incorrect embed installation, highlighting the need for improved documentation processes.</div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="info-box"><div class="info-label">Applicability</div><div class="info-value">BROAD</div></div>
+                        <div class="info-box"><div class="info-label">Actionability</div><div class="info-value">HIGH</div></div>
+                        <div class="info-box"><div class="info-label">Root Cause</div><div class="info-value">CLEAR</div></div>
+                    </div>
+                    <div class="info-box"><div class="info-label">Action</div><div class="info-value">Implement stricter review processes for submittals to ensure all comments and revisions are accurate</div></div>
+                    <div class="reasoning-box">
+                        <div class="reasoning-label">Why this score</div>
+                        <div class="reasoning-text">The RFI highlights a significant coordination gap where the relocation of the embed was not captured in the revised submittal, leading to incorrect installation. This indicates a notable issue in communication and documentation processes that could be improved to prevent similar occurrences in the future.</div>
+                    </div>
+                    <div class="feedback-section">
+                        <h4>Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(29,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(29,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(29,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="s29">
+                                    <option value="">Keep 4</option>
+                                    <option value="5">5</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="n29" placeholder="Why?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="export-bar">
+            <button class="export-btn" onclick="exportFeedback()">Export</button>
+            <button class="export-btn secondary" onclick="copyFeedback()">Copy</button>
+            <button class="export-btn secondary" onclick="expandAll()">Expand All</button>
+            <div class="output-area" id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const agreements = {};
+        function toggle(i) { document.getElementById('c'+i).classList.toggle('open'); }
+        function expandAll() { document.querySelectorAll('.rfi-content').forEach(c=>c.classList.add('open')); }
+        function setAgreement(i,v) {
+            agreements[i]=v;
+            document.querySelector(`[data-i="${i}"]`).querySelectorAll('.agree-btn').forEach(b=>b.classList.remove('selected','agree','disagree','partial'));
+            event.target.classList.add('selected',v);
+        }
+        function exportFeedback() {
+            const fb=[];
+            document.querySelectorAll('.rfi-card').forEach(c=>{
+                const i=c.dataset.i;
+                if(!agreements[i])return;
+                fb.push({
+                    rfi:c.querySelector('.rfi-id').textContent,
+                    project:c.querySelector('.rfi-project').textContent,
+                    score:c.querySelector('.score-badge').textContent,
+                    agreement:agreements[i],
+                    your_score:document.getElementById('s'+i)?.value||null,
+                    notes:document.getElementById('n'+i)?.value||null
+                });
+            });
+            const out=document.getElementById('output');
+            out.textContent=JSON.stringify({date:new Date().toISOString(),count:fb.length,feedback:fb},null,2);
+            out.classList.add('visible');
+        }
+        function copyFeedback() {
+            const out=document.getElementById('output');
+            if(!out.textContent)exportFeedback();
+            navigator.clipboard.writeText(out.textContent).then(()=>alert('Copied!'));
+        }
+    </script>
+</body>
+</html>

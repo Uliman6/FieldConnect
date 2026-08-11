@@ -1,0 +1,537 @@
+{
+  "generated_at": "2026-07-15T21:01:10.526850",
+  "total_rfis": 442,
+  "total_co": 70937900.0,
+  "by_trade": {
+    "electrical": {
+      "count": 11,
+      "total_co": 20526666.0
+    },
+    "architectural, electrical": {
+      "count": 4,
+      "total_co": 15885681.0
+    },
+    "Not Specified": {
+      "count": 193,
+      "total_co": 10277850.0
+    },
+    "mechanical": {
+      "count": 3,
+      "total_co": 5765973.0
+    },
+    "security": {
+      "count": 1,
+      "total_co": 2994765.0
+    },
+    "electrical, architectural": {
+      "count": 1,
+      "total_co": 2988703.0
+    },
+    "architectural": {
+      "count": 82,
+      "total_co": 2779055.0
+    },
+    "drywall": {
+      "count": 1,
+      "total_co": 1219303.0
+    },
+    "structural": {
+      "count": 27,
+      "total_co": 1195097.0
+    },
+    "architectural, structural": {
+      "count": 19,
+      "total_co": 829369.0
+    },
+    "curtainwall": {
+      "count": 2,
+      "total_co": 766576.0
+    },
+    "landscaping": {
+      "count": 4,
+      "total_co": 474864.0
+    },
+    "architectural, civil_site, landscaping": {
+      "count": 1,
+      "total_co": 474694.0
+    },
+    "architectural, landscaping, structural": {
+      "count": 1,
+      "total_co": 474694.0
+    },
+    "concrete": {
+      "count": 8,
+      "total_co": 457994.0
+    },
+    "concrete, structural, plumbing": {
+      "count": 1,
+      "total_co": 227483.0
+    },
+    "civil_site, landscaping": {
+      "count": 2,
+      "total_co": 225130.0
+    },
+    "architectural, concrete, landscaping": {
+      "count": 2,
+      "total_co": 224172.0
+    },
+    "exterior_envelope": {
+      "count": 2,
+      "total_co": 218632.0
+    },
+    "architectural, plumbing, other": {
+      "count": 2,
+      "total_co": 196589.0
+    },
+    "architectural, masonry, interior_finishes": {
+      "count": 2,
+      "total_co": 178498.0
+    },
+    "structural_steel": {
+      "count": 5,
+      "total_co": 163376.0
+    },
+    "landscaping, concrete": {
+      "count": 1,
+      "total_co": 156948.0
+    },
+    "civil_site": {
+      "count": 2,
+      "total_co": 120355.0
+    },
+    "architectural, exterior_envelope": {
+      "count": 3,
+      "total_co": 119338.0
+    },
+    "exterior_envelope, architectural": {
+      "count": 1,
+      "total_co": 114792.0
+    },
+    "architectural, structural, mechanical": {
+      "count": 2,
+      "total_co": 114010.0
+    },
+    "architectural, plumbing": {
+      "count": 1,
+      "total_co": 111780.0
+    },
+    "architectural, fire_protection, structural, concrete": {
+      "count": 1,
+      "total_co": 107373.0
+    },
+    "architectural, interior_finishes": {
+      "count": 2,
+      "total_co": 98759.0
+    },
+    "plumbing": {
+      "count": 3,
+      "total_co": 98677.0
+    },
+    "structural, architectural": {
+      "count": 4,
+      "total_co": 92394.0
+    },
+    "concrete, masonry, structural": {
+      "count": 1,
+      "total_co": 91208.0
+    },
+    "architectural, electrical, structural, other": {
+      "count": 1,
+      "total_co": 89281.0
+    },
+    "architectural, electrical, other": {
+      "count": 1,
+      "total_co": 89281.0
+    },
+    "architectural, electrical, structural": {
+      "count": 3,
+      "total_co": 79736.0
+    },
+    "structural, plumbing": {
+      "count": 1,
+      "total_co": 62341.0
+    },
+    "interior_finishes, architectural": {
+      "count": 1,
+      "total_co": 59171.0
+    },
+    "interior_finishes, mechanical": {
+      "count": 1,
+      "total_co": 59171.0
+    },
+    "architectural, landscaping": {
+      "count": 3,
+      "total_co": 56689.0
+    },
+    "architectural, electrical, landscaping, civil_site": {
+      "count": 1,
+      "total_co": 55385.0
+    },
+    "electrical, food service": {
+      "count": 1,
+      "total_co": 47464.0
+    },
+    "architectural, electrical, fire_protection, mechanical, other, structural": {
+      "count": 1,
+      "total_co": 44059.0
+    },
+    "waterproofing": {
+      "count": 1,
+      "total_co": 43547.0
+    },
+    "electrical, plumbing, mechanical": {
+      "count": 2,
+      "total_co": 43043.0
+    },
+    "architectural, electrical, mechanical": {
+      "count": 1,
+      "total_co": 29175.0
+    },
+    "fire_protection": {
+      "count": 2,
+      "total_co": 27183.0
+    },
+    "architectural, mechanical, exterior_envelope": {
+      "count": 1,
+      "total_co": 26871.0
+    },
+    "signage": {
+      "count": 1,
+      "total_co": 26582.0
+    },
+    "architectural, mechanical": {
+      "count": 1,
+      "total_co": 24575.0
+    },
+    "architectural, concrete, electrical": {
+      "count": 1,
+      "total_co": 24129.0
+    },
+    "electrical, structural": {
+      "count": 1,
+      "total_co": 23974.0
+    },
+    "concrete, structural": {
+      "count": 2,
+      "total_co": 22561.0
+    },
+    "plumbing, structural": {
+      "count": 1,
+      "total_co": 21915.0
+    },
+    "architectural, fire alarm, mechanical, structural": {
+      "count": 1,
+      "total_co": 21907.0
+    },
+    "architectural, fire_protection": {
+      "count": 1,
+      "total_co": 21903.0
+    },
+    "plumbing, structural, architectural": {
+      "count": 1,
+      "total_co": 21360.0
+    },
+    "architectural, electrical, mechanical, structural": {
+      "count": 1,
+      "total_co": 21153.0
+    },
+    "fire_protection, structural": {
+      "count": 1,
+      "total_co": 20539.0
+    },
+    "architectural, concrete": {
+      "count": 1,
+      "total_co": 18562.0
+    },
+    "structural, concrete": {
+      "count": 1,
+      "total_co": 16072.0
+    },
+    "plumbing, architectural": {
+      "count": 1,
+      "total_co": 13765.0
+    },
+    "architectural, mechanical, electrical": {
+      "count": 1,
+      "total_co": 11601.0
+    },
+    "civil_site, concrete, landscaping": {
+      "count": 1,
+      "total_co": 11195.0
+    },
+    "masonry, architectural": {
+      "count": 1,
+      "total_co": 10906.0
+    },
+    "audio_visual, architectural": {
+      "count": 1,
+      "total_co": 6114.0
+    },
+    "flooring": {
+      "count": 2,
+      "total_co": 5563.0
+    },
+    "architectural, interior_finishes, structural, exterior_envelope": {
+      "count": 1,
+      "total_co": 4525.0
+    },
+    "metal_fabrication": {
+      "count": 1,
+      "total_co": 2354.0
+    },
+    "architectural, fire_protection, other, masonry": {
+      "count": 1,
+      "total_co": 2030.0
+    },
+    "other": {
+      "count": 1,
+      "total_co": 840.0
+    },
+    "interior_finishes": {
+      "count": 1,
+      "total_co": 580.0
+    }
+  },
+  "by_category": {
+    "coordination": {
+      "count": 146,
+      "total_co": 42448549.0
+    },
+    "design_error": {
+      "count": 190,
+      "total_co": 37493098.0
+    },
+    "existing_conditions": {
+      "count": 82,
+      "total_co": 22604137.0
+    },
+    "scope_change": {
+      "count": 120,
+      "total_co": 21579518.0
+    },
+    "structural": {
+      "count": 121,
+      "total_co": 5791606.0
+    },
+    "fire_life_safety": {
+      "count": 41,
+      "total_co": 3338116.0
+    },
+    "waterproofing": {
+      "count": 32,
+      "total_co": 1681477.0
+    },
+    "field_error": {
+      "count": 39,
+      "total_co": 1612574.0
+    },
+    "code_compliance": {
+      "count": 22,
+      "total_co": 1157537.0
+    }
+  },
+  "by_keyword": {
+    "electrical": {
+      "count": 22,
+      "total_co": 37253335.0
+    },
+    "clash": {
+      "count": 4,
+      "total_co": 29087940.0
+    },
+    "wall": {
+      "count": 100,
+      "total_co": 25712991.0
+    },
+    "layout": {
+      "count": 38,
+      "total_co": 24843941.0
+    },
+    "door": {
+      "count": 34,
+      "total_co": 19595231.0
+    },
+    "conduit": {
+      "count": 16,
+      "total_co": 19457582.0
+    },
+    "duct": {
+      "count": 16,
+      "total_co": 16255658.0
+    },
+    "clearance": {
+      "count": 13,
+      "total_co": 4127308.0
+    },
+    "permit": {
+      "count": 3,
+      "total_co": 4092113.0
+    },
+    "concrete": {
+      "count": 56,
+      "total_co": 2877515.0
+    },
+    "roof": {
+      "count": 29,
+      "total_co": 2471474.0
+    },
+    "pipe": {
+      "count": 26,
+      "total_co": 2292800.0
+    },
+    "slab": {
+      "count": 44,
+      "total_co": 2209236.0
+    },
+    "demo": {
+      "count": 12,
+      "total_co": 2175615.0
+    },
+    "beam": {
+      "count": 28,
+      "total_co": 1854700.0
+    },
+    "conflict": {
+      "count": 23,
+      "total_co": 1832692.0
+    },
+    "window": {
+      "count": 6,
+      "total_co": 1469843.0
+    },
+    "water": {
+      "count": 26,
+      "total_co": 1461987.0
+    },
+    "drain": {
+      "count": 20,
+      "total_co": 1042521.0
+    },
+    "rebar": {
+      "count": 12,
+      "total_co": 941929.0
+    },
+    "floor": {
+      "count": 20,
+      "total_co": 941105.0
+    },
+    "core": {
+      "count": 2,
+      "total_co": 850042.0
+    },
+    "embed": {
+      "count": 19,
+      "total_co": 737318.0
+    },
+    "glazing": {
+      "count": 5,
+      "total_co": 575477.0
+    },
+    "shear wall": {
+      "count": 8,
+      "total_co": 573961.0
+    },
+    "column": {
+      "count": 21,
+      "total_co": 479385.0
+    },
+    "code": {
+      "count": 7,
+      "total_co": 452237.0
+    },
+    "ceiling": {
+      "count": 16,
+      "total_co": 407437.0
+    },
+    "cut": {
+      "count": 16,
+      "total_co": 390709.0
+    },
+    "ada": {
+      "count": 7,
+      "total_co": 330309.0
+    }
+  },
+  "by_root_cause": {
+    "design_documentation": {
+      "count": 135,
+      "total_co": 49424344.0
+    },
+    "trade_coordination": {
+      "count": 50,
+      "total_co": 38433184.0
+    },
+    "communication": {
+      "count": 17,
+      "total_co": 17587779.0
+    },
+    "sequencing": {
+      "count": 12,
+      "total_co": 16758592.0
+    },
+    "field_execution": {
+      "count": 35,
+      "total_co": 16006764.0
+    },
+    "other": {
+      "count": 283,
+      "total_co": 14165025.0
+    },
+    "quality_control": {
+      "count": 10,
+      "total_co": 9986754.0
+    },
+    "code_requirements": {
+      "count": 25,
+      "total_co": 5092811.0
+    },
+    "existing_conditions": {
+      "count": 23,
+      "total_co": 1964604.0
+    }
+  },
+  "by_phase": {
+    "design": {
+      "count": 235,
+      "total_co": 62582430.0
+    },
+    "construction": {
+      "count": 181,
+      "total_co": 7432197.0
+    },
+    "preconstruction": {
+      "count": 15,
+      "total_co": 639029.0
+    },
+    "submittal_review": {
+      "count": 8,
+      "total_co": 197447.0
+    },
+    "closeout": {
+      "count": 3,
+      "total_co": 86797.0
+    }
+  },
+  "by_project": {
+    "CoreSite Data Center": {
+      "count": 23,
+      "total_co": 46751544.0
+    },
+    "Intuitive Surgical MOB": {
+      "count": 18,
+      "total_co": 4736028.0
+    },
+    "Southline Office": {
+      "count": 305,
+      "total_co": 16608301.0
+    },
+    "Silicon Valley Office": {
+      "count": 75,
+      "total_co": 2227831.0
+    },
+    "Abbott Alameda Office TI": {
+      "count": 21,
+      "total_co": 614196.0
+    }
+  }
+}

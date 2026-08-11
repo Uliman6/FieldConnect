@@ -186,7 +186,10 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
       getVoiceNotesForDate: (date, projectId) => {
         const { voiceNotes, currentUserId } = get();
         return voiceNotes.filter((note) => {
-          const matchesDate = note.createdAt.startsWith(date);
+          // Convert createdAt (UTC ISO string) to local date for comparison
+          const noteDate = new Date(note.createdAt);
+          const noteLocalDate = `${noteDate.getFullYear()}-${String(noteDate.getMonth() + 1).padStart(2, '0')}-${String(noteDate.getDate()).padStart(2, '0')}`;
+          const matchesDate = noteLocalDate === date;
           const matchesProject = projectId ? note.projectId === projectId : true;
           // Filter by user if currentUserId is set
           const matchesUser = !currentUserId || note.userId === currentUserId;
@@ -236,7 +239,13 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
 
         return get().categorizedSnippets.filter((snippet) => {
           const matchesCategory = snippet.category === category;
-          const matchesDate = date ? snippet.createdAt.startsWith(date) : true;
+          // Convert createdAt (UTC ISO string) to local date for comparison
+          let matchesDate = true;
+          if (date) {
+            const snippetDate = new Date(snippet.createdAt);
+            const snippetLocalDate = `${snippetDate.getFullYear()}-${String(snippetDate.getMonth() + 1).padStart(2, '0')}-${String(snippetDate.getDate()).padStart(2, '0')}`;
+            matchesDate = snippetLocalDate === date;
+          }
           const matchesProject = voiceNoteIds ? voiceNoteIds.has(snippet.voiceNoteId) : true;
           return matchesCategory && matchesDate && matchesProject;
         });
@@ -248,7 +257,10 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
           : null;
 
         return get().categorizedSnippets.filter((snippet) => {
-          const matchesDate = snippet.createdAt.startsWith(date);
+          // Convert createdAt (UTC ISO string) to local date for comparison
+          const snippetDate = new Date(snippet.createdAt);
+          const snippetLocalDate = `${snippetDate.getFullYear()}-${String(snippetDate.getMonth() + 1).padStart(2, '0')}-${String(snippetDate.getDate()).padStart(2, '0')}`;
+          const matchesDate = snippetLocalDate === date;
           const matchesProject = voiceNoteIds ? voiceNoteIds.has(snippet.voiceNoteId) : true;
           return matchesDate && matchesProject;
         });
@@ -270,7 +282,10 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
           );
 
           const voiceNoteCount = state.voiceNotes.filter((n) => {
-            const matchesDate = n.createdAt.startsWith(date);
+            // Convert createdAt (UTC ISO string) to local date for comparison
+            const noteDate = new Date(n.createdAt);
+            const noteLocalDate = `${noteDate.getFullYear()}-${String(noteDate.getMonth() + 1).padStart(2, '0')}-${String(noteDate.getDate()).padStart(2, '0')}`;
+            const matchesDate = noteLocalDate === date;
             const matchesProject = n.projectId === projectId;
             const matchesUser = userId ? n.userId === userId : true;
             return matchesDate && matchesProject && matchesUser;

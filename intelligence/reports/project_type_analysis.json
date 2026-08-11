@@ -1,0 +1,1054 @@
+{
+  "generated_at": "2026-07-15T21:13:43.225069",
+  "project_types": {
+    "CoreSite Data Center": {
+      "type": "TI",
+      "subtype": "Data Center",
+      "description": "Tenant improvement in existing building for data center use",
+      "characteristics": "High electrical loads, cooling requirements, raised floors, redundancy requirements"
+    },
+    "Abbott Alameda Office TI": {
+      "type": "TI",
+      "subtype": "Office",
+      "description": "Tenant improvement in existing office building",
+      "characteristics": "Working within existing conditions, demolition of existing finishes, coordination with base building systems"
+    },
+    "Intuitive Surgical MOB": {
+      "type": "MOB",
+      "subtype": "Medical Office Building",
+      "description": "Medical office building - potentially renovation or new construction",
+      "characteristics": "Medical-grade finishes, specialized MEP, ADA compliance critical, infection control considerations"
+    },
+    "Silicon Valley Office": {
+      "type": "Hybrid",
+      "subtype": "Office with Existing Structure",
+      "description": "Office building incorporating existing structural steel",
+      "characteristics": "Working with existing structure, potential as-built discrepancies, coordination with existing conditions"
+    },
+    "Southline Office": {
+      "type": "Ground-Up",
+      "subtype": "Office",
+      "description": "New ground-up office construction",
+      "characteristics": "New foundations, structural frame, all-new systems, typical new construction coordination"
+    }
+  },
+  "total_rfis": 50,
+  "total_co": 57090848.0,
+  "specific_count": 18,
+  "specific_co": 11336633.0,
+  "broad_count": 32,
+  "broad_co": 45754215.0,
+  "results": [
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The RFI addresses specific challenges related to existing conditions and the need for coordination with base building systems, which are particularly prevalent in Tenant Improvement (TI) projects. Issues such as existing framing height discrepancies, plumbing rework due to new finishes, and coordination with ADA requirements are common in office TI projects where modifications are made within existing structures. These challenges are less likely to arise in ground-up construction or other project types.",
+      "applicable_to": [
+        "Office TI",
+        "Retail TI",
+        "Hospitality TI"
+      ],
+      "key_lesson": "Thorough assessment of existing conditions is crucial in TI projects to avoid costly rework.",
+      "prevention_action": "Conduct detailed pre-construction surveys and assessments of existing conditions to identify potential issues early.",
+      "rfi": "RFI-47",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 142648.0,
+      "trade": "architectural",
+      "question_preview": "Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor rest",
+      "original_summary": "The RFI reveals critical structural and compliance issues requiring major rework.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The misalignment of structural columns and the resulting need for design adjustments is a common issue across various types of construction projects. It reflects a general failure in design coordination and documentation that can occur regardless of the project type, whether it be TI, ground-up, or any other construction category.",
+      "applicable_to": [
+        "office TI",
+        "ground-up",
+        "hybrid/existing structure",
+        "MOB",
+        "data center TI"
+      ],
+      "key_lesson": "Effective design coordination is crucial to prevent costly change orders due to structural misalignments.",
+      "prevention_action": "Implement thorough design reviews and coordination meetings involving all relevant trades before finalizing construction documents.",
+      "rfi": "RFI-17",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 124678.0,
+      "trade": null,
+      "question_preview": "Reference Sheet A2.1.2 Offices 2080, 2079, and 2078 have columns imbedded in the walls. These columns do not align with each other. Office 2078 will have an exposed column with current drywall layout.",
+      "original_summary": "The misalignment of structural columns led to a costly change order due to inadequate design coordination.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of needing to change wall framing specifications due to existing conditions and demolition scope is particularly relevant to tenant improvement (TI) projects, especially in office settings where existing structures must be modified. This situation is less likely to arise in ground-up construction or other project types where new walls are built from scratch without existing conditions to consider.",
+      "applicable_to": [
+        "Office TI",
+        "Retail TI",
+        "Hospitality TI"
+      ],
+      "key_lesson": "Effective communication and clarity in design specifications are crucial to avoid costly rework in tenant improvement projects.",
+      "prevention_action": "Implement a thorough review process for design specifications and ensure clear communication among all stakeholders before demolition and reconstruction begins.",
+      "rfi": "RFI-37",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 124678.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 37 - Abbott Alameda 1420 HBP - Breakroom 02H6C Wall Width Confirmation A2.1.2, AD2.1.2 As per conversation with John (Abbott), Existing north wall at Breakroom 02H6C is framed using a 2",
+      "original_summary": "The need to change wall framing specifications led to a costly rework due to inadequate initial design communication.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of demolition scope clarity, particularly in existing conditions like those found in a Tenant Improvement (TI) project, is unique to this project type. Office TIs often involve working within existing structures where the existing conditions can lead to surprises, especially regarding demolition and renovation of spaces. This RFI highlights a specific challenge related to the lack of demolition details in the design documents, which is a common issue in office TIs but less prevalent in ground-up or new construction projects.",
+      "applicable_to": [
+        "Office TI",
+        "Retail TI",
+        "Hospitality TI"
+      ],
+      "key_lesson": "Ensure comprehensive demolition details are included in design documents to avoid costly change orders.",
+      "prevention_action": "Implement a thorough review process for demolition plans during the design phase to ensure all existing conditions are accurately documented.",
+      "rfi": "RFI-21",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 72300.0,
+      "trade": "architectural",
+      "question_preview": "Reference: RFI 21 - Abbott Alameda 1420 HBP - Flooring Removal in Existing Conference Room 02H6C Confirmation Sheet AD2.1.2 and Note D21 in sheet AD2.1.2 Existing Conference Room 02H6C is to become th",
+      "original_summary": "The absence of demolition details for existing flooring in design documents led to a costly change order due to scope addition.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The RFI highlights issues related to existing conditions and the need for coordination with base building systems, which are particularly prevalent in Tenant Improvement (TI) projects, especially in office settings. The confusion over existing electrical outlets and the need for new installations due to demolition is a common challenge in TI projects where existing infrastructure must be navigated.",
+      "applicable_to": [
+        "Office TI",
+        "Retail TI",
+        "Healthcare TI"
+      ],
+      "key_lesson": "Inadequate documentation of existing conditions can lead to costly design changes in TI projects.",
+      "prevention_action": "Ensure thorough site surveys and accurate documentation of existing conditions prior to finalizing design documents.",
+      "rfi": "RFI-51",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 26003.0,
+      "trade": "architectural, electrical",
+      "question_preview": "Reference: RFI 51 - Abbott Alameda 1420 HBP - Restrooms Electrical Outlets Layout Clarification Sheets A4.4.0 and E2.3 Attached Pictures of Existing Conditions at Restrooms Electrical drawings do not ",
+      "original_summary": "The RFI resulted from inadequate documentation of existing conditions, leading to costly design changes for electrical outlet layouts.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The omission of emergency lighting specifications and the need for clarification on emergency power requirements is a common issue across various types of construction projects. It reflects a general failure in design documentation that can occur in any project, regardless of type. This issue is not unique to office tenant improvements but is relevant to all construction projects where safety and compliance with electrical codes are critical.",
+      "applicable_to": [
+        "office TI",
+        "retail TI",
+        "hospitality",
+        "educational",
+        "industrial",
+        "ground-up"
+      ],
+      "key_lesson": "Thorough review and inclusion of safety features in design documents are essential to avoid costly change orders.",
+      "prevention_action": "Implement a checklist for design reviews that includes verification of emergency lighting and other safety systems before finalizing documents.",
+      "rfi": "RFI-54",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 26003.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 54 - Abbott Alameda 1420 HBP - EM Lighting Clarifications CBF RFI 2 Sheets E3.3, E3.4, A2.2.2 The RCP on E3.3 and E3.4 do not show any emergency lights in the space. Approved light fixt",
+      "original_summary": "The omission of emergency lighting in the design led to a costly change order due to necessary design changes.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of lacking detailed structural information in design documents is a common problem across various types of construction projects. It can lead to confusion and costly change orders, regardless of whether the project is a tenant improvement, ground-up construction, or any other type. This reflects a general failure in design documentation that can occur in any construction context.",
+      "applicable_to": [
+        "office TI",
+        "ground-up",
+        "hybrid/existing structure",
+        "medical office building",
+        "data center TI"
+      ],
+      "key_lesson": "Ensure comprehensive structural details are included in design documents to avoid costly change orders.",
+      "prevention_action": "Implement a thorough review process for design documents to confirm all necessary structural details are included before finalizing plans.",
+      "rfi": "RFI-55",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 15861.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 55 - Abbott Alameda 1420 HBP - Grease Duct Framing Clarification ASK-13 R1 Sheet A2.1.2 Detail 2/S5.01 Attached Pictures Per detail 2 on ASK-13 R1, a new wide flange beam is being calle",
+      "original_summary": "The lack of structural details in the design led to a costly change order for reinforcement of the grease duct installation.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issues surrounding the relocation of thermostats are closely tied to the complexities of working within existing conditions and the need for precise coordination with base building systems, which are particularly prevalent in Office TI projects. The specific challenges of demoing existing finishes and accommodating existing site conditions make this scenario more likely in this project type compared to others.",
+      "applicable_to": [
+        "Office TI",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Thorough initial design coordination is crucial to avoid costly changes during construction.",
+      "prevention_action": "Implement a detailed review of existing conditions and design coordination meetings before finalizing plans.",
+      "rfi": "RFI-39",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 10587.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 39 - Abbott - Alameda 1420 HBP - Thermostat Relocation Clarifications ACCO RFI 005/EMCOR RFI 001 Mechanical Drawings with Markups and Pictures During rough-in for in-wall MEP, it was no",
+      "original_summary": "The relocation of thermostats due to design flaws resulted in a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The RFI addresses issues related to existing structural conditions and the specifics of duct hanger support in a tenant improvement (TI) project, particularly in an office setting. These challenges are unique to TI projects where existing conditions must be navigated, and coordination with base building systems is critical. The oversight in mechanical duct hanging details is a common concern in office TIs due to the nature of working within existing structures.",
+      "applicable_to": [
+        "Office TI",
+        "Retail TI",
+        "Hospitality TI"
+      ],
+      "key_lesson": "Ensure detailed specifications for mechanical systems that account for existing structural conditions in tenant improvement projects.",
+      "prevention_action": "Incorporate comprehensive existing condition assessments and detailed design specifications in the early stages of the project to avoid ambiguities.",
+      "rfi": "RFI-14",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 10587.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 14 - Abbott Alameda 1420 HBP - Mechanical Duct Hanging Detail Confirmation Submittal 155000-6 Excerpt Mechanical Sheet M0.2 As noted on Submittal 155000-6, the existing structure is woo",
+      "original_summary": "The RFI revealed a costly oversight in the mechanical duct hanging details that led to a change order due to unclear design specifications.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of design coordination failures, particularly between elements like handrails and doors, is a common challenge across various types of construction projects. While the specifics of the handrail and service corridor door are tied to this office TI project, the underlying problem of ensuring that all design elements work together without conflicts is a universal concern in construction.",
+      "applicable_to": [
+        "office TI",
+        "retail TI",
+        "hospitality TI",
+        "education facilities",
+        "ground-up construction",
+        "renovation projects"
+      ],
+      "key_lesson": "Thorough design coordination is essential to prevent costly conflicts during construction.",
+      "prevention_action": "Implement a comprehensive design review process that includes all relevant trades to identify potential conflicts before construction begins.",
+      "rfi": "RFI-76.1",
+      "project": "Abbott Alameda Office TI",
+      "co_amount": 10155.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 76.1 - Abbott Alameda 1420 HBP - Stair 2 Handrail Clash with Service Corridor Door Clarification A7.0.0 MAS Metals Guardrail Submittal Sheet S5.00 Attached pictures Per RFI 76 response,",
+      "original_summary": "The RFI revealed a costly oversight in design coordination between a handrail and a service corridor door, leading to a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The clash between the proposed furred wall and existing conduits is a common issue that arises in many construction projects due to inadequate design coordination and communication among different trades. While the specifics of the project (data center TI) may involve unique elements like high electrical loads and cooling requirements, the fundamental problem of design coordination failures is universal across all types of construction projects.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Effective coordination and communication between architectural and electrical teams are crucial to avoid costly design clashes.",
+      "prevention_action": "Implement a more rigorous design review process that includes all relevant trades to identify potential clashes early in the design phase.",
+      "rfi": "RFI-54",
+      "project": "CoreSite Data Center",
+      "co_amount": 15807369.0,
+      "trade": "architectural, electrical",
+      "question_preview": "There is a furred wall at Storage 235 intended to hide the existing bus duct and multiple existing conduit risers. However, the current dimensions of the furred wall clash with these existing conduits",
+      "original_summary": "The clash between the proposed furred wall and existing conduits led to a costly change order due to inadequate design coordination.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of design coordination failures and clash detection is a common challenge across various types of construction projects. While the specific context involves light fixtures in a data center, the underlying problem of inadequate initial design coordination and clash detection can occur in any project type, regardless of its specific characteristics.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Effective design coordination and clash detection are critical to prevent costly changes during construction.",
+      "prevention_action": "Implement a robust clash detection process during the design phase, utilizing advanced modeling tools and regular coordination meetings among all trades.",
+      "rfi": "RFI-52",
+      "project": "CoreSite Data Center",
+      "co_amount": 13229900.0,
+      "trade": "electrical",
+      "question_preview": "CYCLE 1: 6/24/25: Per 6/18 DPR/Design Teams breakout call, F05 light fixtures in Corridor 260 and 260A are to be swapped to F04 lights. See referenced markup for new proposed light fixture layout. -- ",
+      "original_summary": "The RFI revealed a significant coordination failure in the design of light fixtures, resulting in a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of relocating mechanical equipment due to obstructions and the specific requirements of high electrical loads and cooling systems is unique to data center projects. The need for careful coordination of mechanical systems, especially in environments with raised floors and redundancy requirements, makes this situation significantly more likely in data center TI projects compared to other types.",
+      "applicable_to": [
+        "Data Center TI"
+      ],
+      "key_lesson": "Thorough coordination and verification of mechanical system locations are critical in data center projects to avoid costly change orders.",
+      "prevention_action": "Implement a detailed pre-installation coordination process that includes all relevant stakeholders to verify equipment locations against existing site conditions.",
+      "rfi": "RFI-43",
+      "project": "CoreSite Data Center",
+      "co_amount": 5753119.0,
+      "trade": "mechanical",
+      "question_preview": "Cycle 1 - 7/22/25: The updated reference markup was changed to move the air separator equipment further plan-south to avoid obstructions with phase 4 installations at the mechanical yard per design te",
+      "original_summary": "The relocation of the air separator due to design changes led to a costly change order due to poor coordination.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of inadequate review of design documents leading to confusion and costly changes is a common problem across various types of construction projects. While the specifics of the security infrastructure may be unique to data centers, the underlying issue of design documentation gaps and coordination failures is universal.",
+      "applicable_to": [
+        "office TI",
+        "MOB",
+        "ground-up",
+        "hybrid/existing structure"
+      ],
+      "key_lesson": "Thorough review and acceptance of design documents are critical to avoid costly changes later in the project.",
+      "prevention_action": "Implement a more rigorous design review process with clear communication channels among all stakeholders.",
+      "rfi": "RFI-78.1",
+      "project": "CoreSite Data Center",
+      "co_amount": 2994765.0,
+      "trade": "security",
+      "question_preview": "The CCTV and access control rough-in plans developed by CEI and submitted to PSG/CoreSite review per RFI 78 as not accepted. CoreSite has since shared an updated rough-in plan. See the referenced atta",
+      "original_summary": "The RFI revealed a significant oversight in the design review process, leading to a costly change order for security infrastructure adjustments.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The RFI addresses specific issues related to electrical distribution and clearance requirements that are unique to data center projects, particularly those with high electrical loads and redundancy requirements. The need for precise voltage distribution and the associated clearance requirements for RPPs (Remote Power Panels) are critical in data center TI projects, making this issue significantly more likely to arise in this context compared to other project types.",
+      "applicable_to": [
+        "Data Center TI"
+      ],
+      "key_lesson": "Inadequate design considerations for electrical distribution and clearance requirements can lead to costly change orders in data center projects.",
+      "prevention_action": "Ensure thorough design reviews that account for clearance requirements and electrical distribution configurations during the initial design phase.",
+      "rfi": "RFI-125",
+      "project": "CoreSite Data Center",
+      "co_amount": 2988703.0,
+      "trade": "electrical, architectural",
+      "question_preview": "1) As discussed with CoreSite, 8/20/2025, please confirm we are to proceed with splitting the RPPs at 4MW (415V) and 5MW (208V). This would give us 80 (208V) RPPs, and 32 (415V) RPPs 2) Provide a mark",
+      "original_summary": "The costly issue arose from inadequate design considerations for RPP clearance requirements, leading to a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of unclear power requirements for door hardware is a common problem across various construction projects, not limited to data centers. Coordination failures due to insufficient documentation can occur in any project type where electrical systems and hardware interfaces are involved.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Clear documentation and communication regarding power requirements are essential to avoid costly change orders.",
+      "prevention_action": "Implement a thorough review process for all hardware specifications and power requirements during the design phase to ensure clarity and prevent coordination issues.",
+      "rfi": "RFI-140",
+      "project": "CoreSite Data Center",
+      "co_amount": 2988703.0,
+      "trade": "electrical",
+      "question_preview": "CEI is requesting clarification regarding the door hardware power requirements. Specifically, we need a confirmed list of all door numbers that will require line voltage power supplied above the door ",
+      "original_summary": "The lack of clarity in door hardware power requirements led to a costly change order due to coordination failures.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of inadequate design coordination leading to the need for a furred wall to cover exposed plumbing is a common problem across various types of construction projects. Design coordination failures can occur in any project type, regardless of the specific characteristics of the project, such as high electrical loads or cooling requirements. This indicates a universal challenge in construction management rather than a project-type-specific issue.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Effective design coordination is essential to prevent costly changes and ensure project efficiency.",
+      "prevention_action": "Implement regular design coordination meetings and thorough reviews of architectural and plumbing plans to identify potential conflicts early.",
+      "rfi": "RFI-48",
+      "project": "CoreSite Data Center",
+      "co_amount": 1219303.0,
+      "trade": null,
+      "question_preview": "There are existing roof drainage pipes protruding through the wall into office 240, see referenced Newforma Issue #185 for reference. Per 6/12 BIM call, Corgan's direction is to implement a furred wal",
+      "original_summary": "The need for a furred wall to cover exposed roof drainage pipes resulted from inadequate design coordination, leading to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The RFI addresses a fire safety compliance issue related to wall terminations and fire ratings, which is a common requirement across various types of construction projects. While the context involves a data center TI, the fundamental need for compliance with fire safety codes and proper wall termination practices is applicable to all construction types.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Ensuring compliance with fire safety regulations is critical in all construction projects.",
+      "prevention_action": "Implement a thorough review process for fire safety details during the design phase to avoid compliance issues.",
+      "rfi": "RFI-76",
+      "project": "CoreSite Data Center",
+      "co_amount": 1219303.0,
+      "trade": "drywall",
+      "question_preview": "Per 7/7 Workshop, DPR requested a termination detail for the East end of UPS Room walls running E-W. Corgan confirmed that these walls will need to run to interior face of exterior walls to maintain r",
+      "original_summary": "The RFI highlights a critical fire safety compliance issue that requires immediate attention to prevent code violations.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of insufficient coordination and communication during the design phase, leading to design oversights regarding existing conditions, is a common challenge across various types of construction projects. While the specific context involves drainage risers in a data center, the underlying problem of design documentation gaps and coordination failures can occur in any project type.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Effective communication and thorough coordination during the design phase are essential to prevent costly design oversights.",
+      "prevention_action": "Implement regular design coordination meetings and establish clear communication protocols among all stakeholders to address existing conditions early in the design process.",
+      "rfi": "RFI-89",
+      "project": "CoreSite Data Center",
+      "co_amount": 59960.0,
+      "trade": "architectural",
+      "question_preview": "Per 7/21 DPR/Design Teams workshop, existing drainage risers were identified and in Storage 234 with no chase or covering shown in design. These risers are active and service the South-most UPS room C",
+      "original_summary": "The RFI resulted from a design oversight regarding the treatment of active drainage risers, leading to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue revolves around fire rating compliance for a wall type, which is a common requirement across various construction projects regardless of the specific project type. Fire safety regulations and the need for walls to meet certain fire ratings are universally applicable in construction, making this issue not unique to data center TI projects.",
+      "applicable_to": [
+        "data center TI",
+        "office TI",
+        "medical office building",
+        "ground-up",
+        "hybrid/existing structure"
+      ],
+      "key_lesson": "Ensuring compliance with fire rating requirements is critical in all construction projects.",
+      "prevention_action": "Conduct thorough reviews of fire safety requirements during the design phase to ensure compliance with applicable codes.",
+      "rfi": "RFI-94",
+      "project": "CoreSite Data Center",
+      "co_amount": 59171.0,
+      "trade": "architectural, structural",
+      "question_preview": "The current design calls for a furred wall (E6-D) at the south wall of the Janitor's Closet; however, the janitor's closet is to maintain a 1hr rating per A03-03B which cannot be achieved with an E ty",
+      "original_summary": "The RFI addresses a critical fire safety compliance issue regarding the wall type in the janitor's closet.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of coordination between electrical device layouts and furniture placement is a common challenge across various types of construction projects. While the context of a Medical Office Building (MOB) may introduce specific requirements (like ADA compliance or specialized MEP systems), the fundamental problem of ensuring that electrical layouts align with furniture placement is a universal concern in construction. This type of coordination failure can occur in any project where multiple design elements must interact, making it broadly applicable.",
+      "applicable_to": [
+        "Medical Office Building",
+        "Office TI",
+        "Retail",
+        "Hospital",
+        "Educational Facilities",
+        "Residential",
+        "Data Centers"
+      ],
+      "key_lesson": "Effective coordination between design teams is crucial to avoid costly changes during construction.",
+      "prevention_action": "Implement a collaborative design review process that includes all relevant stakeholders to ensure alignment of layouts before finalizing drawings.",
+      "rfi": "RFI-21",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 4058394.0,
+      "trade": "electrical",
+      "question_preview": "Please verify device layout as represented on the electrical drawings will be acceptable to scale for installation and that furniture will match as represented on the permit drawings. If not, please p",
+      "original_summary": "The RFI revealed a costly coordination failure between electrical device layouts and furniture placement, leading to a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of inadequate design documentation leading to the omission of elements like mullion covers is a common problem across various types of construction projects. While the context of a Medical Office Building (MOB) adds specific considerations, the root cause of design oversight and documentation gaps is a universal challenge in the construction industry.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Thorough and accurate design documentation is critical to prevent costly change orders due to omissions.",
+      "prevention_action": "Implement a rigorous design review process to ensure all elements are included and accounted for before construction begins.",
+      "rfi": "RFI-55",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 271798.0,
+      "trade": "curtainwall",
+      "question_preview": "Existing Mullion Covers Not Installed",
+      "original_summary": "The failure to install existing mullion covers due to oversight in design documentation resulted in a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issues raised in the RFI regarding flooring transitions and drainage slopes are common challenges in construction projects across various types. While the specific context of a Medical Office Building (MOB) may heighten the importance of these details due to ADA compliance and infection control, the fundamental problem of unclear design specifications and the need for precise coordination in flooring transitions is not unique to MOBs. Such issues can arise in any construction project where flooring and drainage are involved.",
+      "applicable_to": [
+        "Medical Office Building",
+        "Office TI",
+        "Retail",
+        "Hospitality",
+        "Residential",
+        "Industrial"
+      ],
+      "key_lesson": "Clear and detailed design specifications are crucial to avoid costly change orders related to flooring and drainage.",
+      "prevention_action": "Implement a thorough review process for design documents to ensure all critical details, such as flooring transitions and drainage slopes, are clearly specified before construction begins.",
+      "rfi": "RFI-89.1",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 194849.0,
+      "trade": "architectural",
+      "question_preview": "Reference: Floor Plans 1-5/A2.11-A2.15 & Attached Pictures Question 1: As discussed on our check-in meeting on 9/16, please confirm if Schluter transition across whole opening at side doors is accepta",
+      "original_summary": "The RFI resulted from unclear design specifications regarding flooring transitions, leading to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of inadequate design consideration for access and installation of architectural elements like soffits is a common challenge across various construction projects. While the specific context involves a Medical Office Building, the underlying problem of access limitations and design oversight can occur in many types of projects, including office buildings, residential, and commercial spaces. Therefore, this RFI highlights a general coordination failure rather than a unique aspect of MOBs.",
+      "applicable_to": [
+        "Medical Office Building",
+        "Office TI",
+        "Commercial",
+        "Residential",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Ensure thorough site condition assessments and access planning during the design phase to avoid costly change orders.",
+      "prevention_action": "Implement a detailed review process for design documents that includes site access evaluations and coordination with construction teams before finalizing designs.",
+      "rfi": "RFI-16",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 118846.0,
+      "trade": "architectural, structural",
+      "question_preview": "The soffit that supports the mecho shade is drawn as a single drop with a kicker. There is not enough access to install this soffit drop between the building's perimeter beam and the exterior wall. Al",
+      "original_summary": "The costly issue arose from a design oversight regarding soffit installation access, leading to a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of inadequate initial design specifications leading to noise mitigation concerns is a common challenge across various types of construction projects. While the context of the project (medical office building) adds specific considerations like infection control and ADA compliance, the fundamental problem of design documentation gaps and the need for clarification on specifications is not unique to medical office buildings. Similar issues can arise in any construction project where design specifications are incomplete or unclear.",
+      "applicable_to": [
+        "MOB",
+        "Office TI",
+        "Ground-Up",
+        "Hybrid/Existing Structure",
+        "Data Center TI"
+      ],
+      "key_lesson": "Ensure thorough and clear design specifications to avoid costly change orders due to inadequate initial documentation.",
+      "prevention_action": "Implement a rigorous review process for design specifications before finalizing submittals to ensure all necessary details, including noise mitigation measures, are clearly outlined.",
+      "rfi": "RFI-37",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 18237.0,
+      "trade": null,
+      "question_preview": "Comment on Submittal #233000-02 -Level 2 and 3 Ductwork Shop Drawings stated \"Per Salters recommendations, ISI has directed to provide gypsum board backed ACT (NRC 0.90 or above) to mitigate any poten",
+      "original_summary": "The RFI resulted from inadequate initial design specifications for noise mitigation, leading to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of miscommunication regarding the scope of work and discrepancies between contract drawings and submittal comments is a common occurrence across various types of construction projects. While the specific details pertain to a Medical Office Building, the underlying problem of coordination failures and design documentation gaps can happen in any project type.",
+      "applicable_to": [
+        "MOB",
+        "Office TI",
+        "Ground-Up",
+        "Hybrid/Existing Structure",
+        "Data Center TI"
+      ],
+      "key_lesson": "Clear communication and alignment between contract documents and submittals are critical to avoid costly change orders.",
+      "prevention_action": "Implement a rigorous review process for all submittals against contract documents to ensure consistency and clarity before approval.",
+      "rfi": "RFI-139",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 17500.0,
+      "trade": "architectural",
+      "question_preview": "Reference: Submittal 064116-03-1 - Millwork Shop Drawings (Level 1) Enlarged Lobby Plan / A5.11 Detail 11 & 13/A5.12 Detail 1/A9.12 Question: RMW submittal comment for 064116-03-1 - Millwork Shop Draw",
+      "original_summary": "The RFI revealed a significant miscommunication regarding the scope of AV niches, leading to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of inadequate design specifications and coordination between architectural and structural teams is a common problem that can occur across various types of construction projects. While the specific context of Cold Roll Channels at Double Stud Sound Walls may relate to the MOB's unique requirements, the underlying issue of design and coordination failures is not exclusive to medical office buildings and can be found in many construction scenarios.",
+      "applicable_to": [
+        "MOB",
+        "Office TI",
+        "Ground-Up",
+        "Hybrid/Existing Structure",
+        "Data Center TI"
+      ],
+      "key_lesson": "Effective communication and coordination between design teams are crucial to avoid costly change orders.",
+      "prevention_action": "Implement regular design coordination meetings and thorough review processes to ensure all specifications are clearly defined and agreed upon by all parties involved.",
+      "rfi": "RFI-57",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 10844.0,
+      "trade": "architectural",
+      "question_preview": "Cold Roll Channel (CRC) at Double Stud Sound Walls",
+      "original_summary": "The RFI regarding Cold Roll Channels at Double Stud Sound Walls resulted in a costly change order due to inadequate design specifications.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of relocating mechanical equipment due to inadequate design coordination is a common challenge across various types of construction projects. While the specific context involves a medical office building, the root cause of insufficient coordination between architectural and mechanical teams is a universal problem that can occur in any project type, regardless of the specific requirements or finishes involved.",
+      "applicable_to": [
+        "Medical Office Building",
+        "Office TI",
+        "Retail",
+        "Hospital",
+        "Educational Facilities",
+        "Residential",
+        "Industrial"
+      ],
+      "key_lesson": "Improved collaboration and communication between design teams can mitigate costly relocation issues.",
+      "prevention_action": "Implement regular coordination meetings and integrated design reviews between architectural and mechanical teams to ensure alignment on design intent and installation requirements.",
+      "rfi": "RFI-110",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 8427.0,
+      "trade": "architectural",
+      "question_preview": "Reference: Mechanical 3rd Floor Plan/M2.03. & Floor Plan/A2.13 Question: The mechanical drawings indicate a FCU located in the GN RR 3023, which has a hard lit ceiling. To improve accessibility for ov",
+      "original_summary": "The costly relocation of an FCU due to inadequate design coordination highlights the need for improved collaboration between architectural and mechanical teams.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The omission of access panel locations in design documents is a common issue that can occur across various types of construction projects. It reflects a general design documentation gap rather than a specific challenge unique to Medical Office Buildings. Access panels are a standard requirement in many building types for maintenance access to MEP systems, making this issue broadly applicable.",
+      "applicable_to": [
+        "Medical Office Building",
+        "Office TI",
+        "Retail",
+        "Residential",
+        "Industrial"
+      ],
+      "key_lesson": "Ensure that all necessary access points are clearly indicated in design documents to avoid costly change orders.",
+      "prevention_action": "Implement a checklist during the design review process to confirm that all access panel locations are specified in the reflected ceiling plans.",
+      "rfi": "RFI-100",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 5952.0,
+      "trade": "architectural",
+      "question_preview": "Reference: Reflected Celling Plans - Floors 1-3/ A2.31-A2.35 Question: Access Panels are not indicated in the RCPs. Please provide the specific locations where access panels should be installed in the",
+      "original_summary": "The omission of access panel locations in the reflected ceiling plans resulted in a costly change order due to a preventable design oversight.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of insufficient design details regarding sound terminations and insulation requirements is a common problem across various types of construction projects. While the context of the RFI is within a Medical Office Building, the underlying issue of design documentation gaps and the need for clear specifications can occur in any construction project, regardless of type.",
+      "applicable_to": [
+        "Medical Office Building",
+        "Office TI",
+        "Retail",
+        "Residential",
+        "Industrial",
+        "Ground-Up"
+      ],
+      "key_lesson": "Ensure comprehensive design documentation to avoid costly change orders due to insufficient details.",
+      "prevention_action": "Implement a thorough review process for design documents to identify and address potential gaps before construction begins.",
+      "rfi": "RFI-53",
+      "project": "Intuitive Surgical MOB",
+      "co_amount": 5612.0,
+      "trade": "architectural",
+      "question_preview": "Level 2 Beam Pocket Sound Terminations",
+      "original_summary": "The RFI regarding sound terminations led to a costly change order due to insufficient design details.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of missing details in fabrication drawings, particularly related to existing structures and the need for coordination with as-built conditions, is a common challenge in hybrid projects that involve existing structures. This is especially true when dealing with structural tie-ins and discrepancies that arise from working with previously constructed elements.",
+      "applicable_to": [
+        "Hybrid",
+        "Existing Structure",
+        "Office"
+      ],
+      "key_lesson": "Ensure all structural details are clearly specified in fabrication drawings to avoid costly rework.",
+      "prevention_action": "Implement a thorough review process for fabrication drawings to ensure all necessary details are included before issuance.",
+      "rfi": "RFI-2",
+      "project": "Silicon Valley Office",
+      "co_amount": 215946.0,
+      "trade": null,
+      "question_preview": "Ref: Attached file GPLA SSK_A02_DoublerPlate on Gusset_REV24-02-14.pdf Doubler plates as shown in Detail 8/PK2-S5.3.1 per PCR #2 and Bulletin #3 were not called out in previously issued fabrication er",
+      "original_summary": "The omission of doubler plate details in the design documents resulted in a costly change order due to necessary rework.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of needing to adjust storm drainage design due to unverified existing conditions is particularly relevant to hybrid projects that involve working with existing structures. This scenario often leads to as-built discrepancies and requires careful coordination with existing conditions, which is a hallmark of hybrid construction projects. The specific mention of existing drainage infrastructure and the need for modifications based on field conditions further emphasizes its project-type specificity.",
+      "applicable_to": [
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Thorough verification of existing site conditions is crucial to avoid costly change orders.",
+      "prevention_action": "Implement a rigorous site verification process prior to finalizing design documents to ensure alignment with actual conditions.",
+      "rfi": "RFI-115",
+      "project": "Silicon Valley Office",
+      "co_amount": 210975.0,
+      "trade": null,
+      "question_preview": "Ref: Attached RFI-115 Markup Revision 11/21/24; At the marked location, (E) SD Invert sits lower than (N) SD Invert. In order to address field conditions of (E) SD pipe invert, please confirm it is ac",
+      "original_summary": "The need to adjust the storm drainage design due to unverified existing conditions led to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The RFI addresses issues related to existing structural conditions and the need for detailed infill specifications, which are particularly relevant to projects involving existing structures. The complexities of working with as-built discrepancies and the coordination required for infilling existing openings are unique challenges faced in hybrid or renovation projects, making this issue significantly more likely in this project type.",
+      "applicable_to": [
+        "Hybrid/Existing Structure",
+        "Office with Existing Structure"
+      ],
+      "key_lesson": "Ensure detailed structural infill specifications are included in architectural drawings for projects involving existing structures.",
+      "prevention_action": "Conduct thorough reviews of architectural drawings to ensure all necessary structural details are provided before construction begins.",
+      "rfi": "RFI-6",
+      "project": "Silicon Valley Office",
+      "co_amount": 177121.0,
+      "trade": "structural",
+      "question_preview": "Ref: A2.0.2, S1.4A, S1.4B, attached Rev1 file under References; Questions: 1) The architectural edge-of-slab drawings, PK2-A2.0.2, call out the shaded areas at the Southwest and Southeast corners of t",
+      "original_summary": "The lack of detailed structural infill specifications in the design led to a costly change order due to necessary rework.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of beam penetration at joint locations is particularly relevant to hybrid projects that involve existing structures, where as-built discrepancies and coordination with existing conditions are common challenges. This situation is less likely to arise in ground-up construction or other project types that do not involve integrating new elements with existing frameworks.",
+      "applicable_to": [
+        "Hybrid/Existing Structure",
+        "Office TI"
+      ],
+      "key_lesson": "Ensure thorough coordination and communication regarding structural integrations with existing elements during the design phase.",
+      "prevention_action": "Implement a detailed review process for structural connections and penetrations in existing structures during the design phase to identify potential conflicts early.",
+      "rfi": "RFI-52.2",
+      "project": "Silicon Valley Office",
+      "co_amount": 175614.0,
+      "trade": null,
+      "question_preview": "Beam Penetration at Joint Locations (EIFS APPLICATION)",
+      "original_summary": "The RFI regarding beam penetration at joint locations led to a costly change order due to design oversight and lack of coordination.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The RFI addresses critical safety compliance issues regarding egress paths, which are fundamental requirements in all construction projects regardless of type. Egress paths must adhere to fire/life safety codes, which are universally applicable across various project types, including offices, residential buildings, and industrial facilities. While the context of the existing structure may introduce specific challenges, the underlying principles of egress and safety compliance are common to all construction projects.",
+      "applicable_to": [
+        "office",
+        "residential",
+        "industrial",
+        "commercial",
+        "healthcare"
+      ],
+      "key_lesson": "Ensuring compliance with egress and safety regulations is essential in all construction projects.",
+      "prevention_action": "Conduct thorough reviews of egress requirements during the design phase to ensure compliance with safety codes.",
+      "rfi": "RFI-145",
+      "project": "Silicon Valley Office",
+      "co_amount": 111935.0,
+      "trade": null,
+      "question_preview": "Ref: Attached markup; SmithGroup and Langan Team, please confirm: 1) Please confirm the outdoor landscape area will require two paths of egress from concrete patio. 2) Please confirm paths of egress a",
+      "original_summary": "The RFI highlights critical safety compliance issues regarding egress paths that must be adhered to for fire/life safety.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The conflict between the lobby elevator shaft and mass timber roof design is significantly influenced by the existing structure and the unique characteristics of hybrid projects, particularly those involving mass timber elements. This type of issue is more likely to arise in projects that integrate new structural elements with existing conditions, as seen in this case.",
+      "applicable_to": [
+        "Hybrid/Existing Structure",
+        "Office with Existing Structure"
+      ],
+      "key_lesson": "Inadequate initial design coordination can lead to costly conflicts in projects involving existing structures and new materials.",
+      "prevention_action": "Enhance initial design coordination efforts by involving all relevant stakeholders early in the design process to address potential conflicts with existing structures.",
+      "rfi": "RFI-8",
+      "project": "Silicon Valley Office",
+      "co_amount": 92894.0,
+      "trade": "architectural, structural",
+      "question_preview": "Lobby Elevator Shaft Conflict with Mass Timber Roof",
+      "original_summary": "The conflict between the lobby elevator shaft and mass timber roof design resulted in a costly change order due to inadequate initial design coordination.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of beam penetrations at joint locations is particularly relevant to projects involving existing structures, where as-built discrepancies and coordination with existing conditions are common challenges. This RFI highlights a specific failure in design review that is more likely to occur in hybrid projects due to the complexities of integrating new elements with existing frameworks.",
+      "applicable_to": [
+        "Hybrid/Existing Structure",
+        "Office TI"
+      ],
+      "key_lesson": "Thorough design reviews are essential to prevent costly coordination failures in projects involving existing structures.",
+      "prevention_action": "Implement a rigorous review process for shop drawings that includes cross-disciplinary coordination checks.",
+      "rfi": "RFI-52",
+      "project": "Silicon Valley Office",
+      "co_amount": 90540.0,
+      "trade": "structural_steel",
+      "question_preview": "Beam Penetration at Joint Locations (Metal Panel Shop Drawings)",
+      "original_summary": "The costly change order resulted from a coordination failure regarding beam penetrations at joint locations, highlighting the need for improved design reviews.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The RFI addresses issues related to below-grade planters, which are particularly relevant to projects involving existing structures where as-built discrepancies and coordination with existing conditions are common. The confusion arising from unclear specifications for below-grade elements is a challenge that is more likely to occur in hybrid projects like this one, where existing conditions must be integrated with new work.",
+      "applicable_to": [
+        "Hybrid/Existing Structure",
+        "Office TI"
+      ],
+      "key_lesson": "Clear and detailed specifications for existing conditions are crucial to avoid costly change orders.",
+      "prevention_action": "Ensure that construction documents include comprehensive details and specifications for all elements, particularly those interacting with existing structures.",
+      "rfi": "RFI-113",
+      "project": "Silicon Valley Office",
+      "co_amount": 71971.0,
+      "trade": null,
+      "question_preview": "RFI for record -Modified Planter Scope",
+      "original_summary": "The RFI for the modified planter scope resulted from unclear specifications for below-grade planters, leading to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of coordination failures and clarity in design specifications regarding UL design usage is a common challenge across various types of construction projects. While this RFI is related to a hybrid project with existing structures, the underlying problem of ensuring all trades are aligned and that design specifications are clear is a universal concern in construction.",
+      "applicable_to": [
+        "Data Center TI",
+        "Office TI",
+        "MOB",
+        "Ground-Up",
+        "Hybrid/Existing Structure"
+      ],
+      "key_lesson": "Effective coordination and clear design specifications are critical to avoid costly change orders.",
+      "prevention_action": "Implement a robust coordination process involving all trades early in the design phase to clarify specifications and expectations.",
+      "rfi": "RFI-127",
+      "project": "Silicon Valley Office",
+      "co_amount": 47010.0,
+      "trade": null,
+      "question_preview": "Can we use the UL design V497 in the 1st floor MDF (102) and Fire Command Center (104) along the exterior?",
+      "original_summary": "The RFI revealed a costly coordination failure regarding UL design specifications that led to a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue of switching from wood to metal kickers due to design oversight is closely tied to the complexities of working with existing structures, where as-built discrepancies and material properties must be carefully considered. This is particularly relevant in hybrid projects that involve significant coordination with existing conditions, making it a unique challenge for this project type.",
+      "applicable_to": [
+        "Hybrid/Existing Structure",
+        "Office TI"
+      ],
+      "key_lesson": "Inadequate consideration of material properties during design can lead to costly change orders in projects involving existing structures.",
+      "prevention_action": "Implement thorough material property assessments and coordination reviews during the design phase to mitigate potential discrepancies.",
+      "rfi": "RFI-224",
+      "project": "Silicon Valley Office",
+      "co_amount": 45550.0,
+      "trade": "structural",
+      "question_preview": "Exterior Wall Bracing at GL 3.6 and Nanawall",
+      "original_summary": "The switch from wood to metal kickers due to design oversight resulted in a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The RFI addresses specific issues related to vapor mitigation and the definition of construction stages, which are particularly relevant to ground-up construction projects where new foundations and structural coordination are critical. The need for clarity in scope regarding vapor barriers and construction stages is more pronounced in this context, as it directly impacts the construction sequence and the integration of tenant improvements with core and shell work.",
+      "applicable_to": [
+        "Ground-Up",
+        "Office"
+      ],
+      "key_lesson": "Clear definitions in design documents regarding scope and construction stages are essential to avoid costly change orders.",
+      "prevention_action": "Ensure comprehensive review and clarification of design documents before construction begins, particularly for critical elements like vapor mitigation.",
+      "rfi": "RFI-0618",
+      "project": "Southline Office",
+      "co_amount": 687762.0,
+      "trade": null,
+      "question_preview": "Reference: VM1.02, VM 1.03, A2.01S Q1: Please confirm that the \"Second Stage\" is defined as area in yellow shown on VM1.03, as there is interstitial fill through the entirety of the SOG. Q2: Please co",
+      "original_summary": "The RFI resulted from unclear scope definitions regarding vapor mitigation, leading to a costly change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The discrepancies between architectural and structural plans, as well as the need for rework due to misalignment, are common issues that can occur in any construction project, regardless of type. These types of coordination failures and design documentation gaps are not unique to ground-up office projects and can arise in various contexts.",
+      "applicable_to": [
+        "ground-up",
+        "office",
+        "retail",
+        "residential",
+        "industrial",
+        "infrastructure"
+      ],
+      "key_lesson": "Thorough coordination and review of architectural and structural plans are essential to prevent costly discrepancies.",
+      "prevention_action": "Implement a comprehensive design review process that includes cross-discipline coordination meetings to identify potential conflicts before construction begins.",
+      "rfi": "RFI-0968",
+      "project": "Southline Office",
+      "co_amount": 510169.0,
+      "trade": null,
+      "question_preview": "Reference: A2.07, A2.07S, A8.11 Detail 14, A4.04 Detail 2, RFI 0712 Q1: The north penthouse curb and framing are not aligning due to architectural and slab plan discrepancies. Where the framing extend",
+      "original_summary": "The RFI revealed critical discrepancies between architectural and structural plans, leading to a costly change order due to necessary rework.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of unclear design communication and documentation gaps regarding the bird frit treatment on exterior glazing is a common challenge across various types of construction projects. This type of coordination failure can occur in any project where design details are not clearly communicated, leading to confusion and costly change orders.",
+      "applicable_to": [
+        "ground-up",
+        "office",
+        "retail",
+        "residential",
+        "industrial",
+        "institutional"
+      ],
+      "key_lesson": "Clear communication and thorough documentation are essential to prevent costly change orders in construction projects.",
+      "prevention_action": "Implement a robust design review process that includes detailed documentation and confirmation of design elements with all relevant stakeholders.",
+      "rfi": "RFI-0672",
+      "project": "Southline Office",
+      "co_amount": 494778.0,
+      "trade": "curtainwall",
+      "question_preview": "Ref: ASK-500 Per previous coordination, please confirm the attached documents clarify the extent of the bird frit treatment on the exterior glazing for B1.",
+      "original_summary": "The RFI regarding the bird frit treatment on exterior glazing resulted in a costly change order due to a lack of clear design communication.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The RFI highlights a coordination failure between trades, which is a common issue across all types of construction projects. While the specific context involves architectural and structural coordination in a ground-up office project, the underlying problem of inadequate communication and coordination is not unique to this project type and can occur in any construction setting.",
+      "applicable_to": [
+        "ground-up",
+        "office",
+        "retail",
+        "industrial",
+        "residential",
+        "infrastructure"
+      ],
+      "key_lesson": "Effective communication and coordination between trades are essential to prevent costly change orders.",
+      "prevention_action": "Implement regular coordination meetings and establish clear communication protocols among all trades involved in the project.",
+      "rfi": "RFI-1651",
+      "project": "Southline Office",
+      "co_amount": 474694.0,
+      "trade": "architectural, landscaping, structural",
+      "question_preview": "REF: Site - Offsite Current Set: L1.10, 6/S0.01, 7/S0.01 POST TO: Site - Offsite Current Set: L1.10, 6/S0.01, 7/S0.01 Please review the attached file and provide responses to Items 1 and 2 per BrightV",
+      "original_summary": "The RFI highlights a costly coordination failure between trades that resulted in a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issues raised in the RFI relate to the use of non-standard components, warranty concerns, and coordination failures between design and construction teams. These problems are common across various types of construction projects, not just ground-up office projects. The need for clear specifications and adherence to standard parts is a universal concern in construction.",
+      "applicable_to": [
+        "ground-up",
+        "office",
+        "commercial",
+        "residential",
+        "infrastructure"
+      ],
+      "key_lesson": "Ensure that all components used in construction are standard and well-coordinated with design specifications to avoid warranty issues and costly change orders.",
+      "prevention_action": "Implement a thorough review process for all design specifications and components before construction begins to ensure compliance with industry standards.",
+      "rfi": "RFI-1651.2",
+      "project": "Southline Office",
+      "co_amount": 474694.0,
+      "trade": "architectural, civil_site, landscaping",
+      "question_preview": "REF: Site - Offsite Current Set: L1.10, S0.01 POST TO: Site - Offsite Current Set: L1.10, S0.01 Please review the attached file. 1) RFI 1651.1 for Omega 2 Fence shows 1.75x1.75\" 'rub bars' installed a",
+      "original_summary": "The RFI revealed critical issues with non-standard components that void warranties, leading to a costly change order due to design changes.",
+      "success": true
+    },
+    {
+      "classification": "project_type_specific",
+      "confidence": "high",
+      "reasoning": "The issue revolves around the coordination of existing utilities with lime treatment requirements, which is particularly relevant to ground-up construction projects where new foundations and site preparation are involved. The need for specific clearance and treatment adjustments due to existing utilities is a common challenge in new construction but is less likely to be a concern in renovation or interior fit-out projects.",
+      "applicable_to": [
+        "Ground-Up",
+        "Site Development"
+      ],
+      "key_lesson": "Thorough utility coordination is critical in ground-up construction to avoid costly change orders.",
+      "prevention_action": "Conduct comprehensive utility surveys and integrate utility management into the early planning stages of ground-up projects.",
+      "rfi": "RFI-1521",
+      "project": "Southline Office",
+      "co_amount": 439635.0,
+      "trade": null,
+      "question_preview": "Reference Drawing: Offsite C4.3 Requesting clarification or alternate details where lime treatment cannot occur offsite due to existing utilities. Mixers need 1' minimum clearance between bottom of tr",
+      "original_summary": "The costly issue arose from inadequate coordination of existing utilities with the lime treatment requirements, leading to a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of unclear design specifications, particularly regarding paint requirements, is a common problem across various types of construction projects. It highlights a general failure in design documentation that can lead to costly change orders, regardless of the project type. This ambiguity in specifications is not unique to ground-up office projects but can occur in any construction scenario where design details are insufficiently communicated.",
+      "applicable_to": [
+        "ground-up",
+        "office",
+        "retail",
+        "residential",
+        "industrial",
+        "infrastructure"
+      ],
+      "key_lesson": "Clear and detailed design specifications are essential to avoid costly change orders and project delays.",
+      "prevention_action": "Implement a thorough review process for design documents to ensure all specifications are clearly defined and communicated before construction begins.",
+      "rfi": "RFI-1531",
+      "project": "Southline Office",
+      "co_amount": 306156.0,
+      "trade": "architectural",
+      "question_preview": "Reference: SLP1 - RFI 1531 - PSD Loading Dock Paint Confirmation Sheet A4.05 Marked Up Picture in Sheet A4.05 Background: The current design did not clarify any paint to be installed in the loading do",
+      "original_summary": "The lack of clarity in paint specifications for the loading dock led to a costly change order due to design oversight.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of compliance with seismic rebar spacing requirements is not unique to ground-up office projects; it can occur in any construction project where structural elements are designed to meet seismic codes. The oversight during the design review process that led to the incorrect spacing of rebar ties is a common risk across various project types, particularly those involving structural components. Therefore, while the specifics of the project may influence the context, the underlying issue is broadly applicable.",
+      "applicable_to": [
+        "ground-up",
+        "hybrid/existing structure",
+        "office",
+        "multi-family residential",
+        "commercial",
+        "industrial"
+      ],
+      "key_lesson": "Ensure thorough design reviews that specifically check for compliance with all relevant codes to prevent costly errors.",
+      "prevention_action": "Implement a checklist during the design review process that includes verification of seismic requirements and other critical code compliance factors.",
+      "rfi": "RFI-1268",
+      "project": "Southline Office",
+      "co_amount": 301656.0,
+      "trade": null,
+      "question_preview": "Reference: SLP1 - RFI1268 - PSD Floor Boundary Remediation Confirmation Sheet A2.01 Background: An alternate rebar configuration for the inner, horizontal ties at these eight(8) boundaries were propos",
+      "original_summary": "The failure to comply with seismic rebar spacing requirements during the design phase led to a costly change order for error correction.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issue of insufficient coordination between structural and fire protection design teams, leading to conflicts in required clearances, is a common challenge across all types of construction projects. While the specifics of the designs may vary, the fundamental need for coordination among different trades is universal in construction.",
+      "applicable_to": [
+        "ground-up",
+        "office",
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "key_lesson": "Effective coordination among design teams is crucial to avoid conflicts and costly change orders.",
+      "prevention_action": "Implement regular interdisciplinary coordination meetings during the design phase to identify and resolve potential conflicts early.",
+      "rfi": "RFI-0069",
+      "project": "Southline Office",
+      "co_amount": 294704.0,
+      "trade": "structural",
+      "question_preview": "Ref: FP1.01 (95% CD drawing dated 08.26.22) There's a minimum clearance required above the unit substation in electrical substation room,. Therefore the fire protection lines need to be within the bea",
+      "original_summary": "The costly issue arose from a lack of coordination between structural and fire protection designs, resulting in a significant change order.",
+      "success": true
+    },
+    {
+      "classification": "broadly_applicable",
+      "confidence": "high",
+      "reasoning": "The issues raised in the RFI regarding backfill material, compaction requirements, and concrete mix design are common challenges faced across various construction projects, not just ground-up office projects. The need for clarity in design documents and specifications is a universal concern that can lead to costly change orders in any type of construction.",
+      "applicable_to": [
+        "ground-up",
+        "office",
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "key_lesson": "Ensure clarity and completeness in design documentation to prevent costly change orders.",
+      "prevention_action": "Implement a thorough review process for design documents to confirm all specifications are clear and unambiguous before construction begins.",
+      "rfi": "RFI-0197",
+      "project": "Southline Office",
+      "co_amount": 272789.0,
+      "trade": "concrete",
+      "question_preview": "As discussed with Cornerstone Earth group (Nick Devlin) regarding the backfill material for the Manlift pad, please confirm the following: 1) Per drawing MH1-01-2.1, 95% soil compaction is required un",
+      "original_summary": "The RFI regarding backfill material and concrete mix for the manlift pad resulted in a costly change order due to unclear design specifications.",
+      "success": true
+    }
+  ]
+}

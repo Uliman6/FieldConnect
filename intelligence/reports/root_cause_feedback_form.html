@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Root Cause Categorization Feedback</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.5;
+            color: #333;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        h1 { color: #1a1a2e; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 16px; }
+
+        .instructions {
+            background: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 { color: #004085; margin-bottom: 10px; }
+        .instructions ul { margin-left: 20px; color: #004085; }
+        .instructions li { margin-bottom: 5px; }
+
+        .rfi-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .rfi-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .rfi-id { font-weight: bold; font-size: 16px; }
+        .rfi-project {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        .rfi-trade {
+            background: rgba(255,255,255,0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .rfi-body { padding: 20px; }
+
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .rfi-question {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+        }
+
+        .rfi-resolution {
+            background: #f0fff4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #c6f6d5;
+            color: #166534;
+        }
+
+        .llm-extraction {
+            background: #fff7ed;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #fed7aa;
+        }
+        .llm-extraction .label { color: #c2410c; font-weight: 600; }
+        .llm-extraction .value { color: #9a3412; margin-top: 5px; }
+
+        .feedback-section {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #fbbf24;
+        }
+        .feedback-section h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .feedback-section h4::before {
+            content: "✏️";
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #78350f;
+            margin-bottom: 5px;
+        }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d97706;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #92400e;
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+        }
+        .input-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .input-group .hint {
+            font-size: 12px;
+            color: #a16207;
+            margin-top: 4px;
+        }
+
+        .export-section {
+            background: #1a1a2e;
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            position: sticky;
+            bottom: 20px;
+        }
+        .export-section h3 { margin-bottom: 15px; }
+        .export-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background 0.2s;
+        }
+        .export-btn:hover { background: #5a67d8; }
+        .export-btn.secondary {
+            background: transparent;
+            border: 2px solid #667eea;
+        }
+
+        .output-area {
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .output-area.visible { display: block; }
+
+        .category-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .suggestion-chip {
+            background: white;
+            border: 1px solid #d97706;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .suggestion-chip:hover {
+            background: #fef3c7;
+            border-color: #92400e;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Root Cause Categorization Feedback</h1>
+        <p class="subtitle">Help me understand the right level of abstraction for grouping similar RFIs</p>
+
+        <div class="instructions">
+            <h3>How to provide feedback:</h3>
+            <ul>
+                <li><strong>Read each RFI</strong> - Understand the actual issue described</li>
+                <li><strong>Suggest a subcategory</strong> - Something specific enough to be useful, but general enough that multiple RFIs could fall under it</li>
+                <li><strong>Group similar RFIs</strong> - If two RFIs should be the same subcategory, give them the same name</li>
+                <li><strong>Optional notes</strong> - Explain your reasoning if helpful</li>
+            </ul>
+            <p style="margin-top: 15px; color: #004085;">
+                <strong>Goal:</strong> Find the sweet spot between "Missing Drawing Detail" (too broad) and
+                "Footings at a higher elevation than the sidewalk" (too specific/unique)
+            </p>
+        </div>
+
+        <div class="progress-text">Completed: <span id="progress-count">0</span> / <span id="total-count">20</span></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+
+        <div id="rfi-container">
+            <!-- RFIs will be loaded here -->
+        </div>
+
+        <div class="export-section">
+            <h3>Export Your Feedback</h3>
+            <p style="margin-bottom: 15px; opacity: 0.8;">When you're done, click export and paste the result back to me.</p>
+            <button class="export-btn" onclick="exportFeedback()">Export Feedback (JSON)</button>
+            <button class="export-btn secondary" onclick="copyToClipboard()">Copy to Clipboard</button>
+            <div class="output-area" id="output-area"></div>
+        </div>
+    </div>
+
+    <script>
+        // Sample RFIs - diverse across projects and issue types
+        const rfis = [
+            {
+                id: "RFI-26.1",
+                project: "Abbott Alameda Office TI",
+                trade: "concrete, civil_site",
+                question: "Marked Up Pictures Response to RFI 26 provided a re-design of the footing that would leave the footings at a higher elevation than the sidewalk and the sidewalk would still not be ADA compliant. Please provide direction on how to proceed with the concrete sidewalk and curb.",
+                resolution: "See attached RFI Response with revised design showing footing modification to achieve ADA compliant slopes.",
+                llm_condition: "Footings at a higher elevation than the sidewalk, preventing ADA compliance",
+                llm_category: "Existing Conditions Differ"
+            },
+            {
+                id: "RFI-47",
+                project: "Abbott Alameda Office TI",
+                trade: "architectural",
+                question: "During existing conditions survey, we noticed that existing framing only goes to 8' height while RCP calls for 9' ceilings. This will require removal of existing plumbing above and re-installation after new 10' tall studs are installed. Please confirm this is the intended scope.",
+                resolution: "Confirmed. Proceed with demo of existing framing and install new full-height framing to achieve 9' ceiling height per RCP.",
+                llm_condition: "Existing framing only goes to 8' height while RCP calls for 9' ceilings",
+                llm_category: "Existing Conditions Differ"
+            },
+            {
+                id: "RFI-0234",
+                project: "Parkmerced Block 20",
+                trade: "structural",
+                question: "Structural drawings do not show embed plate locations for the steel canopy connections at the main entrance. Please provide embed layout and specifications.",
+                resolution: "See attached SK-S-042 showing embed plate locations, sizes, and anchor requirements for canopy connections.",
+                llm_condition: "Embed plate locations for steel canopy connections not shown on structural drawings",
+                llm_category: "Missing Drawing Detail"
+            },
+            {
+                id: "RFI-0559.4",
+                project: "Parkmerced Block 20",
+                trade: "architectural",
+                question: "Detail 4/A8.2 shows flashing at column finish but does not indicate how flashing terminates at the base. Please clarify flashing detail and termination.",
+                resolution: "Flashing to extend 2\" below finish grade and turn out. See attached detail.",
+                llm_condition: "Flashing termination detail at column base not shown",
+                llm_category: "Missing Drawing Detail"
+            },
+            {
+                id: "RFI-0187",
+                project: "Parkmerced Block 20",
+                trade: "mechanical",
+                question: "Mechanical drawings show ductwork routing through the area where structural drawings indicate a shear wall. Please clarify coordination and provide revised routing.",
+                resolution: "Revise duct routing per attached SK-M-023. Route around shear wall as shown.",
+                llm_condition: "Ductwork routing conflicts with structural shear wall location",
+                llm_category: "MEP Coordination Gap"
+            },
+            {
+                id: "RFI-112",
+                project: "1200 Van Ness",
+                trade: "concrete",
+                question: "PT cable blew out during stressing operation at grid B-7 level 5. Strand ruptured at anchor. Please provide repair procedure.",
+                resolution: "Install replacement strand per attached repair detail. Coordinate with PT inspector for re-stress sequence.",
+                llm_condition: "PT cable blew out during stressing operation, strand ruptured at anchor",
+                llm_category: "Field Damage/Error"
+            },
+            {
+                id: "RFI-098",
+                project: "1200 Van Ness",
+                trade: "architectural",
+                question: "Door schedule calls for 3'-0\" x 7'-0\" door at Room 405 but field measurement shows only 2'-10\" clear width available due to existing column. Please advise.",
+                resolution: "Revise door to 2'-8\" width. ADA waiver required - coordinate with owner.",
+                llm_condition: "Door width conflicts with existing column - insufficient clear width",
+                llm_category: "Dimensional Conflict"
+            },
+            {
+                id: "RFI-0445",
+                project: "Parkmerced Block 20",
+                trade: "concrete",
+                question: "Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall. Please provide direction.",
+                resolution: "Extend curb to meet slab depression edge. See attached detail for curb extension.",
+                llm_condition: "Curb installed short of slab depression, gap to terracotta framing",
+                llm_category: "Dimensional Conflict"
+            },
+            {
+                id: "RFI-067",
+                project: "1200 Van Ness",
+                trade: "electrical",
+                question: "Electrical panel EP-2A conflicts with structural beam at Level 3. Panel cannot be installed at shown location. Please provide alternate location.",
+                resolution: "Relocate panel 3'-0\" south as shown on attached SK. Coordinate conduit routing.",
+                llm_condition: "Electrical panel location conflicts with structural beam",
+                llm_category: "MEP Coordination Gap"
+            },
+            {
+                id: "RFI-0298",
+                project: "Parkmerced Block 20",
+                trade: "architectural",
+                question: "Blocking layout for grab bars in Type A accessible restrooms is not shown on drawings. Please provide blocking requirements and locations.",
+                resolution: "See attached blocking diagram. Provide 3/4\" plywood backing at all grab bar locations per ADA requirements.",
+                llm_condition: "Blocking layout for grab bars not shown on drawings",
+                llm_category: "Missing Drawing Detail"
+            },
+            {
+                id: "RFI-145",
+                project: "1200 Van Ness",
+                trade: "mechanical",
+                question: "Fire damper locations are not shown on mechanical drawings at rated corridor walls. Please confirm FD requirements and locations.",
+                resolution: "Fire dampers required at all duct penetrations through 1-hr rated corridors. See attached FD schedule.",
+                llm_condition: "Fire damper locations not shown at rated corridor walls",
+                llm_category: "Missing Drawing Detail"
+            },
+            {
+                id: "RFI-0512",
+                project: "Parkmerced Block 20",
+                trade: "concrete",
+                question: "Anchor bolt layout for equipment pad at mechanical room does not match equipment submittal. Equipment requires (6) 3/4\" anchors but drawings show (4) 1/2\" anchors.",
+                resolution: "Revise to (6) 3/4\" anchors per equipment requirements. See attached revised layout.",
+                llm_condition: "Anchor bolt layout does not match equipment submittal requirements",
+                llm_category: "Missing Drawing Detail"
+            },
+            {
+                id: "RFI-203",
+                project: "1200 Van Ness",
+                trade: "architectural",
+                question: "Wall type at elevator lobby is shown as Type W-1 (non-rated) but elevator shaft requires 2-hr separation. Please clarify wall type.",
+                resolution: "Revise to Type W-3 (2-hr rated) at elevator lobby. Update door hardware accordingly.",
+                llm_condition: "Wall type shown does not meet required fire rating at elevator lobby",
+                llm_category: "Code/Inspector Requirement"
+            },
+            {
+                id: "RFI-0623",
+                project: "Parkmerced Block 20",
+                trade: "structural",
+                question: "Seismic bracing details for rooftop mechanical equipment are not shown on structural drawings. Units require anchorage per CBC.",
+                resolution: "See attached SK-S-089 for seismic anchorage details. Coordinate with mechanical for equipment weights.",
+                llm_condition: "Seismic bracing details for rooftop equipment not shown",
+                llm_category: "Missing Drawing Detail"
+            },
+            {
+                id: "RFI-178",
+                project: "1200 Van Ness",
+                trade: "concrete",
+                question: "Existing foundation elevation discovered during excavation is 6\" higher than shown on geotech report. This affects new footing design. Please advise.",
+                resolution: "Revise footing depth per attached structural SK. Additional excavation required.",
+                llm_condition: "Existing foundation elevation differs from geotech report",
+                llm_category: "Existing Conditions Differ"
+            },
+            {
+                id: "RFI-0701",
+                project: "Parkmerced Block 20",
+                trade: "architectural",
+                question: "Ceiling height at corridor shown as 9'-0\" AFF but ductwork at 8'-4\" prevents this height. Please confirm acceptable ceiling height.",
+                resolution: "Lower ceiling to 8'-0\" AFF at corridor to accommodate ductwork. Revise RCP.",
+                llm_condition: "Ceiling height conflicts with ductwork elevation",
+                llm_category: "MEP Coordination Gap"
+            },
+            {
+                id: "RFI-089",
+                project: "Abbott Alameda Office TI",
+                trade: "architectural",
+                question: "Interior partition at grid C-4 shown on A2.1 but not on A4.1 demo plan. Please confirm if existing wall to remain or be demolished.",
+                resolution: "Existing wall to be demolished. Add to demo scope.",
+                llm_condition: "Partition shown on architectural plan but missing from demo plan",
+                llm_category: "Conflicting Documents"
+            },
+            {
+                id: "RFI-256",
+                project: "1200 Van Ness",
+                trade: "plumbing",
+                question: "Sanitary waste line routing shown on P2.1 conflicts with structural beam at Level 2. Insufficient clearance for pipe slope. Please provide alternate routing.",
+                resolution: "Reroute waste line per attached P-SK-012. Core through beam with structural approval.",
+                llm_condition: "Waste line routing conflicts with structural beam - insufficient slope clearance",
+                llm_category: "MEP Coordination Gap"
+            },
+            {
+                id: "RFI-0834",
+                project: "Parkmerced Block 20",
+                trade: "electrical",
+                question: "Light fixture type LF-4 shown on E3.1 is discontinued by manufacturer. Please provide acceptable alternate.",
+                resolution: "Substitute with Model XYZ per attached spec sheet. Maintain same mounting and circuiting.",
+                llm_condition: "Specified light fixture discontinued by manufacturer",
+                llm_category: "Scope Gap"
+            },
+            {
+                id: "RFI-312",
+                project: "1200 Van Ness",
+                trade: "architectural",
+                question: "Owner requested addition of card reader at main entrance doors. This was not in original scope. Please confirm location and provide backing requirements.",
+                resolution: "Add card reader per owner directive. See attached for location and blocking. Issue PCO for added scope.",
+                llm_condition: "Owner requested card reader addition not in original scope",
+                llm_category: "Owner Request"
+            }
+        ];
+
+        // Suggested subcategories for quick selection
+        const suggestedSubcategories = [
+            "Existing elevation differs from design",
+            "Existing framing height mismatch",
+            "Embed/anchor layout missing",
+            "Blocking/backing not detailed",
+            "MEP routing conflicts with structure",
+            "Fire rating not specified",
+            "Seismic anchorage not detailed",
+            "Equipment anchor mismatch",
+            "Ceiling/duct height conflict",
+            "Demo scope unclear",
+            "Wall type rating error",
+            "Pipe routing clearance issue",
+            "PT stressing damage",
+            "Door/opening size conflict",
+            "Flashing/waterproofing detail missing",
+            "Fire damper locations missing",
+            "Product discontinued/unavailable",
+            "Owner-requested addition",
+            "Curb/slab dimensional error"
+        ];
+
+        function renderRFIs() {
+            const container = document.getElementById('rfi-container');
+            document.getElementById('total-count').textContent = rfis.length;
+
+            rfis.forEach((rfi, index) => {
+                const card = document.createElement('div');
+                card.className = 'rfi-card';
+                card.innerHTML = `
+                    <div class="rfi-header">
+                        <span class="rfi-id">${rfi.id}</span>
+                        <span class="rfi-project">${rfi.project}</span>
+                        <span class="rfi-trade">${rfi.trade}</span>
+                    </div>
+                    <div class="rfi-body">
+                        <div class="section-label">RFI Question</div>
+                        <div class="rfi-question">${rfi.question}</div>
+
+                        <div class="section-label">Resolution</div>
+                        <div class="rfi-resolution">${rfi.resolution}</div>
+
+                        <div class="llm-extraction">
+                            <div class="label">Current LLM Extraction (too specific?):</div>
+                            <div class="value">"${rfi.llm_condition}"</div>
+                            <div style="margin-top: 8px; font-size: 12px; color: #c2410c;">
+                                Category: ${rfi.llm_category}
+                            </div>
+                        </div>
+
+                        <div class="feedback-section">
+                            <h4>Your Feedback</h4>
+
+                            <div class="input-group">
+                                <label for="subcat-${index}">Suggested Subcategory Name</label>
+                                <input type="text" id="subcat-${index}"
+                                    placeholder="e.g., 'Existing elevation conflicts with design'"
+                                    onchange="updateProgress()">
+                                <div class="hint">What would you call this type of issue? (General enough to group similar RFIs)</div>
+                                <div class="category-suggestions">
+                                    ${suggestedSubcategories.slice(0, 8).map(s =>
+                                        `<span class="suggestion-chip" onclick="selectSuggestion(${index}, '${s}')">${s}</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="notes-${index}">Notes (optional)</label>
+                                <textarea id="notes-${index}"
+                                    placeholder="Any reasoning or similar RFIs this should group with..."></textarea>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="group-${index}">Group With (RFI IDs)</label>
+                                <input type="text" id="group-${index}"
+                                    placeholder="e.g., RFI-47, RFI-178">
+                                <div class="hint">If this should be grouped with other RFIs above, list them</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function selectSuggestion(index, value) {
+            document.getElementById(`subcat-${index}`).value = value;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let completed = 0;
+            rfis.forEach((_, index) => {
+                if (document.getElementById(`subcat-${index}`).value.trim()) {
+                    completed++;
+                }
+            });
+            document.getElementById('progress-count').textContent = completed;
+            document.getElementById('progress-fill').style.width = `${(completed / rfis.length) * 100}%`;
+        }
+
+        function exportFeedback() {
+            const feedback = rfis.map((rfi, index) => ({
+                rfi_id: rfi.id,
+                project: rfi.project,
+                trade: rfi.trade,
+                original_llm_condition: rfi.llm_condition,
+                original_llm_category: rfi.llm_category,
+                your_subcategory: document.getElementById(`subcat-${index}`).value.trim(),
+                your_notes: document.getElementById(`notes-${index}`).value.trim(),
+                group_with: document.getElementById(`group-${index}`).value.trim()
+            })).filter(f => f.your_subcategory); // Only include ones with feedback
+
+            const output = {
+                feedback_date: new Date().toISOString(),
+                total_reviewed: feedback.length,
+                feedback: feedback
+            };
+
+            const outputArea = document.getElementById('output-area');
+            outputArea.textContent = JSON.stringify(output, null, 2);
+            outputArea.classList.add('visible');
+        }
+
+        function copyToClipboard() {
+            const outputArea = document.getElementById('output-area');
+            if (!outputArea.textContent) {
+                exportFeedback();
+            }
+            navigator.clipboard.writeText(outputArea.textContent).then(() => {
+                alert('Copied to clipboard! Paste this back to Claude.');
+            });
+        }
+
+        // Initialize
+        renderRFIs();
+    </script>
+</body>
+</html>

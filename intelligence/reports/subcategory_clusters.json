@@ -1,0 +1,240 @@
+{
+  "generated_at": "2026-04-30T15:06:10.248865",
+  "total_items": 550,
+  "cluster_distribution": {
+    "Missing Specification": 106,
+    "Structural Detail Missing": 56,
+    "Conflicting Documents": 45,
+    "Electrical Conflicts": 43,
+    "Other": 41,
+    "Scope Addition": 41,
+    "Pipe/Plumbing Conflicts": 36,
+    "Equipment Coordination": 29,
+    "Missing Layout/Elevation": 24,
+    "Elevation Conflicts": 24,
+    "Code Compliance Issue": 20,
+    "Existing Structure Differs": 18,
+    "Duct Conflicts": 11,
+    "Dimensional Conflict": 10,
+    "Blocking/Backing Missing": 7,
+    "Clearance/Access Issues": 7,
+    "Fire Protection Gaps": 5,
+    "Hidden Conditions": 5,
+    "Incomplete Demo Plans": 4,
+    "Framing Height Mismatch": 4,
+    "Cross-Trade Coordination": 4,
+    "Submittal Issue": 4,
+    "Design Team Change": 3,
+    "Fire Code Requirements": 2,
+    "Material Substitution": 1
+  },
+  "cluster_definitions": {
+    "Framing Height Mismatch": [
+      "framing height",
+      "ceiling height",
+      "stud height",
+      "wall height",
+      "existing framing",
+      "header height",
+      "top of wall"
+    ],
+    "Blocking/Backing Missing": [
+      "blocking",
+      "backing",
+      "support",
+      "reinforcement for",
+      "nailer",
+      "backer board"
+    ],
+    "Structural Detail Missing": [
+      "structural detail",
+      "beam",
+      "column",
+      "footing",
+      "reinforcement",
+      "rebar",
+      "anchor",
+      "embed"
+    ],
+    "Duct Conflicts": [
+      "duct conflict",
+      "ductwork",
+      "duct routing",
+      "duct obstruction",
+      "hvac conflict",
+      "supply air",
+      "return air",
+      "grease duct"
+    ],
+    "Pipe/Plumbing Conflicts": [
+      "pipe conflict",
+      "plumbing",
+      "drain",
+      "waste line",
+      "water line",
+      "condensate",
+      "riser"
+    ],
+    "Electrical Conflicts": [
+      "conduit",
+      "electrical",
+      "circuit",
+      "panel",
+      "junction box",
+      "outlet",
+      "receptacle",
+      "cable tray"
+    ],
+    "Fire Protection Gaps": [
+      "fire rating",
+      "fire damper",
+      "fsd",
+      "fire sprinkler",
+      "fire alarm",
+      "smoke detector",
+      "fire separation"
+    ],
+    "Elevation Conflicts": [
+      "elevation",
+      "grade",
+      "level",
+      "height conflict",
+      "ada compliance",
+      "slope"
+    ],
+    "Existing Structure Differs": [
+      "existing structure",
+      "existing wall",
+      "existing concrete",
+      "existing truss",
+      "existing beam",
+      "as-built"
+    ],
+    "Hidden Conditions": [
+      "discovered",
+      "exposed",
+      "unanticipated",
+      "unforeseen",
+      "post-demo",
+      "during demolition"
+    ],
+    "Code Compliance Issue": [
+      "code",
+      "inspector",
+      "compliance",
+      "per code",
+      "building code",
+      "ada",
+      "accessibility"
+    ],
+    "Seismic Requirements": [
+      "seismic",
+      "bracing",
+      "anchorage",
+      "lateral"
+    ],
+    "Fire Code Requirements": [
+      "fire code",
+      "fire rated",
+      "fire barrier",
+      "frp",
+      "fire protection"
+    ],
+    "Missing Layout/Elevation": [
+      "layout",
+      "elevation",
+      "rcp",
+      "reflected ceiling",
+      "floor plan",
+      "section"
+    ],
+    "Missing Specification": [
+      "specification",
+      "spec not",
+      "not specified",
+      "not called out",
+      "not shown",
+      "not detailed",
+      "not provided"
+    ],
+    "Conflicting Documents": [
+      "conflict between",
+      "discrepancy",
+      "inconsistent",
+      "does not match",
+      "differs from"
+    ],
+    "Incomplete Demo Plans": [
+      "demo plan",
+      "demolition",
+      "removal",
+      "not shown for removal"
+    ],
+    "Owner-Requested Change": [
+      "owner request",
+      "client request",
+      "owner directed",
+      "per owner",
+      "owner change"
+    ],
+    "Design Team Change": [
+      "design change",
+      "design team",
+      "architect directed",
+      "revised design",
+      "redesign"
+    ],
+    "Scope Addition": [
+      "addition",
+      "added",
+      "new scope",
+      "add scope",
+      "not in original",
+      "not included"
+    ],
+    "Clearance/Access Issues": [
+      "clearance",
+      "access",
+      "space",
+      "tight",
+      "insufficient room",
+      "cannot fit"
+    ],
+    "Dimensional Conflict": [
+      "dimension",
+      "measurement",
+      "size",
+      "length",
+      "width",
+      "thickness"
+    ],
+    "Material Substitution": [
+      "substitut",
+      "alternate",
+      "equivalent",
+      "in lieu of",
+      "product change"
+    ],
+    "Equipment Coordination": [
+      "equipment",
+      "unit",
+      "fixture",
+      "device",
+      "installation"
+    ],
+    "Cross-Trade Coordination": [
+      "coordination",
+      "coordinate",
+      "between trades",
+      "architectural and",
+      "mechanical and",
+      "electrical and"
+    ],
+    "Submittal Issue": [
+      "submittal",
+      "shop drawing",
+      "approval",
+      "rejection"
+    ]
+  }
+}

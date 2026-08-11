@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Value RFI Analysis</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        h1 { color: #1a1a2e; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+
+        .summary-box {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .summary-box h2 { margin-bottom: 15px; }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 36px; font-weight: bold; }
+        .stat-label { opacity: 0.8; font-size: 14px; }
+
+        .issue-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .issue-header {
+            background: #dc2626;
+            color: white;
+            padding: 20px;
+        }
+        .issue-header.medium {
+            background: #d97706;
+        }
+        .issue-title { font-size: 20px; margin-bottom: 5px; }
+        .issue-count { opacity: 0.9; font-size: 14px; }
+
+        .rfi-card {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .rfi-card:last-child { border-bottom: none; }
+
+        .rfi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .rfi-id {
+            font-weight: bold;
+            font-size: 16px;
+            color: #1a1a2e;
+        }
+        .rfi-project {
+            background: #e5e7eb;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #374151;
+        }
+        .rfi-trade {
+            background: #dbeafe;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+
+        .rfi-question {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border-left: 4px solid #dc2626;
+        }
+        .rfi-resolution {
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border-left: 4px solid #22c55e;
+        }
+        .rfi-resolution strong { color: #166534; }
+
+        .llm-insight {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+        }
+        .llm-insight .label {
+            font-weight: 600;
+            color: #92400e;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .llm-insight .condition { color: #78350f; margin-bottom: 8px; }
+        .llm-insight .impact { color: #a16207; font-size: 13px; }
+
+        .analysis-prompt {
+            background: #fef2f2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px dashed #dc2626;
+        }
+        .analysis-prompt strong { color: #991b1b; }
+
+        .key-questions {
+            background: #1a1a2e;
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .key-questions h2 { margin-bottom: 15px; }
+        .question-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .question-item:last-child { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>High-Value RFI Analysis</h1>
+        <p class="subtitle">Focus on RFIs that can teach us something - not routine noise</p>
+
+        <div class="summary-box">
+            <h2>Why These RFIs Matter</h2>
+            <p style="margin-bottom: 20px; opacity: 0.9;">
+                These are NOT routine "missing detail" or "field conditions differ" RFIs.
+                These are issues that could cause significant harm, weren't caught early,
+                or show patterns we can learn from.
+            </p>
+            <div class="summary-stats">
+                <div class="stat">
+                    <div class="stat-value">17</div>
+                    <div class="stat-label">High-Value RFIs</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Issue Categories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Projects Affected</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-section">
+            <div class="issue-header">
+                <div class="issue-title">Field Error/Damage</div>
+                <div class="issue-count">8 RFIs across 2 projects</div>
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-17</span>
+                    <span class="rfi-project">Intuitive Surgical MOB</span>
+                    <span class="rfi-trade">architectural, plumbing</span>
+                </div>
+
+                <div class="rfi-question">Please refer to the attached overlay of the ground floor vs. the basement (in red). Pribuss proposes reconfiguring Pantry 1071 to place the breakroom sink on the north wall. This change would avoid coring through the perimeter concrete wall in the basement, saw-cutting the slab on grade, and the associated excavation and backfilling. Adding the sink as currently designed would significantly increase the installation costs for this new fixture. Please confirm if reconfiguring and relocating the sink to the north wall is acceptable. Suggested answer Reconfigure Pantry 1071 to place the breakroom sink on the north wall.</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW RESPONSE:
+RMW will reconfigure Pantry 1071 to move the plumbing to the north wall, as recommended. The new layout will 
+be provided in a future revision.
+M. Thomas, RMW, 07.10.24
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> The existing plumbing layout required coring through the perimeter concrete wall in the basement and saw-cutting the slab on grade.</div>
+                    <div class="impact"><strong>Impact:</strong> Significantly increased installation costs for the new breakroom sink fixture.</div>
+                </div>
+
+                <div class="analysis-prompt">
+                    <strong>INVESTIGATE: What caused this? Has it happened before on this or other projects?</strong>
+                </div>
+
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-0945</span>
+                    <span class="rfi-project">Southline Office</span>
+                    <span class="rfi-trade">concrete, structural</span>
+                </div>
+
+                <div class="rfi-question">Reference: SLP1 - RFI0945 - PSD Added Shutoff&#39;s at Shear Walls and CJ Relocation Confirmation Post on: A2.03 Background: Due to the current sequencing for the shotcrete walls and the elevated slabs, Camblin has been working around the bracing for the shear walls to layout their rebar and PT cables. In addition to Camblin working around these braces, DPR Concrete has been installing, breaking down, and reinstalling these braces to allow for Camblin to finish their layout and for the concrete pour itself. DPR GC is proposing to change the sequencing of these walls and the decks to omit the rework of the forms at the shear walls. DPR GC is proposing to shoot walls after the slabs have been poured. In order to make this work, the CJ location between Area 1 and Area 2 12&#39; West of its current location. In addition to this, DPR GC is proposing shutoffs at the shear walls per the locations on the mark-up. Question: Q1: Please confirm it is acceptable to move the CJ location 12&#39; West of its current location. Q2: Please confirm it is acceptable to create a shutoff at the shear walls at the clouded locations.</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Please see attached.
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> CJ location needs to be moved 12&#39; West of its current location due to sequencing changes for shotcrete walls and elevated slabs.</div>
+                    <div class="impact"><strong>Impact:</strong> Rework of forms at the shear walls is required to accommodate the new sequencing, leading to additional work and costs.</div>
+                </div>
+
+                <div class="analysis-prompt">
+                    <strong>INVESTIGATE: What caused this? Has it happened before on this or other projects?</strong>
+                </div>
+
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-1080</span>
+                    <span class="rfi-project">Southline Office</span>
+                    <span class="rfi-trade">concrete</span>
+                </div>
+
+                <div class="rfi-question">Referenced Attachments: S2.1, 11/3/23 DES-PMA-DPR SOG Shrinkage Crack Follow Up Meeting Notes SOG Pour #1 has seen shrinkage cracking, which is anticipated in concrete. Based on prominence of cracking, DPR, PMA, and DES met to review if any modifications to concrete mix design, reinforcement, or sawcut plan was desired for SOG Pour #2. This RFI is addressing concrete mix design and reinforcement options; RFI 1088 has separately been submitted to address sawcut plan. Please see detailed pros/cons for each option numbers in attached email. 1. Option 1a: Please advise if there is a desired reduction in specified shrinkage requirement (currently 0.04% per Spec 033000, 2.5.B.11, minimum feasible is 0.028%) 2. Option 1b: Please advise if the water to cement ratio is desired to be modified (currently 0.45 by weight per Spec 033000, 2.5.B.7). Please note this is anticipated to have a definite architectural</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> Shrinkage cracking observed in SOG Pour #1, prompting review for modifications in concrete mix design and reinforcement for SOG Pour #2.</div>
+                    <div class="impact"><strong>Impact:</strong> Potential structural integrity issues and aesthetic concerns due to prominent shrinkage cracking.</div>
+                </div>
+
+                <div class="analysis-prompt">
+                    <strong>INVESTIGATE: What caused this? Has it happened before on this or other projects?</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="issue-section">
+            <div class="issue-header">
+                <div class="issue-title">Concrete Misplacement</div>
+                <div class="issue-count">6 RFIs across 1 projects</div>
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-1074</span>
+                    <span class="rfi-project">Southline Office</span>
+                    <span class="rfi-trade">architectural, exterior_envelope</span>
+                </div>
+
+                <div class="rfi-question">Ref: A2.03S, Detail 20/A8.21 Suggested answer Per A2.03S, the perimeter curb at the balconies is to stop at the location of the slab depression. This leaves a gap from edge of curb to the framing for the terracotta return wall. Curb was also installed short of the slab depression which increased the gap to terracotta framing. Please see attached for more information. Please confirm it is acceptable to extend curb to face of framing. Proposed curb extension will be installed with #4 dowels 6&quot; OC with 3 3/4&quot; embedment.</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</div>
+                    <div class="impact"><strong>Impact:</strong> Increased gap to terracotta framing, necessitating an extension of the curb.</div>
+                </div>
+
+                <div class="analysis-prompt">
+                    <strong>INVESTIGATE: Why was concrete placed incorrectly? What was the fix cost? Frequency?</strong>
+                </div>
+
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-1074</span>
+                    <span class="rfi-project">Southline Office</span>
+                    <span class="rfi-trade">architectural, exterior_envelope</span>
+                </div>
+
+                <div class="rfi-question">Ref: A2.03S, Detail 20/A8.21 Suggested answer Per A2.03S, the perimeter curb at the balconies is to stop at the location of the slab depression. This leaves a gap from edge of curb to the framing for the terracotta return wall. Curb was also installed short of the slab depression which increased the gap to terracotta framing. Please see attached for more information. Please confirm it is acceptable to extend curb to face of framing. Proposed curb extension will be installed with #4 dowels 6&quot; OC with 3 3/4&quot; embedment.</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> No resolution recorded
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</div>
+                    <div class="impact"><strong>Impact:</strong> Increased gap to terracotta framing, potentially compromising the integrity and aesthetics of the balcony area.</div>
+                </div>
+
+                <div class="analysis-prompt">
+                    <strong>INVESTIGATE: Why was concrete placed incorrectly? What was the fix cost? Frequency?</strong>
+                </div>
+
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-1447</span>
+                    <span class="rfi-project">Southline Office</span>
+                    <span class="rfi-trade">structural</span>
+                </div>
+
+                <div class="rfi-question">Reference: SLP1 - RFI 1447 - PSD Elevator Steel Tier 6 Misplaced Embed Remediation Confirmation Glazier Steel Shop Drawing Sheet AB2015 and AB2016 Email Correspondence between GPLA/Armando and DPR/Luis Background: In the returned submittal 2917, embed at Tier 6 for the elevator steel was to get relocated 10&#39;- 2 3/4&quot; from grid line. The comment however did not get captured in a new revision of submittal 3873, which was the submittal the DPR Concrete used to install the embeds. Due to this, the embed got located at the wrong location. Question: Per conversations with Armando/GPLA, please confirm if a new L-angle can get post installed using anchor bolts. The anchor bolts would be 5/8&quot; Hilti KBTZ2 with a 4&quot; embedment to the concrete. The L-angle would then get welded to the beam using a 3-sided 5/16&quot; fillet welds. Please confirm that this is acceptable.</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> Embed at Tier 6 for the elevator steel was installed at the wrong location, 10&#39;- 2 3/4&quot; from grid line instead of the relocated position indicated in the returned submittal.</div>
+                    <div class="impact"><strong>Impact:</strong> Requires additional work to post-install a new L-angle using anchor bolts due to the incorrect placement of the embed.</div>
+                </div>
+
+                <div class="analysis-prompt">
+                    <strong>INVESTIGATE: Why was concrete placed incorrectly? What was the fix cost? Frequency?</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="issue-section">
+            <div class="issue-header">
+                <div class="issue-title">Safety/Code Violation</div>
+                <div class="issue-count">2 RFIs across 2 projects</div>
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-147</span>
+                    <span class="rfi-project">CoreSite Data Center</span>
+                    <span class="rfi-trade">architectural, fire_protection</span>
+                </div>
+
+                <div class="rfi-question">Per Enlarged Plans P3-A04-01, the North and West walls of Mechanical room 0235A call out for non-rated walls, while per Life Safety Plan P3-G01-03 the North and West wall call out for 1 hour rated fire barrier assembly. Suggested answer Corgan, please confirm if in the Mechanical room 0235A the North and West walls should be 1 hour rated, A6-DA.</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Ashley Hill (Corgan - 10059759): Confirmed for the wall to be A6-D. Acoustical rating is not required.
+CS - CORGAN - 9.12.25
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> North and West walls of Mechanical room 0235A are specified as non-rated in Enlarged Plans P3-A04-01 but as 1 hour rated fire barrier assembly in Life Safety Plan P3-G01-03.</div>
+                    <div class="impact"><strong>Impact:</strong> Confusion regarding wall rating requirements led to the need for additional work to ensure compliance with fire safety regulations.</div>
+                </div>
+
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-1099</span>
+                    <span class="rfi-project">Southline Office</span>
+                    <span class="rfi-trade">Not specified</span>
+                </div>
+
+                <div class="rfi-question">Reference: SLP1 - 1040-093100-4 B1 Tile/Stone Product and Safety Data Q1: Per coordination meeting with DES on 11/3/23, DPR is concerned about the load of CT6 wall tile on the elevator lobby furred wall. Please confirm that the elevator lobby furred wall can support the load of the CT6 wall tile. Please note that the entire system assembly (i.e. tile, thinset mortar and grout) is roughly 8 pounds per square foot.</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> Concerns about the load capacity of the elevator lobby furred wall to support the CT6 wall tile, which weighs roughly 8 pounds per square foot.</div>
+                    <div class="impact"><strong>Impact:</strong> Potential structural inadequacy of the elevator lobby furred wall to support the additional weight of the wall tile, leading to safety concerns and the need for additional structural evaluation or reinforcement.</div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="issue-section">
+            <div class="issue-header">
+                <div class="issue-title">Owner Request</div>
+                <div class="issue-count">1 RFIs across 1 projects</div>
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-15</span>
+                    <span class="rfi-project">Abbott Alameda Office TI</span>
+                    <span class="rfi-trade">Not specified</span>
+                </div>
+
+                <div class="rfi-question">Reference: RFI 15 - Abbott Alameda 1420 HBP - BMS Intergration for Split System Confirmation Approved Submittal 155000-2 - Mitsubishi DX Split System Product Data Split system HP-2037/FC-2037 is currently designed and scheduled to operate with stand-alone controls via a local thermostat and will not be tied into the BMS. Question: Please confirm with the owner/building engineer that standalone controls with no BMS monitoring/ integration is acceptable or provide direction to add BMS integration for monitoring and/or control. There will be a cost</div>
+
+                <div class="rfi-resolution">
+                    <strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.
+                </div>
+
+                <div class="llm-insight">
+                    <div class="label">LLM Analysis</div>
+                    <div class="condition"><strong>Condition:</strong> The Mitsubishi DX Split System is designed to operate with stand-alone controls and is not integrated with the Building Management System (BMS).</div>
+                    <div class="impact"><strong>Impact:</strong> The lack of BMS integration may lead to increased operational costs and inefficiencies in monitoring and controlling the HVAC system.</div>
+                </div>
+
+                <div class="analysis-prompt">
+                    <strong>TRACK: Who is the owner? What did they request? Does this pattern across jobs?</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <h2 style="margin: 30px 0 20px; color: #1a1a2e;">Medium Priority - Worth Tracking</h2>
+
+        <div class="issue-section">
+            <div class="issue-header medium">
+                <div class="issue-title">Spatial Conflict</div>
+                <div class="issue-count">15 examples</div>
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-43</span>
+                    <span class="rfi-project">CoreSite Data Center</span>
+                </div>
+                <div class="rfi-question">Cycle 1 - 7/22/25: The updated reference markup was changed to move the air separator equipment further plan-south to avoid obstructions with phase 4 installations at the mechanical yard per design team request on 7/11. This air separator equipment location was provided to the design team on 7/16 via correspondence and reviewed on 7/17 BIM cluster. This location was confirmed as acceptable by the design team on the 7/21 workshop. In order to install AS-CHW-04 inside the building as shown on the </div>
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-8</span>
+                    <span class="rfi-project">Silicon Valley Office</span>
+                </div>
+                <div class="rfi-question">Lobby Elevator Shaft Conflict with Mass Timber Roof</div>
+            </div>
+
+        </div>
+
+        <div class="issue-section">
+            <div class="issue-header medium">
+                <div class="issue-title">Design Mismatch</div>
+                <div class="issue-count">5 examples</div>
+            </div>
+
+            <div class="rfi-card">
+                <div class="rfi-header">
+                    <span class="rfi-id">RFI-138</span>
+                    <span class="rfi-project">CoreSite Data Center</span>
+                </div>
+                <div class="rfi-question">There are door hardware requirement discrepancies between the phase 3 security drawings issued by PSG and the current Architectural drawings. See referenced attachment for latest security drawing issuance by PSG with rough-in markups proposed via RFI 78.1. The security drawings call for access control security power supply to support access control devices and electrified hardware at new door 224 and existing doors 229, 271, and 272. All of these doors do not have a power supply or electrified h</div>
+            </div>
+
+        </div>
+
+        <div class="key-questions">
+            <h2>Questions to Investigate</h2>
+
+            <div class="question-item">
+                <strong>For Field Errors/Damage:</strong><br>
+                What caused the failure? Was there a sequence issue? Material defect?
+                Has this happened on other projects with similar conditions?
+            </div>
+
+            <div class="question-item">
+                <strong>For Concrete Misplacement:</strong><br>
+                Why was concrete placed incorrectly? Survey error? Communication gap?
+                What was the fix cost compared to getting it right the first time?
+            </div>
+
+            <div class="question-item">
+                <strong>For Owner Requests:</strong><br>
+                Who is this owner? Have they made similar requests on other projects?
+                Can we anticipate this for future bids?
+            </div>
+
+            <div class="question-item">
+                <strong>For Safety/Code Violations:</strong><br>
+                How did this get missed in design review? What process change would catch it earlier?
+            </div>
+        </div>
+    </div>
+</body>
+</html>

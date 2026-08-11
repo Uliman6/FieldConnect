@@ -1,0 +1,507 @@
+{
+  "generated_at": "2026-07-15T22:06:15.583503",
+  "total_rfis": 17,
+  "total_co": 49820208.0,
+  "by_coordination_type": {
+    "NEW_TO_EXISTING_CLASH": {
+      "count": 9,
+      "total_co": 33613319.0
+    },
+    "DESIGN_CHANGE_CASCADE": {
+      "count": 2,
+      "total_co": 8747884.0
+    },
+    "DIMENSIONAL_COORDINATION": {
+      "count": 1,
+      "total_co": 4058394.0
+    },
+    "SCOPE_BOUNDARY_GAP": {
+      "count": 2,
+      "total_co": 3006940.0
+    },
+    "NEW_TO_NEW_CLASH": {
+      "count": 2,
+      "total_co": 385244.0
+    },
+    "DESIGN_SEQUENCE_ERROR": {
+      "count": 1,
+      "total_co": 8427.0
+    }
+  },
+  "existing_conditions_analysis": {
+    "existing_involved": {
+      "count": 10,
+      "co": 39366438.0
+    },
+    "new_only": {
+      "count": 7,
+      "co": 10453770.0
+    }
+  },
+  "ti_specific_analysis": {
+    "ti_specific": {
+      "count": 10,
+      "co": 39366438.0
+    },
+    "universal": {
+      "count": 7,
+      "co": 10453770.0
+    }
+  },
+  "excluding_coresite": {
+    "total_rfis": 10,
+    "total_co": 4838346.0,
+    "existing_involved": {
+      "count": 5,
+      "co": 368044.0
+    },
+    "new_only": {
+      "count": 5,
+      "co": 4470302.0
+    }
+  },
+  "results": [
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "drywall layout",
+        "element_1_status": "new",
+        "element_2": "columns",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "arch",
+        "struct"
+      ],
+      "why_not_caught_earlier": "The existing column locations were not accurately reflected or considered in the initial design layout for the offices, likely due to insufficient as-built documentation or site survey.",
+      "when_should_have_caught": "During the initial design phase, specifically in the site survey and as-built verification stage.",
+      "prevention_action": "Ensure comprehensive site surveys and accurate as-built documentation are conducted and reviewed before finalizing design layouts. Incorporate existing conditions into design models to identify potential clashes early.",
+      "is_ti_specific": true,
+      "rfi": "RFI-17",
+      "project": "Abbott Alameda Office TI",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 124678.0,
+      "trade": null,
+      "question_preview": "Reference Sheet A2.1.2 Offices 2080, 2079, and 2078 have columns imbedded in the walls. These columns do not align with each other. Office 2078 will have an exposed column with current drywall layout.",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "thermostat VAV-W1",
+        "element_1_status": "new",
+        "element_2": "existing wall to be demo'd",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "mech",
+        "arch"
+      ],
+      "why_not_caught_earlier": "The existing conditions, such as the wall slated for future demolition, were not adequately considered during the initial design phase. This oversight could have been identified with a thorough review of the existing building plans and future demolition phases.",
+      "when_should_have_caught": "Design Development Phase during the coordination review between mechanical and architectural plans.",
+      "prevention_action": "Implement a more rigorous review process that includes cross-referencing existing conditions with new design elements, especially in TI projects where existing structures are involved. Ensure that future demolition plans are clearly communicated and integrated into the design review process.",
+      "is_ti_specific": true,
+      "rfi": "RFI-39",
+      "project": "Abbott Alameda Office TI",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 10587.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 39 - Abbott - Alameda 1420 HBP - Thermostat Relocation Clarifications ACCO RFI 005/EMCOR RFI 001 Mechanical Drawings with Markups and Pictures During rough-in for in-wall MEP, it was no",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "handrail extension",
+        "element_1_status": "new",
+        "element_2": "service corridor door",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "arch"
+      ],
+      "why_not_caught_earlier": "The clash was not caught earlier due to insufficient verification of the existing conditions against the new design elements. The as-built documentation or site survey did not adequately capture the spatial constraints of the existing service corridor door.",
+      "when_should_have_caught": "Design Development Phase during site surveys or as-built verification",
+      "prevention_action": "Conduct thorough site surveys and ensure accurate as-built documentation is available and reviewed during the design phase. Implement a mandatory field verification step for all new installations that interface with existing conditions.",
+      "is_ti_specific": true,
+      "rfi": "RFI-76.1",
+      "project": "Abbott Alameda Office TI",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 10155.0,
+      "trade": null,
+      "question_preview": "Reference: RFI 76.1 - Abbott Alameda 1420 HBP - Stair 2 Handrail Clash with Service Corridor Door Clarification A7.0.0 MAS Metals Guardrail Submittal Sheet S5.00 Attached pictures Per RFI 76 response,",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "furred wall",
+        "element_1_status": "new",
+        "element_2": "conduit risers",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "arch",
+        "elec"
+      ],
+      "why_not_caught_earlier": "The clash was not caught earlier due to insufficient as-built documentation or inadequate site survey of existing conditions.",
+      "when_should_have_caught": "During the design development phase, specifically in the site survey and existing conditions review.",
+      "prevention_action": "Ensure comprehensive site surveys and accurate as-built documentation are conducted and reviewed before finalizing new designs. Implement a rigorous clash detection process that includes existing conditions.",
+      "is_ti_specific": true,
+      "rfi": "RFI-54",
+      "project": "CoreSite Data Center",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 15807369.0,
+      "trade": "architectural, electrical",
+      "question_preview": "There is a furred wall at Storage 235 intended to hide the existing bus duct and multiple existing conduit risers. However, the current dimensions of the furred wall clash with these existing conduits",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "F05 light fixtures",
+        "element_1_status": "new",
+        "element_2": "doors and walls",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "elec",
+        "arch"
+      ],
+      "why_not_caught_earlier": "The clash between the new light fixtures and existing doors and walls was not identified due to insufficient integration of the existing building conditions into the electrical design model.",
+      "when_should_have_caught": "Design Development phase during clash detection reviews with updated as-built conditions.",
+      "prevention_action": "Ensure comprehensive site surveys and accurate as-built documentation are integrated into design models. Conduct thorough clash detection sessions with a focus on existing conditions.",
+      "is_ti_specific": true,
+      "rfi": "RFI-52",
+      "project": "CoreSite Data Center",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 13229900.0,
+      "trade": "electrical",
+      "question_preview": "CYCLE 1: 6/24/25: Per 6/18 DPR/Design Teams breakout call, F05 light fixtures in Corridor 260 and 260A are to be swapped to F04 lights. See referenced markup for new proposed light fixture layout. -- ",
+      "success": true
+    },
+    {
+      "coordination_type": "DESIGN_CHANGE_CASCADE",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "AS-CHW-04 air separator",
+        "element_1_status": "new",
+        "element_2": "Room 0235A Mechanical and Room 0236 Office",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "mech",
+        "arch",
+        "struct"
+      ],
+      "why_not_caught_earlier": "The change in the air separator location was not fully coordinated with architectural space planning, leading to a conflict with existing room layouts.",
+      "when_should_have_caught": "Design Development phase during interdisciplinary coordination meetings and BIM reviews.",
+      "prevention_action": "Implement a more rigorous change management process that ensures all design changes are communicated and reviewed across all disciplines, especially in BIM coordination meetings.",
+      "is_ti_specific": true,
+      "rfi": "RFI-43",
+      "project": "CoreSite Data Center",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 5753119.0,
+      "trade": "mechanical",
+      "question_preview": "Cycle 1 - 7/22/25: The updated reference markup was changed to move the air separator equipment further plan-south to avoid obstructions with phase 4 installations at the mechanical yard per design te",
+      "success": true
+    },
+    {
+      "coordination_type": "DESIGN_CHANGE_CASCADE",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "CCTV and access control rough-in plans",
+        "element_1_status": "new",
+        "element_2": "updated rough-in plan from CoreSite",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "security",
+        "electrical"
+      ],
+      "why_not_caught_earlier": "The initial rough-in plans were not accepted, indicating a lack of communication or update flow between the design team and CoreSite's requirements.",
+      "when_should_have_caught": "Design Development Phase, during design review meetings with CoreSite",
+      "prevention_action": "Implement a more robust change management process that ensures all design changes are communicated and reviewed across all relevant disciplines before final approval.",
+      "is_ti_specific": false,
+      "rfi": "RFI-78.1",
+      "project": "CoreSite Data Center",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 2994765.0,
+      "trade": "security",
+      "question_preview": "The CCTV and access control rough-in plans developed by CEI and submitted to PSG/CoreSite review per RFI 78 as not accepted. CoreSite has since shared an updated rough-in plan. See the referenced atta",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "RPPs at 415V",
+        "element_1_status": "new",
+        "element_2": "existing wall proximity",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "elec",
+        "arch"
+      ],
+      "why_not_caught_earlier": "The clearance requirements for the new 415V RPPs were not adequately checked against existing wall proximities during the design phase.",
+      "when_should_have_caught": "Design Development phase during clearance and spatial coordination review",
+      "prevention_action": "Conduct thorough site surveys and integrate detailed as-built documentation into the design process to ensure new installations meet clearance requirements.",
+      "is_ti_specific": true,
+      "rfi": "RFI-125",
+      "project": "CoreSite Data Center",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 2988703.0,
+      "trade": "electrical, architectural",
+      "question_preview": "1) As discussed with CoreSite, 8/20/2025, please confirm we are to proceed with splitting the RPPs at 4MW (415V) and 5MW (208V). This would give us 80 (208V) RPPs, and 32 (415V) RPPs 2) Provide a mark",
+      "success": true
+    },
+    {
+      "coordination_type": "SCOPE_BOUNDARY_GAP",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "door hardware power requirements",
+        "element_1_status": "new",
+        "element_2": "electrical power source",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "elec",
+        "security"
+      ],
+      "why_not_caught_earlier": "The interface between the electrical power supply and the door hardware was not clearly defined, leading to confusion about which doors required power.",
+      "when_should_have_caught": "Design Development phase during interdisciplinary coordination meetings",
+      "prevention_action": "Ensure clear scope definitions and responsibilities are established between trades, particularly at interfaces like electrical and security systems. Conduct thorough interdisciplinary coordination reviews.",
+      "is_ti_specific": false,
+      "rfi": "RFI-140",
+      "project": "CoreSite Data Center",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 2988703.0,
+      "trade": "electrical",
+      "question_preview": "CEI is requesting clarification regarding the door hardware power requirements. Specifically, we need a confirmed list of all door numbers that will require line voltage power supplied above the door ",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "furred wall",
+        "element_1_status": "new",
+        "element_2": "roof drainage pipes",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "arch",
+        "plumb"
+      ],
+      "why_not_caught_earlier": "The existing roof drainage pipes were not adequately documented or considered in the initial design phase, leading to a clash with the proposed new wall design.",
+      "when_should_have_caught": "During the initial site survey and as-built documentation review phase, prior to the design development phase.",
+      "prevention_action": "Conduct thorough site surveys and ensure accurate as-built documentation is available and reviewed before commencing design work. Implement a robust review process for existing conditions during the design phase.",
+      "is_ti_specific": true,
+      "rfi": "RFI-48",
+      "project": "CoreSite Data Center",
+      "project_type": "TI",
+      "existing_building": true,
+      "co_amount": 1219303.0,
+      "trade": null,
+      "question_preview": "There are existing roof drainage pipes protruding through the wall into office 240, see referenced Newforma Issue #185 for reference. Per 6/12 BIM call, Corgan's direction is to implement a furred wal",
+      "success": true
+    },
+    {
+      "coordination_type": "DIMENSIONAL_COORDINATION",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "device layout on electrical drawings",
+        "element_1_status": "new",
+        "element_2": "furniture layout on permit drawings",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "elec",
+        "arch"
+      ],
+      "why_not_caught_earlier": "The dimensional coordination between the electrical device layout and the furniture layout was not verified for compatibility during the design phase.",
+      "when_should_have_caught": "Design Development phase during interdisciplinary coordination review",
+      "prevention_action": "Implement a thorough cross-discipline review process focusing on dimensional coordination between electrical layouts and architectural elements like furniture. Use 3D modeling tools to visualize and verify spatial arrangements.",
+      "is_ti_specific": false,
+      "rfi": "RFI-21",
+      "project": "Intuitive Surgical MOB",
+      "project_type": "MOB",
+      "existing_building": false,
+      "co_amount": 4058394.0,
+      "trade": "electrical",
+      "question_preview": "Please verify device layout as represented on the electrical drawings will be acceptable to scale for installation and that furniture will match as represented on the permit drawings. If not, please p",
+      "success": true
+    },
+    {
+      "coordination_type": "SCOPE_BOUNDARY_GAP",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "ductwork",
+        "element_1_status": "new",
+        "element_2": "gypsum board backed ACT",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "mech",
+        "arch"
+      ],
+      "why_not_caught_earlier": "The need for gypsum board backed ACT to mitigate noise was not initially coordinated between mechanical and architectural disciplines, leading to a gap in scope definition.",
+      "when_should_have_caught": "Design Development Phase during interdisciplinary coordination meetings",
+      "prevention_action": "Implement a more rigorous interdisciplinary coordination review process during the Design Development Phase, ensuring all noise mitigation requirements are clearly defined and coordinated between mechanical and architectural teams.",
+      "is_ti_specific": false,
+      "rfi": "RFI-37",
+      "project": "Intuitive Surgical MOB",
+      "project_type": "MOB",
+      "existing_building": false,
+      "co_amount": 18237.0,
+      "trade": null,
+      "question_preview": "Comment on Submittal #233000-02 -Level 2 and 3 Ductwork Shop Drawings stated \"Per Salters recommendations, ISI has directed to provide gypsum board backed ACT (NRC 0.90 or above) to mitigate any poten",
+      "success": true
+    },
+    {
+      "coordination_type": "DESIGN_SEQUENCE_ERROR",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "FCU in GN RR 3023",
+        "element_1_status": "new",
+        "element_2": "hard lit ceiling",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "arch",
+        "mech"
+      ],
+      "why_not_caught_earlier": "The design did not account for the accessibility required for maintenance and installation of the FCU in a hard lit ceiling area.",
+      "when_should_have_caught": "Design Development phase during interdisciplinary coordination review",
+      "prevention_action": "Ensure that all mechanical equipment locations are reviewed for accessibility and maintenance requirements during the design phase, especially in areas with hard ceilings.",
+      "is_ti_specific": false,
+      "rfi": "RFI-110",
+      "project": "Intuitive Surgical MOB",
+      "project_type": "MOB",
+      "existing_building": false,
+      "co_amount": 8427.0,
+      "trade": "architectural",
+      "question_preview": "Reference: Mechanical 3rd Floor Plan/M2.03. & Floor Plan/A2.13 Question: The mechanical drawings indicate a FCU located in the GN RR 3023, which has a hard lit ceiling. To improve accessibility for ov",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "Beam",
+        "element_1_status": "existing",
+        "element_2": "EIFS Application",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "struct",
+        "arch"
+      ],
+      "why_not_caught_earlier": "The clash between the new EIFS application and existing beam penetrations at joint locations was not identified due to insufficient as-built documentation or inadequate site survey of existing conditions.",
+      "when_should_have_caught": "Design Development Phase during existing conditions review and coordination meetings.",
+      "prevention_action": "Ensure comprehensive site surveys and accurate as-built documentation are conducted and reviewed during the early design phases. Implement regular interdisciplinary coordination meetings focusing on existing conditions.",
+      "is_ti_specific": true,
+      "rfi": "RFI-52.2",
+      "project": "Silicon Valley Office",
+      "project_type": "Hybrid",
+      "existing_building": true,
+      "co_amount": 175614.0,
+      "trade": null,
+      "question_preview": "Beam Penetration at Joint Locations (EIFS APPLICATION)",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_NEW_CLASH",
+      "confidence": "medium",
+      "clashing_elements": {
+        "element_1": "beam penetration",
+        "element_1_status": "new",
+        "element_2": "metal panel joint",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "struct",
+        "arch"
+      ],
+      "why_not_caught_earlier": "The clash between the structural steel beam penetration and the metal panel joint locations was not identified during the design coordination phase, possibly due to insufficient integration of structural and architectural shop drawings.",
+      "when_should_have_caught": "During the design development phase, specifically in the interdisciplinary coordination review.",
+      "prevention_action": "Implement a more rigorous interdisciplinary design review process, utilizing 3D modeling tools to simulate and detect potential clashes between structural and architectural elements before finalizing designs.",
+      "is_ti_specific": false,
+      "rfi": "RFI-52",
+      "project": "Silicon Valley Office",
+      "project_type": "Hybrid",
+      "existing_building": true,
+      "co_amount": 90540.0,
+      "trade": "structural_steel",
+      "question_preview": "Beam Penetration at Joint Locations (Metal Panel Shop Drawings)",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_EXISTING_CLASH",
+      "confidence": "medium",
+      "clashing_elements": {
+        "element_1": "UL design V497",
+        "element_1_status": "new",
+        "element_2": "existing exterior conditions",
+        "element_2_status": "existing"
+      },
+      "disciplines_involved": [
+        "arch",
+        "fire protection"
+      ],
+      "why_not_caught_earlier": "The clash was not caught earlier due to insufficient as-built documentation or lack of a detailed site survey that would have revealed the existing exterior conditions conflicting with the new UL design.",
+      "when_should_have_caught": "Design Development Phase during the coordination review between architectural and fire protection disciplines.",
+      "prevention_action": "Conduct thorough site surveys and ensure detailed as-built documentation is available and reviewed during the design phase. Implement regular interdisciplinary coordination meetings to review potential clashes with existing conditions.",
+      "is_ti_specific": true,
+      "rfi": "RFI-127",
+      "project": "Silicon Valley Office",
+      "project_type": "Hybrid",
+      "existing_building": true,
+      "co_amount": 47010.0,
+      "trade": null,
+      "question_preview": "Can we use the UL design V497 in the 1st floor MDF (102) and Fire Command Center (104) along the exterior?",
+      "success": true
+    },
+    {
+      "coordination_type": "NEW_TO_NEW_CLASH",
+      "confidence": "high",
+      "clashing_elements": {
+        "element_1": "fire protection lines",
+        "element_1_status": "new",
+        "element_2": "beam penetrations",
+        "element_2_status": "new"
+      },
+      "disciplines_involved": [
+        "struct",
+        "elec"
+      ],
+      "why_not_caught_earlier": "The clearance requirements above the unit substation were not adequately coordinated between the structural and electrical designs, leading to a conflict with the fire protection layout.",
+      "when_should_have_caught": "During the design development phase, specifically in the interdisciplinary coordination review.",
+      "prevention_action": "Implement a comprehensive interdisciplinary coordination review process that includes clearance checks for all critical equipment and systems, ensuring that all trades are aware of spatial requirements and constraints.",
+      "is_ti_specific": false,
+      "rfi": "RFI-0069",
+      "project": "Southline Office",
+      "project_type": "Ground-Up",
+      "existing_building": false,
+      "co_amount": 294704.0,
+      "trade": "structural",
+      "question_preview": "Ref: FP1.01 (95% CD drawing dated 08.26.22) There's a minimum clearance required above the unit substation in electrical substation room,. Therefore the fire protection lines need to be within the bea",
+      "success": true
+    }
+  ]
+}

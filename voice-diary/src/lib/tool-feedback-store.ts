@@ -172,7 +172,12 @@ export const useToolFeedbackStore = create<ToolFeedbackStore>()(
       getSnippetsForDate: (projectId, date) => {
         const entryIds = new Set(
           get().feedbackEntries
-            .filter((e) => e.projectId === projectId && e.createdAt.startsWith(date))
+            .filter((e) => {
+              // Convert createdAt (UTC ISO string) to local date for comparison
+              const entryDate = new Date(e.createdAt);
+              const entryLocalDate = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, '0')}-${String(entryDate.getDate()).padStart(2, '0')}`;
+              return e.projectId === projectId && entryLocalDate === date;
+            })
             .map((e) => e.id)
         );
         return get().feedbackSnippets.filter((s) => entryIds.has(s.feedbackId));

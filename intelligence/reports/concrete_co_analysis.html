@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concrete Trade - Change Order Root Cause Analysis</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #1a1a2e; margin-bottom: 5px; }
+        .timestamp { color: #666; font-size: 14px; margin-bottom: 30px; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-value { font-size: 36px; font-weight: bold; color: #1a1a2e; }
+        .stat-label { color: #666; font-size: 14px; }
+
+        .category-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+        .category-title { font-size: 20px; margin-bottom: 5px; }
+        .category-desc { opacity: 0.8; font-size: 14px; }
+        .category-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        @media (max-width: 800px) {
+            .analysis-grid { grid-template-columns: 1fr; }
+        }
+
+        .analysis-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .analysis-box h4 {
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .cause-item, .fix-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 13px;
+        }
+        .cause-item:last-child, .fix-item:last-child { border-bottom: none; }
+        .cause-count {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        .fix-count {
+            background: #27ae60;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .examples-section {
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        .examples-section h4 { color: #1a1a2e; margin-bottom: 15px; }
+        .example-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        .example-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .example-rfi { font-weight: bold; color: #1a1a2e; }
+        .example-project { color: #666; font-size: 13px; }
+
+        .example-question {
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 10px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .example-resolution {
+            color: #1a5f2a;
+            font-size: 13px;
+            margin-bottom: 10px;
+            background: #f0fff4;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #c6f6d5;
+            white-space: pre-wrap;
+        }
+        .example-resolution strong {
+            color: #166534;
+        }
+
+        .example-causes { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+        .cause-tag {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .fix-tag {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .key-insights {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .key-insights h2 { margin-bottom: 15px; }
+        .insight-item {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .toggle-btn:hover { background: #5a67d8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Concrete Trade - Change Order Root Cause Analysis</h1>
+        <p class="timestamp">Generated: 2026-04-30 15:09:38</p>
+
+        <div class="summary-grid">
+            <div class="stat-card">
+                <div class="stat-value">216</div>
+                <div class="stat-label">Total Concrete COs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">10</div>
+                <div class="stat-label">Issue Categories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Projects Affected</div>
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Footings & Foundations</div>
+                <div class="category-desc">Foundation systems, footings, and below-grade concrete</div>
+                <div class="category-stats">
+                    <span><strong>82</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Need for additional footings at terrace walls for structural stability and installation of rat slab for form work of B2 seat walls</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demolition of existing special aggregate exposed concrete.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">73</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">6</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Additional work required</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved as proposed</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved - no exceptions</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Coordinate with other trades</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-27</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 27 - Abbott Alameda 1420 HBP - Striping Along Curb at Accessible Parking (Main Entry) Confirmation Attached Pictures Enlarged Site Plans Mark Up During site demolition, it was noticed that if the plan directions were followed and the stripe along the face of curb got installed, the crosswalk would be at an angle, and it would require demo of existing special aggregate exposed concrete. See attached pictures for clarity. Question: Please confirm it is acceptable to instead stripe in alignment with the existing concrete. (Approximately 23 inches left of existing black tiles).</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demoliti...</span>
+                        <span class="cause-tag">Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough site assessment to identify existing conditions that may conflict with design pla</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-46</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 46 Abbott Alameda 1420 HBP - Added Bike Racks Clarification RFI 26.1 Abbott Alameda 1420 HBP - Chipping of Concrete Footings Confirmation R_1 During OAC call on 2/25, Abbott confirmed that the no parking area highlighted in RFI 46 is to get added Bike Racks. Please confirm the Spec, Dimensioned location, Quantities, and mounting details for proposed Bike racks.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-tag">Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Incorporate bike rack requirements in initial design and confirm with stakeholders during design pha</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-47</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor restrooms. DPR was contracted to only provide new finishes in these restrooms. However, additional work needs to be completed due to the existing conditions of the framing. Question 1: Existing framing only goes to 8&#39; height. RCP calls for 9&#39; ceilings. Per OAC on 02/27/25, DPR to proceed with 9&#39; ceilings. Please confirm no exceptions. Question 2: Plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10&#39; tall for the 9&#39; ceilings) and re- installed after framing is complete. Per OAC on 02/27/25, DPR to with removal and re-install of plumbing due to new framing installation. Please confirm no exceptions. Question 3: Per OAC on 02/27/25, DPR to proceed with shifting of plumbing carriers plan north to accommodate the ADA stall layout. Please confirm no exceptions. Question 4: Concrete wall calls for paint. Imperfections will be very noticeable if the wall is only primed and painted. Per OAC on 02/27/25, DPR to proceed with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2&quot; off concrete wall. Please confirm no exceptions.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu: Work is approved with no exceptions, see attached for additional comments.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-tag">Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="fix-tag">Approved as proposed</span>
+                        <span class="fix-tag">Approved - no exceptions</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough existing conditions survey prior to finalizing design and scope.</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Post-Tensioning</div>
+                <div class="category-desc">Post-tensioned concrete systems and details</div>
+                <div class="category-stats">
+                    <span><strong>81</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Need for additional footings at terrace walls for structural stability and installation of rat slab for form work of B2 seat walls</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demolition of existing special aggregate exposed concrete.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires re-framing of walls to accommodate the 9&#39; ceilings, leading to additional labor and material costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Existing OWJ truss needs to be removed to reattach to the new W14x34 beam, leaving the perpendicular truss and slab unsupported.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">73</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">5</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Additional work required</span>
+                        <span class="fix-count">4</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved as proposed</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved - no exceptions</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Relocate element</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-27</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 27 - Abbott Alameda 1420 HBP - Striping Along Curb at Accessible Parking (Main Entry) Confirmation Attached Pictures Enlarged Site Plans Mark Up During site demolition, it was noticed that if the plan directions were followed and the stripe along the face of curb got installed, the crosswalk would be at an angle, and it would require demo of existing special aggregate exposed concrete. See attached pictures for clarity. Question: Please confirm it is acceptable to instead stripe in alignment with the existing concrete. (Approximately 23 inches left of existing black tiles).</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demoliti...</span>
+                        <span class="cause-tag">Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough site assessment to identify existing conditions that may conflict with design pla</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-47</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor restrooms. DPR was contracted to only provide new finishes in these restrooms. However, additional work needs to be completed due to the existing conditions of the framing. Question 1: Existing framing only goes to 8&#39; height. RCP calls for 9&#39; ceilings. Per OAC on 02/27/25, DPR to proceed with 9&#39; ceilings. Please confirm no exceptions. Question 2: Plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10&#39; tall for the 9&#39; ceilings) and re- installed after framing is complete. Per OAC on 02/27/25, DPR to with removal and re-install of plumbing due to new framing installation. Please confirm no exceptions. Question 3: Per OAC on 02/27/25, DPR to proceed with shifting of plumbing carriers plan north to accommodate the ADA stall layout. Please confirm no exceptions. Question 4: Concrete wall calls for paint. Imperfections will be very noticeable if the wall is only primed and painted. Per OAC on 02/27/25, DPR to proceed with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2&quot; off concrete wall. Please confirm no exceptions.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu: Work is approved with no exceptions, see attached for additional comments.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-tag">Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="fix-tag">Approved as proposed</span>
+                        <span class="fix-tag">Approved - no exceptions</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough existing conditions survey prior to finalizing design and scope.</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-69</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 69 - Phase 1B Restrooms Existing Conditions Modifications Confirmation Detail 1/A4.4.0 Attached Pictures with Markups Similar to the restrooms in Phase 1A, the only scope of work was to add new finishes to the walls, floors, ceilings, and installation of new plumbing fixtures, partitions, and counters. However, after doing the initial demolition, DPR noticed that the same issues were being observed in the Phase 1B restrooms. Please see the attached pictures and confirm if the proposed modifications are acceptable. Question 1: Concrete wall calls for paint (once tile is removed). Imperfections will be very noticeable if the wall is only primed and painted. DPR proceeded with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2&quot; off concrete wall. Please confirm no exceptions taken to doing the same for restrooms in Phase 1B. Question 2: Similar to the restrooms in Phase 1A, please confirm DPR is to proceed with providing new plumbing carriers at the wet walls. These carriers will need to be relocated once installed to accommodate the ADA stall layout. Question 3: Existing framing only goes to 8&#39; height. RCP calls for 9&#39; ceilings. Please confirm no exceptions for DPR to proceed with re-framing walls to accommodate the 9&#39; ceilings. Question 4: Existing transfer duct in the restrooms, neither do the demo plans nor do the mechanical plans mention a transfer duct within this space. Please confirm if transfer air ducts are to stay in place. Please also confirm if new ceiling grille (similar to CEF-1) is required for the transfer air ducts. Question 5: Similar to Phase 1A restrooms, plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10&#39; tall for the 9&#39; ceilings) and re-installed after framing is complete. Please confirm no exceptions. Question 7: Per CBF, electrical receptacles in men&#39;s and women&#39;s restrooms (Phase 1B) will need be upgraded as the current circuits are not code compliant. The existing feeds do not have ground, and the existing conductors are undersized. New home runs will need to be pulled back to the panel. Panel B circuits 3 and 5 are being utilized. Please confirm no exceptions. Question 8: Existing electrical conduit is currently sitting on top of the 8&#39; ceiling framing. Please confirm it is acceptable to remove the conduit and replace it with flex where needed and provide proper supports per code.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi (FORGE - 10049724): Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-tag">Impact: Requires re-framing of walls to accommodate the 9&#39; ceilings, leading to additional labor and material costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough review of existing conditions and verify framing heights during pre-construction </span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Embeds & Anchors</div>
+                <div class="category-desc">Embed plates, anchor bolts, dowels, and cast-in connections</div>
+                <div class="category-stats">
+                    <span><strong>77</strong> Change Orders</span>
+                    <span><strong>3</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Steel embeds for the balcony guardrail were set 1&#39; off of correct locations at the SW and SE balconies due to missed steel embeds at corners of Level 3 balcony curbs.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Congestion at boundary elements on the Gridline 12 shear wall prevents consistent drilling spacing for embeds.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Need for specific screw specifications for the attachment of the exterior Glu-Lam Columns</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Detail 3/S5.02 does not show reinforcement for pan-fill stair tread infill</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Uncertainty regarding structural integrity of stair tread infill, leading to potential safety concerns and additional work for reinforcement</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provided.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">72</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Additional work required</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Coordinate with other trades</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Delegated design - submit calcs</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Relocate element</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-101</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 101 - Abbott Alameda 1420 HBP - Stair 1 Tread Reinforcement Confirmation Detail 3/S5.02 DPRC RFI 001 Please confirm if reinforcement is needed for pan-fill stair tread infill. Detail 3/S5.02 does not show any. If needed, please provide WWF or rebar sizing and layout.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): SEE ATTACHED RESPONSE.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Detail 3/S5.02 does not show reinforcement for pan-fill stair tread infill</span>
+                        <span class="cause-tag">Impact: Uncertainty regarding structural integrity of stair tread infill, leading to potential safety concerns and additional work for reinforcement</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all structural details are fully specified in design documents before issuing for constructio</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-108</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 108 - Abbott Alameda 1420 HBP - Stair 1 Added L-Bracket Clarifications ASK-22 Stair 1 Guardrail and Handrail Submittal L-Bracket anchored to slab was added in RFI 103 response and Guardrail/Handrail Submittal, but no details showing the extent of install was provided. 1. Please provide structural details for anchoring into slab. 2. Please also provide details on how the L-Bracket interacts with the wall panel under the stair when the bracket returns to the wall.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. TYE SEE ATTACHED FOR STRUCTURAL RESPONSE AND ASK-25 FOR ADDITIONAL INFORMATION.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provid...</span>
+                        <span class="cause-tag">Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="fix-tag">Additional work required</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure comprehensive structural details are included in submittals and RFIs to clarify installation </span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-16</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 16 - Abbott Alameda 1420 HBP - Seismic Anchorage Detail for HVAC Equipment Confirmation Bid Addendum #1 Mechanical Drawings As per the Mechanical Drawings M0.2 Details 2 &amp; 3, seismic bracing is not shown on the air terminal and exhaust fan hanging details. From the mechanical schedule these units&#39; weights&#39; range from: VAVs - 86 - 166 lbs EFs - 47 - 65 lbs These units will require seismic per code. Please provide seismic bracing details for this equipment. If MHC/Forge would like to delegate this design to ACCO/DPR please refer to Alternate #10 provided in DPR&#39;s proposal (rejected at bid time).</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> James Watters: See attached response.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Seismic bracing details for HVAC equipment not shown on mechanical drawings M0.2 Details 2 &amp; 3</span>
+                        <span class="cause-tag">Impact: Units require seismic bracing per code, which was not accounted for in the original design</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all seismic requirements are included in mechanical drawings during design phase</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Tolerances & Finishes</div>
+                <div class="category-desc">Surface tolerances, flatness requirements, and finishes</div>
+                <div class="category-stats">
+                    <span><strong>77</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demolition of existing special aggregate exposed concrete.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires re-framing of walls to accommodate the 9&#39; ceilings, leading to additional labor and material costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Existing j-box and IDU above door 272 are at a height of 29 inches from the top of the door frame, conflicting with the requirement to raise the door and frame by 3 feet.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">71</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Additional work required</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Relocate element</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved as proposed</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved - no exceptions</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-27</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 27 - Abbott Alameda 1420 HBP - Striping Along Curb at Accessible Parking (Main Entry) Confirmation Attached Pictures Enlarged Site Plans Mark Up During site demolition, it was noticed that if the plan directions were followed and the stripe along the face of curb got installed, the crosswalk would be at an angle, and it would require demo of existing special aggregate exposed concrete. See attached pictures for clarity. Question: Please confirm it is acceptable to instead stripe in alignment with the existing concrete. (Approximately 23 inches left of existing black tiles).</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demoliti...</span>
+                        <span class="cause-tag">Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough site assessment to identify existing conditions that may conflict with design pla</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-46</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 46 Abbott Alameda 1420 HBP - Added Bike Racks Clarification RFI 26.1 Abbott Alameda 1420 HBP - Chipping of Concrete Footings Confirmation R_1 During OAC call on 2/25, Abbott confirmed that the no parking area highlighted in RFI 46 is to get added Bike Racks. Please confirm the Spec, Dimensioned location, Quantities, and mounting details for proposed Bike racks.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-tag">Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Incorporate bike rack requirements in initial design and confirm with stakeholders during design pha</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-47</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor restrooms. DPR was contracted to only provide new finishes in these restrooms. However, additional work needs to be completed due to the existing conditions of the framing. Question 1: Existing framing only goes to 8&#39; height. RCP calls for 9&#39; ceilings. Per OAC on 02/27/25, DPR to proceed with 9&#39; ceilings. Please confirm no exceptions. Question 2: Plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10&#39; tall for the 9&#39; ceilings) and re- installed after framing is complete. Per OAC on 02/27/25, DPR to with removal and re-install of plumbing due to new framing installation. Please confirm no exceptions. Question 3: Per OAC on 02/27/25, DPR to proceed with shifting of plumbing carriers plan north to accommodate the ADA stall layout. Please confirm no exceptions. Question 4: Concrete wall calls for paint. Imperfections will be very noticeable if the wall is only primed and painted. Per OAC on 02/27/25, DPR to proceed with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2&quot; off concrete wall. Please confirm no exceptions.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu: Work is approved with no exceptions, see attached for additional comments.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-tag">Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="fix-tag">Approved as proposed</span>
+                        <span class="fix-tag">Approved - no exceptions</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough existing conditions survey prior to finalizing design and scope.</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Walls & Columns</div>
+                <div class="category-desc">Concrete walls, columns, and vertical elements</div>
+                <div class="category-stats">
+                    <span><strong>68</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Design clarification required</span>
+                        <span class="cause-count">3</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Need for additional footings at terrace walls for structural stability and installation of rat slab for form work of B2 seat walls</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provided.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires re-framing of walls to accommodate the 9&#39; ceilings, leading to additional labor and material costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">62</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Additional work required</span>
+                        <span class="fix-count">5</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved - no exceptions</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Relocate element</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved as proposed</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-108</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 108 - Abbott Alameda 1420 HBP - Stair 1 Added L-Bracket Clarifications ASK-22 Stair 1 Guardrail and Handrail Submittal L-Bracket anchored to slab was added in RFI 103 response and Guardrail/Handrail Submittal, but no details showing the extent of install was provided. 1. Please provide structural details for anchoring into slab. 2. Please also provide details on how the L-Bracket interacts with the wall panel under the stair when the bracket returns to the wall.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. TYE SEE ATTACHED FOR STRUCTURAL RESPONSE AND ASK-25 FOR ADDITIONAL INFORMATION.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provid...</span>
+                        <span class="cause-tag">Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="fix-tag">Additional work required</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure comprehensive structural details are included in submittals and RFIs to clarify installation </span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-47</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor restrooms. DPR was contracted to only provide new finishes in these restrooms. However, additional work needs to be completed due to the existing conditions of the framing. Question 1: Existing framing only goes to 8&#39; height. RCP calls for 9&#39; ceilings. Per OAC on 02/27/25, DPR to proceed with 9&#39; ceilings. Please confirm no exceptions. Question 2: Plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10&#39; tall for the 9&#39; ceilings) and re- installed after framing is complete. Per OAC on 02/27/25, DPR to with removal and re-install of plumbing due to new framing installation. Please confirm no exceptions. Question 3: Per OAC on 02/27/25, DPR to proceed with shifting of plumbing carriers plan north to accommodate the ADA stall layout. Please confirm no exceptions. Question 4: Concrete wall calls for paint. Imperfections will be very noticeable if the wall is only primed and painted. Per OAC on 02/27/25, DPR to proceed with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2&quot; off concrete wall. Please confirm no exceptions.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu: Work is approved with no exceptions, see attached for additional comments.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-tag">Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="fix-tag">Approved as proposed</span>
+                        <span class="fix-tag">Approved - no exceptions</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough existing conditions survey prior to finalizing design and scope.</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-69</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 69 - Phase 1B Restrooms Existing Conditions Modifications Confirmation Detail 1/A4.4.0 Attached Pictures with Markups Similar to the restrooms in Phase 1A, the only scope of work was to add new finishes to the walls, floors, ceilings, and installation of new plumbing fixtures, partitions, and counters. However, after doing the initial demolition, DPR noticed that the same issues were being observed in the Phase 1B restrooms. Please see the attached pictures and confirm if the proposed modifications are acceptable. Question 1: Concrete wall calls for paint (once tile is removed). Imperfections will be very noticeable if the wall is only primed and painted. DPR proceeded with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2&quot; off concrete wall. Please confirm no exceptions taken to doing the same for restrooms in Phase 1B. Question 2: Similar to the restrooms in Phase 1A, please confirm DPR is to proceed with providing new plumbing carriers at the wet walls. These carriers will need to be relocated once installed to accommodate the ADA stall layout. Question 3: Existing framing only goes to 8&#39; height. RCP calls for 9&#39; ceilings. Please confirm no exceptions for DPR to proceed with re-framing walls to accommodate the 9&#39; ceilings. Question 4: Existing transfer duct in the restrooms, neither do the demo plans nor do the mechanical plans mention a transfer duct within this space. Please confirm if transfer air ducts are to stay in place. Please also confirm if new ceiling grille (similar to CEF-1) is required for the transfer air ducts. Question 5: Similar to Phase 1A restrooms, plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10&#39; tall for the 9&#39; ceilings) and re-installed after framing is complete. Please confirm no exceptions. Question 7: Per CBF, electrical receptacles in men&#39;s and women&#39;s restrooms (Phase 1B) will need be upgraded as the current circuits are not code compliant. The existing feeds do not have ground, and the existing conductors are undersized. New home runs will need to be pulled back to the panel. Panel B circuits 3 and 5 are being utilized. Please confirm no exceptions. Question 8: Existing electrical conduit is currently sitting on top of the 8&#39; ceiling framing. Please confirm it is acceptable to remove the conduit and replace it with flex where needed and provide proper supports per code.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi (FORGE - 10049724): Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-tag">Impact: Requires re-framing of walls to accommodate the 9&#39; ceilings, leading to additional labor and material costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough review of existing conditions and verify framing heights during pre-construction </span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Curbs & Miscellaneous</div>
+                <div class="category-desc">Curbs, pads, pits, depressions, and miscellaneous concrete</div>
+                <div class="category-stats">
+                    <span><strong>51</strong> Change Orders</span>
+                    <span><strong>3</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provided.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demolition of existing special aggregate exposed concrete.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Existing OWJ truss needs to be removed to reattach to the new W14x34 beam, leaving the perpendicular truss and slab unsupported.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires shoring of the slab to prevent it from hanging unsupported after the removal of the existing truss.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Actual length of existing landing is 5&#39;-11 3/4&quot; which is shorter than the designed stair dimensions.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">46</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">4</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Additional work required</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Relocate element</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-108</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 108 - Abbott Alameda 1420 HBP - Stair 1 Added L-Bracket Clarifications ASK-22 Stair 1 Guardrail and Handrail Submittal L-Bracket anchored to slab was added in RFI 103 response and Guardrail/Handrail Submittal, but no details showing the extent of install was provided. 1. Please provide structural details for anchoring into slab. 2. Please also provide details on how the L-Bracket interacts with the wall panel under the stair when the bracket returns to the wall.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. TYE SEE ATTACHED FOR STRUCTURAL RESPONSE AND ASK-25 FOR ADDITIONAL INFORMATION.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provid...</span>
+                        <span class="cause-tag">Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="fix-tag">Additional work required</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure comprehensive structural details are included in submittals and RFIs to clarify installation </span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-27</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 27 - Abbott Alameda 1420 HBP - Striping Along Curb at Accessible Parking (Main Entry) Confirmation Attached Pictures Enlarged Site Plans Mark Up During site demolition, it was noticed that if the plan directions were followed and the stripe along the face of curb got installed, the crosswalk would be at an angle, and it would require demo of existing special aggregate exposed concrete. See attached pictures for clarity. Question: Please confirm it is acceptable to instead stripe in alignment with the existing concrete. (Approximately 23 inches left of existing black tiles).</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">The stripe along the face of the curb, if installed according to the plan, would result in the crosswalk being at an angle, necessitating the demoliti...</span>
+                        <span class="cause-tag">Impact: Requires additional work to demo existing concrete to align the crosswalk properly, leading to increased costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough site assessment to identify existing conditions that may conflict with design pla</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-74.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 74.1 - Abbott Alameda 1420 HBP - Stair 2 Shoring Detail Clarification RFI 74 - Abbott Alameda 1420 HBP - Stair 2 WF Beam to (E) OWJ Connection at Top and Bottom of Opening Clarification Marked up Picture Detail 2/S2.01 Per RFI 74 response, OWJ trusses at top and bottom of slab opening (red) need to reattach to the new W14x34 beam. To do this, DPR needs to remove the existing OWJ truss (blue), however once the truss is removed, it will leave the perpendicular truss (red) and slab hanging. Therefore, shoring of the slab will be required prior to completely removing the existing truss. DPR is proposing a layout of (2) shoring posts at each end as shown in the planview detail 2/S2.01. DPR is proposing to use Pro-Shore shoring, see product data attached. SEOR to confirm shoring detail is acceptable.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): SEE ATTACHED FOR TIPPING&#39;S DETAILED RESPONSE.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing OWJ truss needs to be removed to reattach to the new W14x34 beam, leaving the perpendicular truss and slab unsupported.</span>
+                        <span class="cause-tag">Impact: Requires shoring of the slab to prevent it from hanging unsupported after the removal of the existing truss.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough review of existing structural conditions and support requirements during design p</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Slab & Pour Sequence</div>
+                <div class="category-desc">Slab pours, sequences, joints, and placement issues</div>
+                <div class="category-stats">
+                    <span><strong>50</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Need for additional footings at terrace walls for structural stability and installation of rat slab for form work of B2 seat walls</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provided.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Existing OWJ truss needs to be removed to reattach to the new W14x34 beam, leaving the perpendicular truss and slab unsupported.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires shoring of the slab to prevent it from hanging unsupported after the removal of the existing truss.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Actual length of existing landing is 5&#39;-11 3/4&quot; which is shorter than the designed stair dimensions.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires relocation of footings to accommodate the new stair dimension, leading to additional work and costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">45</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Additional work required</span>
+                        <span class="fix-count">4</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Relocate element</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved as proposed</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>Approved - no exceptions</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-108</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 108 - Abbott Alameda 1420 HBP - Stair 1 Added L-Bracket Clarifications ASK-22 Stair 1 Guardrail and Handrail Submittal L-Bracket anchored to slab was added in RFI 103 response and Guardrail/Handrail Submittal, but no details showing the extent of install was provided. 1. Please provide structural details for anchoring into slab. 2. Please also provide details on how the L-Bracket interacts with the wall panel under the stair when the bracket returns to the wall.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. TYE SEE ATTACHED FOR STRUCTURAL RESPONSE AND ASK-25 FOR ADDITIONAL INFORMATION.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provid...</span>
+                        <span class="cause-tag">Impact: Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.</span>
+                        <span class="fix-tag">Additional work required</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure comprehensive structural details are included in submittals and RFIs to clarify installation </span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-74.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 74.1 - Abbott Alameda 1420 HBP - Stair 2 Shoring Detail Clarification RFI 74 - Abbott Alameda 1420 HBP - Stair 2 WF Beam to (E) OWJ Connection at Top and Bottom of Opening Clarification Marked up Picture Detail 2/S2.01 Per RFI 74 response, OWJ trusses at top and bottom of slab opening (red) need to reattach to the new W14x34 beam. To do this, DPR needs to remove the existing OWJ truss (blue), however once the truss is removed, it will leave the perpendicular truss (red) and slab hanging. Therefore, shoring of the slab will be required prior to completely removing the existing truss. DPR is proposing a layout of (2) shoring posts at each end as shown in the planview detail 2/S2.01. DPR is proposing to use Pro-Shore shoring, see product data attached. SEOR to confirm shoring detail is acceptable.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): SEE ATTACHED FOR TIPPING&#39;S DETAILED RESPONSE.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing OWJ truss needs to be removed to reattach to the new W14x34 beam, leaving the perpendicular truss and slab unsupported.</span>
+                        <span class="cause-tag">Impact: Requires shoring of the slab to prevent it from hanging unsupported after the removal of the existing truss.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough review of existing structural conditions and support requirements during design p</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-76</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 76 - Abbott Alameda 1420 HBP - Stair 2 Slab Edge Infill Confirmation A7.0.0 Attached pictures Actual length of existing landing is 5&#39;-11 3/4&quot;. This will cause the stair to be shorter at the bottom if left as is, and the footings would need to be relocated to accommodate this new dimension. DPR proposes to infill the delta of 13-1/4&quot; with wood. The wood infill can be supported by the new wood wall that is to be installed to support the stairs. Please confirm if this is acceptable. If so, please provide connection details for wood infill to wood stud wall below.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): See attached for detailed comments.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Actual length of existing landing is 5&#39;-11 3/4&quot; which is shorter than the designed stair dimensions.</span>
+                        <span class="cause-tag">Impact: Requires relocation of footings to accommodate the new stair dimension, leading to additional work and costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough survey of existing conditions prior to finalizing design dimensions.</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Rebar & Reinforcement</div>
+                <div class="category-desc">Reinforcing steel placement, splices, and detailing</div>
+                <div class="category-stats">
+                    <span><strong>49</strong> Change Orders</span>
+                    <span><strong>2</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Plaster finish specified for columns at Tiers 4-6 instead of terracotta as initially indicated</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires confirmation on the use of SS flashing and fluid applied flashing termination height, potentially affecting waterproofing integrity</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Fasteners were included in the 50% and 75% CD drawings but were omitted in the most recent permit drawing set.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Potential structural integrity issue with the collector plate assembly due to missing fasteners.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>DBAs around the elevator overrun were only welded at 12&quot; O.C. instead of the required installation as per detail 15 &amp; 19 / S7.02, leading to missing additional DBAs shown in detail 17 &amp; 18 / S7.02.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">46</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-46</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 46 Abbott Alameda 1420 HBP - Added Bike Racks Clarification RFI 26.1 Abbott Alameda 1420 HBP - Chipping of Concrete Footings Confirmation R_1 During OAC call on 2/25, Abbott confirmed that the no parking area highlighted in RFI 46 is to get added Bike Racks. Please confirm the Spec, Dimensioned location, Quantities, and mounting details for proposed Bike racks.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-tag">Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Incorporate bike rack requirements in initial design and confirm with stakeholders during design pha</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-0559.4</span>
+                        <span class="example-project">Southline Office</span>
+                    </div>
+                    <div class="example-question">Reference: SLP1 - RFI 0559.4 - PSD Waterproofing Detail at Tiers 4-6 Plaster Clarification_R4 A2.01, A7.01, A2.01S RFI 0559.2 - PSD Waterproofing Detail Clarification_R2 Background: At Tiers 4-6, the columns highlighted are to receive plaster finish, not terracotta. Question 1: Please confirm it is acceptable to provide a SS flashing, similar to detail SKA-04 (attached) at the base of the wall where plaster terminates. Question 2: Please confirm if fluid applied flashing is to terminate 2&quot; above slab.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Plaster finish specified for columns at Tiers 4-6 instead of terracotta as initially indicated</span>
+                        <span class="cause-tag">Impact: Requires confirmation on the use of SS flashing and fluid applied flashing termination height, potentially affecting waterproofing integrity</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure detailed specifications for finishes and flashing are included in the design documents</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-0794</span>
+                        <span class="example-project">Southline Office</span>
+                    </div>
+                    <div class="example-question">Referenced Documents: 13/S6.2 on 50% CDs and 75%CDs Detail 13 in drawing S6.2 in the previously issued drawing set (05/15/2023) shows fasteners located within each side of the splice plate. (Page 3) Detail 13 in drawing S6.2 in the most recent permit drawing set (07/07/2023) does not show these fasteners. (Page 2) 1) Please confirm if fasteners are no longer a part of the collector plate assembly.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Please see attached.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Fasteners were included in the 50% and 75% CD drawings but were omitted in the most recent permit drawing set.</span>
+                        <span class="cause-tag">Impact: Potential structural integrity issue with the collector plate assembly due to missing fasteners.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Implement a thorough review process for changes between drawing sets to ensure all details are consi</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Formwork & Shoring</div>
+                <div class="category-desc">Formwork design, stripping times, and shoring requirements</div>
+                <div class="category-stats">
+                    <span><strong>19</strong> Change Orders</span>
+                    <span><strong>2</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Need for additional footings at terrace walls for structural stability and installation of rat slab for form work of B2 seat walls</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Existing OWJ truss needs to be removed to reattach to the new W14x34 beam, leaving the perpendicular truss and slab unsupported.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires shoring of the slab to prevent it from hanging unsupported after the removal of the existing truss.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Need for clarification and additional waterproofing details not provided in the original drawings, including the removal of below grade waterproofing and adjustments to existing details.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Potential for improper waterproofing installation leading to water intrusion issues, which could affect the integrity of the building envelope.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Metal decking at north penthouse roof does not align with structural details and is unclear if it should extend over the tube steel overhang.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Potential misalignment of structural and architectural elements could lead to improper installation and structural integrity issues.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">15</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span>See response for detail</span>
+                        <span class="fix-count">4</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-74.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 74.1 - Abbott Alameda 1420 HBP - Stair 2 Shoring Detail Clarification RFI 74 - Abbott Alameda 1420 HBP - Stair 2 WF Beam to (E) OWJ Connection at Top and Bottom of Opening Clarification Marked up Picture Detail 2/S2.01 Per RFI 74 response, OWJ trusses at top and bottom of slab opening (red) need to reattach to the new W14x34 beam. To do this, DPR needs to remove the existing OWJ truss (blue), however once the truss is removed, it will leave the perpendicular truss (red) and slab hanging. Therefore, shoring of the slab will be required prior to completely removing the existing truss. DPR is proposing a layout of (2) shoring posts at each end as shown in the planview detail 2/S2.01. DPR is proposing to use Pro-Shore shoring, see product data attached. SEOR to confirm shoring detail is acceptable.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): SEE ATTACHED FOR TIPPING&#39;S DETAILED RESPONSE.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing OWJ truss needs to be removed to reattach to the new W14x34 beam, leaving the perpendicular truss and slab unsupported.</span>
+                        <span class="cause-tag">Impact: Requires shoring of the slab to prevent it from hanging unsupported after the removal of the existing truss.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough review of existing structural conditions and support requirements during design p</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-0559.2</span>
+                        <span class="example-project">Southline Office</span>
+                    </div>
+                    <div class="example-question">Reference: A2.01, A7.01, A2.01S RFI 0559 - PSD Waterproofing Detail Clarification RFI 0559.1 - PSD Waterproofing Detail Clarification Q1: Please review and confirm attached markup on A2.01 for waterproofing details is accurate. Q2: Please provide another waterproofing detail similar to SKA-06 however without the shaft wall shown on the interior. Q3: Please provide a SKA-04A waterproofing detail similar to SKA-04 for terracotta only wall and no interior plaster wall. Q4: Please revise SKA-04 detail to remove below grade waterproofing. Q5: Where waterproofing details transition to other waterproofing details please confirm base flashing to simply terminate. If any specific flashing details are required at these transitions please advise. Q6: Please confirm curb required at skin column wrap at gridline G16 and GA and updated A2.01S accordingly. Q7: Please revise callout on SKA-07 as no detail 17 on A8.01 exists. Please see attached for more information. D0-A20007-00 LPSC Phase 1 #0559.2 - PSD Waterproofing Detail Clarification</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Need for clarification and additional waterproofing details not provided in the original drawings, including the removal of below grade waterproofing ...</span>
+                        <span class="cause-tag">Impact: Potential for improper waterproofing installation leading to water intrusion issues, which could affect the integrity of the building envelope...</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure comprehensive waterproofing details are included in the design documents and conduct a thorou</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-0782</span>
+                        <span class="example-project">Southline Office</span>
+                    </div>
+                    <div class="example-question">Ref: S2.08, S2.09, A8.20, S5.90 Per architectural details metal decking at north penthouse roof to extend the entire roof including the overhang. This does not align with structural details. Please confirm decking type B is intended to extend over entire roof area on the North Penthouse roof, including on top of the tube steel overhang. Please see attached for more information.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Please see attached.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Metal decking at north penthouse roof does not align with structural details and is unclear if it should extend over the tube steel overhang.</span>
+                        <span class="cause-tag">Impact: Potential misalignment of structural and architectural elements could lead to improper installation and structural integrity issues.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure comprehensive coordination between architectural and structural drawings during the design ph</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Waterproofing & Joints</div>
+                <div class="category-desc">Waterproofing, waterstops, and joint treatments</div>
+                <div class="category-stats">
+                    <span><strong>19</strong> Change Orders</span>
+                    <span><strong>1</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span>Need for clarification and additional waterproofing details not provided in the original drawings, including the removal of below grade waterproofing and adjustments to existing details.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Potential for improper waterproofing installation leading to water intrusion issues, which could affect the integrity of the building envelope.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Plaster finish specified for columns at Tiers 4-6 instead of terracotta as initially indicated</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Requires confirmation on the use of SS flashing and fluid applied flashing termination height, potentially affecting waterproofing integrity</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>City inspector directed installation of expansion joints at a maximum of 20&#39; intervals instead of the previously specified 50&#39; intervals in concrete curbs, gutters, and sidewalks.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Increased labor and material costs due to the need for additional expansion joints installation.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Depressed slab design to prevent waterproofing penetration</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span>Impact: Potential for waterproofing failure if slab is not properly designed</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span>Per attached ASK/detail</span>
+                        <span class="fix-count">19</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-0559.2</span>
+                        <span class="example-project">Southline Office</span>
+                    </div>
+                    <div class="example-question">Reference: A2.01, A7.01, A2.01S RFI 0559 - PSD Waterproofing Detail Clarification RFI 0559.1 - PSD Waterproofing Detail Clarification Q1: Please review and confirm attached markup on A2.01 for waterproofing details is accurate. Q2: Please provide another waterproofing detail similar to SKA-06 however without the shaft wall shown on the interior. Q3: Please provide a SKA-04A waterproofing detail similar to SKA-04 for terracotta only wall and no interior plaster wall. Q4: Please revise SKA-04 detail to remove below grade waterproofing. Q5: Where waterproofing details transition to other waterproofing details please confirm base flashing to simply terminate. If any specific flashing details are required at these transitions please advise. Q6: Please confirm curb required at skin column wrap at gridline G16 and GA and updated A2.01S accordingly. Q7: Please revise callout on SKA-07 as no detail 17 on A8.01 exists. Please see attached for more information. D0-A20007-00 LPSC Phase 1 #0559.2 - PSD Waterproofing Detail Clarification</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Need for clarification and additional waterproofing details not provided in the original drawings, including the removal of below grade waterproofing ...</span>
+                        <span class="cause-tag">Impact: Potential for improper waterproofing installation leading to water intrusion issues, which could affect the integrity of the building envelope...</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure comprehensive waterproofing details are included in the design documents and conduct a thorou</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-0559.4</span>
+                        <span class="example-project">Southline Office</span>
+                    </div>
+                    <div class="example-question">Reference: SLP1 - RFI 0559.4 - PSD Waterproofing Detail at Tiers 4-6 Plaster Clarification_R4 A2.01, A7.01, A2.01S RFI 0559.2 - PSD Waterproofing Detail Clarification_R2 Background: At Tiers 4-6, the columns highlighted are to receive plaster finish, not terracotta. Question 1: Please confirm it is acceptable to provide a SS flashing, similar to detail SKA-04 (attached) at the base of the wall where plaster terminates. Question 2: Please confirm if fluid applied flashing is to terminate 2&quot; above slab.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Plaster finish specified for columns at Tiers 4-6 instead of terracotta as initially indicated</span>
+                        <span class="cause-tag">Impact: Requires confirmation on the use of SS flashing and fluid applied flashing termination height, potentially affecting waterproofing integrity</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure detailed specifications for finishes and flashing are included in the design documents</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-0940</span>
+                        <span class="example-project">Southline Office</span>
+                    </div>
+                    <div class="example-question">Reference: Offsite Drawing C10.0 detail 4 Offsite Drawing 4/C10.0(SSF Standard R-2A) Curb and Gutters are to be placed per City Standard Detail R-1. City Specification R-1 states that expansion joints shall be construction at a maximum of 50&#39; intervals in concrete curbs, gutters, sidewalks, and at cold joints. On 9/8/23 we had a rebar inspection with City of SSF inspectors, Tony Corsetti and Amer Moussali. Based on our discussion, the inspector has directed DPR to install expansion Joints in Curb/Gutter and Sidewalk at a maximum of 20&#39; interval per an upcoming revision to city Specs R-1, see attached. As such, there will be added cost for labor and materials. Please confirm DPR is to follow the instructions of the City of SSF inspector and install expansion joints in curb, gutter, and sidewalk at a maximum interval of 20&#39;.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">City inspector directed installation of expansion joints at a maximum of 20&#39; intervals instead of the previously specified 50&#39; intervals in concrete c...</span>
+                        <span class="cause-tag">Impact: Increased labor and material costs due to the need for additional expansion joints installation.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure updated city specifications are reviewed and incorporated into project plans before construct</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="key-insights">
+            <h2>Top Root Causes Across All Categories</h2>
+
+            <div class="insight-item">
+                <strong>#1:</strong> Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall. <em>(16 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#2:</strong> Need for additional footings at terrace walls for structural stability and installation of rat slab for form work of B2 seat walls <em>(10 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#3:</strong> Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings. <em>(8 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#4:</strong> Impact: Increased gap to terracotta framing, necessitating an extension of the curb. <em>(8 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#5:</strong> Impact: Increased gap to terracotta framing, potentially compromising the integrity and aesthetics of the balcony area. <em>(8 occurrences)</em>
+            </div>
+
+            <div class="insight-item" style="margin-top: 20px;">
+                <strong>Prevention Strategy:</strong> For TI/renovation projects, budget for existing condition surveys before concrete work.
+                Verify embed/anchor locations with steel and MEP before pour. Request seismic anchorage details early if not shown on drawings.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

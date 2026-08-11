@@ -1,0 +1,210 @@
+{
+  "generated_at": "2026-04-30T14:07:45.818099",
+  "total_analyzed": 550,
+  "categories": {
+    "Missing Drawing Detail": 172,
+    "Design Change/Addition": 138,
+    "Existing Conditions Differ": 128,
+    "Code/Inspector Requirement": 37,
+    "MEP Coordination Gap": 27,
+    "Dimensional Conflict": 25,
+    "Scope Gap": 13,
+    "Owner Request": 6,
+    "Field Damage/Error": 4
+  },
+  "top_subcategories": {
+    "Framing height discrepancy": 2,
+    "Inadequate wall type specified for fire rating requirements": 2,
+    "Lack of detailed layout for Wiremold in Fitness Area 107": 2,
+    "Curb installation detail not adequately specified to address slab depression.": 2,
+    "Seismic tie spacing non-compliance": 2,
+    "Insufficient rebar clearance as per building code": 2,
+    "Access requirement not included in original design": 2,
+    "Insufficient screw specifications for column attachment": 2,
+    "Lack of specified finishes in design documents": 1,
+    "Lack of reinforcement specification for stair tread infill": 1,
+    "Duct conflicts with door swing": 1,
+    "Missing elevation and layout details for veneer paneling": 1,
+    "Framing requirements for wood veneer panels not adequately detailed in the design documents.": 1,
+    "Truss conflict with new column installation": 1,
+    "L-Bracket installation details not provided": 1,
+    "Absence of FRP or protective coating detail in construction documents.": 1,
+    "Lack of BMS integration in the original design": 1,
+    "Lack of seismic anchorage details for HVAC equipment": 1,
+    "FSD locations not specified in mechanical drawings": 1,
+    "Demo plans did not include removal of existing flooring.": 1
+  },
+  "preventable_pct": 98.36363636363636,
+  "sample_extractions": [
+    {
+      "specific_condition": "No finishes existing or called out in plans for storage room 02D8C",
+      "impact": "Uncertainty regarding ceiling height, ceiling type, and interior finishes, leading to additional work and costs for clarification and implementation",
+      "root_cause_category": "Missing Drawing Detail",
+      "root_cause_subcategory": "Lack of specified finishes in design documents",
+      "preventable": "yes",
+      "prevention_action": "Ensure all finishes are detailed in design documents before project initiation",
+      "rfi_id": "112d7f19-f79a-4f95-af4a-827dd786d2ac",
+      "rfi_number": "RFI-10.1",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "success": true,
+      "tokens_used": {
+        "input": 422,
+        "output": 111
+      }
+    },
+    {
+      "specific_condition": "Detail 3/S5.02 does not show reinforcement for pan-fill stair tread infill",
+      "impact": "Uncertainty regarding structural integrity of stair tread infill, leading to potential safety concerns and additional work for reinforcement",
+      "root_cause_category": "Missing Drawing Detail",
+      "root_cause_subcategory": "Lack of reinforcement specification for stair tread infill",
+      "preventable": "yes",
+      "prevention_action": "Ensure all structural details are fully specified in design documents before issuing for construction",
+      "rfi_id": "aa47fdca-4005-4c3a-b799-3075189f25f6",
+      "rfi_number": "RFI-101",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "success": true,
+      "tokens_used": {
+        "input": 408,
+        "output": 116
+      }
+    },
+    {
+      "specific_condition": "Existing duct work prevents the roof access door from opening a full 90 degrees.",
+      "impact": "Requires modification of the door swing to a right-hand reverse (RHR) to allow proper access.",
+      "root_cause_category": "Existing Conditions Differ",
+      "root_cause_subcategory": "Duct conflicts with door swing",
+      "preventable": "yes",
+      "prevention_action": "Conduct a thorough review of existing MEP layouts during design phase to identify potential conflicts.",
+      "rfi_id": "75504514-d854-43bc-bf27-34d3cc143583",
+      "rfi_number": "RFI-10.2",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "success": true,
+      "tokens_used": {
+        "input": 469,
+        "output": 109
+      }
+    },
+    {
+      "specific_condition": "No elevation or layout provided for the wood veneer paneling installation as per detail 9/A9.6.0.",
+      "impact": "Lack of clarity on the extent and orientation of veneer installation leads to additional work and costs for determining installation requirements.",
+      "root_cause_category": "Missing Drawing Detail",
+      "root_cause_subcategory": "Missing elevation and layout details for veneer paneling",
+      "preventable": "yes",
+      "prevention_action": "Ensure all necessary details for finishes, including elevations and layouts, are included in the design documents before issuance.",
+      "rfi_id": "6261fd56-e03d-4820-b74f-8cd840e328bf",
+      "rfi_number": "RFI-103",
+      "project": "Abbott Alameda Office TI",
+      "trade": "architectural",
+      "success": true,
+      "tokens_used": {
+        "input": 520,
+        "output": 127
+      }
+    },
+    {
+      "specific_condition": "Framing/backing/blocking requirements for wood veneer panels at Stair 1 were unclear, leading to the conclusion that existing wall should be demoed and rebuilt.",
+      "impact": "Increased costs and additional work required to demo and rebuild the wall instead of following the original framing plan.",
+      "root_cause_category": "Missing Drawing Detail",
+      "root_cause_subcategory": "Framing requirements for wood veneer panels not adequately detailed in the design documents.",
+      "preventable": "yes",
+      "prevention_action": "Provide detailed framing and blocking requirements in the design documents to avoid ambiguity.",
+      "rfi_id": "65c3cde8-6ac4-4bba-bc13-ddf6a561e1b5",
+      "rfi_number": "RFI-103.1",
+      "project": "Abbott Alameda Office TI",
+      "trade": "architectural",
+      "success": true,
+      "tokens_used": {
+        "input": 528,
+        "output": 131
+      }
+    },
+    {
+      "specific_condition": "Existing truss above the wall clashes with the new HSS4X4 column as per post-demo investigations.",
+      "impact": "The clash prevents the installation of the new HSS column as designed, requiring a shift of the column outside of the wall.",
+      "root_cause_category": "Existing Conditions Differ",
+      "root_cause_subcategory": "Truss conflict with new column installation",
+      "preventable": "yes",
+      "prevention_action": "Conduct thorough post-demolition investigations to identify existing structural elements before finalizing design.",
+      "rfi_id": "bfa62341-3021-4922-af8f-ee7cb07e51b2",
+      "rfi_number": "RFI-107",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "success": true,
+      "tokens_used": {
+        "input": 509,
+        "output": 120
+      }
+    },
+    {
+      "specific_condition": "No details showing the extent of install for the L-Bracket anchoring into the slab and its interaction with the wall panel under the stair were provided.",
+      "impact": "Lack of structural details led to uncertainty in installation, requiring additional work to clarify anchoring methods and interactions.",
+      "root_cause_category": "Missing Drawing Detail",
+      "root_cause_subcategory": "L-Bracket installation details not provided",
+      "preventable": "yes",
+      "prevention_action": "Ensure comprehensive structural details are included in submittals and RFIs to clarify installation requirements.",
+      "rfi_id": "640e865f-7984-4995-8d38-ca5a4d76c5b8",
+      "rfi_number": "RFI-108",
+      "project": "Abbott Alameda Office TI",
+      "trade": "architectural, structural",
+      "success": true,
+      "tokens_used": {
+        "input": 466,
+        "output": 127
+      }
+    },
+    {
+      "specific_condition": "Current drawings do not show any FRP or Epoxy type paint being installed around the mop sink as required by building code.",
+      "impact": "Lack of specified wall protection around the mop sink could lead to water damage and code compliance issues.",
+      "root_cause_category": "Missing Drawing Detail",
+      "root_cause_subcategory": "Absence of FRP or protective coating detail in construction documents.",
+      "preventable": "yes",
+      "prevention_action": "Ensure all code-required details, such as wall protection around mop sinks, are included in the construction drawings during the design phase.",
+      "rfi_id": "b9e74595-18d6-418b-963c-21f3dd3dbe6c",
+      "rfi_number": "RFI-109",
+      "project": "Abbott Alameda Office TI",
+      "trade": "architectural",
+      "success": true,
+      "tokens_used": {
+        "input": 443,
+        "output": 132
+      }
+    },
+    {
+      "specific_condition": "The Mitsubishi DX Split System is designed to operate with stand-alone controls and is not integrated with the Building Management System (BMS).",
+      "impact": "The lack of BMS integration may lead to increased operational costs and inefficiencies in monitoring and controlling the HVAC system.",
+      "root_cause_category": "Design Change/Addition",
+      "root_cause_subcategory": "Lack of BMS integration in the original design",
+      "preventable": "yes",
+      "prevention_action": "Ensure that all HVAC system designs include BMS integration requirements during the design phase.",
+      "rfi_id": "7ac67549-be0f-4e1e-9ce8-a48a8255459b",
+      "rfi_number": "RFI-15",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "success": true,
+      "tokens_used": {
+        "input": 444,
+        "output": 127
+      }
+    },
+    {
+      "specific_condition": "Seismic bracing details for HVAC equipment not shown on mechanical drawings M0.2 Details 2 & 3",
+      "impact": "Units require seismic bracing per code, which was not accounted for in the original design",
+      "root_cause_category": "Missing Drawing Detail",
+      "root_cause_subcategory": "Lack of seismic anchorage details for HVAC equipment",
+      "preventable": "yes",
+      "prevention_action": "Ensure all seismic requirements are included in mechanical drawings during design phase",
+      "rfi_id": "0440c479-473c-446e-bb85-e9c216b4ac17",
+      "rfi_number": "RFI-16",
+      "project": "Abbott Alameda Office TI",
+      "trade": "structural, mechanical",
+      "success": true,
+      "tokens_used": {
+        "input": 471,
+        "output": 115
+      }
+    }
+  ]
+}

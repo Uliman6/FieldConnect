@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discriminating Scoring - Feedback Form</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; line-height: 1.5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #fff; margin-bottom: 10px; }
+        .subtitle { color: #94a3b8; margin-bottom: 20px; }
+
+        .stats-bar { background: linear-gradient(135deg, #1e3a5f 0%, #312e81 100%); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 25px; flex-wrap: wrap; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 24px; font-weight: bold; }
+        .stat-label { font-size: 11px; opacity: 0.8; }
+        .stat-value.critical { color: #ef4444; }
+        .stat-value.important { color: #f97316; }
+        .stat-value.notable { color: #eab308; }
+
+        .validated-section { background: #166534; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .validated-section h3 { color: #86efac; margin-bottom: 10px; }
+        .validated-item { background: #14532d; padding: 8px 12px; border-radius: 4px; margin-bottom: 5px; font-size: 13px; }
+
+        .section-header { padding: 12px 15px; border-radius: 6px; font-weight: bold; color: white; margin-top: 25px; margin-bottom: 12px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .section-header.score-5 { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); }
+        .section-header.score-45 { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); }
+        .section-header.score-4 { background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%); }
+        .section-count { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 13px; }
+
+        .rfi-card { background: #1e293b; border-radius: 8px; margin-bottom: 15px; overflow: hidden; border-left: 4px solid #475569; }
+        .rfi-card.score-5 { border-left-color: #ef4444; }
+        .rfi-card.score-45 { border-left-color: #f97316; }
+        .rfi-card.score-4 { border-left-color: #eab308; }
+
+        .rfi-header { background: #0f172a; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; cursor: pointer; }
+        .rfi-header:hover { background: #1e293b; }
+        .rfi-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .co-amount { font-size: 16px; font-weight: bold; color: #22c55e; min-width: 100px; }
+        .rfi-id { font-weight: bold; color: #fff; }
+        .rfi-project { background: #334155; padding: 3px 10px; border-radius: 4px; font-size: 11px; color: #94a3b8; }
+        .lesson-type { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .lesson-type.code_violation { background: #7f1d1d; color: #fecaca; }
+        .lesson-type.safety_issue { background: #7f1d1d; color: #fecaca; }
+        .lesson-type.damage_occurred { background: #7c2d12; color: #fed7aa; }
+        .lesson-type.coordination_gap { background: #713f12; color: #fef08a; }
+        .lesson-type.design_error { background: #365314; color: #d9f99d; }
+        .lesson-type.routine_clarification { background: #1e3a5f; color: #93c5fd; }
+
+        .score-badge { padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px; color: white; }
+        .score-badge.score-5 { background: #dc2626; }
+        .score-badge.score-45 { background: #ea580c; }
+        .score-badge.score-4 { background: #ca8a04; }
+
+        .rfi-content { padding: 15px; display: none; }
+        .rfi-content.open { display: block; }
+
+        .text-box { background: #0f172a; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; border: 1px solid #334155; line-height: 1.6; max-height: 150px; overflow-y: auto; }
+        .text-label { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
+
+        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
+        .analysis-box { background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; }
+        .analysis-label { font-size: 10px; color: #64748b; text-transform: uppercase; }
+        .analysis-value { font-size: 14px; color: #e2e8f0; font-weight: 500; margin-top: 2px; }
+        .analysis-detail { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+        .reasoning-box { background: #1e1b4b; border: 1px solid #4338ca; border-radius: 6px; padding: 12px; margin: 10px 0; }
+        .reasoning-box .label { font-size: 10px; color: #a5b4fc; text-transform: uppercase; }
+        .reasoning-box .text { font-size: 13px; color: #e0e7ff; margin-top: 4px; }
+
+        .feedback-section { background: #1e3a5f; border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; margin-top: 15px; }
+        .feedback-section h4 { color: #93c5fd; margin-bottom: 12px; font-size: 13px; }
+        .agree-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .agree-btn { flex: 1; padding: 10px; border: 2px solid #475569; border-radius: 6px; background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .agree-btn:hover { border-color: #3b82f6; background: #1e3a5f; }
+        .agree-btn.selected.agree { background: #166534; border-color: #22c55e; color: #86efac; }
+        .agree-btn.selected.disagree { background: #7f1d1d; border-color: #ef4444; color: #fecaca; }
+        .agree-btn.selected.partial { background: #713f12; border-color: #f59e0b; color: #fef3c7; }
+
+        .feedback-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        .feedback-group label { display: block; font-size: 12px; font-weight: 600; color: #93c5fd; margin-bottom: 4px; }
+        .feedback-group select, .feedback-group textarea { width: 100%; padding: 8px; border: 1px solid #475569; border-radius: 6px; background: #0f172a; color: #e2e8f0; font-size: 13px; }
+        .feedback-group textarea { min-height: 60px; resize: vertical; }
+
+        .export-section { background: #1e293b; border-radius: 8px; padding: 15px 20px; margin-top: 30px; position: sticky; bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .export-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .export-btn:hover { background: #2563eb; }
+        .export-btn.secondary { background: #475569; }
+        .output-area { flex: 1; min-width: 200px; background: #0f172a; color: #94a3b8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; max-height: 100px; overflow-y: auto; display: none; }
+        .output-area.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Discriminating Scoring - Review</h1>
+        <p class="subtitle">Stricter criteria applied. Review NEW Score 5s and 4.5s.</p>
+
+        <div class="stats-bar">
+            <div class="stat"><div class="stat-value">100</div><div class="stat-label">Total Scored</div></div>
+            <div class="stat"><div class="stat-value critical">0</div><div class="stat-label">NEW Score 5</div></div>
+            <div class="stat"><div class="stat-value important">0</div><div class="stat-label">Score 4.5</div></div>
+            <div class="stat"><div class="stat-value notable">18</div><div class="stat-label">Score 4</div></div>
+            <div class="stat"><div class="stat-value" style="color:#22c55e;">4</div><div class="stat-label">Already Validated 5s</div></div>
+        </div>
+
+        <div class="validated-section">
+            <h3>Already Validated Score 5s (Not Shown)</h3>
+            <div class="validated-item">RFI-2028 (Southline Office)</div>
+            <div class="validated-item">RFI-1268 (Southline Office)</div>
+            <div class="validated-item">RFI-1993 (Southline Office)</div>
+            <div class="validated-item">RFI-2119 (Southline Office)</div>
+        </div>
+
+        <div id="rfi-container">
+<div class="section-header score-4">NOTABLE (Score 4) - Sample <span class="section-count">18 shown</span></div>
+
+            <div class="rfi-card score-4" data-idx="0">
+                <div class="rfi-header" onclick="toggleCard(0)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$15,807,369</span>
+                        <span class="rfi-id">RFI-54</span>
+                        <span class="rfi-project">CoreSite Data Center</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-0">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">There is a furred wall at Storage 235 intended to hide the existing bus duct and multiple existing conduit risers. However, the current dimensions of the furred wall clash with these existing conduits. Reference Newforma Issues 114, 134. For the wall segment running E-W (highlighted in blue on the attached markup), there is a clash with existing conduit risers, DPR proposes removing this wall segment. For the wall segment running N-S (highlighted in orange on the attached markup), There are existing Conduits behind the walls that are clashing with the wall. There is also limited space between the existing conduits and the new bus duct, for new wall framing to be installed. DPR proposes shifting furred wall segment West of bus duct run flush with West-most wall segment of furred wall to avo</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Ashley Hill (Corgan - 10059759): Per the updated information on the 06.24.2025 email</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">Coordination issues between the proposed furred wall and existing conduits were identified, preventing potential costly rework.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">data centers, commercial construction</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement a more thorough review process for wall placements</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The initial design did not adequately account for the existi</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a notable coordination gap between the proposed furred wall and existing conduit risers, which could have led to significant rework if not resolved. The proposed changes also involve a design error that was caught during construction, indicating a moderate cost impact.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(0,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(0,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(0,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-0">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-0" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="1">
+                <div class="rfi-header" onclick="toggleCard(1)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$439,635</span>
+                        <span class="rfi-id">RFI-1521</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-1">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference Drawing: Offsite C4.3 Requesting clarification or alternate details where lime treatment cannot occur offsite due to existing utilities. Mixers need 1' minimum clearance between bottom of treatment area &amp; existing utilities for lime treatment, therefore no existing utilities can be within 2.5' or 30 inches of proposed subgrade with an 18&quot; lime treatment program. See attached sheets for utility areas which can not be lime treated based on the above. In these areas Teichert is requesting the following: 1) Confirmation if utilities will be lowered to allow lime treatment to occur. 2) If not, is it acceptable to shrink lime treatment section to allow for lime treatment to occur. If so, provide minimum lime treatment section. 3) Alternate detail showing 15&quot; full section AC over &quot;compa</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI addresses a significant coordination issue regarding lime treatment and existing utilities, preventing potential construction delays and cost overruns.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">civil engineering, infrastructure, site developmen</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Review utility placement and treatment methods during the de</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The existing utility placements were not adequately accounte</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">This RFI highlights a notable coordination gap regarding the lime treatment process due to existing utilities, which could lead to significant cost implications and construction challenges. The request for alternate details and confirmation of utility adjustments indicates a proactive approach to prevent potential issues, but it does not rise to the level of a critical violation or safety incident.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(1,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(1,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(1,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-1">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-1" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="2">
+                <div class="rfi-header" onclick="toggleCard(2)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$206,565</span>
+                        <span class="rfi-id">RFI-0756</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-2">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Ref: SLP1 - 4062-054000-2 B1 Exterior Framing Deferred Submittal There are multiple locations where the curtainwall embed at edge of slab is conflicting with the unistrut for the prefabricated exterior framing panel clip attachments. At these locations the unistrut will be shorter than the width of the framing panels. This will prevent the jamb studs from being clipped off to the unistrut. Please confirm it is acceptable to add 2 clips to the penultimate stud with a cap track per detail 9/SE1.1 or SE1.1A where the last stud on the vertical panels cannot be connected to the Unistrut.</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">See attached sketch.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">Coordination gap between curtainwall embeds and unistrut identified, necessitating design adjustments.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, office</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement a review process for coordination between structur</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The conflict arises from a lack of detailed coordination bet</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">This RFI identifies a notable coordination gap between the curtainwall embed and the unistrut, which could lead to significant rework and cost implications if not addressed. The resolution suggests a modification to the framing panel attachment that prevents potential issues during construction.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(2,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(2,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(2,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-2">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-2" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="3">
+                <div class="rfi-header" onclick="toggleCard(3)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$151,450</span>
+                        <span class="rfi-id">RFI-0849</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-3">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference Drawing: Offsite C6.8 Per Offsite Drawing C6.8 DPR is to install an 8&quot; Storm Drain lateral along Tanforan. Currently, the storm drain lateral is in conflict with an existing PG&amp;E power pole. Please provide direction for one of the following: Option 1: If Storm drain line is to be relocated, provide updated drawings and routing of the 8&quot; storm drain line. See attached for proposed routing. Option 2: If Storm Drain line is to remain, confirm the line will be installed once the power pole is relocated.</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI revealed a significant coordination gap between the storm drain installation and an existing power pole, preventing potential costly rework.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, infrastructure</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement a more thorough review process for utility conflic</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The existing utility infrastructure was not adequately accou</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a coordination gap between the storm drain installation and an existing PG&amp;E power pole, which could lead to significant rework if not resolved. While it is not a critical violation or safety issue, it highlights a notable design error that was caught during construction.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(3,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(3,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(3,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-3">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-3" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="4">
+                <div class="rfi-header" onclick="toggleCard(4)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$142,648</span>
+                        <span class="rfi-id">RFI-47</span>
+                        <span class="rfi-project">Abbott Alameda Office TI</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-4">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor restrooms. DPR was contracted to only provide new finishes in these restrooms. However, additional work needs to be completed due to the existing conditions of the framing. Question 1: Existing framing only goes to 8' height. RCP calls for 9' ceilings. Per OAC on 02/27/25, DPR to proceed with 9' ceilings. Please confirm no exceptions. Question 2: Plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10' tall for the 9' ceilings) and re- installed after framing is complete. Per OAC on 02/27/25, DPR to with removal and re-install of plumbing due to new framing installation. Please conf</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Elaine Yiu: Work is approved with no exceptions, see attached for additional comments.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights critical adjustments needed due to discrepancies between existing conditions and design intent, preventing potential costly rework.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">tenant improvement, commercial construction</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement thorough pre-construction assessments to identify </div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">Existing framing conditions did not align with the design sp</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses significant coordination gaps and design errors related to existing conditions that could have led to costly rework if not clarified. The need for additional framing and plumbing adjustments indicates a notable deviation from the original design intent, which could impact project timelines and costs.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(4,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(4,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(4,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-4">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-4" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="5">
+                <div class="rfi-header" onclick="toggleCard(5)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$135,704</span>
+                        <span class="rfi-id">RFI-2046.1</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-5">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">At the elevator lobby on Tier 1, it was noticed that during heavy rain and wind events, water starts to accumulate under the stair landings, traveling through the North access of the tower. With the high wind forces, the water starts to flow towards the elevator fronts. This causes the water to start flowing into the elevator pits. All the slopes have been installed per the drawings and verified in the field, per heat map included in RFI attachment. Per meeting on 3.14 with DES, Broadway, DPR, and PMA, it is proposed to install a trench drain parallel with the elevator fronts (see attached markup) with perpendicular legs at either end. Drain would feed back into the hub drain located at the fire riser. This method aligns with the walk with ownership on 3.4.25. 1. DES - Please confirm exten</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights a significant water management issue that could lead to water intrusion into elevator pits, necessitating a trench drain installation.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">BROAD</div>
+                            <div class="analysis-detail">commercial, office, mixed-use</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">HIGH</div>
+                            <div class="analysis-detail">Implement trench drain installation as proposed to mitigate </div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">PARTIAL</div>
+                            <div class="analysis-detail">The existing design did not adequately account for water man</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a notable issue regarding water accumulation that could lead to significant problems, including potential water intrusion into elevator pits. While the slopes were installed per the drawings, the identification of this issue during heavy rain and wind events indicates a design oversight that could have serious implications if not addressed. The proposed trench drain solution is a proactive measure to prevent future issues, but it does not indicate an actual violation or damage that has occurred.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(5,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(5,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(5,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-5">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-5" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="6">
+                <div class="rfi-header" onclick="toggleCard(6)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$120,190</span>
+                        <span class="rfi-id">RFI-0849.1</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-6">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference Drawing C6.8 Response to RFI-849 provided revised plans to both the Storm drain line and Domestic water line, see attached. Response was provided by BKF and closed out on 8/30/23. DW tie-in installed and completed per onsite and offsite drawings on 8/04/23. Please confirm DPR is to move the 6&quot; DW line to STA 55+51.47 and build per the plans provided in response to RFI-849. This work will require rework and incur cost and time</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">This RFI highlights a notable design error that necessitated costly rework due to a coordination gap.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, office</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement a more rigorous review process for design drawings</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The root cause was a design error in the original plans that</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a significant coordination gap that requires rework and incurs additional costs. While it is not a critical violation or safety issue, the need to move the 6&quot; domestic water line indicates a notable design error that could have led to further complications if not addressed.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(6,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(6,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(6,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-6">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-6" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="7">
+                <div class="rfi-header" onclick="toggleCard(7)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$118,846</span>
+                        <span class="rfi-id">RFI-16</span>
+                        <span class="rfi-project">Intuitive Surgical MOB</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-7">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">The soffit that supports the mecho shade is drawn as a single drop with a kicker. There is not enough access to install this soffit drop between the building's perimeter beam and the exterior wall. Also, in some areas existing cold formed metal framing ties into exterior wall preventing access. To avoid attaching to the curtain wall. DPR Drywall proposes changing the detail to a drywall grid soffit that is supported by Z clips to the beam, and wire back to the deck. The soffit would be braced to the structure by CRC channel attached to the drywall grid main and the web of the Z clip attached to the beam. Please see attached Sketch and confirm the proposed details are acceptable.</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW RESPONSE:
+After review of the onsite condition with the construction team, we are removing the soffit and instead will prefer 
+to install the mechoshade pocket directly to exterior mullion. Please review attached ASK-709.
+M. Thomas, RMW, 07.25.24</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlighted a critical coordination gap that was effectively resolved before leading to potential rework.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, institutional</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement more thorough coordination reviews between archite</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">Inadequate consideration of existing structural elements in </div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI identified a significant coordination gap between the soffit installation and existing structural elements, which could have led to costly rework if not addressed. The proposed solution effectively mitigates potential issues, indicating a notable design error caught during construction.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(7,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(7,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(7,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-7">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-7" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="8">
+                <div class="rfi-header" onclick="toggleCard(8)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$114,016</span>
+                        <span class="rfi-id">RFI-1076</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-8">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Currently there is an existing communication line and irrigation line that is directly in conflict with one of our PG&amp;E #7 Vaults. Additionally there is an existing storm drain line that is in conflict with the eastern #7 box pad. See attached. Please provide new location of the two PG&amp;E #7 Box and PG&amp;E transformer that will deconflict with the communication irrigation line, existing storm drain, and high voltage line. Confirm that field adjustment and red line plans will be acceptable with PG&amp;E. Please also coordinate with BKF that the new proposed location will not conflict with future civil work to be installed.</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Orig. response is attached. Thank you!!</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights significant utility conflicts that require careful coordination to avoid costly rework.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">BROAD</div>
+                            <div class="analysis-detail">civil, infrastructure, utility installation</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement a more thorough utility conflict assessment proces</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">Existing utilities were not adequately accounted for in the </div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses significant conflicts between existing utilities and proposed infrastructure, which could lead to notable coordination issues and potential delays if not resolved. While it does not indicate an actual violation or damage, the need for careful relocation and coordination suggests a notable learning opportunity.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(8,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(8,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(8,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-8">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-8" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="9">
+                <div class="rfi-header" onclick="toggleCard(9)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$108,977</span>
+                        <span class="rfi-id">RFI-1470</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-9">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: R20 DL JT4.0 The section of the trench highlighted in red is being affected due to the existing utilities that the JT is crossing over at South Linden Ave. At location A, the Joint trench will be crossing over communication duct bank and gas line. The top of the communication duct bank is at a depth of ~43&quot; and the gas line is at a depth of ~33&quot; and ~22&quot; each as shown in Image 1 and 2 respectively(Depth is measured from existing grade). Based on the on-site discussion with the PG&amp;E inspector, Phoenix has been directed to have the primary power conduit run on top of the communication duct bank and then use 22° fittings to go down deeper to avoid the gas lines so that the conduit end up in the original design depth near the end of its run. However, due to the changes necessitated </div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">Coordination with existing utilities necessitated design changes and additional fittings, highlighting the importance of thorough preconstruction planning.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">Utility installation, Civil engineering, Infrastru</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement thorough utility surveys and coordination meetings</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">Existing utilities not accurately represented or accounted f</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">This RFI highlights a notable coordination gap due to existing utilities that required a design modification and additional fittings, which could have led to significant issues if not addressed. The need for an additional vault indicates a moderate cost impact and a design error caught during construction.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(9,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(9,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(9,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-9">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-9" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="10">
+                <div class="rfi-header" onclick="toggleCard(10)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$107,373</span>
+                        <span class="rfi-id">RFI-0091</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-10">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Ref: Fire Water Tank Water Volume Calculation Sheet; A1.03 (B1 ASK-01 dated 10.13.22); FP0.04, S1.01 &amp; S3.01 (B1 95% CD drawing dated 08.26.22); SK-1 Blockout Size This is confirming RFI. 1. See FP0.04 and SK-1. Blockout (area highlighted in yellow) is required at the southeast corner of firewater tank so that the sanitary sewer and storm drain lines are not submerged in water. The structural beams around the blockout are highlighted in orange. Please confirm that the size of the grade beam are 18&quot;W x 16&quot;D and 20&quot;W x 20&quot;D respectively. 2. See FP0.04. The manhole is also shifted next to the blockout so as to minimize additional structural beams around the manhole/blockout. Please confirm the location and size of the manhole depicted is acceptable. 3. See A1.03, S3.01 &amp; S1.01. (3) 8&quot; city fi</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">see attached.
+Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655) - Oct 24, 2022, 9:43 AM PDT
+•
+•
+References
+Files (2)
+SLP1 - RFI-0091 - B1 Fire Water Tank Size Changes_Resp.pdf
+RFI0091 Attachment.pdf</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights critical design adjustments necessary to ensure compliance with fire safety and structural integrity.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">BROAD</div>
+                            <div class="analysis-detail">commercial, infrastructure, public works</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">HIGH</div>
+                            <div class="analysis-detail">Implement a thorough review process for structural and fire </div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The initial design did not adequately account for the necess</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">This RFI addresses significant design clarifications that could have led to substantial issues if not resolved, particularly regarding the fire water tank's capacity and structural implications. The adjustments proposed prevent potential code violations and ensure compliance with safety standards.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(10,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(10,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(10,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-10">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-10" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="11">
+                <div class="rfi-header" onclick="toggleCard(11)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$92,894</span>
+                        <span class="rfi-id">RFI-8</span>
+                        <span class="rfi-project">Silicon Valley Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-11">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Lobby Elevator Shaft Conflict with Mass Timber Roof</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Jason Hsia (GPLA Structural Engineers): The interior GLT panels over the elevator shaft will become 2X4 panels 
+with thickness of 3 1/8&quot; from 2X8 panels with thickness of 6 3/4&quot; to clear the top of concrete of existing elevator 
+shaft. Additional angle ledgers will be welded to adjacent steel beams to support the added panel section. GLT 
+panels in adjacent bays will remain 2X8 panels.
+Jordan Koop</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights a critical design error regarding GLT panel thickness over the elevator shaft, necessitating a material change to avoid structural issues.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, office</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement a review process for material specifications and d</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The initial design did not account for the existing concrete</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a significant design error related to the thickness of the GLT panels over the elevator shaft, which could have led to coordination issues and potential structural concerns if not resolved. The resolution involves a notable change in materials and dimensions, indicating a moderate impact on the project.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(11,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(11,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(11,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-11">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-11" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="12">
+                <div class="rfi-header" onclick="toggleCard(12)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$86,744</span>
+                        <span class="rfi-id">RFI-0547</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-12">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Ref: M2.06, A4.10 (B1 PCR #2 dated 01.10.23), SK-1, SK-2 The Level 6 bathroom exhaust duct offsets horizontally in Level 6 overhead and the goes through the Level 7/roof slab. In order to maintain the rating between the Level 6 bathroom exhaust shaft wall and Level 7/roof slab opening a rated soffit will need to be built to extend the rating of the shaft wall. Please see attached SK-1 &amp; SK-2 for proposed soffit using 4&quot; framing. 1. Please provide framing details and framing schedule for shaft bottom at this location. 2. Please confirm it is acceptable to finish the shaft bottom at same elevation as ceiling to achieve design intent. 3. Please provide all farming details for the shaft system. Including all kicker and framing schedule components</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.
+Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655) - Jun 20, 2023, 11:43 AM PDT
+•
+•
+References
+Files (2)
+CMI RFI #9 - Southline B1 Level 6 Rated Soffit for Bathroom Exhaust.pdf
+SLP1 - RFI-0547 - B1 L6 Rated Soffit for Bathroom Exhaust_Resp.pdf</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights a design error regarding the rated soffit for a bathroom exhaust duct, preventing potential code compliance issues.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">office, commercial</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Ensure thorough review of rated assemblies in design documen</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The design did not adequately account for the necessary rate</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a notable design error related to the rated soffit for the bathroom exhaust duct, which could have led to compliance issues if not resolved. The need for framing details and confirmation of design intent indicates a significant coordination gap that was identified during construction.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(12,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(12,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(12,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-12">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-12" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="13">
+                <div class="rfi-header" onclick="toggleCard(13)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$67,447</span>
+                        <span class="rfi-id">RFI-1132</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type design_error">design error</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-13">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Referenced Documents: A2.01S, 9,10/S5.3, 6/S6.2, 3/S6.3, Section Cut of GL 9 Wall Markup, Beam Seat Above Embed at North and South Ends of GL 9 Wall Markup Question: The shear wall on GL 9 has been built 6&quot; too short, with its required height of 19' 1&quot; at the North end of the wall and 18'7&quot; on the South end of the Wall. As-builts show actual dimensions of the wall to be 18'7&quot; on the North end of the wall and 18' 0 3/4&quot; on the South end of the wall. 1. Is it possible to install something similar to capped end tube steel welded to TOW embed to make up the additional 6&quot;? If so, please provide sketch showing sizing for tube steel; and confirm no modifications for the weld type from tube steel to L-angles and/or beam seats, and collector plates. If not, please provide alternate detail to allow </div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">A significant design error in shear wall height was identified, necessitating corrective measures to ensure structural compliance.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, office</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">HIGH</div>
+                            <div class="analysis-detail">Implement stricter checks on wall height during construction</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The shear wall was constructed to incorrect dimensions based</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a significant design error where the shear wall was built too short, which could lead to structural integrity issues if not corrected. The resolution involves critical adjustments to ensure compliance with design specifications, indicating a notable coordination gap that could have resulted in costly rework.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(13,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(13,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(13,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-13">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-13" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="14">
+                <div class="rfi-header" onclick="toggleCard(14)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$67,139</span>
+                        <span class="rfi-id">RFI-1233</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-14">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: SLP1 - RFI1232 - PSD Storage Room 117 CMU Wall Shift Confirmation Sheet A2.01 Attached SSK-01 Background: DPR GC provided curb layout for the CMU curbs at Tier 1 MPOE, Fire Command, and Storage Room (117). When DPR Concrete poured these curbs, the exterior edge of the curb was taken as the interior edge, shifting the curb of the MPOE and Fire Command Rooms 7 5/8&quot; into the Storage Room (117). When Glazier Steel tried to install the support brackets it was noticed that there was no plate to weld these brackets due to the wall shifting. Question 1: Per the attached SSK-01 drawing, please confirm that the fix is acceptable. Question 2: Regarding conduit inside MPOE and Fire Command Rooms, please confirm that adding a gutter to flush the conduit to the CMU wall is acceptable.</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">A significant coordination gap was identified that prevented installation issues for the glazier.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, office</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement stricter checks on curb layout and trade coordinat</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The exterior edge of the curb was incorrectly taken as the i</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI highlights a significant coordination gap that resulted in a shift of the CMU wall, which could have led to installation issues for the glazier. This indicates a notable design error that was caught during construction, preventing potential rework and additional costs.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(14,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(14,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(14,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-14">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-14" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="15">
+                <div class="rfi-header" onclick="toggleCard(15)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$66,948</span>
+                        <span class="rfi-id">RFI-0260</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-15">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Ref: Wind Responsive Report by CPP Wind Engineering Consultant (dated 01.23.23); M2.01, A1.00 (PCR #2 dated 01.10.23); Email correspondence between Jordan B. Singh/CPP and Meg Gainey/DES dated 12.12.22) Per email correspondence, there is a height limitation by FAA that the anemometer cannot be placed more than 4' above the top of pent house parapets at B1. CPP engineering performed the wind responsive analysis and determined that placing the anemometer at B2 is the recommended location for most effective monitoring (see extracted page from Wind Responsive Report). Moreover, the control subs recommended hard-wired anemometer due to lab exhaust re-entrainment in lieu of wireless/cloud based solution. Therefore, Please confirm that it is acceptable to place the anemometer at B2 by adding an u</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.
+Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655) - Mar 27, 2023, 7:50 AM PDT
+•
+•
+References
+Files (2)
+SLP1 - RFI-0260 - B1 Anemometer Location_Resp.pdf
+RFI0260.pdf</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI successfully identified and resolved a potential compliance issue regarding anemometer placement, preventing future violations.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, office</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Ensure all equipment placements comply with FAA regulations </div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The need for clarification arose from FAA height limitations</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a significant coordination issue regarding the placement of the anemometer, which could have led to compliance issues with FAA height restrictions. The resolution indicates a proactive approach to prevent potential violations, making it notable but not critical.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(15,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(15,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(15,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-15">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-15" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="16">
+                <div class="rfi-header" onclick="toggleCard(16)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$62,853</span>
+                        <span class="rfi-id">RFI-0667</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-16">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: Maple Rule 20 JT 4.0 Per the current plan the Joint Trench was to be run as shown in Maple Rule 20 Plan page JT 4.0. However, currently there was an unmarked buried concrete structure South of South maple Ave as shown in attached JT 4.0. As such, PEC suggests rerouting the section of the JT as follows: Please confirm that the reroute suggested by PEC in Project RFI #667 can still be utilized as the overall bend angle for the conduits going from the #7 Vault to the Pole is ~225° and the overall angle for the conduit going from the PMI Pad to the Pole is ~247.5° Image 1 shows the proposed reroute of the JT suggested by PEC adding up to ~157°. From here the conduits that go into the PMI pad have an additional 90° of bends to them. And for the conduits going to the #7 Vault have an </div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Please see attached.
+Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655) - Jun 26, 2023, 4:25 PM PDT
+•
+References
+Files (2)
+RFI-0667 - Offsite - Maple Rule 20 JT Reroute at Tanforan and South Maple_PSD_DES.pdf
+
+D0-A20007-00 LPSC Phase 1
+SLP1 - RFI-0667 - Offsite - Maple Rule 20 JT Reroute at Tanforan and
+South Maple
+Created</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights a critical coordination gap that necessitated a reroute of the joint trench due to an unmarked buried structure.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">utility installation, infrastructure projects</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">MEDIUM</div>
+                            <div class="analysis-detail">Implement more rigorous site surveys and verification proces</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The presence of an unmarked buried concrete structure that w</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI addresses a significant coordination gap due to an unmarked buried concrete structure, which required rerouting of the joint trench. This reroute could have led to costly rework if not identified, indicating a notable issue that was caught during construction.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(16,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(16,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(16,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-16">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-16" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rfi-card score-4" data-idx="17">
+                <div class="rfi-header" onclick="toggleCard(17)">
+                    <div class="rfi-main">
+                        <span class="co-amount">$62,341</span>
+                        <span class="rfi-id">RFI-1425</span>
+                        <span class="rfi-project">Southline Office</span>
+                        <span class="lesson-type coordination_gap">coordination gap</span>
+                    </div>
+                    <span class="score-badge score-4">Score 4</span>
+                </div>
+                <div class="rfi-content" id="content-17">
+                    <div class="text-label">Question</div>
+                    <div class="text-box">Reference: Submittal #4090 - B2 Plumbing Fixtures The approved LAV-2 sink (American Standard Decorum Wall-Hung Lavatory with Everclean) has a total weight load of 250 lbs. This exceeds the 200 lb. backing support detail 11/A9.12. Please advise if the backing support detail 11/A9.12 is sufficient for the LAV-2 sink. If it is not sufficient, please provide a new detail for the backing support for the LAV-2 sink.</div>
+
+                    <div class="text-label">Resolution</div>
+                    <div class="text-box">Julia Morini (DES Architects &amp; Engineers, Inc. - 10012655): Please see attached.</div>
+
+                    <div class="reasoning-box">
+                        <div class="label">AI Summary</div>
+                        <div class="text">The RFI highlights a critical review of plumbing fixture support that prevented a potential structural issue.</div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="analysis-box">
+                            <div class="analysis-label">Applicability</div>
+                            <div class="analysis-value">CATEGORY_SPECIFIC</div>
+                            <div class="analysis-detail">commercial, office</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Actionability</div>
+                            <div class="analysis-value">HIGH</div>
+                            <div class="analysis-detail">Review and update backing support details for plumbing fixtu</div>
+                        </div>
+                        <div class="analysis-box">
+                            <div class="analysis-label">Root Cause</div>
+                            <div class="analysis-value">CLEAR</div>
+                            <div class="analysis-detail">The original design did not account for the weight of the ap</div>
+                        </div>
+                    </div>
+
+                    <div class="reasoning-box">
+                        <div class="label">Learning Value Reasoning</div>
+                        <div class="text">The RFI identifies a potential issue with the backing support for a plumbing fixture that exceeds the specified weight limit. This could have led to structural concerns if not addressed, making it a notable coordination gap between design and structural requirements.</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h4>Your Feedback</h4>
+                        <div class="agree-row">
+                            <button class="agree-btn" onclick="setAgreement(17,'agree')">Agree</button>
+                            <button class="agree-btn" onclick="setAgreement(17,'partial')">Partial</button>
+                            <button class="agree-btn" onclick="setAgreement(17,'disagree')">Disagree</button>
+                        </div>
+                        <div class="feedback-row">
+                            <div class="feedback-group">
+                                <label>Your Score</label>
+                                <select id="score-17">
+                                    <option value="">Keep as 4</option>
+                                    <option value="5">5 - Critical</option>
+                                    <option value="4.5">4.5 - Important Check</option>
+                                    <option value="4">4 - Notable</option>
+                                    <option value="3">3 - Worth Tracking</option>
+                                    <option value="2">2 - Routine</option>
+                                </select>
+                            </div>
+                            <div class="feedback-group">
+                                <label>Notes</label>
+                                <textarea id="notes-17" placeholder="Why agree/disagree?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="export-section">
+            <button class="export-btn" onclick="exportFeedback()">Export Feedback</button>
+            <button class="export-btn secondary" onclick="copyToClipboard()">Copy</button>
+            <button class="export-btn secondary" onclick="expandAll()">Expand All</button>
+            <div class="output-area" id="output-area"></div>
+        </div>
+    </div>
+
+    <script>
+        const agreements = {};
+
+        function toggleCard(idx) {
+            const content = document.getElementById('content-' + idx);
+            content.classList.toggle('open');
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.rfi-content').forEach(c => c.classList.add('open'));
+        }
+
+        function setAgreement(idx, value) {
+            agreements[idx] = value;
+            const card = document.querySelector(`[data-idx="${idx}"]`);
+            card.querySelectorAll('.agree-btn').forEach(btn => btn.classList.remove('selected', 'agree', 'disagree', 'partial'));
+            event.target.classList.add('selected', value);
+        }
+
+        function exportFeedback() {
+            const feedback = [];
+            document.querySelectorAll('.rfi-card').forEach((card) => {
+                const idx = card.dataset.idx;
+                const agreement = agreements[idx];
+                if (!agreement) return;
+
+                feedback.push({
+                    rfi_number: card.querySelector('.rfi-id').textContent,
+                    project: card.querySelector('.rfi-project').textContent,
+                    co_amount: card.querySelector('.co-amount').textContent,
+                    current_score: card.querySelector('.score-badge').textContent,
+                    agreement: agreement,
+                    your_score: document.getElementById('score-' + idx)?.value || null,
+                    notes: document.getElementById('notes-' + idx)?.value || null
+                });
+            });
+
+            const output = {
+                feedback_date: new Date().toISOString(),
+                total_reviewed: feedback.length,
+                feedback: feedback
+            };
+
+            const area = document.getElementById('output-area');
+            area.textContent = JSON.stringify(output, null, 2);
+            area.classList.add('visible');
+        }
+
+        function copyToClipboard() {
+            const area = document.getElementById('output-area');
+            if (!area.textContent) exportFeedback();
+            navigator.clipboard.writeText(area.textContent).then(() => alert('Copied!'));
+        }
+    </script>
+</body>
+</html>

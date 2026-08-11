@@ -1,0 +1,2314 @@
+{
+  "generated_at": "2026-07-07T21:34:10.994136",
+  "top_n_per_project": 10,
+  "total_rfis": 50,
+  "successful": 50,
+  "cost_usd": 0.0178617,
+  "score_distribution": {
+    "1": 0,
+    "2": 0,
+    "3": 1,
+    "4": 49,
+    "5": 0
+  },
+  "results": [
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the existing conditions of the framing and the lack of thorough pre-construction assessments. The need for additional framing and plumbing adjustments indicates a failure to adequately assess existing conditions during the design phase."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office TI",
+          "Renovation Projects",
+          "Commercial Construction"
+        ],
+        "reasoning": "Other projects involving renovations or tenant improvements can benefit from this lesson, particularly in ensuring that existing conditions are thoroughly evaluated before finalizing designs."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a comprehensive existing conditions review process during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that existing conditions are accurately assessed and documented, similar costly change orders can be avoided in future projects."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate assessment of existing framing conditions prior to design finalization.",
+        "reasoning": "The clarity of the root cause is high as the RFI directly points to the discrepancies between the design intent and the actual existing conditions."
+      },
+      "cost_driver": {
+        "primary_driver": "field_conditions",
+        "reasoning": "The high cost was primarily driven by unforeseen field conditions that necessitated additional work, including framing modifications and plumbing adjustments."
+      },
+      "summary": {
+        "one_line": "The costly change order resulted from inadequate assessment of existing conditions, leading to necessary adjustments in framing and plumbing.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "eeddf713-668d-4a6e-a78a-c58fa3eaadee",
+      "rfi_number": "RFI-47",
+      "project": "Abbott Alameda Office TI",
+      "trade": "architectural",
+      "co_amount": 142648.0,
+      "question_text": "Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor restrooms. DPR was contracted to only provide new finishes in these restrooms. However, additional work needs to be completed due to the existing conditions of the framing. Question 1: Existing framing only goes to 8' height. RCP calls for 9' ceilings. Per OAC on 02/27/25, DPR to proceed with 9' ceilings. Please confirm no exceptions. Question 2: Plumbing will need to be removed to install the new 3 5/8\" studs (@ 10' tall for the 9' ceilings) and re- installed after framing is complete. Per OAC on 02/27/25, DPR to with removal and re-install of plumbing due to new framing installation. Please confirm no exceptions. Question 3: Per OAC on 02/27/25, DPR to proceed with shifting of plumbing carriers plan north to accommodate the ADA stall layout. Please confirm no exceptions. Question 4: Concrete wall calls for paint. Imperfections will be very noticeable if the wall is only primed and painted. Per OAC on 02/27/25, DPR to proceed with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2\" off concrete wall. Please confirm no exceptions.",
+      "resolution_text": "Elaine Yiu: Work is approved with no exceptions, see attached for additional comments.",
+      "success": true,
+      "tokens_used": {
+        "input": 959,
+        "output": 371
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the misalignment of columns that could have been identified during the design phase. The need for a change order indicates that there was a failure in the initial coordination and planning, which could be improved in future projects."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office renovations",
+          "Commercial construction",
+          "Tenant improvements"
+        ],
+        "reasoning": "Other projects involving office layouts and structural elements should be aware of the importance of thorough design reviews to prevent similar issues."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process to ensure alignment of structural elements.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, teams can catch misalignments and other issues before they reach the construction phase, reducing costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Misalignment of structural columns not identified during the design phase.",
+        "reasoning": "The cause is clear as it stems from a lack of coordination and oversight in the design documentation, which should have been addressed before construction began."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily due to the need for rework and adjustments in the field to accommodate the misaligned columns, which could have been avoided with better coordination."
+      },
+      "summary": {
+        "one_line": "The misalignment of structural columns led to a costly change order due to inadequate design coordination.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "5300db0a-ae91-440f-9898-9a1a5d9e988e",
+      "rfi_number": "RFI-17",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "co_amount": 124678.0,
+      "question_text": "Reference Sheet A2.1.2 Offices 2080, 2079, and 2078 have columns imbedded in the walls. These columns do not align with each other. Office 2078 will have an exposed column with current drywall layout. Confirm if acceptable to shift offices over to enclose the column. Suggested answer DPR suggest shifting over offices by one inch towards the exterior windows so that drywall can fully enclose both columns.",
+      "resolution_text": "Ava Ghiassi: Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 720,
+        "output": 385
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to wall framing specifications that led to expensive rework. The need to change the wall studs from 2.5 inches to 3.5 inches for consistency indicates a failure in the initial design or communication that could have been avoided."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office renovations",
+          "Commercial construction",
+          "Tenant improvements"
+        ],
+        "reasoning": "Other projects involving wall framing and interior renovations should be aware of the importance of verifying wall specifications early in the design phase to avoid similar costly changes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a verification step in the design review process to confirm wall framing specifications against project requirements.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that wall framing details are accurate and consistent with project needs during the design phase, similar costly RFIs can be prevented."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate initial design specifications and communication regarding wall framing requirements.",
+        "reasoning": "The clarity of the issue suggests that the design team did not adequately address the framing requirements, leading to the need for rework."
+      },
+      "cost_driver": {
+        "primary_driver": "rework",
+        "reasoning": "The significant cost was primarily due to the rework required to demolish and reframe the wall, which was not anticipated in the original scope."
+      },
+      "summary": {
+        "one_line": "The need to change wall framing specifications led to a costly rework due to inadequate initial design communication.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "c09c9af2-26a8-412c-953e-192ad51a84f4",
+      "rfi_number": "RFI-37",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "co_amount": 124678.0,
+      "question_text": "Reference: RFI 37 - Abbott Alameda 1420 HBP - Breakroom 02H6C Wall Width Confirmation A2.1.2, AD2.1.2 As per conversation with John (Abbott), Existing north wall at Breakroom 02H6C is framed using a 2.5-inch stud. Abbott Confirmed demolition of the north wall in order to reframe with 3.5-inch stud to have consistent door frames throughout.",
+      "resolution_text": "Ava Ghiassi: Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 727,
+        "output": 393
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to missing demolition details in the design documents, which led to significant rework and additional costs."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office renovations",
+          "Tenant improvements",
+          "Commercial construction"
+        ],
+        "reasoning": "Other projects involving renovations or tenant improvements should be aware of the importance of thorough documentation and clarity in demolition plans to avoid similar costly RFIs."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a checklist for reviewing demolition plans to ensure all necessary details are included before finalizing design documents.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all demolition requirements are clearly outlined in the design phase, future projects can avoid costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The absence of demolition instructions for the existing flooring in the design documents led to confusion and the need for clarification.",
+        "reasoning": "The cause is well understood as it stems from a lack of detail in the design documents, which should have been addressed during the design review process."
+      },
+      "cost_driver": {
+        "primary_driver": "scope_addition",
+        "reasoning": "The high cost was primarily due to the need to add scope for the demolition of flooring that was not initially included in the plans, resulting in additional labor and materials."
+      },
+      "summary": {
+        "one_line": "The absence of demolition details for existing flooring in design documents led to a costly change order due to scope addition.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "9a6a003a-b7f2-4a35-bf71-935d09e4accf",
+      "rfi_number": "RFI-21",
+      "project": "Abbott Alameda Office TI",
+      "trade": "architectural",
+      "co_amount": 72300.0,
+      "question_text": "Reference: RFI 21 - Abbott Alameda 1420 HBP - Flooring Removal in Existing Conference Room 02H6C Confirmation Sheet AD2.1.2 and Note D21 in sheet AD2.1.2 Existing Conference Room 02H6C is to become the new employee Breakroom which will be getting new LVT plank flooring. Note D21 is not shown in the demo plans to remove existing flooring at this location. Question: Please confirm if existing carpet is to be demolished in existing Cala Conf. Room 02H6C for an additional cost.",
+      "resolution_text": "Ava Ghiassi: Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 747,
+        "output": 384
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error in the design phase where existing conditions were not adequately documented, leading to expensive rework. This indicates a need for improved coordination and thoroughness in the design process."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office TI",
+          "Commercial Renovations",
+          "Restroom Upgrades"
+        ],
+        "reasoning": "Other projects involving renovations or tenant improvements can benefit from this lesson, particularly those that involve existing conditions that may not be clearly documented."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a checklist for verifying existing conditions and ensuring clarity in electrical layouts during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that existing conditions are thoroughly documented and clearly communicated in the design phase, similar issues can be prevented in future projects."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate documentation of existing electrical outlets and conditions in the design documents.",
+        "reasoning": "The cause is clear as it stems from a lack of detail in the design phase, which should have accounted for existing conditions."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for a design change to accommodate new electrical outlets that were not initially accounted for due to unclear documentation."
+      },
+      "summary": {
+        "one_line": "The RFI resulted from inadequate documentation of existing conditions, leading to costly design changes for electrical outlet layouts.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "9d19a4f9-dc56-4fa3-9a0f-4f8537419acd",
+      "rfi_number": "RFI-51",
+      "project": "Abbott Alameda Office TI",
+      "trade": "architectural, electrical",
+      "co_amount": 26003.0,
+      "question_text": "Reference: RFI 51 - Abbott Alameda 1420 HBP - Restrooms Electrical Outlets Layout Clarification Sheets A4.4.0 and E2.3 Attached Pictures of Existing Conditions at Restrooms Electrical drawings do not clearly show existing electrical outlets in the restrooms. Elevation plans show (2) outlets being installed in the restrooms per plan notes C61 and C70. Notes state that these outlets are existing, however, due to existing conditions the walls in these rooms got demo'd, so new outlets are to be provided. Additionally, the elevations shown do not clearly give horizontal dimensions for layout. Please provide electrical outlet layout for the men's and women's restrooms (typical for both sets of restrooms on the second floor).",
+      "resolution_text": "Elaine Yiu: SEE ATTACHED RESPONSE.",
+      "success": true,
+      "tokens_used": {
+        "input": 782,
+        "output": 379
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the omission of emergency lighting in the design documents. The need for clarification and subsequent change order indicates a failure in the initial design review process, which could have been avoided with more thorough checks."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office TI",
+          "Commercial Construction",
+          "Healthcare Facilities"
+        ],
+        "reasoning": "Many projects involve emergency lighting requirements, and lessons learned from this RFI can be applied to similar projects to ensure compliance with safety standards and avoid costly change orders."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a checklist for emergency lighting requirements during the design review phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that emergency lighting is included in the initial design and reviewed thoroughly, future projects can avoid similar costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The initial design documents failed to include emergency lighting specifications, leading to confusion and the need for clarification.",
+        "reasoning": "The clarity of the root cause is evident as it stems from a design oversight that could have been caught during the review process."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for a design change to incorporate emergency lighting, which was not initially included in the project scope."
+      },
+      "summary": {
+        "one_line": "The omission of emergency lighting in the design led to a costly change order due to necessary design changes.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "b9f40b36-b0cb-4473-aabf-816a333f34d6",
+      "rfi_number": "RFI-54",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "co_amount": 26003.0,
+      "question_text": "Reference: RFI 54 - Abbott Alameda 1420 HBP - EM Lighting Clarifications CBF RFI 2 Sheets E3.3, E3.4, A2.2.2 The RCP on E3.3 and E3.4 do not show any emergency lights in the space. Approved light fixtures can be powered with Bodine batteries. Question: Please confirm if it's acceptable to provide battery backups and match existing to the emergency light fixtures. Question: Also, please advise what lights will need to be on emergency power.",
+      "resolution_text": "Elaine Yiu: 3/18/25 -EY\nSEE ATTACHED RESPONSE, PHOTOMETRIC STUDY REQUESTED FOR EMERGENCY LIGHTING PLAN STUDY.",
+      "success": true,
+      "tokens_used": {
+        "input": 769,
+        "output": 389
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to missing structural details in the design phase, which led to costly rework. The lack of clarity in the original drawings necessitated additional coordination and verification, indicating a gap in the design process that could be improved."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Commercial Office TI",
+          "Industrial Construction",
+          "Renovation Projects"
+        ],
+        "reasoning": "Other projects involving structural modifications and duct installations can benefit from ensuring that all necessary structural details are included in the design documents to avoid similar issues."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a checklist for structural detail verification during the design phase to ensure all necessary information is included.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that structural details are thoroughly reviewed and included in the design documents, future projects can avoid similar costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The absence of detailed structural information in the design documents led to confusion and the need for clarification.",
+        "reasoning": "The root cause is well-defined; it stems from a lack of comprehensive design documentation, which is a common issue that can be addressed."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for design changes and additional coordination efforts to address the missing structural details."
+      },
+      "summary": {
+        "one_line": "The lack of structural details in the design led to a costly change order for reinforcement of the grease duct installation.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "259055f4-5f70-4656-b2cc-a2654da41998",
+      "rfi_number": "RFI-55",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "co_amount": 15861.0,
+      "question_text": "Reference: RFI 55 - Abbott Alameda 1420 HBP - Grease Duct Framing Clarification ASK-13 R1 Sheet A2.1.2 Detail 2/S5.01 Attached Pictures Per detail 2 on ASK-13 R1, a new wide flange beam is being called out. However, no structural details were provided. Per the approved permit drawings, detail 2/S5.01 can be used for openings of up to 48\" x 24\". Since there are existing beams near the area where the grease duct and make-air duct need to be installed, please confirm if HSS posts can be used to reinforce the decking, similar to the approved detail.",
+      "resolution_text": "Ava Ghiassi (FORGE - 10049724): Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 781,
+        "output": 396
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error related to the initial design and coordination of thermostat locations, which led to costly rework. This indicates a clear lesson on the importance of thorough preconstruction planning and coordination among trades."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office renovations",
+          "Commercial construction",
+          "Tenant improvements"
+        ],
+        "reasoning": "Other projects in similar sectors can benefit from understanding the need for detailed coordination and verification of mechanical layouts before construction begins."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a mandatory review process for MEP layouts during the design phase to ensure all installations are feasible and do not conflict with existing structures.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that MEP layouts are thoroughly vetted during design, future projects can avoid similar costly relocations and rework."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate initial design coordination and failure to account for existing site conditions.",
+        "reasoning": "The issues with thermostat locations were clearly identified as a result of poor planning, which can be addressed in future projects."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The need to relocate thermostats due to design flaws and site conditions directly led to the incurred costs, making design change the primary cost driver."
+      },
+      "summary": {
+        "one_line": "The relocation of thermostats due to design flaws resulted in a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "7c1d74e4-acbe-4d0c-9834-13494df256ec",
+      "rfi_number": "RFI-39",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "co_amount": 10587.0,
+      "question_text": "Reference: RFI 39 - Abbott - Alameda 1420 HBP - Thermostat Relocation Clarifications ACCO RFI 005/EMCOR RFI 001 Mechanical Drawings with Markups and Pictures During rough-in for in-wall MEP, it was noticed that there are some issues with the current plan locations for the following thermostats: VAV-W1 - Existing wall is to be demo'd in a future construction phase of building 1420. VAV-W11 - Thermostat was located behind the location of the tv, leaving no space on the wall for installation. VAV-W13 - new framing does not allow thermostat to be installed. See new locations for each of these thermostats provided in the markup. Please confirm these new thermostat locations are acceptable or provide new locations.",
+      "resolution_text": "James Watters: REVISION 01: Additional relocation of thermostats_M.Tye\nRelocation of Thermostat accepted/approved, see additional notes regarding locations in offices/conferences.\nNote RFI response is noted as draft pending schedule/cost",
+      "success": true,
+      "tokens_used": {
+        "input": 831,
+        "output": 376
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the lack of clarity in the mechanical duct hanging details and the existing structure. The confusion over attachment methods indicates a need for better design documentation and communication, which could prevent costly rework in the future."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office TI",
+          "Commercial Construction",
+          "Renovation Projects"
+        ],
+        "reasoning": "Other projects involving similar structural conditions and mechanical installations can benefit from improved clarity in design documents and attachment details."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a review process for design documents to ensure all structural details are clearly defined and communicated.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that design documents are comprehensive and clear, future RFIs related to structural support can be minimized, thus reducing costs and delays."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient detail in the mechanical duct hanging design related to existing structural conditions.",
+        "reasoning": "The cause is well understood as it stems from a lack of specificity in the design documents, which led to confusion and the need for clarification."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for a change order resulting from unclear design specifications that necessitated additional work and adjustments."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a costly oversight in the mechanical duct hanging details that led to a change order due to unclear design specifications.",
+        "lesson_type": "design_issue"
+      },
+      "rfi_id": "e0e2e35f-338e-4ca4-95bc-58988155adb8",
+      "rfi_number": "RFI-14",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "co_amount": 10587.0,
+      "question_text": "Reference: RFI 14 - Abbott Alameda 1420 HBP - Mechanical Duct Hanging Detail Confirmation Submittal 155000-6 Excerpt Mechanical Sheet M0.2 As noted on Submittal 155000-6, the existing structure is wood trusses that are drywalled over (as noted by DPR). The duct hanger support detail, Detail 1 on M0.2, does not specify existing structure. It is assumed that the duct hangers will need to be fastened to the wood structural member through the drywall or connected to unitstrut that is spanned and fastened to the wood structural members. See DCS Miscellaneous Details section (pg 38-44). Question: Please confirm the existing built-up structure; as well as, associated preferred options for hanging and attachment type with reference to the DCS.",
+      "resolution_text": "James Watters: See attached response.",
+      "success": true,
+      "tokens_used": {
+        "input": 801,
+        "output": 387
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the handrail extension conflicting with the service corridor door. The need for a change order indicates a significant oversight that could have been avoided with better initial coordination and design review."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Office TI",
+          "Commercial Construction",
+          "Public Works"
+        ],
+        "reasoning": "Other projects involving handrail installations and door placements should be aware of the potential for similar conflicts, especially in tight spaces where code compliance is critical."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more thorough design review process that includes detailed coordination checks for handrails and door placements.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design phase to include these checks, future projects can avoid similar costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate initial design coordination between the handrail and door specifications.",
+        "reasoning": "The cause is well understood, as the conflict arose from a failure to verify spatial requirements during the design phase."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost stemmed from the need to replace the door due to the oversight in coordinating the handrail extension with existing structures."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a costly oversight in design coordination between a handrail and a service corridor door, leading to a significant change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "80eecf8e-3808-488f-aa09-19124ea4530b",
+      "rfi_number": "RFI-76.1",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "co_amount": 10155.0,
+      "question_text": "Reference: RFI 76.1 - Abbott Alameda 1420 HBP - Stair 2 Handrail Clash with Service Corridor Door Clarification A7.0.0 MAS Metals Guardrail Submittal Sheet S5.00 Attached pictures Per RFI 76 response, contractor was to verify that the handrail extension does not impeded into existing service corridor. After verifying in the field, it was confirmed that the rail will impeded with the service corridor door. DPR asked the City Inspector if there was an exception at this location to CBC 11B-404.2.4 since the door that is being impeded is a non active leaf, to which they then declined the exception. DPR is proposing to replace the double door at the service corridor with a new double door that will fit a 5'-0\" opening (3'-0\" active lead and 2'-0\" inactive leaf).",
+      "resolution_text": "Ava Ghiassi (FORGE - 10049724): Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 823,
+        "output": 377
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant preventable error related to the clash between the proposed furred wall and existing conduits, indicating a failure in the initial design and coordination between architectural and electrical trades. The high cost reflects the need for rework and adjustments that could have been avoided with better upfront planning."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "data centers",
+          "commercial buildings",
+          "industrial facilities"
+        ],
+        "reasoning": "Other projects involving complex electrical and architectural systems can learn from this issue, particularly in ensuring thorough coordination and clash detection during the design phase."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous clash detection process during the design phase, including detailed reviews of architectural and electrical plans.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the clash detection process, similar issues can be identified and resolved before construction begins, reducing the likelihood of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate coordination and communication between architectural and electrical teams during the design phase.",
+        "reasoning": "The clash between the furred wall and existing conduits was a direct result of insufficient planning and oversight, making the root cause clear and actionable."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The significant cost stemmed from the need to rework the design and construction due to the clash, which was a direct result of poor coordination between trades."
+      },
+      "summary": {
+        "one_line": "The clash between the proposed furred wall and existing conduits led to a costly change order due to inadequate design coordination.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "1a68191b-0331-4dae-9110-3404c3d31c58",
+      "rfi_number": "RFI-54",
+      "project": "CoreSite Data Center",
+      "trade": "architectural, electrical",
+      "co_amount": 15807369.0,
+      "question_text": "There is a furred wall at Storage 235 intended to hide the existing bus duct and multiple existing conduit risers. However, the current dimensions of the furred wall clash with these existing conduits. Reference Newforma Issues 114, 134. For the wall segment running E-W (highlighted in blue on the attached markup), there is a clash with existing conduit risers, DPR proposes removing this wall segment. For the wall segment running N-S (highlighted in orange on the attached markup), There are existing Conduits behind the walls that are clashing with the wall. There is also limited space between the existing conduits and the new bus duct, for new wall framing to be installed. DPR proposes shifting furred wall segment West of bus duct run flush with West-most wall segment of furred wall to avoid both clashes and eliminate bus duct wall penetration through Storage 235 furred wall. Additionally, wall typing to be changed from E3 to A6 support electrical seismic in space East of Storage 235. Suggested answer Corgan, please confirm if proposed shift of Storage 235 East wall to the West by 8' - 0 7/8\" to align with West-most segment of busduct furred wall is acceptable, and wall type can change to A6. At the space between Storage 235 and the exterior wall, please confirm a 90min rated door is to be added at the North end to UPS Room 2D, (2) F02 lights are to be added, and RAF is to be removed.",
+      "resolution_text": "Ashley Hill (Corgan - 10059759): Per the updated information on the 06.24.2025 email",
+      "success": true,
+      "tokens_used": {
+        "input": 966,
+        "output": 411
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and coordination of light fixtures, which led to significant rework and cost overruns. The need for elevation adjustments due to clashes indicates a failure in the initial design process."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "data centers",
+          "institutional buildings"
+        ],
+        "reasoning": "Other projects with complex electrical layouts and multiple trades should be aware of the importance of thorough design reviews and coordination to avoid similar costly issues."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process that includes clash detection and coordination meetings among all trades before finalizing designs.",
+        "action_phase": "design",
+        "reasoning": "By improving the design review process, teams can identify potential clashes early, reducing the likelihood of costly change orders during construction."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate initial design coordination and clash detection for light fixture placements.",
+        "reasoning": "The issue was clearly identified in the RFI, indicating that the design did not account for spatial constraints, leading to the need for significant changes."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily driven by the need to rework the electrical layout due to clashes with structural elements, which could have been avoided with better coordination."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a significant coordination failure in the design of light fixtures, resulting in a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "5cbe5041-0695-4689-a6c1-b3f16d1984e0",
+      "rfi_number": "RFI-52",
+      "project": "CoreSite Data Center",
+      "trade": "electrical",
+      "co_amount": 13229900.0,
+      "question_text": "CYCLE 1: 6/24/25: Per 6/18 DPR/Design Teams breakout call, F05 light fixtures in Corridor 260 and 260A are to be swapped to F04 lights. See referenced markup for new proposed light fixture layout. -- F05 light fixtures in Corridor 260 and Corridor 262 at location and elevation provided in Electrical design model clash with some doors and walls, see the attached markup. Need elevation of F05 light fixtures confirmed and shifted or raised accordingly for identified clashes. Reference Newforma issues 126, 127. Suggested answer Corgan/kW, please confirm the proposed F04 light layout per the referenced markup is acceptable in lieu of F05 light fixtures in Corridors 260 and 260A.",
+      "resolution_text": "Ashley Hill (Corgan - 10059759): GC to refer to KW and attachments.\nGC to notify Owner if any cost",
+      "success": true,
+      "tokens_used": {
+        "input": 804,
+        "output": 393
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the coordination of mechanical installations and the design team's response to changes. The significant cost indicates that better communication and planning could have avoided this issue."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "data centers",
+          "commercial buildings",
+          "mechanical installations"
+        ],
+        "reasoning": "Other projects involving complex mechanical systems and multiple phases of construction should learn from this to improve coordination and communication between design and construction teams."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous review process for design changes that involve mechanical installations, ensuring all stakeholders are aligned before proceeding.",
+        "action_phase": "design",
+        "reasoning": "Enhancing the design review process can help catch potential conflicts early, reducing the likelihood of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The need to relocate the air separator due to obstructions and the subsequent lack of thorough verification of the new location's feasibility.",
+        "reasoning": "The cause is well-defined as it stems from a design change that was not adequately coordinated with the construction team."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily driven by the need to relocate equipment and the associated rework, which stemmed from a failure to properly coordinate the design changes with the construction schedule."
+      },
+      "summary": {
+        "one_line": "The relocation of the air separator due to design changes led to a costly change order due to poor coordination.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "a9722e89-0b08-4bf8-9e6b-938a997a78a8",
+      "rfi_number": "RFI-43",
+      "project": "CoreSite Data Center",
+      "trade": "mechanical",
+      "co_amount": 5753119.0,
+      "question_text": "Cycle 1 - 7/22/25: The updated reference markup was changed to move the air separator equipment further plan-south to avoid obstructions with phase 4 installations at the mechanical yard per design team request on 7/11. This air separator equipment location was provided to the design team on 7/16 via correspondence and reviewed on 7/17 BIM cluster. This location was confirmed as acceptable by the design team on the 7/21 workshop. In order to install AS-CHW-04 inside the building as shown on the plans, Room 0235A Mechanical would need to be increased to encompass Room 0236 Office. Instead of losing 0236 Office, SVM proposes installing AS-CHW-04 outside at the south end of the mechanical yard. See attached PDF for reference. Suggested answer Please confirm the new location of AS-CHW-04 is acceptable.",
+      "resolution_text": "Daniel Showalter (Peoples Associates Structural Engineers, Inc. - 10040833): PASE Response:\nNo exceptions structurally for relocating the air separator to the outside of the building. The support of the \nmechanical\ncomponent is delegated design, stamped and signed calculations and drawings to be submitted to EOR for \nreview.\nContractor to verify foundation requirements and confirm underground utilities are not in conflict with the \nproposed\nlocation.\nRefer to architectural and owner response for confirmation of location considering future phases of work.\nCreated",
+      "success": true,
+      "tokens_used": {
+        "input": 915,
+        "output": 388
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error related to the lack of clarity in the initial rough-in plans, which led to significant rework and additional costs. This situation underscores the importance of thorough review and coordination in the design phase to avoid costly change orders."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "data centers",
+          "commercial construction",
+          "security installations"
+        ],
+        "reasoning": "Other projects involving complex systems integration, especially in data centers, should learn from this to improve their design review processes and coordination among stakeholders."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process that includes all relevant stakeholders to ensure clarity and completeness of plans before approval.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, similar issues can be identified and resolved early, preventing costly rework during construction."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The initial rough-in plans were not adequately reviewed or accepted, leading to confusion and the need for significant changes later.",
+        "reasoning": "The cause is well understood as it stems from a lack of thorough communication and review among the design and construction teams."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The costs were primarily driven by the need to change the design after construction had begun, resulting in additional materials and labor to accommodate the new requirements."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a significant oversight in the design review process, leading to a costly change order for security infrastructure adjustments.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "3e2905fb-a9ff-48ce-892f-6a16753626b4",
+      "rfi_number": "RFI-78.1",
+      "project": "CoreSite Data Center",
+      "trade": "security",
+      "co_amount": 2994765.0,
+      "question_text": "The CCTV and access control rough-in plans developed by CEI and submitted to PSG/CoreSite review per RFI 78 as not accepted. CoreSite has since shared an updated rough-in plan. See the referenced attachment for CoreSite's rough-in plan with CEI comments for PSG/CoreSite confirmation. Suggested answer PSG/CoreSite, please confirm the attached proposed security infrastructure layout per the is acceptable for phase 3. If not, please provide direction on the required infrastructure.",
+      "resolution_text": "Dave Allen: The drawing attached to RFI 78.1 is approved for security rough-in installation. This Rev 2 drawing is \nadding (5) additional pull boxes in the (blue) Device conduit and (1) in the (Red) Camera conduit within the data \nhall. These will match the other pull boxes. No additional conduits will be added to the overhead.",
+      "success": true,
+      "tokens_used": {
+        "input": 795,
+        "output": 398
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and clearance requirements for RPPs. The need to change the voltage of certain RPPs due to clearance issues indicates a lack of thorough initial planning and coordination between electrical and architectural trades, which could have been avoided."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "data centers",
+          "commercial electrical installations",
+          "large-scale construction projects"
+        ],
+        "reasoning": "Other projects involving complex electrical distribution systems can benefit from understanding the importance of clearance requirements and the need for thorough coordination between trades during the design phase."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous review process for clearance requirements during the design phase to ensure all trades are aligned.",
+        "action_phase": "design",
+        "reasoning": "By improving the design review process, similar issues can be avoided in future projects, reducing the likelihood of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate initial design considerations regarding clearance requirements for different voltage RPPs.",
+        "reasoning": "The issue is well-defined, as it stems from a failure to account for the necessary clearances in the design phase, leading to the need for costly changes during construction."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily driven by the need to redesign the electrical distribution system after materials had already been procured and prefabricated, resulting in significant rework and additional costs."
+      },
+      "summary": {
+        "one_line": "The costly issue arose from inadequate design considerations for RPP clearance requirements, leading to a significant change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "116a40a5-38a4-48de-8da7-983afdbebbb7",
+      "rfi_number": "RFI-125",
+      "project": "CoreSite Data Center",
+      "trade": "electrical, architectural",
+      "co_amount": 2988703.0,
+      "question_text": "1) As discussed with CoreSite, 8/20/2025, please confirm we are to proceed with splitting the RPPs at 4MW (415V) and 5MW (208V). This would give us 80 (208V) RPPs, and 32 (415V) RPPs 2) Provide a markup of the attached RPP layout to show what RPPs are to be removed, and which ones will change to 415V. Please note, materials have already been procured/prefabricated for the current design, we recommend using a similar PDU distribution configuration to the RPPs remaining at 208V. Reference page 6 attached, 208V RPP's require 3' clearance. 415V RPP need 4' clearance. Given the proximity to the wall the RPPs highlight in Green will not be able to be at a 4' clearance. To eliminate any redesign, CEI requests these \"green\" RPP's stay at 208V. All other RPP’s have clearances that can support the 415V change. 3) Confirm the RPP Feeder conduit size will remain at 2-1/2\"",
+      "resolution_text": "Garret Gross (KW Engineering - 10059720): KW Response\n1. 208V to 415V distribution to be updated in upcoming permit amendment. See the attached for a markup of the\npreliminary shop drawings for planned RCAB placement and updated PDU distribution. Markup of preliminary \nshop\ndrawings does not constitute approval of shop drawings, provide a separate submittal for review and approval.\n2. Markups have been provided outlining updated PDU voltage and RCAB placement. The majority of RCAB \nplacement\nhas not been altered, however shifts have been made on plan north east distribution to avoid existing conditions \nand on\nthe central east/west placement to allow for easier coordination with telecom equipment. DPR to provide \nclarification on\nif alternate placement creates significant",
+      "success": true,
+      "tokens_used": {
+        "input": 1040,
+        "output": 415
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the lack of clarity in the power requirements for door hardware, which led to significant rework and coordination issues. The need for a confirmed list of door numbers indicates a gap in the initial design documentation that could have been addressed earlier."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Data Centers",
+          "Commercial Buildings",
+          "Security Installations"
+        ],
+        "reasoning": "Other projects involving complex electrical and security systems should be aware of the importance of clear documentation and coordination regarding power requirements for hardware."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a standardized checklist for door hardware power requirements during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all power requirements are clearly defined and documented in the design phase, similar issues can be prevented, reducing the risk of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient initial documentation regarding the power needs of door hardware.",
+        "reasoning": "The resolution indicates a lack of clarity in the design documents, which directly led to the need for this RFI and the subsequent change order."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily due to the need for rework and adjustments in the electrical rough-in process, stemming from a failure to coordinate the power requirements effectively."
+      },
+      "summary": {
+        "one_line": "The lack of clarity in door hardware power requirements led to a costly change order due to coordination failures.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "9b3a8257-698a-445c-9ec3-7f0c22d49058",
+      "rfi_number": "RFI-140",
+      "project": "CoreSite Data Center",
+      "trade": "electrical",
+      "co_amount": 2988703.0,
+      "question_text": "CEI is requesting clarification regarding the door hardware power requirements. Specifically, we need a confirmed list of all door numbers that will require line voltage power supplied above the door header to accommodate the specified hardware. Suggested answer Please confirm which doors are to receive line voltage power so that we can properly coordinate electrical rough- in.",
+      "resolution_text": "steven holt: No security doors require power from a source outside of our panels.",
+      "success": true,
+      "tokens_used": {
+        "input": 704,
+        "output": 395
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and coordination of the roof drainage system with the interior office layout. The need for a furred wall to cover exposed plumbing indicates a lack of foresight in the initial design, which could have been addressed during the design phase."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "data centers",
+          "office renovations"
+        ],
+        "reasoning": "Other projects involving interior finishes and plumbing systems can learn from this issue, particularly in ensuring that all mechanical systems are adequately integrated into the design before construction begins."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for plumbing and mechanical systems during the design phase to ensure they are fully integrated with architectural elements.",
+        "action_phase": "design",
+        "reasoning": "By improving the design review process, similar issues can be identified and resolved before construction, preventing costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate design coordination between architectural and plumbing systems.",
+        "reasoning": "The cause of the issue is well understood, as it stems from a failure to account for the existing plumbing in the design, leading to the need for a costly modification."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The significant cost was primarily due to the need for a design change to accommodate the existing plumbing, which was not properly integrated into the initial design."
+      },
+      "summary": {
+        "one_line": "The need for a furred wall to cover exposed roof drainage pipes resulted from inadequate design coordination, leading to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "820513ab-bd0c-4e77-b4fb-a40b49c9c860",
+      "rfi_number": "RFI-48",
+      "project": "CoreSite Data Center",
+      "trade": null,
+      "co_amount": 1219303.0,
+      "question_text": "There are existing roof drainage pipes protruding through the wall into office 240, see referenced Newforma Issue #185 for reference. Per 6/12 BIM call, Corgan's direction is to implement a furred wall to cover the exposed plumbing as tight to the pipes as possible. Suggested answer Corgan, please confirm a furred wall is acceptable to cover exposed roof drainage pipe. DPR proposes furred wall aligned with bump-out for Office 240 window, 8'-2 1/8\" from GL 9 to face of furred wall.",
+      "resolution_text": "Ashley Hill (Corgan - 10059759): Per the updated information on the 06.24.2025 email",
+      "success": true,
+      "tokens_used": {
+        "input": 763,
+        "output": 410
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and coordination of wall terminations, which led to significant rework and costs. The need for a termination detail that was not initially provided indicates a gap in the design process that could be addressed in future projects."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "data centers",
+          "commercial buildings",
+          "industrial facilities"
+        ],
+        "reasoning": "Other projects involving fire-rated walls and complex interior layouts can benefit from understanding the importance of clear design details and coordination between architectural and structural elements."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a checklist for design reviews that includes verification of termination details for fire-rated walls.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all necessary details are included in the design phase, similar costly issues can be avoided in future projects."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The initial design did not specify the required termination details for the UPS Room walls, leading to confusion and rework.",
+        "reasoning": "The cause is clear as it stems from a lack of detail in the design documents, which should have been addressed during the design review process."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for a design change that required rework and demolition of existing drywall, which was not anticipated in the original scope."
+      },
+      "summary": {
+        "one_line": "The lack of clear termination details for fire-rated walls in the UPS Room led to a costly change order due to necessary rework.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "3d86c1d4-3460-412d-b402-da5b47ec862c",
+      "rfi_number": "RFI-76",
+      "project": "CoreSite Data Center",
+      "trade": "drywall",
+      "co_amount": 1219303.0,
+      "question_text": "Per 7/7 Workshop, DPR requested a termination detail for the East end of UPS Room walls running E-W. Corgan confirmed that these walls will need to run to interior face of exterior walls to maintain required fire rating instead of terminating at existing drywall. This includes wall separating UPS Room 2C and 2D near GL 5; new UPS Room wall must run through shaft to interior face of exterior wall. Please note, demo of existing drywall at UPS room wall terminations will be required to satisfy requirement. Suggested answer Corgan, please confirm UPS Room walls running E-W must terminate at interior face of exterior wall. If so, please provide termination detail.",
+      "resolution_text": "Ashley Hill (Corgan - 10059759): GC to terminate walls to exterior wall, follow detail provided. Detail to be added in \nIFC.\nGC to notify Owner if any cost",
+      "success": true,
+      "tokens_used": {
+        "input": 798,
+        "output": 407
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and coordination of active drainage risers. The need for additional walls to encase the risers indicates a lack of clarity in the original design, which could have been addressed earlier in the process."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "data centers",
+          "commercial buildings",
+          "industrial facilities"
+        ],
+        "reasoning": "Other projects involving complex mechanical systems and architectural designs can benefit from understanding the importance of clear communication and thorough design reviews to avoid similar issues."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process that includes all relevant stakeholders to ensure all active systems are properly accounted for in the design.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, potential conflicts and omissions can be identified and resolved before construction begins, reducing costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient coordination and communication during the design phase regarding the existing drainage risers and their treatment in the architectural design.",
+        "reasoning": "The clear identification of the risers during the workshop indicates that the issue stemmed from a lack of initial clarity in the design documents."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The change order was primarily driven by the need to modify the design to accommodate existing conditions that were not adequately addressed in the original plans."
+      },
+      "summary": {
+        "one_line": "The RFI resulted from a design oversight regarding the treatment of active drainage risers, leading to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "2c3cebc6-de4c-4736-954b-7ded4ab47a8f",
+      "rfi_number": "RFI-89",
+      "project": "CoreSite Data Center",
+      "trade": "architectural",
+      "co_amount": 59960.0,
+      "question_text": "Per 7/21 DPR/Design Teams workshop, existing drainage risers were identified and in Storage 234 with no chase or covering shown in design. These risers are active and service the South-most UPS room CRAHs on level 4. However, the floor drains adjacent to the risers are not in service. Per 7/21 workshop, Corgan confirmed a furred wall to encase the active risers would be preferred instead of a standalone chase. To encase these risers, DPR proposes two additional E-type walls. see referenced markup for minimum dimensions to cover risers. Suggested answer Corgan, please confirm existing risers in Storage 234 are to be concealed. If so, please confirm the following and provide an updated layout drawing: 1. The pipe risers are to be enclosed with furred walls 2. RAF is to be removed from area inside furring.",
+      "resolution_text": "Ashley Hill (Corgan - 10059759): NO EXCEPTIONS TAKEN TO PROPOSED FURRED OUT WALL DIMENSIONS. RAF IS \nNOT REQUIRED WITHIN FUROUT. PROCEED WITH TYPE E PARTITIONS.\nS SCARCELLI - CORGAN - 08.01.25",
+      "success": true,
+      "tokens_used": {
+        "input": 866,
+        "output": 405
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable design error regarding the fire rating of the janitor's closet wall. The need for a change from an E-type wall to a D-type wall indicates a lack of clarity in the design documents, which could have been addressed during the design phase."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "data centers",
+          "healthcare facilities"
+        ],
+        "reasoning": "Other projects that require fire-rated walls should be aware of the importance of verifying wall types against fire rating requirements to avoid similar costly changes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for fire-rated wall requirements during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all fire rating requirements are clearly defined and adhered to in the design documents, similar costly change orders can be avoided."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate design documentation regarding fire rating requirements for the janitor's closet.",
+        "reasoning": "The design team failed to specify the necessary wall type to maintain the required fire rating, leading to the need for a costly change order."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need to change the wall type to meet fire rating requirements, which involved additional materials and labor."
+      },
+      "summary": {
+        "one_line": "The need to change the janitor's closet wall type to maintain fire rating resulted in a costly change order due to inadequate design documentation.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "a2b687f3-29d4-4a60-93eb-186571e8caa9",
+      "rfi_number": "RFI-94",
+      "project": "CoreSite Data Center",
+      "trade": "architectural, structural",
+      "co_amount": 59171.0,
+      "question_text": "The current design calls for a furred wall (E6-D) at the south wall of the Janitor's Closet; however, the janitor's closet is to maintain a 1hr rating per A03-03B which cannot be achieved with an E type wall. If the wall rating is to be maintained, DPR proposes changing South wall of the janitors closet to a shaft wall (D-type). If this wall does not need to maintain a fire rating, the E6 wall type can remain. There will be a cost",
+      "resolution_text": "Ashley Hill (Corgan - 10059759): 1) JANITOR CLOSET TO MAINTAIN FIRE RATING AS NOTED ON PLANS, NO \nEXCEPTIONS TAKEN TO USING D-TYPE WALL.\n2) NO EXCEPTIONS TAKEN TO SOUTH WALL SHIFTING PLAN NORTH 5''. TO MAINTAIN ADA DOOR CLEARANCE, \nDOOR\nOPENING HAS BEEN ADJUSTED TO FLIP OUTWARD, SEE ATTACHED SDA.\nCreated",
+      "success": true,
+      "tokens_used": {
+        "input": 828,
+        "output": 398
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the coordination of electrical device layouts with furniture placement. The significant cost indicates that this issue led to expensive rework and could have been avoided with better initial design and communication."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "healthcare facilities",
+          "office spaces"
+        ],
+        "reasoning": "Any project involving electrical installations and furniture layouts can benefit from this lesson, particularly in sectors where precise coordination is critical."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a standardized review process for electrical layouts against furniture plans during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that electrical layouts are verified against furniture placements early in the design phase, similar costly issues can be avoided in future projects."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate coordination between the design teams for electrical and furniture layouts.",
+        "reasoning": "The root cause is well-defined, as the RFI directly addresses the lack of alignment between the electrical drawings and the furniture permit drawings."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost stemmed from the need to rework electrical installations due to misalignment with furniture layouts, indicating a failure in coordination between the design teams."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a costly coordination failure between electrical device layouts and furniture placement, leading to a significant change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "9bbc28e4-31d3-495d-8205-408e3f6cc40a",
+      "rfi_number": "RFI-21",
+      "project": "Intuitive Surgical MOB",
+      "trade": "electrical",
+      "co_amount": 4058394.0,
+      "question_text": "Please verify device layout as represented on the electrical drawings will be acceptable to scale for installation and that furniture will match as represented on the permit drawings. If not, please provide dimensioned layout for devices at preferred installation location.",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW RESPONSE:\nPlease find attached the Floor 2 and Floor 3 furniture dimensioned locations for power and data.\n240724-IS B143-FL02-Floor Core & Power-FURN.pdf\n240724-IS B143-FL03-Floor Core & power-FURN.pdf\nM. Thomas, RMW, 07.25.24",
+      "success": true,
+      "tokens_used": {
+        "input": 759,
+        "output": 382
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The issue with the existing mullion covers not being installed indicates a preventable error that could have been caught during the design phase. This costly change order highlights the need for thorough checks in design documentation to ensure all components are accounted for before construction begins."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "institutional projects",
+          "healthcare facilities"
+        ],
+        "reasoning": "Many construction projects, especially in commercial and institutional sectors, can benefit from improved design review processes to avoid similar costly oversights."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a comprehensive design review checklist that includes verification of all critical components and their installation requirements.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all elements, such as mullion covers, are included and verified in the design phase, future projects can avoid similar costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate design documentation and oversight during the design phase led to the omission of the mullion covers.",
+        "reasoning": "The clarity of the root cause is supported by the fact that the issue was identified during installation, indicating a lack of attention to detail in the design documents."
+      },
+      "cost_driver": {
+        "primary_driver": "scope_addition",
+        "reasoning": "The cost was primarily driven by the need to add the installation of the mullion covers, which were not included in the original scope of work, leading to additional labor and materials."
+      },
+      "summary": {
+        "one_line": "The failure to install existing mullion covers due to oversight in design documentation resulted in a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "13f1646a-2e26-4210-b748-ff7303a8ed34",
+      "rfi_number": "RFI-55",
+      "project": "Intuitive Surgical MOB",
+      "trade": "curtainwall",
+      "co_amount": 271798.0,
+      "question_text": "Existing Mullion Covers Not Installed",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW: Proceed with installation of mullion cover \nand completion of\npony walls. Additional cost shall be reviewed and approved",
+      "success": true,
+      "tokens_used": {
+        "input": 671,
+        "output": 411
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error related to the flooring transition and slope around drinking fountains, which could have been addressed during the design phase. The need for clarification indicates a gap in the initial design documentation that led to costly rework."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial",
+          "institutional",
+          "healthcare"
+        ],
+        "reasoning": "Other projects in similar sectors should be aware of the importance of clear design specifications and the potential costs associated with flooring transitions and drainage considerations."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for flooring transitions and drainage details during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that these details are clearly defined and coordinated in the design documents, future costly RFIs and change orders can be minimized."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient detail in the design documents regarding flooring transitions and drainage slopes.",
+        "reasoning": "The RFI arose from a lack of clarity in the original plans, indicating a clear root cause that can be addressed in future projects."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The change order was primarily driven by the need to modify the design to accommodate proper flooring transitions and drainage, which were not adequately addressed in the original plans."
+      },
+      "summary": {
+        "one_line": "The RFI resulted from unclear design specifications regarding flooring transitions, leading to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "c2a5cc3b-876f-41bc-8a43-5d7f3adbcb8b",
+      "rfi_number": "RFI-89.1",
+      "project": "Intuitive Surgical MOB",
+      "trade": "architectural",
+      "co_amount": 194849.0,
+      "question_text": "Reference: Floor Plans 1-5/A2.11-A2.15 & Attached Pictures Question 1: As discussed on our check-in meeting on 9/16, please confirm if Schluter transition across whole opening at side doors is acceptable. Question 2: Provide direction on flooring slope around drinking fountains.",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW:\nLeave existing threshold in place. Refer to ASK 720 for guidance of where new floor finish and thresholds need to \nbe provided. Please review this condition sketched in the attached ASK against all the core restroom conditions.\nPlease note the infill tile at the restroom interior shall match the specification for the new tiled hallway. DPR shall \nprovide options meeting schedule and cost parameters.\nM. Thomas, RMW, 09.24.25",
+      "success": true,
+      "tokens_used": {
+        "input": 792,
+        "output": 383
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and coordination of the soffit installation. The need for a change order indicates that the original design did not adequately account for site conditions, which could have been identified during the design phase."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "office spaces",
+          "multi-story structures"
+        ],
+        "reasoning": "Other projects with similar architectural and structural elements should be aware of the potential for access issues when designing soffits and other overhead installations."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more thorough review process for design details that involve overhead installations, ensuring that site conditions are fully considered.",
+        "action_phase": "design",
+        "reasoning": "By improving the design review process, future projects can avoid similar costly change orders due to overlooked site conditions."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate design consideration of site conditions and access limitations for soffit installation.",
+        "reasoning": "The cause is clear as it stems from the original design not accommodating existing structural elements that obstructed access."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for a design change after construction had begun, necessitating rework and adjustments to the installation approach."
+      },
+      "summary": {
+        "one_line": "The costly issue arose from a design oversight regarding soffit installation access, leading to a significant change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "59a5ee68-ddbb-41b4-bcee-38906e5f1554",
+      "rfi_number": "RFI-16",
+      "project": "Intuitive Surgical MOB",
+      "trade": "architectural, structural",
+      "co_amount": 118846.0,
+      "question_text": "The soffit that supports the mecho shade is drawn as a single drop with a kicker. There is not enough access to install this soffit drop between the building's perimeter beam and the exterior wall. Also, in some areas existing cold formed metal framing ties into exterior wall preventing access. To avoid attaching to the curtain wall. DPR Drywall proposes changing the detail to a drywall grid soffit that is supported by Z clips to the beam, and wire back to the deck. The soffit would be braced to the structure by CRC channel attached to the drywall grid main and the web of the Z clip attached to the beam. Please see attached Sketch and confirm the proposed details are acceptable.",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW RESPONSE:\nAfter review of the onsite condition with the construction team, we are removing the soffit and instead will prefer \nto install the mechoshade pocket directly to exterior mullion. Please review attached ASK-709.\nM. Thomas, RMW, 07.25.24",
+      "success": true,
+      "tokens_used": {
+        "input": 838,
+        "output": 382
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable issue related to the specification and installation of noise mitigation measures. The need for additional gypsum board backers indicates a lack of clarity or completeness in the initial design documents, which could have been addressed earlier in the design phase."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Healthcare facilities",
+          "Commercial buildings",
+          "Educational institutions"
+        ],
+        "reasoning": "Other projects involving ductwork and noise control measures can benefit from this lesson, particularly in ensuring that specifications are clear and comprehensive during the design phase."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for acoustical requirements in design documents to ensure all necessary specifications are included.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the review process for acoustical specifications, similar costly RFIs can be avoided in future projects."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate initial design specifications regarding noise mitigation measures.",
+        "reasoning": "The need for additional materials indicates that the original design did not fully address the acoustical requirements, leading to this costly change order."
+      },
+      "cost_driver": {
+        "primary_driver": "scope_addition",
+        "reasoning": "The additional cost stemmed from the need to add gypsum board backers to meet noise mitigation requirements, which were not adequately specified in the original design."
+      },
+      "summary": {
+        "one_line": "The RFI resulted from inadequate initial design specifications for noise mitigation, leading to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "6c5390fe-b5a7-492b-bc4b-3e00e2cb90d2",
+      "rfi_number": "RFI-37",
+      "project": "Intuitive Surgical MOB",
+      "trade": null,
+      "co_amount": 18237.0,
+      "question_text": "Comment on Submittal #233000-02 -Level 2 and 3 Ductwork Shop Drawings stated \"Per Salters recommendations, ISI has directed to provide gypsum board backed ACT (NRC 0.90 or above) to mitigate any potential noise from the following units.\" Please confirm the product and locations of the gypsum board backer in the attached is acceptable. The ROM for the additional backer board at these locations on Level 2 and Level 3 totals to $18,000.",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW: Proceed per direction in submittal \nresponse. RMW takes no exception to the product and locations noted.\nH.Travis 08.05.24",
+      "success": true,
+      "tokens_used": {
+        "input": 777,
+        "output": 385
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error regarding the scope of work related to AV niches, which led to a costly change order. The confusion between the contract drawings and the submittal comments indicates a coordination gap that could have been avoided with clearer communication and documentation."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "healthcare facilities",
+          "educational institutions"
+        ],
+        "reasoning": "Other projects with similar architectural features and scope definitions can benefit from understanding the importance of clear communication and documentation to avoid costly RFIs."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a standardized review process for submittals that cross-references contract drawings to ensure alignment before approval.",
+        "action_phase": "preconstruction",
+        "reasoning": "By establishing a thorough review process, the likelihood of discrepancies between drawings and submittals can be minimized, reducing the potential for costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Misalignment between the contract drawings and the submittal comments regarding the scope of AV niches.",
+        "reasoning": "The clear discrepancy between the details in the contract and the comments from the submittal indicates a straightforward cause for the confusion and subsequent change order."
+      },
+      "cost_driver": {
+        "primary_driver": "scope_addition",
+        "reasoning": "The change order was primarily driven by the need to clarify and adjust the scope of work related to the AV niches, which were initially miscommunicated."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a significant miscommunication regarding the scope of AV niches, leading to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "1801f1d3-92af-44d2-b053-84e83c024c22",
+      "rfi_number": "RFI-139",
+      "project": "Intuitive Surgical MOB",
+      "trade": "architectural",
+      "co_amount": 17500.0,
+      "question_text": "Reference: Submittal 064116-03-1 - Millwork Shop Drawings (Level 1) Enlarged Lobby Plan / A5.11 Detail 11 & 13/A5.12 Detail 1/A9.12 Question: RMW submittal comment for 064116-03-1 - Millwork Shop Drawings (Level 1) notes that no framed niche is in scope at Circulation 1002. RMW submittal comment also indicates no niche is required per Detail 2/CS-24.00 corresponding to Circulation 1002 and Circulation 1072 elevations. Details 11 & 13/A5.12 in the contract drawings indicate TV niches are required at Circulation 1002 and Circulation 1072. 1. Please confirm whether TV niches are required at Circulation 1002 and/or Circulation 1072. 2. If no niches are required, please confirm the wall finish at these elevations. 3. If a niche is required at Circulation 1072, note that Detail 1/A9.12 shows a niche in a rated wall, which does not match existing conditions. Please provide an updated detail for a niche in the correct wall type.",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW:\n1. No AV niches are required at Circulation 1002 or 1072. Those are removed from scope for overall budget.\n2. Phenolic panels will continue past those locations. See attached ASK 727 and ASK 728.\n3. The only AV niche in the town square at lob",
+      "success": true,
+      "tokens_used": {
+        "input": 956,
+        "output": 409
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error related to the design and installation of Cold Roll Channels at Double Stud Sound Walls, which led to costly rework. This indicates a clear need for improved coordination and design clarity to prevent similar issues in future projects."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "multi-family residential",
+          "healthcare facilities"
+        ],
+        "reasoning": "Other projects involving similar architectural elements and sound wall constructions should be aware of the design considerations and coordination required to avoid similar costly RFIs."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for architectural details involving sound walls and associated structural elements during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all architectural details are clearly defined and coordinated with structural elements before construction begins, the likelihood of costly RFIs and change orders can be significantly reduced."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate design specifications and coordination between architectural and structural teams regarding the installation of Cold Roll Channels.",
+        "reasoning": "The root cause is well understood as it stems from a lack of clarity in the design documents, which should have been addressed during the design phase."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for design changes and rework associated with the installation of the Cold Roll Channels, which were not adequately specified in the original design."
+      },
+      "summary": {
+        "one_line": "The RFI regarding Cold Roll Channels at Double Stud Sound Walls resulted in a costly change order due to inadequate design specifications.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "fd72030c-9d4b-47f7-8a01-6c1e539688e8",
+      "rfi_number": "RFI-57",
+      "project": "Intuitive Surgical MOB",
+      "trade": "architectural",
+      "co_amount": 10844.0,
+      "question_text": "Cold Roll Channel (CRC) at Double Stud Sound Walls",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): Please see posted response for RFI 057 - Cold \nRoll Channel (CRC) at Double Stud Sound Walls.",
+      "success": true,
+      "tokens_used": {
+        "input": 672,
+        "output": 415
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The relocation of the FCU indicates a preventable error in the initial design phase, where the hard lit ceiling was not adequately considered for mechanical installations. This situation highlights the need for better coordination between architectural and mechanical designs to prevent similar issues in future projects."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "healthcare facilities",
+          "educational institutions"
+        ],
+        "reasoning": "Other projects involving complex mechanical systems and architectural features should be aware of the importance of thorough design reviews to avoid costly relocations and changes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a standardized checklist for design reviews that includes considerations for mechanical installations in relation to architectural features.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that mechanical and architectural designs are reviewed together, similar issues can be identified and resolved before construction begins, reducing the likelihood of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient coordination between architectural and mechanical design teams regarding ceiling types and their implications for utility installations.",
+        "reasoning": "The cause of the issue is well understood, as it stems from a lack of foresight in the design process, which can be addressed through improved communication and design protocols."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily due to the need to relocate the FCU after the design was finalized, indicating a failure in coordinating the architectural and mechanical aspects of the project."
+      },
+      "summary": {
+        "one_line": "The costly relocation of an FCU due to inadequate design coordination highlights the need for improved collaboration between architectural and mechanical teams.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "dacbe8c1-a915-4e76-a19a-516300039e52",
+      "rfi_number": "RFI-110",
+      "project": "Intuitive Surgical MOB",
+      "trade": "architectural",
+      "co_amount": 8427.0,
+      "question_text": "Reference: Mechanical 3rd Floor Plan/M2.03. & Floor Plan/A2.13 Question: The mechanical drawings indicate a FCU located in the GN RR 3023, which has a hard lit ceiling. To improve accessibility for overhead utilities, DPR & mechanical contractor are proposing to relocate this FCU to training/multi-purpose room 3028, which has a T-bar ceiling. Please confirm if this relocation is acceptable or provide alternate direction.",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): Glumac Response\nGlumac does not take exception to request to relocate FCU. The new location to be reviewed",
+      "success": true,
+      "tokens_used": {
+        "input": 755,
+        "output": 417
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The absence of access panel locations in the reflected ceiling plans indicates a preventable design oversight that led to costly rework. This situation highlights the need for thorough reviews of design documents to ensure all necessary access points for MEP utilities are included."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "healthcare facilities",
+          "educational institutions"
+        ],
+        "reasoning": "Design teams across various project types should be aware of the importance of including access panels in initial plans to avoid costly change orders and rework."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a checklist for design reviews that includes verification of access panel locations for MEP utilities.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that access panels are included in the design phase, future projects can avoid similar costly change orders and improve overall project efficiency."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The design documents did not specify the locations for access panels, leading to confusion and the need for a change order.",
+        "reasoning": "The clarity of the root cause is high, as it directly relates to a lack of detail in the design documents that should have been addressed during the design phase."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The cost was primarily driven by the need to revise the design to include access panels, which were omitted in the initial plans, necessitating a change order."
+      },
+      "summary": {
+        "one_line": "The omission of access panel locations in the reflected ceiling plans resulted in a costly change order due to a preventable design oversight.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "2e9e5f8c-b222-4560-af3d-5746a8281c60",
+      "rfi_number": "RFI-100",
+      "project": "Intuitive Surgical MOB",
+      "trade": "architectural",
+      "co_amount": 5952.0,
+      "question_text": "Reference: Reflected Celling Plans - Floors 1-3/ A2.31-A2.35 Question: Access Panels are not indicated in the RCPs. Please provide the specific locations where access panels should be installed in the elevator lobby hard ceilings. A 24\" x 24\" access panel would be ideal, to allow access to the MEP utilities above the hard ceiling.",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW REVISED RESPONSE:\nSee typical layout noted on L2\nElevator Lobby.\nH.Travis 09.12.25\nRMW: Please note items requiring access panels. We will provide precise locations\nonce items are confirmed.\nH.Travis 09.09.25",
+      "success": true,
+      "tokens_used": {
+        "input": 776,
+        "output": 409
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The issue involved a preventable error related to the installation method of drywall and insulation, which could have been addressed during the design phase. The resolution indicates a lack of clarity in the original design regarding sound terminations, which led to costly rework."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "healthcare facilities",
+          "multi-story structures"
+        ],
+        "reasoning": "Other projects involving similar architectural elements and sound insulation requirements should be aware of this issue to avoid similar costly change orders."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a detailed review process for sound termination details in design documents.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that sound termination details are clearly defined and coordinated in the design phase, future projects can prevent similar costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient detail in the design documents regarding sound termination and insulation requirements.",
+        "reasoning": "The cause is clear as the RFI arose from a lack of specific instructions in the design, leading to confusion during construction."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The need for a change order stemmed from a design oversight that necessitated additional work to meet sound insulation standards."
+      },
+      "summary": {
+        "one_line": "The RFI regarding sound terminations led to a costly change order due to insufficient design details.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "8c792ff6-1331-409f-934a-46263cac82de",
+      "rfi_number": "RFI-53",
+      "project": "Intuitive Surgical MOB",
+      "trade": "architectural",
+      "co_amount": 5612.0,
+      "question_text": "Level 2 Beam Pocket Sound Terminations",
+      "resolution_text": "Felice Rosario Arrigotti (RMW Architecture + Interiors - 10024152): RMW: Proceed with suggested horizontal \ndrywall. Provide\nbatt insulation in cavity.\nH.Travis 09.03.24\nSALTER RESPONSE:\nWe agree with the suggestion of installing drywall horizontally in the indicated areas. Ensure the horizontal\nlayer of gypsum board is sealed airtight to the inside face of the exterior wall and to the bottom flange of\nthe structural beam. We recommend including batt insulation in this cavity.\nMichael Hoeft 8.29.24",
+      "success": true,
+      "tokens_used": {
+        "input": 742,
+        "output": 373
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to missing details in the design documents, which led to significant rework and additional costs. The lack of clarity in the original drawings indicates a need for improved design review processes."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial office buildings",
+          "structural engineering projects"
+        ],
+        "reasoning": "Other projects in similar sectors should be aware of the importance of thorough design documentation and the potential costs associated with missing details."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process to ensure all necessary details are included in fabrication drawings.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, future projects can minimize the risk of similar costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The absence of specified details in the fabrication drawings led to confusion and the need for clarification.",
+        "reasoning": "The root cause is well-defined, as it stems from a lack of comprehensive documentation in the design phase."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for design changes and subsequent rework, as the details were not initially included in the drawings."
+      },
+      "summary": {
+        "one_line": "The omission of doubler plate details in the design documents resulted in a costly change order due to necessary rework.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "e4e96461-d658-4e7c-8aed-6a3afe1aa1b1",
+      "rfi_number": "RFI-2",
+      "project": "Silicon Valley Office",
+      "trade": null,
+      "co_amount": 215946.0,
+      "question_text": "Ref: Attached file GPLA SSK_A02_DoublerPlate on Gusset_REV24-02-14.pdf Doubler plates as shown in Detail 8/PK2-S5.3.1 per PCR #2 and Bulletin #3 were not called out in previously issued fabrication erection drawings. Please confirm that this detail applies at all in-plane braces on Level 2 and Level 3. (Follow up to Issue #1746)",
+      "resolution_text": "Jason Hsia (GPLA Structural Engineers): The detail would apply where indicated in GPLA-SSK.",
+      "success": true,
+      "tokens_used": {
+        "input": 731,
+        "output": 373
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design of the storm drainage system, specifically the oversight of the existing pipe invert levels. The need for a change order indicates that better coordination and verification of existing conditions could have prevented this costly adjustment."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "infrastructure projects",
+          "site development"
+        ],
+        "reasoning": "Other projects involving drainage systems and site grading should be aware of the importance of verifying existing conditions against design plans to avoid similar costly changes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process of existing site conditions during the design phase, including site surveys and verification of invert levels.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that existing conditions are accurately reflected in the design documents, future projects can avoid similar costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate verification of existing site conditions leading to a mismatch between design and actual field conditions.",
+        "reasoning": "The cause is clearly identified as a failure to account for the existing drainage invert levels, which should have been verified during the design phase."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The change order was primarily driven by the need to modify the design to accommodate unforeseen field conditions, which resulted in significant costs."
+      },
+      "summary": {
+        "one_line": "The need to adjust the storm drainage design due to unverified existing conditions led to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "1937ba39-66f7-40c9-82e4-be8bb58f2a9a",
+      "rfi_number": "RFI-115",
+      "project": "Silicon Valley Office",
+      "trade": null,
+      "co_amount": 210975.0,
+      "question_text": "Ref: Attached RFI-115 Markup Revision 11/21/24; At the marked location, (E) SD Invert sits lower than (N) SD Invert. In order to address field conditions of (E) SD pipe invert, please confirm it is acceptable to install a 36\"x36\" SDMH with non-grated cover in lieu of the SDMH called out in 4/C10.4. This is also intended to act as an overflow catch basin.",
+      "resolution_text": "Dustin Shitanishi (Langan Engineering and Environmental Services Inc - 10066660): see attached for revised plans",
+      "success": true,
+      "tokens_used": {
+        "input": 744,
+        "output": 391
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to missing structural details in the design phase, which led to significant rework and additional costs. The need for clarification on infill details indicates a gap in the initial design documentation that could have been addressed earlier."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial office buildings",
+          "multi-story structures",
+          "any project involving complex structural infill"
+        ],
+        "reasoning": "Other projects with similar structural complexities should be aware of the importance of comprehensive design documentation to avoid costly RFIs and change orders."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for structural details in design documents to ensure all necessary information is included before construction begins.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, future projects can minimize the risk of missing critical details that lead to costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The absence of detailed structural infill specifications in the architectural drawings.",
+        "reasoning": "The cause is clearly identified as a design oversight, which is a common issue that can be mitigated with better design practices."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for additional design work and rework to address the missing details, which resulted in a change order."
+      },
+      "summary": {
+        "one_line": "The lack of detailed structural infill specifications in the design led to a costly change order due to necessary rework.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "4f2e4cea-2f0c-480b-b898-285885a2c6b9",
+      "rfi_number": "RFI-6",
+      "project": "Silicon Valley Office",
+      "trade": "structural",
+      "co_amount": 177121.0,
+      "question_text": "Ref: A2.0.2, S1.4A, S1.4B, attached Rev1 file under References; Questions: 1) The architectural edge-of-slab drawings, PK2-A2.0.2, call out the shaded areas at the Southwest and Southeast corners of the office tower as new concrete. There are no structural details provided for these existing, open areas. Please provide concrete pour back and deck infill details given the existing conditions (Ref Issue #1923) 2) There are multiple existing openings at the roof slab that are to be infilled with metal deck and concrete. For each opening, please provide a structurally acceptable infill detail. It is DPR's preference to infill these openings without the removal of additional concrete surrounding these holes.",
+      "resolution_text": "Jason Hsia (GPLA Structural Engineers): Please see sign sealed SSK-A03 Rev 02 for details to address infill in \nelevated slab conditions and revised detail to address new elevated slab openings.",
+      "success": true,
+      "tokens_used": {
+        "input": 822,
+        "output": 398
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error related to beam penetration at joint locations, which resulted in significant rework and modifications. This indicates a clear lesson on the importance of thorough design reviews and coordination among trades to avoid costly changes."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial office buildings",
+          "mixed-use developments",
+          "high-rise structures"
+        ],
+        "reasoning": "Many construction projects involve complex framing and exterior finishes, making it essential for teams to understand the implications of design decisions on structural elements."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process that includes detailed coordination meetings among all relevant trades.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, potential conflicts like beam penetrations can be identified and resolved before construction begins, reducing the likelihood of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient coordination and communication regarding beam penetrations at joint locations during the design phase.",
+        "reasoning": "The clarity of the issue indicates that the root cause was a lack of attention to detail in the design documents, which could have been addressed with better collaboration."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The change order was primarily driven by the need to modify the design to accommodate the beam penetrations, which were not adequately addressed in the initial design."
+      },
+      "summary": {
+        "one_line": "The RFI regarding beam penetration at joint locations led to a costly change order due to design oversight and lack of coordination.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "00e878b2-4c54-4ca9-bd4f-5196835a3749",
+      "rfi_number": "RFI-52.2",
+      "project": "Silicon Valley Office",
+      "trade": null,
+      "co_amount": 175614.0,
+      "question_text": "Beam Penetration at Joint Locations (EIFS APPLICATION)",
+      "resolution_text": "MM/DPR (4/11/25); See attached SG and GPLA consolidated.\nReynaldo Royo (SmithGroup, Inc - 10017650): Please see attached response to RFI 0052.2 - Beam Penetration at Jt \nLoc (EIFS APPLICATION)-2025-0318 - SG-2025-0327.pdf.\nThanks,\nReynaldo Royo, AIA\n415-309-5324\nBrian Gibson (GPLA Structural Engineers): The proposed framing option is acceptable with modifications per SSK \nC14. See attached",
+      "success": true,
+      "tokens_used": {
+        "input": 751,
+        "output": 400
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and communication of egress requirements. The need for clarification on paths of egress indicates a lack of clear initial design documentation, which could have been addressed during the design phase."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Commercial Office Buildings",
+          "Public Infrastructure",
+          "Landscape Architecture"
+        ],
+        "reasoning": "Other projects involving outdoor spaces and egress requirements can benefit from improved clarity in design documents and communication among teams."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a standardized checklist for egress requirements during the design phase to ensure all paths are clearly defined and communicated.",
+        "action_phase": "design",
+        "reasoning": "By establishing a checklist, teams can prevent similar issues from arising in future projects, ensuring that all egress paths are adequately addressed in the initial design."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient clarity in the design documents regarding egress paths and their specifications.",
+        "reasoning": "The resolution indicates that the design team had to clarify existing plans, suggesting that the initial documentation was not comprehensive enough."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The change order was primarily driven by the need to modify the design to meet egress requirements, which resulted in additional costs for rework and adjustments."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a significant oversight in the design documentation regarding egress paths, leading to costly changes.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "e9e4f35d-7a40-4729-be92-db9c3fa203a9",
+      "rfi_number": "RFI-145",
+      "project": "Silicon Valley Office",
+      "trade": null,
+      "co_amount": 111935.0,
+      "question_text": "Ref: Attached markup; SmithGroup and Langan Team, please confirm: 1) Please confirm the outdoor landscape area will require two paths of egress from concrete patio. 2) Please confirm paths of egress are acceptable as sidewalk as shown as long as sidewalk does not exceed 5% slope. 3) No exceptions taken to area between sidewalk and building exterior to be SOG.",
+      "resolution_text": "Jordan Koop (SmithGroup, Inc - 10017650): DPR Team,\nPlease see attached 'RFI 0145 - Paths of Egress at Outdoor Wedge Patio Area-2025-0110 SG'.\nThanks,\nJordan\nDustin Shitanishi (Langan Engineering and Environmental Services Inc - 10066660): Accessible paths to the public \nway are shown on sheet PK2-G2.2.0 which includes the two paths of egress included in this RFI. Proposed grades \nfor this area is shown on sheet PK2-C5.4 and these path ways are less than 5% as designed. No exceptions taken \nfrom Langan for area between sidewalk and building exterior to be SOG which is DPR's preference. Provide slight \npitch away from the building as shown on sheet PK2-C5.1.",
+      "success": true,
+      "tokens_used": {
+        "input": 871,
+        "output": 387
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable design issue where the thickness of the GLT panels was not adequately coordinated with the existing elevator shaft dimensions, leading to costly rework. The resolution indicates that better initial design checks could have avoided this conflict."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "mixed-use developments",
+          "high-rise structures"
+        ],
+        "reasoning": "Other projects involving mass timber and complex structural elements should be aware of the potential for conflicts with existing systems, particularly in vertical transportation areas."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more thorough design review process that includes checks for vertical clearances and conflicts with existing structures.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, similar conflicts can be identified and resolved before construction begins, reducing the likelihood of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate initial design coordination between the structural elements and the existing elevator shaft dimensions.",
+        "reasoning": "The cause is clear as it stems from a lack of attention to the spatial relationship between the GLT panels and the elevator shaft, which should have been addressed during the design phase."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The need to change the GLT panel thickness and add additional support led to significant costs associated with rework and adjustments in the construction process."
+      },
+      "summary": {
+        "one_line": "The conflict between the lobby elevator shaft and mass timber roof design resulted in a costly change order due to inadequate initial design coordination.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "0fdeb2e6-c34f-4cf8-9960-a006766659c5",
+      "rfi_number": "RFI-8",
+      "project": "Silicon Valley Office",
+      "trade": "architectural, structural",
+      "co_amount": 92894.0,
+      "question_text": "Lobby Elevator Shaft Conflict with Mass Timber Roof",
+      "resolution_text": "Jason Hsia (GPLA Structural Engineers): The interior GLT panels over the elevator shaft will become 2X4 panels \nwith thickness of 3 1/8\" from 2X8 panels with thickness of 6 3/4\" to clear the top of concrete of existing elevator \nshaft. Additional angle ledgers will be welded to adjacent steel beams to support the added panel section. GLT \npanels in adjacent bays will remain 2X8 panels.\nJordan Koop (SmithGroup, Inc - 10017650): Thickness of GLT roof above hoistway to be reduced to 3-1/8\" \nthickness (2x4 GLT panels) per Submittal 832-1. Transition from 2x8 to 2x4 GLT panels to occur above beam \nflanges, all (4) sides. GPLA to confirm that GLT roof thicknesses are acceptable - JG/SG/07.08.2024.",
+      "success": true,
+      "tokens_used": {
+        "input": 833,
+        "output": 405
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The issue stems from a preventable error related to beam penetration at joint locations, which indicates a lack of thorough review in the design phase. This costly change order highlights the need for better coordination and design validation to prevent similar issues in future projects."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial office buildings",
+          "mixed-use developments",
+          "industrial facilities"
+        ],
+        "reasoning": "Many construction projects involve structural steel and metal panel systems, making this lesson relevant to a wide range of similar projects that could benefit from improved design coordination."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process that includes detailed coordination checks between structural and architectural elements.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, teams can identify potential conflicts early, reducing the likelihood of costly change orders related to coordination issues."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate review of shop drawings leading to conflicts at joint locations.",
+        "reasoning": "The root cause is well understood, as it directly relates to the oversight in the design phase and the need for better communication between trades."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily due to the need for rework and adjustments resulting from the failure to coordinate the design of beam penetrations with the metal panel shop drawings."
+      },
+      "summary": {
+        "one_line": "The costly change order resulted from a coordination failure regarding beam penetrations at joint locations, highlighting the need for improved design reviews.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "d8ab7fdd-f885-4adf-a86d-93a2a786efb1",
+      "rfi_number": "RFI-52",
+      "project": "Silicon Valley Office",
+      "trade": "structural_steel",
+      "co_amount": 90540.0,
+      "question_text": "Beam Penetration at Joint Locations (Metal Panel Shop Drawings)",
+      "resolution_text": "MM/DPR 5/16/25:\nPlease see RFI #52.2 for answer",
+      "success": true,
+      "tokens_used": {
+        "input": 655,
+        "output": 401
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error related to the scope of work for planters, which led to significant rework. The resolution indicates that there was a misunderstanding or lack of clarity regarding the details for below-grade planters, suggesting that better communication or documentation could have prevented this costly change."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "landscaping projects",
+          "infrastructure projects"
+        ],
+        "reasoning": "Other projects involving below-grade work and landscaping can benefit from understanding the importance of clear scope definitions and detailed plans to avoid similar costly RFIs."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a review process for all below-grade details to ensure clarity and alignment with the intended scope before construction begins.",
+        "action_phase": "preconstruction",
+        "reasoning": "By ensuring that all details are thoroughly reviewed and understood prior to the start of construction, the likelihood of similar RFIs and associated costs can be significantly reduced."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The original construction documents did not adequately specify the scope of work for below-grade planters, leading to confusion and the need for a change order.",
+        "reasoning": "The resolution clearly identifies the lack of detail as the root cause, indicating confidence in the analysis of the issue."
+      },
+      "cost_driver": {
+        "primary_driver": "scope_addition",
+        "reasoning": "The change order was primarily driven by the need to adjust the scope of work related to the planter details, which was not adequately defined in the original plans."
+      },
+      "summary": {
+        "one_line": "The RFI for the modified planter scope resulted from unclear specifications for below-grade planters, leading to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "b10bb640-a9f6-4e42-88fb-e684ce4c3c69",
+      "rfi_number": "RFI-113",
+      "project": "Silicon Valley Office",
+      "trade": null,
+      "co_amount": 71971.0,
+      "question_text": "RFI for record -Modified Planter Scope",
+      "resolution_text": "Matthew Militante (DPR Construction): DPR to proceed with removing Bituthene and insulation behind the \nplanters that are below grade (ref Detail 64/PK2-A5.4.2 and Detail 56/PK2-A5.3.1). DPR intends to provide the \noriginal detail only at the planters above Level 1 and outside the emergency electrical room.",
+      "success": true,
+      "tokens_used": {
+        "input": 708,
+        "output": 428
+      }
+    },
+    {
+      "learning_value": {
+        "score": 3,
+        "reasoning": "This RFI highlights a coordination gap between trades regarding the use of specific UL designs, which could be improved in future projects. While the cost is high, it stems from a lack of clarity in design specifications rather than a preventable error."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial office buildings",
+          "mixed-use developments"
+        ],
+        "reasoning": "Other projects with similar design and coordination requirements should be aware of the need for clear specifications and trade coordination to avoid similar issues."
+      },
+      "actionability": {
+        "level": "medium",
+        "specific_action": "Implement a more rigorous review process for design specifications and trade coordination during the preconstruction phase.",
+        "action_phase": "preconstruction",
+        "reasoning": "Improving the review process can help catch potential coordination issues before they lead to costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "partial",
+        "root_cause": "Insufficient coordination and clarity in design specifications regarding the UL design usage.",
+        "reasoning": "While the root cause is identified as a coordination issue, the exact details of the miscommunication are not fully clear, indicating a need for better documentation and communication."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost is primarily due to the need for additional work and adjustments resulting from the lack of coordination among trades regarding the UL design specifications."
+      },
+      "summary": {
+        "one_line": "The RFI revealed a costly coordination failure regarding UL design specifications that led to a significant change order.",
+        "lesson_type": "coordination_gap"
+      },
+      "rfi_id": "ad67bd8a-183c-4b82-8471-ea2e5e51c0ff",
+      "rfi_number": "RFI-127",
+      "project": "Silicon Valley Office",
+      "trade": null,
+      "co_amount": 47010.0,
+      "question_text": "Can we use the UL design V497 in the 1st floor MDF (102) and Fire Command Center (104) along the exterior?",
+      "resolution_text": "MM/DPR 3.6.25:\n- See email correspondence on Page 11 for clarification of SG last sentence \"GC to coordinate all trades",
+      "success": true,
+      "tokens_used": {
+        "input": 679,
+        "output": 380
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The change from wood kickers to metal kickers indicates a preventable error in the initial design or specification phase. This suggests a lack of thorough review or consideration of material suitability, which could be improved in future projects."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial office buildings",
+          "structural engineering projects",
+          "any projects involving complex wall systems"
+        ],
+        "reasoning": "Other projects with similar structural requirements can benefit from understanding the importance of material selection and thorough design reviews to avoid costly changes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous review process for material specifications during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that material choices are appropriate and thoroughly vetted during design, similar costly changes can be avoided in the future."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate consideration of material properties and their implications during the design phase.",
+        "reasoning": "The decision to switch materials indicates a clear oversight in the initial design, allowing for confidence in identifying this as the root cause."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The change order was primarily driven by a design change that necessitated rework and additional costs associated with the new material."
+      },
+      "summary": {
+        "one_line": "The switch from wood to metal kickers due to design oversight resulted in a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "a9de628a-da43-4e41-9d32-c3f9fd17e1e6",
+      "rfi_number": "RFI-224",
+      "project": "Silicon Valley Office",
+      "trade": "structural",
+      "co_amount": 45550.0,
+      "question_text": "Exterior Wall Bracing at GL 3.6 and Nanawall",
+      "resolution_text": "Brian Gibson (GPLA Structural Engineers): Please find the revised SSK Drawings C13 [V3] that address the RFI. Let \nus know if you have any follow-up questions or concerns.\n5/13/25: DPR has elected to revert to metal kickers in lieu of wood kickers seen in SSK_C13. All other details \nremain the same. - MM/DPR 5.13.25",
+      "success": true,
+      "tokens_used": {
+        "input": 722,
+        "output": 371
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a significant coordination gap regarding the definition and scope of the 'Second Stage' and the vapor barrier installation. This indicates a preventable error that could have been addressed during the design phase, leading to expensive rework."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "tenant improvement projects",
+          "multi-phase construction"
+        ],
+        "reasoning": "Other projects involving similar phases and scope definitions should be aware of the importance of clear communication and documentation regarding vapor mitigation and construction stages."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for scope definitions and interstitial requirements during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all parties have a clear understanding of the scope and requirements upfront, the likelihood of costly RFIs and change orders can be significantly reduced."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Lack of clarity in the design documents regarding the scope of work for vapor mitigation and the definition of construction stages.",
+        "reasoning": "The RFI directly points to ambiguities in the design that led to confusion and subsequent costly changes."
+      },
+      "cost_driver": {
+        "primary_driver": "scope_addition",
+        "reasoning": "The change order was primarily driven by the need to clarify and expand the scope of work related to vapor mitigation, which was not adequately defined in the original contract documents."
+      },
+      "summary": {
+        "one_line": "The RFI resulted from unclear scope definitions regarding vapor mitigation, leading to a costly change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "5b4f00f2-c18f-4ef9-8296-d78db892281c",
+      "rfi_number": "RFI-0618",
+      "project": "Southline Office",
+      "trade": null,
+      "co_amount": 687762.0,
+      "question_text": "Reference: VM1.02, VM 1.03, A2.01S Q1: Please confirm that the \"Second Stage\" is defined as area in yellow shown on VM1.03, as there is interstitial fill through the entirety of the SOG. Q2: Please confirm that the Vapor Barrier that is part of the \"Second Stage\" is to be installed as part of the Tenant Improvement scope of work (not after tenant improvements) and that this scope is not part of the Core and Shell scope of work. Q3: Please confirm that smoke testing can be conducted on Building 1 for the area listed as \"First Pour\" on VM1.03 via securing of the limited area of that section, as the there will not be a completely sealed system across the foot print of the building. Q4: Please reference the blue highlighted text on page 1. Please confirm it is acceptable to provide the vapor mitigation only in these locations along the exterior. These red locations will still have 3' of overlap for the second stage of construction activities.",
+      "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jun 13, 2023, 5:48 PM PDT\n•\nReferences\nFiles (2)\nSLP1 - RFI 0618 - B1 Vapor Mitigation Scope Confirmation.pdf\n\nD0-A20007-00 LPSC Phase 1\nSLP1 - RFI-0618 - B1 Vapor Mitigation Scope Confirmation\nCreated",
+      "success": true,
+      "tokens_used": {
+        "input": 932,
+        "output": 394
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights significant discrepancies between architectural plans and slab details, leading to costly rework. The issues stem from coordination failures and missing information in the design phase, which are preventable with better processes."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "office buildings",
+          "multi-story structures"
+        ],
+        "reasoning": "Other projects in similar sectors can benefit from understanding the importance of thorough coordination between architectural and structural plans to avoid costly discrepancies."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a comprehensive review process for architectural and structural plans during the design phase to ensure alignment.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all plans are thoroughly vetted for discrepancies before construction begins, similar costly issues can be avoided."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Discrepancies between architectural details and slab plans that were not identified during the design review.",
+        "reasoning": "The cause is well understood, as it directly relates to the lack of coordination and thoroughness in the design documentation."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily due to the need for extensive rework and modifications resulting from the misalignment of plans, which could have been avoided with better coordination."
+      },
+      "summary": {
+        "one_line": "The RFI revealed critical discrepancies between architectural and structural plans, leading to a costly change order due to necessary rework.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "7636be53-5939-44f3-84fe-dd0593a95d75",
+      "rfi_number": "RFI-0968",
+      "project": "Southline Office",
+      "trade": null,
+      "co_amount": 510169.0,
+      "question_text": "Reference: A2.07, A2.07S, A8.11 Detail 14, A4.04 Detail 2, RFI 0712 Q1: The north penthouse curb and framing are not aligning due to architectural and slab plan discrepancies. Where the framing extends 5\" off of the interior curb, please confirm it is acceptable to demo this curb and pour it in the correct location using #4 dowels 12\" O.C with 3 1/4\" embedment (Response to RFI 0712 Question 2 for reinforcement). Q2: There are areas where drywall is extending roughly 1 1/2\" over the concrete curb. Please confirm it is acceptable to use z clips to extend the densdeck prime to the bottom of the curb. Q3: There are areas where the concrete curb is extending past the the drywall due to detail 14 A8.11 not being captured on the slab plan (A2.07S) Please confirm it is acceptable to bush this concrete flush with the drywall. Q4: There are areas where drywall is extending roughly 5/8\" over the concrete curb. Please confirm it is acceptable to place a strip of densdeck prime at the bottom and attach with liquid nails. Q5: The curb and framing are not aligning due to architectural and slab plan discrepancies. Since there is no sheathing in the interior of the penthouse, please confirm it is acceptable for the bottom track to cantilever off of the curb or fill in the space with grout only.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 956,
+        "output": 380
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "The RFI highlights a preventable error related to the bird frit treatment on the exterior glazing, indicating a gap in coordination and communication regarding design specifications. This suggests that clearer guidelines and checks could have prevented the costly change order."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "office complexes",
+          "high-rise structures"
+        ],
+        "reasoning": "Other projects involving curtainwall systems and exterior glazing treatments should be aware of the importance of thorough design documentation and coordination to avoid similar costly changes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a standardized review process for design documents that includes cross-discipline checks for critical design elements like bird frit treatments.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all design documents are thoroughly reviewed and coordinated among relevant trades before construction begins, the likelihood of similar RFIs and change orders can be significantly reduced."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The lack of clear communication and documentation regarding the extent of the bird frit treatment led to confusion and ultimately a change order.",
+        "reasoning": "The documentation provided in the RFI indicates that the issue stemmed from a misunderstanding of the design requirements, which is a clear and identifiable cause."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily due to a failure in coordination between the design team and the construction team regarding the bird frit treatment specifications, leading to rework and additional costs."
+      },
+      "summary": {
+        "one_line": "The RFI regarding the bird frit treatment on exterior glazing resulted in a costly change order due to a lack of clear design communication.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "6530ef46-7314-4f92-9fee-5dff17fdfa82",
+      "rfi_number": "RFI-0672",
+      "project": "Southline Office",
+      "trade": "curtainwall",
+      "co_amount": 494778.0,
+      "question_text": "Ref: ASK-500 Per previous coordination, please confirm the attached documents clarify the extent of the bird frit treatment on the exterior glazing for B1.",
+      "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jun 27, 2023, 11:27 AM PDT\n•\n•\nReferences\nFiles (2)\nSLP1 - RFI-0672 - B1 Bird Frit Treatment on Glazing.pdf\nSLP1 - RFI-0672 - B1 Bird Frit Treatment on Glazing_resp.pdf",
+      "success": true,
+      "tokens_used": {
+        "input": 737,
+        "output": 419
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI indicates a significant preventable error related to coordination between architectural, landscaping, and structural trades, leading to costly rework. The high cost suggests that there were likely multiple layers of miscommunication or oversight that could be addressed."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial office buildings",
+          "mixed-use developments",
+          "landscaping projects"
+        ],
+        "reasoning": "Many projects in the commercial sector face similar coordination challenges, making it essential for teams to learn from this instance to avoid similar costly mistakes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous cross-discipline review process during the design phase to ensure all trades are aligned.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the review process, teams can catch potential issues before they escalate into costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Inadequate coordination and communication between the architectural and structural teams regarding site conditions and design intent.",
+        "reasoning": "The clarity of the root cause suggests that the issue was not an isolated incident but rather a systemic problem that can be addressed through improved processes."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily driven by the need for rework due to misalignment between the designs of different trades, which could have been avoided with better coordination."
+      },
+      "summary": {
+        "one_line": "The RFI highlights a costly coordination failure between trades that resulted in a significant change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "1672aa54-3a71-4eb2-af84-1d5b2b26eb04",
+      "rfi_number": "RFI-1651",
+      "project": "Southline Office",
+      "trade": "architectural, landscaping, structural",
+      "co_amount": 474694.0,
+      "question_text": "REF: Site - Offsite Current Set: L1.10, 6/S0.01, 7/S0.01 POST TO: Site - Offsite Current Set: L1.10, 6/S0.01, 7/S0.01 Please review the attached file and provide responses to Items 1 and 2 per BrightView's RFI #019.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 722,
+        "output": 391
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the use of non-standard parts that void warranties and the need for proper coordination between design specifications and field conditions. The issues raised could have been addressed earlier in the design phase, which would have prevented the costly change order."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "infrastructure projects",
+          "landscaping projects"
+        ],
+        "reasoning": "Other projects involving custom components or materials should be aware of the potential for warranty issues and the importance of adhering to manufacturer specifications to avoid costly changes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a review process for all custom components and materials during the design phase to ensure compliance with manufacturer specifications and warranty requirements.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all components meet manufacturer standards before construction begins, the likelihood of costly change orders due to design conflicts can be significantly reduced."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The use of non-standard parts that void warranties and the lack of coordination between the design team and the construction team regarding the specifications.",
+        "reasoning": "The cause is well understood as it stems from a failure to adhere to manufacturer guidelines and insufficient communication about design changes."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily driven by the need to modify the design to accommodate changes in specifications and the use of non-standard materials, which necessitated a change order."
+      },
+      "summary": {
+        "one_line": "The RFI revealed critical issues with non-standard components that void warranties, leading to a costly change order due to design changes.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "d6095d8f-9631-446e-889d-6785f7340d74",
+      "rfi_number": "RFI-1651.2",
+      "project": "Southline Office",
+      "trade": "architectural, civil_site, landscaping",
+      "co_amount": 474694.0,
+      "question_text": "REF: Site - Offsite Current Set: L1.10, S0.01 POST TO: Site - Offsite Current Set: L1.10, S0.01 Please review the attached file. 1) RFI 1651.1 for Omega 2 Fence shows 1.75x1.75\" 'rub bars' installed along length of fence above block wall. These are not standard parts and modification of the fence will void warranty from the manufacturer. Please confirm this is acceptable. 1a) Rub bar dimensions as designed will conflict with panels. BV recommends reducing the bar to a 1\"x2\" HSS bar, please advise. 1b) Omega Fence posts have been changed to 3\"x3\", the PIP wall running along BART walkway is 8\" thick. Please confirm post will have adequate space between rebar supports and rebar will have adequate coverage at post locations to protect from elements. 2) The original spec for the Omega II fence will not be available until November 2024. BV has provided a substitution that was reviewed by DES and City of San Bruno. Product is attached on page 5. Please confirm that the substitution product from Omega is acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 894,
+        "output": 420
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the coordination of existing utilities and the lime treatment process. The need for clarification indicates a gap in the initial design or planning phase, which could have been addressed earlier to avoid costly change orders."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "Infrastructure projects",
+          "Commercial construction",
+          "Site development"
+        ],
+        "reasoning": "Other projects involving utility management and ground treatment should be aware of the potential for similar issues, especially where existing utilities are present."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough utility coordination review during the design phase to ensure all existing utilities are accounted for and their impact on construction methods is understood.",
+        "action_phase": "design",
+        "reasoning": "By addressing utility placement and treatment methods during the design phase, future projects can avoid similar costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient coordination and planning regarding existing utilities and their impact on the lime treatment process.",
+        "reasoning": "The RFI clearly identifies the conflict between existing utilities and the required construction methods, indicating a lack of foresight in the design."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily driven by the failure to adequately coordinate the existing utilities with the proposed construction methods, leading to a significant change order."
+      },
+      "summary": {
+        "one_line": "The costly issue arose from inadequate coordination of existing utilities with the lime treatment requirements, leading to a significant change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "45c4eb41-042e-431a-8ecb-323bceec5c40",
+      "rfi_number": "RFI-1521",
+      "project": "Southline Office",
+      "trade": null,
+      "co_amount": 439635.0,
+      "question_text": "Reference Drawing: Offsite C4.3 Requesting clarification or alternate details where lime treatment cannot occur offsite due to existing utilities. Mixers need 1' minimum clearance between bottom of treatment area & existing utilities for lime treatment, therefore no existing utilities can be within 2.5' or 30 inches of proposed subgrade with an 18\" lime treatment program. See attached sheets for utility areas which can not be lime treated based on the above. In these areas Teichert is requesting the following: 1) Confirmation if utilities will be lowered to allow lime treatment to occur. 2) If not, is it acceptable to shrink lime treatment section to allow for lime treatment to occur. If so, provide minimum lime treatment section. 3) Alternate detail showing 15\" full section AC over \"compacted subgrade\". Teichert has concern compaction will not be able to be achieved based on experience onsite without dig outs which would likely conflict with existing utilities. Please confirm 15\" AC section will bridge any compaction issues & no digouts below 15\" AC section would be required. Please also note an expected cost increase will incur of ~$5/SF to provide 15\" AC section rather than 6\"AC/7\"AB/18\" lime treatment",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 901,
+        "output": 392
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error in the design phase where the lack of clarity regarding paint specifications led to significant additional costs. It underscores the importance of thorough design documentation to avoid costly change orders."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "office spaces",
+          "industrial facilities"
+        ],
+        "reasoning": "Other projects in similar sectors should be aware of the need for clear design specifications to prevent costly RFIs and change orders."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a checklist for design reviews that includes paint specifications and other critical details.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all design documents are comprehensive and clear, future projects can avoid similar costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The original design did not specify the paint requirements for the loading dock, leading to ambiguity and the need for clarification.",
+        "reasoning": "The cause is well understood as a design oversight, which can be addressed through improved design processes."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The high cost was primarily due to the need for a design change to clarify paint specifications, which was not initially included in the project scope."
+      },
+      "summary": {
+        "one_line": "The lack of clarity in paint specifications for the loading dock led to a costly change order due to design oversight.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "69fd9440-74eb-4892-81f8-2ea3c33bbbef",
+      "rfi_number": "RFI-1531",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "co_amount": 306156.0,
+      "question_text": "Reference: SLP1 - RFI 1531 - PSD Loading Dock Paint Confirmation Sheet A4.05 Marked Up Picture in Sheet A4.05 Background: The current design did not clarify any paint to be installed in the loading dock. Question 1: Please confirm the extents of the additional paint in the loading dock as shown in the mark up. Question 2: Please confirm this is to be texcote and clarify the color.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 731,
+        "output": 370
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to seismic requirements that were not adhered to during the design phase, leading to costly rework. The discovery of the issue after the shear walls were already placed indicates a failure in the design review process that could be improved."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "high-rise structures",
+          "seismic-sensitive projects"
+        ],
+        "reasoning": "Other projects involving seismic design and structural integrity should be aware of the importance of thorough design reviews and compliance with ACI codes to avoid similar costly mistakes."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process that includes checks for compliance with seismic requirements before construction begins.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all design elements meet the necessary codes and standards before construction, similar issues can be prevented, reducing the risk of costly change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The initial rebar configuration did not comply with seismic requirements due to oversight during the design review process.",
+        "reasoning": "The cause of the issue is well-defined, as it stems from a failure to adhere to established codes during the design phase, which should have been caught before construction."
+      },
+      "cost_driver": {
+        "primary_driver": "error_correction",
+        "reasoning": "The significant cost was primarily due to the need to correct the error after the shear walls were already installed, necessitating rework and additional materials."
+      },
+      "summary": {
+        "one_line": "The failure to comply with seismic rebar spacing requirements during the design phase led to a costly change order for error correction.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "d128997f-1956-4dcf-a5de-8a73128f81a9",
+      "rfi_number": "RFI-1268",
+      "project": "Southline Office",
+      "trade": null,
+      "co_amount": 301656.0,
+      "question_text": "Reference: SLP1 - RFI1268 - PSD Floor Boundary Remediation Confirmation Sheet A2.01 Background: An alternate rebar configuration for the inner, horizontal ties at these eight(8) boundaries were proposed during the shop drawing process. While the initial calculations proved to satisfy the structural needs to support the elements above, the spacing of the ties did not comply with the seismic requirements for this type of boundary element per ACI code – which required a 14” MAX between the cross ties versus the ~15 5/8” spacing that was installed. This was only discovered by the engineer after the initial shear walls were placed on level 1 upon their review of the subsequent shear wall shop drawings. Question 1: See next page for proposed FRP solution and confirm this is acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 801,
+        "output": 417
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the design and coordination of structural and fire protection systems. The need for clarification on beam penetrations indicates a lack of thorough review during the design phase, which could have been addressed to avoid costly rework."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial buildings",
+          "industrial facilities",
+          "infrastructure projects"
+        ],
+        "reasoning": "Other projects involving complex structural and mechanical systems should be aware of the importance of clear design specifications and coordination to prevent similar costly issues."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a more rigorous design review process that includes cross-discipline coordination meetings to ensure all systems are accounted for in the design phase.",
+        "action_phase": "design",
+        "reasoning": "By enhancing the design review process, potential conflicts can be identified and resolved before construction begins, reducing the likelihood of costly RFIs and change orders."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "Insufficient coordination between structural and fire protection design teams, leading to conflicts in required clearances.",
+        "reasoning": "The root cause is well understood as it stems from a design oversight that did not adequately consider the spatial requirements of different systems."
+      },
+      "cost_driver": {
+        "primary_driver": "coordination_failure",
+        "reasoning": "The high cost was primarily due to the need for rework and adjustments in the field to accommodate the fire protection lines, which could have been avoided with better initial coordination."
+      },
+      "summary": {
+        "one_line": "The costly issue arose from a lack of coordination between structural and fire protection designs, resulting in a significant change order.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "4c176992-6109-4ce7-a534-fc5d394245e3",
+      "rfi_number": "RFI-0069",
+      "project": "Southline Office",
+      "trade": "structural",
+      "co_amount": 294704.0,
+      "question_text": "Ref: FP1.01 (95% CD drawing dated 08.26.22) There's a minimum clearance required above the unit substation in electrical substation room,. Therefore the fire protection lines need to be within the beam pocket to avoid running within the required clearance zone. Please confirm that the beam penetrations highlighted in yellow are acceptable.",
+      "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Oct 12, 2022, 5:09 PM PDT\n•\n•\nReferences\nFiles (2)\nRFI0069 Attachment - r1.pdf\nSLP1 - RFI-0069 - B1 Beam Penetration at Electrical Substation Rm_Resp.pdf",
+      "success": true,
+      "tokens_used": {
+        "input": 768,
+        "output": 411
+      }
+    },
+    {
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a preventable error related to the choice of backfill material and concrete mix design, which led to significant rework and costs. The need for clarification on compaction requirements and material suitability indicates a gap in initial design or communication that could be improved."
+      },
+      "applicability_scope": {
+        "level": "broad",
+        "project_types": [
+          "commercial construction",
+          "infrastructure projects",
+          "heavy civil works"
+        ],
+        "reasoning": "Other projects involving similar concrete applications and backfill requirements should be aware of the importance of clear specifications and material compatibility to avoid costly change orders."
+      },
+      "actionability": {
+        "level": "high",
+        "specific_action": "Implement a thorough review process for material specifications and compaction requirements during the design phase.",
+        "action_phase": "design",
+        "reasoning": "By ensuring that all material specifications are clearly defined and compatible with project requirements during the design phase, future RFIs and associated costs can be minimized."
+      },
+      "root_cause_clarity": {
+        "level": "clear",
+        "root_cause": "The lack of clarity in the design documents regarding acceptable backfill materials and compaction requirements led to the need for this RFI and subsequent change order.",
+        "reasoning": "The issue stems from insufficient detail in the original design documents, which should have specified acceptable materials and compaction methods."
+      },
+      "cost_driver": {
+        "primary_driver": "design_change",
+        "reasoning": "The change order was primarily driven by the need to alter the originally specified materials and methods due to unclear design requirements, resulting in additional costs for rework and material procurement."
+      },
+      "summary": {
+        "one_line": "The RFI regarding backfill material and concrete mix for the manlift pad resulted in a costly change order due to unclear design specifications.",
+        "lesson_type": "preventable_error"
+      },
+      "rfi_id": "c2912fdc-068f-4b56-9349-59cae29e36a0",
+      "rfi_number": "RFI-0197",
+      "project": "Southline Office",
+      "trade": "concrete",
+      "co_amount": 272789.0,
+      "question_text": "As discussed with Cornerstone Earth group (Nick Devlin) regarding the backfill material for the Manlift pad, please confirm the following: 1) Per drawing MH1-01-2.1, 95% soil compaction is required under the manlift (See page 3 highlighted in red). Please confirm usage of CDF fill is acceptable in lieu of soil at 95% compaction. 2) Attached are two concrete mix design for your review, CDF(100PSI) and Slurry(500 PSI). DPR's preferrence is to use the 100psi CDF mix for concrete fill. Please confirm which mix design is acceptable. 3) Confirm Dimensions of the concrete fill under the manlift pad (See page 3 highlighted in red).",
+      "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jan 27, 2023, 8:46 AM PST\n•\n•\n•\nReferences\nFiles (3)\nManlift Backfill RFI.pdf\nSLP1 - RFI-0197 - B1 CDF Manlift Fill_Resp.pdf\nSLP1 - RFI-0197 - B1 CDF Manlift Fill_Resp_CEG01272023.pdf",
+      "success": true,
+      "tokens_used": {
+        "input": 879,
+        "output": 420
+      }
+    }
+  ]
+}

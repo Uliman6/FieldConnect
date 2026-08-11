@@ -1,0 +1,2868 @@
+{
+  "generated_at": "2026-06-03T17:21:15.127373",
+  "sample_size": 59,
+  "successful": 59,
+  "cost_usd": 0.0239166,
+  "score_distribution": {
+    "1": 1,
+    "2": 4,
+    "3": 12,
+    "4": 38,
+    "5": 4
+  },
+  "target_met": true,
+  "results": [
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses potential spalling issues due to inadequate anchor embedment, which could lead to structural integrity problems. This impacts the structural trade significantly and requires careful consideration.",
+        "trades_affected": [
+          "structural",
+          "concrete"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to confirm embedment depths and potentially modify slab thickness indicates that existing work may need to be redone or adjusted.",
+        "rework_description": "Potential thickening of the slab or adjustment of anchor embedment may require rework of previously completed concrete placements."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The RFI leads to a change order due to necessary adjustments in the design and construction methods to ensure structural safety."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a critical oversight in anchor embedment specifications that could be prevented in future projects through better design checks.",
+        "prevention_action": "Implement a more thorough review process for anchor embedment specifications during the design phase."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of clarity in the design details regarding anchor embedment, indicating a need for improved coordination and review processes."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The potential for spalling and structural issues could lead to further complications in other systems, such as fire ratings and overall structural integrity."
+      },
+      "summary": {
+        "one_line": "The RFI addresses concerns regarding anchor embedment depth in relation to slab thickness to prevent spalling.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant structural implications and potential safety concerns, rather than a simple clarification."
+      },
+      "rfi_id": "d6a16030-de34-4bd1-91af-3d60a797e752",
+      "rfi_number": "RFI-0887",
+      "project": "Southline Office",
+      "trade": "structural",
+      "question_text": "Reference: Detail 10/A9.52 Detail 8/A9.51 Question: Building 2 slab is 5\" thick. Minimum distance between bottom of anchors to bottom of slab is 3\" to avoid spalling. There are various locations where the distance between the end of anchor to slab is at or exceeds this tolerance. 1. Please confirm 4\" embedment per Detail 10/A9.52 and 2\" embed per Detail 8/9.51 are structurally acceptable. 2. If expansion anchor embed length is not acceptable, please confirm thickened slab extent or similar remediation measure to avoid spalling. 3. Please confirm any additional locations where exceeding minimum anchor embedment may be a potential issue and associated remediation measures.",
+      "resolution_text": "Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 927,
+        "output": 431
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The issue of water intrusion into the electrical room poses a significant risk to electrical systems and equipment, which could lead to costly repairs and safety hazards. The need for waterproofing treatment is critical to prevent future damage.",
+        "trades_affected": [
+          "Electrical",
+          "General Contractor",
+          "Waterproofing"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "Existing work related to the CMU wall and electrical installations may need to be redone to accommodate the waterproofing measures.",
+        "rework_description": "Reapplication of waterproofing coatings and potential adjustments to electrical installations to ensure compliance with safety standards."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The need for additional waterproofing measures represents a change in the original scope of work, necessitating a change order."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This situation highlights a critical oversight in the design phase regarding waterproofing requirements for exposed CMU walls, which could be addressed in future projects to prevent similar issues.",
+        "prevention_action": "Implement a review process for waterproofing requirements in design documents, especially for exposed structures."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detail in the design documents regarding waterproofing measures for exposed CMU walls, indicating a gap in the design review process."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The need for waterproofing may affect other systems, such as electrical installations, which could require rework or adjustments to ensure safety and compliance."
+      },
+      "summary": {
+        "one_line": "Water intrusion risk due to lack of waterproofing on the exposed CMU wall in Electrical Room 503.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves significant safety and operational risks that could lead to costly damages and rework."
+      },
+      "rfi_id": "0ea98d47-2d98-45b6-ba0a-1ef1c72f996f",
+      "rfi_number": "RFI-2130",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "South CMU Wall of Electrical Room 503 is exposed on back side to Ramp from Tier 5 to Tier 6. Wind driven rain hits the wall, and is able to saturate through CMU blocks, seeping into inside of electrical room. Per drawings, no sealer is currently installed at CMU. Per input from Sherwin Williams Representative, suggested solution is: Prime with - Loxon Masonry Primer 2 Coats - Loxon XP Waterproofing Masonry Coating. Per Sherwin Williams rep, for proper waterproofing performance and to resist alkalies, 2 coats of the coating MUST be applied between 17.0 -21.5 mils wet per coat. 1. Please confirm the above method is suitable and confirm color is to match paint color at shear walls (TMS Gray).",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 958,
+        "output": 458
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The proposed remediation of the parapet support kickers is critical to the structural integrity of the roof and could potentially affect the overall safety and performance of the building. The need for a change order indicates that this issue was not anticipated and required immediate attention.",
+        "trades_affected": [
+          "structural",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The cutting of the parapet support kickers necessitates either a full replacement or sistering, which involves significant rework of existing structural elements.",
+        "rework_description": "Cutting and either replacing or sistering the kicker studs."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to address the cut parapet kickers and implement the proposed solutions will incur additional costs due to the rework required."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant oversight in the initial design or coordination, which could be addressed in future projects to prevent similar issues from arising.",
+        "prevention_action": "Implement more thorough pre-construction coordination meetings to identify potential conflicts in structural elements."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed coordination in the design phase, leading to the need for field adjustments."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The changes to the parapet support kickers could affect other structural elements and potentially lead to further adjustments in related systems."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for remediation of cut parapet support kickers to ensure structural integrity.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves significant structural implications and necessitates a change order, indicating a deeper problem in the design or coordination process."
+      },
+      "rfi_id": "affc0d96-5793-44d9-94e4-cacdee12e9f2",
+      "rfi_number": "RFI-1884",
+      "project": "Southline Office",
+      "trade": "architectural, structural",
+      "question_text": "Referenced Documents: A2.02, 5/SE1.2 (GPLA Structural Framing Deferred Submittal) Question: To aid in the completion of the roof screw remediation work, some of the parapet support kickers needed to be cut to access space. To remedy the kickers the proposal is to either replace the kicker stud in full or use 54 mil track to sister the cut piece of stud to the left piece of stud. See attached detail on next sheet planned with GPLA. Please confirm Option 1 or Option 2 are acceptable for the cut parapet kicker remediation.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached. Note our response was submitted \nvia email on 08/27/24.",
+      "success": true,
+      "tokens_used": {
+        "input": 929,
+        "output": 450
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses a significant issue regarding the reinstallation of street lights that directly impacts pedestrian safety and lighting adequacy along Centennial Way, which is crucial for public use.",
+        "trades_affected": [
+          "lighting",
+          "landscaping",
+          "electrical"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to reinstall the street lights indicates that prior work related to their removal and storage will need to be undone, requiring coordination among multiple trades.",
+        "rework_description": "Reinstallation of street lights, including potential adjustments to foundations and electrical connections."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The change order reflects an addition to the project scope, as it involves reinstallation of previously removed street lights based on new requirements from the city."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a notable coordination gap between the design team and city requirements that could be improved in future projects to prevent similar issues.",
+        "prevention_action": "Implement a more thorough review process for city requirements and ensure all stakeholders are aligned on design changes before proceeding with demolition or removal."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination and communication regarding the final requirements for street lighting, indicating a process gap in project management."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The reinstallation of street lights may affect other systems, such as electrical layouts and landscaping plans, potentially triggering further adjustments."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need to reinstall street lights along Centennial Way for pedestrian safety after they were removed per initial plans.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant changes to the project scope and impacts safety, requiring coordination across multiple trades."
+      },
+      "rfi_id": "047d4fac-2f31-4452-ae8c-842c6f94f72c",
+      "rfi_number": "RFI-1672",
+      "project": "Southline Office",
+      "trade": "lighting, landscaping, electrical",
+      "question_text": "REF: Site - Offsite Current Set: C3.1, L1.20 POST TO: Site - Offsite Current Set: L1.20 Please review the attached drawings. Per the demo plan C3.1, two street lights along the Centennial Parklet were removed and stored on site. These lights were not to be reinstalled per streetlighting plans or landscape plans. Per conversation with Randy Chen with the city of SSF, these lights are to be reinstalled to allow for sufficient pedestrian lighting along Centennial Way. Please confirm the proposed locations and foundation details provided by Randy Chen are acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 915,
+        "output": 455
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The absence of astragals on the exterior double doors led to water intrusion, which can cause significant damage and requires immediate attention to prevent further issues.",
+        "trades_affected": [
+          "architectural",
+          "waterproofing",
+          "finishes"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing installation of the double doors had to be modified to include the astragals, which involves removing and reinstalling components.",
+        "rework_description": "Installation of astragals at the exterior double doors to ensure water tightness."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The addition of astragals was not part of the original scope and is necessary to address the water intrusion issue."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a critical oversight in the design phase regarding water intrusion prevention, which could be mitigated in future projects with better detail review.",
+        "prevention_action": "Implement a more thorough review process for door and hardware specifications to ensure all necessary components are included."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "This issue stems from a missing detail in the design documents, indicating a gap in the design review process."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The water intrusion could potentially affect interior finishes and lead to further damage if not addressed promptly, triggering additional changes in related trades."
+      },
+      "summary": {
+        "one_line": "The lack of astragals on the penthouse double doors led to water intrusion issues, necessitating a change order.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a significant oversight that could lead to major damage and requires immediate corrective action."
+      },
+      "rfi_id": "123ab308-f3cc-40e5-aec9-0a399109fd3f",
+      "rfi_number": "RFI-1187",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Reference: SLP1 - RFI1187 - B1 Penthouse Double Doors Astragal Clarification Allegion Hardware Schedule: Hardware Group No.25 Sheet A2.07 Submittal 3938 B1 - Doors, Frames and Hardware_R1 Background: At the penthouse level, the exterior double doors did not get astragal's spec'd out. This leaves a small gap between the two doors which allows water to seep into the rooms. DPR suggests to add astragal's at these locations to retain water tightness. Question: Please provide a spec/detail for an astragal at the exterior double doors.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 914,
+        "output": 434
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The requirement for waterstop at the control joint could significantly impact the waterproofing integrity of the building, especially given the VMS system's role in preventing water intrusion. This necessitates careful consideration and potential adjustments by multiple trades.",
+        "trades_affected": [
+          "waterproofing",
+          "concrete",
+          "general contracting"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While the waterstop requirement may lead to adjustments in the installation process, it is not expected to require extensive rework of already completed work.",
+        "rework_description": "Minor adjustments to the installation process of the waterstop at the control joint."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "This RFI leads to an adjustment in the installation requirements for the waterstop, which could incur additional costs but does not necessitate a complete redesign or significant rework."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This situation highlights a coordination gap between the specifications and the installation of the VMS system. Improved communication and clarity in specifications could prevent similar issues in future projects.",
+        "prevention_action": "Implement a more thorough review process for specifications and installation requirements to ensure all systems are aligned."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of clarity in the specifications regarding the interaction between the waterstop and the VMS system, indicating a need for better coordination in the design process."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "While this change may affect the waterproofing approach, it does not trigger a cascade of changes across multiple systems or trades."
+      },
+      "summary": {
+        "one_line": "Clarification needed on the requirement for waterstop at the control joint in light of the VMS installation.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves critical waterproofing considerations that could impact the building's integrity."
+      },
+      "rfi_id": "7522e4d5-631b-43ee-bc4c-a5fe3605c7fa",
+      "rfi_number": "RFI-1013",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Referenced Documents: RFI 0974, S2.1, Spec Section 071300.2.2.F Question: Per RFI 0974, Waterstop is required on the perimeter of all footings of the building. According to specification section 071300.2.2.F Below-Grade Sheet Waterproofing, Waterstop is also called out to be installed at the Control Joint between slab pours (along Gridline 9) to avoid additional water intrusion onto the slab. However, the VMS system is being installed on the overall footprint of the building in order to eliminate this possibility. Please confirm if Waterstop is still required at the control joint between slab pours on gridline 9 in addition to the VMS.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 938,
+        "output": 469
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 5,
+        "reasoning": "The discovery of non-compliant and exposed conductor cables poses a significant safety risk and violates electrical codes, necessitating immediate corrective action. This issue affects the electrical trade directly and could have cascading effects on other systems if not addressed.",
+        "trades_affected": [
+          "Electrical"
+        ]
+      },
+      "rework_level": {
+        "level": "major",
+        "reasoning": "The existing installation of the conductor cables is non-compliant and requires significant rework to ensure safety and code compliance.",
+        "rework_description": "Removal of exposed conductors and installation of proper conduit to protect all cables."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to address the non-compliant installation of electrical conductors will incur additional costs due to the required rework and potential delays."
+      },
+      "learning_value": {
+        "score": 5,
+        "reasoning": "This issue highlights a critical safety violation that could have led to severe consequences. Implementing stricter checks on existing conditions and compliance during the pre-construction phase could prevent similar occurrences in future projects.",
+        "prevention_action": "Establish a protocol for thorough inspections of existing electrical systems before commencing work, ensuring compliance with all relevant codes."
+      },
+      "root_cause_depth": {
+        "level": "systemic",
+        "reasoning": "The issue stems from a lack of oversight regarding existing conditions and compliance with electrical codes, indicating a systemic failure in project management and inspection processes."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The non-compliance of the electrical installation could potentially affect other systems, such as fire safety measures, if not addressed promptly."
+      },
+      "summary": {
+        "one_line": "Non-compliant and exposed conductor cables discovered at the electrical panel pose a significant safety risk.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves a serious safety violation and potential code infractions that require immediate attention and corrective action."
+      },
+      "rfi_id": "c6875188-33e5-46b0-afb6-79e9f941dd17",
+      "rfi_number": "RFI-1993",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "There is an question with the existing electrical panel conditions at 29 Tanforan. It appears the property owner has added conductors to the panel that are not in code and are non-permitted. All conductors to the panel should be inside the conduit. After contacting the property owner at 29 Tanforan Ave. it was discovered that the existing panel has conductor cables exposed and not protected. The cables do not appear to be connected to breaker and what it feeds is unknown. The installation of the cables is not compliant with electrical codes. Photos have been attached for reference. Please provide clarification on how to proceed with these conductor cables.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 918,
+        "output": 456
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The proposed changes involve significant alterations to the sidewalk replacement process, which could impact the overall project timeline and budget. The need to confirm details with the City of SSF indicates a level of complexity that goes beyond routine adjustments.",
+        "trades_affected": [
+          "Concrete",
+          "Sitework"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing sidewalk work will need to be undone and redone to accommodate the new specifications, which involves sawcutting and repouring.",
+        "rework_description": "Sawcutting existing sidewalk, installing expansion joints, doweling into existing curb, and repouring sidewalk."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "This RFI leads to a change in the method of sidewalk replacement, which will likely incur additional costs due to the need for new materials and labor."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical lesson regarding the need for thorough coordination with local authorities and detailed planning for existing conditions. Improved communication could prevent similar issues in future projects.",
+        "prevention_action": "Implement a more rigorous review process for existing conditions and ensure all local standards are confirmed before construction begins."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination and communication with the City of SSF regarding sidewalk standards and existing conditions, indicating a gap in the project management process."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The changes required for the sidewalk replacement may affect other site elements, potentially leading to further adjustments in related trades or systems."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for significant changes to the sidewalk replacement process due to cracking issues, requiring confirmation from the City of SSF.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it involves substantial changes to the construction method and requires coordination with local authorities, indicating a higher level of complexity."
+      },
+      "rfi_id": "1c10e90a-a54b-4878-9e90-a6f73bd4bb90",
+      "rfi_number": "RFI-1948",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Reference Drawing: Offsite C10.4 Detail 2 and 9 DPR has walked with the City of SSF and came up with an exhibit of all of the sidewalks that needs to be replaced due to cracking along Southline Ave. For areas where DPR is required to repour, we propose the following: Sawcut down the back of curb, install expansion joint, dowel into existing curb, and repour sidewalk per SSF standard detail R-3A. See attached mark up. We will pour back the sidewalk without the thickened sidewalk. Please provide spacing for dowels. Please confirm this is acceptable with the City of SSF and provide updated drawings.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 925,
+        "output": 481
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses a significant code compliance issue that affects the electrical installation, which is critical for safety and functionality. The need for additional conduit indicates a substantial change in the electrical work scope.",
+        "trades_affected": [
+          "Electrical"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing installation of the cables is non-compliant and requires rework to meet electrical codes, which involves installing additional conduit.",
+        "rework_description": "Installation of additional conduit between the new meter panel and existing subpanel, along with the deletion of the junction box."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to install additional conduit and modify the existing installation incurs additional costs, classifying this as a rework situation."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical oversight in the initial design and installation process that could have been prevented with better coordination and adherence to electrical codes.",
+        "prevention_action": "Implement a more thorough review process for electrical installations to ensure compliance with codes before construction begins."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of proper coordination and detail in the design phase, leading to a non-compliant installation that required correction."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "While this change affects the electrical installation, it does not trigger changes in other systems or trades."
+      },
+      "summary": {
+        "one_line": "The RFI addresses a non-compliant electrical installation requiring additional conduit to meet code.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine due to the significant safety and compliance implications associated with electrical work, which necessitates careful adherence to codes."
+      },
+      "rfi_id": "8c7dcf9a-226a-4c74-a3cf-87bcb91e91f8",
+      "rfi_number": "RFI-2017",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Reference Drawing: R20 Tanforan JT 4.0 After contacting the property owner at 53 Tanforan Ave, AGL was able to access the 2 100A subpanels in the garage. These panels are side by side. The conductor cables installed between the 2 panels are installed without conduit/chase nipple. Both set of cables from the subpanels are connected to 1 breaker in the existing meter main. The installation of the cables is not compliant with electrical codes. AGL’s conversion panel is mounted on the outside. To rectify both non-compliant code conditions (for the wire only) an additional conduit is needed to be installed between the new meter panel and existing subpanel. The junction box per the design intent can be deleted. Please see attached photos and sketches. Please confirm if this is an acceptable change. Please note that this change will have cost implications associated with additions and deletion.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 977,
+        "output": 433
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The missed steel embeds at the corners of the balcony curbs required a significant change to the attachment method for the guardrails, impacting structural integrity and requiring coordination among multiple trades.",
+        "trades_affected": [
+          "structural",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The proposed solution involved adding steel plates to the existing embeds, which necessitated re-evaluation and potential rework of the balcony guardrail installation.",
+        "rework_description": "Installation of additional steel plates to compensate for the missing embeds."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The need to modify the original design due to the missing embeds resulted in a change order to accommodate the new attachment method."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a critical gap in the coordination of structural embeds, which could be addressed in future projects to avoid similar costly adjustments.",
+        "prevention_action": "Implement a more thorough review process for embed locations during pre-construction coordination meetings."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a coordination gap in the construction process, leading to the incorrect placement of embeds."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in the guardrail attachment method could potentially affect other structural elements and require further adjustments in related trades."
+      },
+      "summary": {
+        "one_line": "Missed steel embeds at balcony corners necessitated a change in guardrail attachment method, leading to a significant change order.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves a significant structural adjustment and highlights a critical coordination failure that could have been avoided."
+      },
+      "rfi_id": "e9598628-2f41-4d0a-8c04-5ac8838dc90b",
+      "rfi_number": "RFI-0893.1",
+      "project": "Southline Office",
+      "trade": "structural, architectural",
+      "question_text": "Reference: SLP1 - RFI0893.1 - B1 Balcony Guardrail Added Plate to Embeds Confirmation_R1 RFI0893.1-SK1, SK2, SK3, SK4, SK5, and SK6 Post on: Detail 8/A8.21 Background: Due to missed steel embeds at corners of Level 3 balcony curbs, the steel embeds for the balcony guardrail were set 1' off of correct locations at the SW and SE balconies. To provide an alternative means of attachment for the balcony guardrails where steel embeds are missing, we propose adding steel plates connected to the steel embeds as noted in the attached sketches. Structural confirmation for the proposed remedial solution was confirmed by Jonathan Chen of DES per response to RFI 0893. Additional clarification was requested by Meg Gainey of DES regarding",
+      "resolution_text": "Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 948,
+        "output": 426
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The confirmation of the elevator pit slab detail is critical for ensuring the correct pit depth, which directly affects the structural integrity and functionality of the elevator system. This issue has implications for multiple trades involved in the installation and operation of the elevator.",
+        "trades_affected": [
+          "concrete",
+          "elevator installation",
+          "mechanical"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to remediate the elevator pit slab indicates that existing work was not completed to specifications, necessitating rework to achieve the correct depth.",
+        "rework_description": "Remediation of the elevator pit slab to correct the depth from the current state to the required 5'-6'."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "This classification is appropriate as the change order is driven by the need to redo work that was not completed correctly, leading to additional costs."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant field error that could have been prevented with better initial coordination and communication regarding the specifications for the elevator pit slab.",
+        "prevention_action": "Implement a more thorough review process for critical structural details during the design phase to ensure all specifications are clearly communicated and understood."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of clarity in the design specifications and communication, rather than a simple missing detail or a systemic flaw."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in the elevator pit slab depth could potentially affect the installation of the elevator system and related mechanical systems, requiring adjustments and rework across multiple trades."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need to confirm the remediation of the elevator pit slab to ensure it meets the required depth, impacting multiple trades and necessitating significant rework.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a critical structural adjustment that has broader implications for the project and requires significant rework."
+      },
+      "rfi_id": "0941a2c8-5308-4bf5-b613-a338f71fe784",
+      "rfi_number": "RFI-0652",
+      "project": "Southline Office",
+      "trade": "concrete",
+      "question_text": "Reference: SLP1 - RFI0652 - PSD Elevator Pit Slab Confirmation Q1: Please confirm the attached detail is acceptable per conversations with Armando/GPLA for the remediation of the current elevator pit slab to the correct pit depth of 5'-6\".",
+      "resolution_text": "Please see attached.\nJulia Morini (DES Architects & Engineers, Inc. - 10012655) - Jun 20, 2023, 9:17 AM PDT\n•\n•\nReferences\nFiles (2)\nSLP1 - RFI-0652 - PSD Elevator Pit Slab Confirmation.pdf\nSLP1 - RFI0652 - PSD Elevator Pit Slab Confirmation.pdf",
+      "success": true,
+      "tokens_used": {
+        "input": 902,
+        "output": 492
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The issue with the overhead signage potentially impacting adjacent electrical components poses a significant risk to both safety and functionality, requiring immediate attention and adjustments.",
+        "trades_affected": [
+          "Electrical",
+          "Signage Installation"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The proposed solution involves adding splay wires and anchors, which requires some rework but does not involve extensive changes to existing installations.",
+        "rework_description": "Installation of additional splay wires and anchors to secure signage."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The need for additional anchoring and splay wires to prevent signage from swinging into electrical components constitutes an adjustment to the original design."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical oversight in the design phase regarding the placement of signage in relation to electrical components, which could be avoided in future projects with better coordination.",
+        "prevention_action": "Implement a more thorough review process for signage placement in relation to other building systems during the design phase."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination in the design process, where the interaction between signage and electrical components was not adequately considered."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The adjustment to the signage could potentially affect the electrical installation and may require further modifications to ensure compliance with safety standards."
+      },
+      "summary": {
+        "one_line": "Overhead wayfinding signage is at risk of colliding with adjacent electrical components due to inadequate design considerations.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves a significant safety concern and requires a design adjustment rather than a simple clarification."
+      },
+      "rfi_id": "9ca27171-1833-4a6a-85c1-0eaadc11bcaf",
+      "rfi_number": "RFI-2143",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "The overhead wayfinding signage at PSD is secured to structure with 2 vertical aircraft wires. This enables the signs to swing on windy days. It was observed at 3 locations that when wind is blowing from the South, the overhead wayfinding signage is close enough to adjacent electrical components to hit them. See attached photo. The (3) signs where this is a problem are OW-L3-1, OW-L4-1, and OW-L5-1. Per meeting on 3.25.25, suggested solution is to add splay wires at 45 degrees anchored South of the existing signage to prevent signage from swinging into electrical components. 1. DES team - please confirm that method as described in attached sketch is acceptable. 2. GPLA team - anchors to be used will be max 3/4\" embedment and slabs will be scanned prior to install. Anchors not to be installed where PT / rebar is found. Please confirm this is acceptable and confirm if there are any further structural requirements.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 998,
+        "output": 430
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The need for sump drains at all locations where percolation testing failed indicates a significant impact on the landscaping trade and potentially others involved in site drainage and grading. This change could affect the overall site drainage strategy.",
+        "trades_affected": [
+          "landscaping",
+          "site drainage",
+          "civil engineering"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The installation of sump drains where percolation testing failed requires rework of the original landscaping plan and may necessitate adjustments to grading and drainage systems.",
+        "rework_description": "Installation of sump drains at multiple tree locations, which may involve trenching and adjustments to existing landscaping."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The addition of sump drains where percolation testing failed represents a change in the scope of work, requiring additional resources and costs."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical field error related to drainage that could have been prevented with better initial testing and planning. Understanding the need for sump drains at multiple locations can improve future site assessments.",
+        "prevention_action": "Implement more thorough pre-construction soil and drainage assessments to identify potential issues before construction begins."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough initial percolation testing and planning, indicating a gap in the process of site evaluation."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The need for sump drains could trigger additional changes in site drainage design, potentially affecting other trades involved in site preparation and landscaping."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for sump drains at tree locations due to failed percolation tests, impacting the landscaping and drainage plans.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant changes to the original design and requires additional work and costs, indicating a critical issue that could have been avoided."
+      },
+      "rfi_id": "febb70de-1a71-48f5-827c-84af26f723d5",
+      "rfi_number": "RFI-1817.1",
+      "project": "Southline Office",
+      "trade": "landscaping",
+      "question_text": "REF: Site - Offsite Current Set: L4.30, RFI 1817 POST TO: Site - Offsite Current Set: L4.30 Please review the attached file. Per the response to RFI 1817, BrightView performed a sump drain test at one of the tree locations along Southline Avenue. This was at a 36\" box tree pit with a 4' sump drain that percolated within 24 hours. Water table was found around a depth of 4' below the tree pit. Please confirm that sump drains are to be installed at all locations where percolation testing failed as shown in RFI 1817. Please advise if additional percolation testing is required at other locations offsite. Suggested answer BrightView suggests installing sumps where percolation testing failed and varying the sump drain between 3' and 4' deep to avoid the water table below. Please note, ROM cost for trenching and a 3’-4’ sump drain is $500.00 per tree.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1001,
+        "output": 482
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The water intrusion through the cracks poses a risk to the installed light fixtures, which could lead to electrical failures or safety hazards. The need for remediation indicates a significant impact on the project.",
+        "trades_affected": [
+          "Electrical",
+          "Concrete"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The proposed solutions require substantial work to address the cracking issue, which affects the integrity of the installed fixtures.",
+        "rework_description": "Opening cracks and applying sealant or applying a traffic coat to the concrete landings."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The change order is driven by the need to address unforeseen water intrusion issues that were not anticipated in the original scope."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a critical oversight in the design or construction process regarding water management and sealing of concrete landings, which could be improved in future projects.",
+        "prevention_action": "Implement a more rigorous review of waterproofing details and drainage solutions in future designs."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of adequate waterproofing measures and consideration of environmental factors during the design phase."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The water intrusion could potentially affect other systems, such as electrical safety and lighting functionality, leading to further complications."
+      },
+      "summary": {
+        "one_line": "Water is seeping through cracks in the concrete landings, compromising the safety and functionality of the installed light fixtures.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine due to the significant safety implications and the need for costly remediation efforts."
+      },
+      "rfi_id": "634adf85-ebea-4735-a832-c6efb4b0eef6",
+      "rfi_number": "RFI-2087",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Reference: SLP1 - RFI 2087 - PSD Stair 2 Concrete Landing Cracking Remediation Confirmation Sheet A7.02, E0.02, E2.03 Submittal 3472 - PSD Light Fixture (Product Data) Attached Pictures Background: At the Stair 2 concrete landings of Tiers 3-5, it is being noticed that water is seeping through the cracks and into the installed light fixture below. Per conversations with the SEOR, these cracks appear to be due to shrinkage and temperature and do not raise structural concerns. The installed light fixtures are \"wet location rated\". \"Wet Location Rated\" is defined as an electrical enclosure that is \"dust tight and watertight against light pressure water spray\". With the intense rains and recent power washing activities, the cracks are allowing more water than what the light fixtures are rated for. To fix this issue, DPR has (2) proposed solutions: Option A: Open crack 1/4\" to create amplitude and fill with urethane sealant caulking. ROM of $1,000 to complete this scope at all locations. Option B: Traffic Coat concrete landings to seal the cracking. ROM of $50,000 to complete this scope at all locations. Question: Please confirm which option DES/PMA would like to proceed with.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1061,
+        "output": 420
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The spalling of the walk-off mat depressions directly affects the aesthetic and functional transition to the polished concrete, necessitating a change in the installation approach that could impact multiple trades involved in flooring and finishes.",
+        "trades_affected": [
+          "flooring",
+          "finishes",
+          "general contracting"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The existing work related to the installation of the walk-off mats required adjustment to ensure a proper transition to the polished concrete, but it did not involve extensive rework.",
+        "rework_description": "Infill of depressions and adjustment of Schluter installation."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "This RFI resulted in a necessary adjustment to the installation method to address the spalling issue, which was not anticipated in the original scope."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a significant field error related to the condition of the walk-off mat depressions, which could have been prevented with better quality control during installation and inspection processes.",
+        "prevention_action": "Implement stricter inspection protocols for surface conditions prior to installation."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough inspection and quality control processes to identify and address surface conditions before installation."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "While this change required adjustments, it did not trigger further changes or affect other systems."
+      },
+      "summary": {
+        "one_line": "The spalled edges of the walk-off mat depressions necessitated a change in installation approach to ensure a clean reveal with the polished concrete.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves a significant field error that could have been avoided with better oversight."
+      },
+      "rfi_id": "0009a1a0-5c88-4ca2-bc5a-0f44cf4fb4c0",
+      "rfi_number": "RFI-1712",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Referenced Documents: A2.01S, Submittal 4730 Question: Interior Walk-Off mat depressions have spalled edges at multiple locations thereby not allowing a Schluter to sit adjacent to the polished concrete with a clean reveal to WOM-1. Please confirm that it is acceptable to infill the depressions at the interior walk-off mats to be flush with the adjacent polished concrete and use approved AEU-35 Schluter on the 3 sides of WOM-1 to transition to the polished concrete floor.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 893,
+        "output": 445
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The missed CMU embeds resulted in a significant oversight that required remediation, indicating a critical coordination gap that could lead to further complications if not addressed properly.",
+        "trades_affected": [
+          "structural",
+          "concrete"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The missed embeds necessitated rework in the concrete wall, which is a substantial aspect of the structural integrity of the project.",
+        "rework_description": "Remediation of the concrete wall to accommodate the missed embed plates."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to remediate the concrete wall due to the missed embeds directly resulted in additional costs associated with labor and materials."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This incident highlights a critical lesson in coordination and oversight, suggesting that improved communication and verification processes could prevent similar issues in future projects.",
+        "prevention_action": "Implement a more rigorous checklist and verification process for embed placements prior to concrete pours."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of proper coordination and verification processes, rather than a simple missing detail or a design flaw."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The missed embeds could potentially affect other structural elements and lead to further changes in related trades, such as adjustments to fire ratings or other systems."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the missed CMU embeds for the concrete wall, necessitating significant remediation work.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a critical oversight that impacts structural integrity and requires substantial rework."
+      },
+      "rfi_id": "9c2d5571-1274-4d5a-a064-098b0537a7e4",
+      "rfi_number": "RFI-1645",
+      "project": "Southline Office",
+      "trade": "structural",
+      "question_text": "Reference: SLP1 - RFI 1645 - PSD Missed CMU Embeds on Tier 2 GB Line Remediation Confirmation Email Correspondence between GPLA and DPRGC Background: Prior to pouring Tier 2 Area 2, DPRC missed the 4 embed plates for the NB concrete wall between G8 and G9. Question: Per coordination with GPLA, please confirm that it is acceptable to proceed with the described remediation shown in the attached email correspondence.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 885,
+        "output": 420
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The proposed remediation involves significant changes to the structural integrity of the elevator installation, which could have cascading effects on other trades and the overall project timeline.",
+        "trades_affected": [
+          "structural",
+          "elevator installation",
+          "welding"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to eliminate bolts and field weld shear tabs indicates a major alteration to the original installation plan, requiring rework of previously completed tasks.",
+        "rework_description": "Field welding of shear tabs instead of using prefabricated bolts, which necessitates adjustments to the existing steel embeds."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The change order arises from the need to rework the installation due to misalignment caused by the shifted embeds, leading to additional labor and material costs."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a significant coordination gap that could be addressed in future projects to prevent similar misalignments and costly rework.",
+        "prevention_action": "Implement more rigorous checks during the design phase to ensure accurate placement of embeds and alignment with structural elements."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination and verification of the embed placement against the structural drawings, indicating a process gap in the project workflow."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in the shear tab installation method could affect the structural integrity and alignment of other systems, potentially triggering further adjustments in related trades."
+      },
+      "summary": {
+        "one_line": "The misalignment of elevator steel embeds necessitated a significant change in the installation method, leading to a change order.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine due to the significant impact on structural integrity and the need for costly rework, which is beyond typical clarifications or minor adjustments."
+      },
+      "rfi_id": "3e9db96f-4e7c-427f-ad49-f77c0895e990",
+      "rfi_number": "RFI-1426",
+      "project": "Southline Office",
+      "trade": "structural",
+      "question_text": "Reference: SLP1 - RFI 1426 - PSD Elevator Steel Embeds Between G4 and G5 Remediation Confirmation As-Built Picture Email Correspondence between Armando/GPLA and Luis/DPR Glazier Shop Drawing E2021 Background: The elevator and steel embeds along the north edge of the PSD between G4 and G5 are shifted up to 1 5/16\" into the building (south). Because of this, the holes of the shear tab that will get welded to these embeds will not align with the prefabricated holes in the beams. DPR and Glazier propose to eliminate the bolts at the shear tabs and field weld 3-sides instead. The welds will be 5/16\" along 3-side. Question: Please confirm if the proposed remediation is acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 953,
+        "output": 463
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses significant changes to the conduit pathways that will affect the installation of data cabling in multiple areas, impacting the overall project timeline and coordination among trades.",
+        "trades_affected": [
+          "cabling",
+          "food service",
+          "pathways"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing conduit pathways need to be reworked to accommodate the new data drops, which involves altering the planned routing of cables.",
+        "rework_description": "Reworking the existing 1 1/2\" conduit to stub out over cold storage instead of the vestibule."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The request for additional data drops constitutes a change in the project scope, requiring additional materials and labor to implement."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a coordination gap that could be addressed in future projects to prevent similar issues, especially regarding the planning of conduit pathways.",
+        "prevention_action": "Implement a more thorough review of conduit requirements during the design phase to ensure all data drop needs are accounted for."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed planning and coordination regarding the installation of data cabling and conduit pathways."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The changes in conduit pathways could potentially affect other systems and trades, leading to further adjustments and rework."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for additional conduit pathways for new data drops in the restaurant area, requiring significant rework.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant changes to existing conduit pathways and impacts multiple trades."
+      },
+      "rfi_id": "a6b5fa79-472e-4d38-8fcb-de3cd0a0e56f",
+      "rfi_number": "RFI-1628.2",
+      "project": "Southline Office",
+      "trade": "cabling, food service, pathways",
+      "question_text": "Ref: RFI 1628, RFI 1628.1, TC2.01, QF301 The requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub out over cold storage as opposed to stubbing out to Vestibule. 3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the Severy to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in north wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1054,
+        "output": 437
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The issue with the CMU wall not aligning properly with the roof slope resulted in significant adjustments needed for the installation of CLT panels and collector plates, affecting the structural integrity and overall project timeline.",
+        "trades_affected": [
+          "concrete",
+          "structural"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The original work on the CMU wall had to be modified to create a new TOW condition, which required rework on the wall and adjustments to the roof structure.",
+        "rework_description": "Welding of 2 L-angles with a top plate that slopes from 0 to +/- 6 inches."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to modify the existing CMU wall and create a new TOW condition resulted in additional costs due to labor and materials."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a significant field error related to the alignment of structural elements, which could be prevented with better coordination and detailed planning.",
+        "prevention_action": "Implement a more thorough review process for structural alignment details during the design phase."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The problem arose from a lack of coordination in the design process, leading to a misalignment that was not caught before construction."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in the CMU wall height could potentially affect the installation of other systems, such as roofing and insulation, leading to further adjustments and rework."
+      },
+      "summary": {
+        "one_line": "The CMU wall was poured incorrectly, leading to significant rework to align with the roof slope.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves a critical misalignment that necessitated a major redesign and rework, rather than a simple clarification or adjustment."
+      },
+      "rfi_id": "daaf446f-27c0-4c5a-a389-eb2fbc0a0c6f",
+      "rfi_number": "RFI-1191",
+      "project": "Southline Office",
+      "trade": "concrete, structural",
+      "question_text": "Referenced Documents: S2.1, S7.1, YSK-01, YSK-02 Question: CMU Wall on GL X was poured level at 17' - 3/8\". The orientation of the angle of the CMU Wall in relation to the roof was not accounted for - therefore resulting in the top of CMU being from 0 to +/- 6\" short at the far West end of the wall on Line X. Due to this issue, we have to create a TOW condition that allows us to follow the slope of the roof and gives us the proper elevations to attach the CLT Panels and collector plates at that location. Please confirm it is acceptable to use a similar detail as GL 9 TOW Remediation where we weld 2 L-angles with a top plate that slopes up from 0 to +/- 6\" from East to West as shown on sketch.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 976,
+        "output": 463
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "Coring through PT beams is a significant structural concern that could affect the integrity of the beams and requires careful consideration and confirmation from structural engineers.",
+        "trades_affected": [
+          "electrical",
+          "structural",
+          "security"
+        ]
+      },
+      "rework_level": {
+        "level": "major",
+        "reasoning": "The need to core through PT beams indicates that existing work related to the sleeves was either missed or damaged, necessitating substantial rework.",
+        "rework_description": "Coring through the beams to accommodate conduit pathways, which alters the original structural design."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The coring through PT beams represents a significant alteration to the original construction plan, leading to additional costs for labor and materials."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This situation highlights a critical field error regarding the placement of sleeves, which could be preventable with better pre-pour coordination and checks.",
+        "prevention_action": "Implement a more rigorous pre-pour checklist and coordination meetings to ensure all sleeves are correctly placed before concrete is poured."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a coordination gap in the construction process, specifically regarding the installation of sleeves prior to the deck pours."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The need to core through PT beams could potentially affect other systems, including structural integrity and safety measures, which may require further adjustments."
+      },
+      "summary": {
+        "one_line": "Coring through PT beams was necessitated due to missed/damaged sleeves, raising significant structural concerns.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves major structural implications and the potential for cascading effects on multiple trades."
+      },
+      "rfi_id": "262c8b43-95c7-4f2e-b73a-2c499cb8927e",
+      "rfi_number": "RFI-1685",
+      "project": "Southline Office",
+      "trade": "electrical, structural, security",
+      "question_text": "Reference: SLP1 - RFI 1685 - PSD Coring at PT Beams for ERRCS and Security Pathways Confirmation Pre-pour pictures X-ray scanning pictures PSD PT Cables Shop Drawing S2.03 and S2.06 Background: Due to missed/damaged sleeves prior to the deck pours, Sprig electric will need to core through PT Beams to complete their conduit pathways. Two (2) locations will be for security and two (2) will be for ERRCS. DPR engaged Digital Concrete Scanning to perform x-ray scanning at the four (4) locations where coring will be needed. As shown in the pictures. PT cables and rebar have been clearly marked and the location of where the core should be has been labeled. Size of cores has also been provided for each location. Pre-pour pictures have also been provided to demonstrate the sleeves prior to the pours. Question 1: Please confirm if it is structurally acceptable to core through the beams at the locations shown where x-raying has been completed. Question 2: Please confirm if any shoring or added structural safety measures are to be followed.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1024,
+        "output": 433
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The proposed modifications to the door swing and framing are significant as they affect the functionality of the access door and require additional framing work, which impacts the overall project timeline and coordination among trades.",
+        "trades_affected": [
+          "Framing",
+          "Door Hardware",
+          "HVAC"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing framing was found to be damaged and not reusable, necessitating new framing to be installed, which is a considerable amount of work.",
+        "rework_description": "Installation of new framing to accommodate the door height and swing change."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The change in door swing and the need for new framing represent an adjustment to the original scope of work due to unforeseen conditions."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant coordination issue between the architectural and mechanical elements of the design, indicating that better initial assessments could prevent similar issues in future projects.",
+        "prevention_action": "Implement a more thorough pre-construction coordination review involving all trades to identify potential conflicts."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination between the design and existing conditions, indicating a need for improved processes in the design phase."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in door swing and framing may affect the installation of other systems, such as HVAC ductwork, which could require further adjustments."
+      },
+      "summary": {
+        "one_line": "The roof access door swing needs to be modified due to existing ductwork interference, requiring new framing.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant changes to the design and impacts multiple trades, indicating a deeper issue with project coordination."
+      },
+      "rfi_id": "75504514-d854-43bc-bf27-34d3cc143583",
+      "rfi_number": "RFI-10.2",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "question_text": "Reference: RFI 10.2 - Abbott Alameda 1420 HBP - Roof Access Door Swing Change and Framing Modification Confirmation Doors, Frames, and Hardware Submittal A2.1.2 Attached Pictures Roof Access door calls for LH swing, however the door will not be able to open a full 90 degrees due to the existing duct work. DPR proposes to modify the swing of the door into a RHR, which would have the door opening into the hallway. Additionally, existing framing does not match the door height called out and is too damaged to be reused, so added framing is required. Please confirm these modifications to the door and framing is acceptable.",
+      "resolution_text": "Ava Ghiassi (FORGE - 10049724): Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 924,
+        "output": 447
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 5,
+        "reasoning": "The blowout of the PT cable during stressing operations indicates a significant structural failure that could compromise the integrity of the ramp. This issue requires immediate attention and a comprehensive fix, affecting the overall project timeline and safety.",
+        "trades_affected": [
+          "structural",
+          "concrete"
+        ]
+      },
+      "rework_level": {
+        "level": "major",
+        "reasoning": "The blowout necessitates significant rework to address the structural integrity of the cable and the surrounding concrete.",
+        "rework_description": "The affected PT cable will need to be replaced, and additional concrete work may be required to ensure proper anchoring and support."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to replace the blown cable and potentially repair or reinforce the surrounding concrete constitutes a significant rework effort, leading to increased costs."
+      },
+      "learning_value": {
+        "score": 5,
+        "reasoning": "This incident highlights a critical failure in the stressing process that could be preventable with better oversight and procedures. Understanding the root cause can lead to improved practices in future projects.",
+        "prevention_action": "Implement stricter monitoring and quality control during the stressing operations to prevent similar blowouts."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The blowout suggests a failure in the stressing process or technique, indicating a need for improved procedures rather than just a missing detail."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The failure of the PT cable could potentially affect other structural elements and require adjustments in related trades, leading to a cascade of changes."
+      },
+      "summary": {
+        "one_line": "A PT cable blowout occurred during stressing operations, necessitating a major rework.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a significant structural failure that poses safety risks and requires extensive remediation."
+      },
+      "rfi_id": "bc13ccf1-8781-4ff9-ab6c-ff7b6100b32e",
+      "rfi_number": "RFI-0983",
+      "project": "Southline Office",
+      "trade": "structural, concrete",
+      "question_text": "Reference: SLP1 - RFI0983 - PSD PT Cable Blowout between Tier 1 and Tier 2 Confirmation Post on: S2.02A Background: One of the uniform PT cables at the ramp between Tier 1 and Tier 2 blew out of the concrete during the stressing operations. Currently the cable is stressed to the specified force. See attachments for the location of the blow out and photos of the cable. Question: Please provide a procedure to fix this cable.",
+      "resolution_text": "Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 872,
+        "output": 448
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The need to upsize the threaded rods and the confirmation of the existing embeds indicates a significant deviation from the original design, which could impact structural integrity and safety.",
+        "trades_affected": [
+          "concrete",
+          "structural"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing embeds were drilled incorrectly, requiring adjustments to the remaining threaded rods and potentially affecting the structural design.",
+        "rework_description": "Upsizing the remaining threaded rods to 1” and ensuring the existing embeds are acceptable."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The change order is driven by the need to adjust the specifications of the threaded rods due to the incorrect drilling of the embeds."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a critical field error that could have been prevented with better oversight and adherence to specifications.",
+        "prevention_action": "Implement stricter quality control measures during the drilling and installation of embeds."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "This issue stems from a process failure in the drilling and installation phase, indicating a lack of proper checks and balances."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in threaded rod specifications could affect the overall structural integrity and may require further adjustments in related systems."
+      },
+      "summary": {
+        "one_line": "The drilled holes for epoxy embeds were incorrectly sized, necessitating a change in the specifications for the remaining threaded rods.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a significant structural adjustment and potential safety implications."
+      },
+      "rfi_id": "42d23b18-2d63-4580-846c-ea332e0e0551",
+      "rfi_number": "RFI-1082",
+      "project": "Southline Office",
+      "trade": "concrete, structural",
+      "question_text": "Referenced Documents: S5.3, Hilti RE 500 V3 Details, RFI 1047 B2 Gridline 12 TOW Shearwall Embed Remediation Question: The holes for the ¾” epoxy embed at the TOW on grid line 12 have been drilled to 1-1/8” diameter x 37” depth. Grade 55 threaded rods have been epoxied in using HILTI HIT – RE 500 V3. Please confirm it is acceptable to maintain these embeds and upsize the remaining (~90) threaded rods to 1”.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 911,
+        "output": 407
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The discrepancy between the roof hatch size and the CLT deck opening could lead to significant installation issues and potential damage to the roof hatch, impacting the roofing trade and possibly others involved in the installation.",
+        "trades_affected": [
+          "roofing",
+          "structural",
+          "general contractor"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to change the roof hatch size and potentially adjust the installation method indicates that existing work may need to be redone to accommodate the correct specifications.",
+        "rework_description": "Rework may include removing the incorrectly sized roof hatch and installing a new one that fits the CLT deck opening."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The change in roof hatch size requires an adjustment in materials and installation methods, which will incur additional costs."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical coordination gap that could be addressed in future projects to prevent similar issues, particularly regarding the alignment of architectural details with structural elements.",
+        "prevention_action": "Implement a more rigorous review process for shop drawings to ensure all dimensions and installation methods are clearly coordinated before approval."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough coordination between architectural and structural drawings, indicating a process gap in the review and approval stages."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in roof hatch size may necessitate adjustments in other trades, such as roofing and structural supports, potentially affecting the overall project timeline and costs."
+      },
+      "summary": {
+        "one_line": "The RFI addresses a critical discrepancy between the roof hatch size and the CLT deck opening, requiring a change order for proper installation.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine due to the significant implications for installation and potential damage, as well as the need for a change in materials."
+      },
+      "rfi_id": "047ba806-27f7-48bc-807c-b55d99104bfe",
+      "rfi_number": "RFI-1586",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Ref: A2.02S, A8.21, Submittal 4212-07-5419 During previous rounds of shop drawing review for 4212:B2 PVC Membrane Roofing Product Data and Taper Plan, it was noted that a 30”x30” roof hatch was called out in the architectural drawings and that contractor was to coordinate the location of the sub-beam and ensure no conflicts are encountered. Upon further review of the approved 30”x30” roof hatch size, the following items need clarification from DES: 1) The CLT deck opening is 3’x3’ (36”x36”), the approved roof hatch has an opening of 30”x30” and the outer mounting flange dimensions are 36-7/8”x36-7/8”. With these dimensions, the flange will only have 7/8” on each side to support the roof hatch. The manufacturer and installer of this product do not recommend this size as the flange will be damaged during the installation due to the minimal bearing dimension (7/8”). Please advise if a 36”x 36” (model: SRCAY36X36SG SRCA36X36SG 36 x 36 Front) roof hatch is acceptable to use to meet the clearance of the CLT opening. 2) Architectural sheet A2.02S indicates a wood framed leveling sleeper/curb to be installed around the roof hatch opening, however, on detail 19/A8.21 the roof hatch sits on top of the CLT deck not sleepers/curbs. Please confirm if the roof hatch is to be installed on sleepers or if the hatch is to sit on the deck as shown on detail 19.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1145,
+        "output": 473
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The proposed shim plate and welding remediation indicates a significant issue with the embed placement, which could affect structural integrity and requires adjustments from multiple trades.",
+        "trades_affected": [
+          "structural",
+          "glazing",
+          "welding"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to add shim plates and perform field welding indicates that existing work related to the embeds will need to be modified.",
+        "rework_description": "Installation of shim plates and welding on three sides of the embeds."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The change order is primarily driven by the need to correct the embed placement, which requires additional materials and labor."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a field error related to embed placement that could be preventable with better coordination and verification processes during the design phase.",
+        "prevention_action": "Implement a more rigorous review process for embed placements and conduct field verification before installation."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a coordination gap in the design and installation process, indicating a need for improved communication and verification."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in embed placement could potentially affect other structural elements and require adjustments in related trades, indicating a risk of cascading changes."
+      },
+      "summary": {
+        "one_line": "The embeds at Tier 6 were incorrectly placed, necessitating the addition of shim plates and welding for remediation.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant structural adjustments and highlights a critical error in the embed placement process."
+      },
+      "rfi_id": "c25f73ab-81a6-4712-a23a-151eee53d3c1",
+      "rfi_number": "RFI-1435",
+      "project": "Southline Office",
+      "trade": "structural",
+      "question_text": "Reference: SLP1 - RFI 1435 - PSD C Channel Embeds at Tier 6 Remediation Confirmation Glazier Steel Shop Drawing Sheet E2026 and E2005 Email Correspondence between GPLA/Armando and DPR/Luis Background: Due to embeds at Tier 6 being too low and flushed with the C-Channel, Glazier Steel and DPR propose to add a shim plate (PL3/8x3-1/4\"x1'-2\") installed 1\" above the embed and field welding 3 sides with 5/16\" fillet weld. Question: Please confirm if remediation is acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 918,
+        "output": 418
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 5,
+        "reasoning": "The issue involves a significant structural concern related to seismic requirements, which is critical for safety and compliance. The incorrect spacing of rebar ties could lead to structural failure during seismic events, impacting the integrity of the building.",
+        "trades_affected": [
+          "Concrete",
+          "Structural Engineering"
+        ]
+      },
+      "rework_level": {
+        "level": "major",
+        "reasoning": "The discovery of the incorrect rebar spacing necessitated a major rework of the already placed shear walls, which involves significant labor and material costs.",
+        "rework_description": "Removal and replacement of the shear walls to meet the correct seismic requirements."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to redo the shear walls due to non-compliance with seismic codes constitutes a significant rework cost."
+      },
+      "learning_value": {
+        "score": 5,
+        "reasoning": "This incident highlights a critical failure in the design and review process that could lead to severe safety violations. Implementing stricter checks during the design phase could prevent similar issues in future projects.",
+        "prevention_action": "Establish a more rigorous review process for seismic design compliance before construction begins."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue arose from a gap in the design review process that failed to catch the non-compliance with seismic requirements before construction."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in rebar configuration could potentially affect other structural elements and systems, leading to further adjustments in related trades."
+      },
+      "summary": {
+        "one_line": "The RFI addressed a critical seismic compliance issue due to incorrect rebar spacing in shear walls.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a significant safety concern and requires major rework, which is beyond typical clarifications or minor adjustments."
+      },
+      "rfi_id": "d128997f-1956-4dcf-a5de-8a73128f81a9",
+      "rfi_number": "RFI-1268",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Reference: SLP1 - RFI1268 - PSD Floor Boundary Remediation Confirmation Sheet A2.01 Background: An alternate rebar configuration for the inner, horizontal ties at these eight(8) boundaries were proposed during the shop drawing process. While the initial calculations proved to satisfy the structural needs to support the elements above, the spacing of the ties did not comply with the seismic requirements for this type of boundary element per ACI code – which required a 14” MAX between the cross ties versus the ~15 5/8” spacing that was installed. This was only discovered by the engineer after the initial shear walls were placed on level 1 upon their review of the subsequent shear wall shop drawings. Question 1: See next page for proposed FRP solution and confirm this is acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 951,
+        "output": 446
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The query addresses a potential design clarification that could affect the structural integrity of the collector plates, which is significant but not critical.",
+        "trades_affected": [
+          "structural",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The clarification may require some adjustments to the installation of the collector plates, but it does not involve extensive rework.",
+        "rework_description": "Adjustment of the collector plate installation to align with the clarified design."
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "The RFI seeks clarification on the design details, which leads to a change order for the necessary adjustments."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "While this issue highlights a coordination gap, it is not a major error. Improved communication and detailed drawings could prevent similar queries in the future.",
+        "prevention_action": "Enhance detail in design documents and ensure thorough reviews to catch potential ambiguities."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue arises from a lack of clarity in the design documents, indicating a need for better processes in documentation and communication."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "This change does not trigger other changes or affect multiple systems; it is confined to the collector plate installation."
+      },
+      "summary": {
+        "one_line": "The RFI seeks clarification on the installation method of collector plates over concrete walls.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a specific design clarification that could impact structural integrity."
+      },
+      "rfi_id": "2c577357-719c-4f26-bf8a-7a72640d8b15",
+      "rfi_number": "RFI-1834",
+      "project": "Southline Office",
+      "trade": "architectural, structural",
+      "question_text": "Referenced Documents: S2.3 Question: Please refer to attached marked up copy of E203 received as part of 'SLP1 - 4928-055000-1 B2 Screw Failure Map Mark-Up_R1 4'. 5. The following query applies where the standard collector plate transitions to collector plates over the top of concrete walls. Please clarify if we need to shape the plate as shown on the attached? Or will we be OK to stop the plate at the start point of the transition?",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 894,
+        "output": 397
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses critical changes to door functionalities that affect security and access control, which are essential for the project's operational integrity. The need for electrified locksets and panic hardware indicates a significant impact on the architectural and security trades.",
+        "trades_affected": [
+          "architectural",
+          "security",
+          "electrical"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The changes required adjustments to existing door preparations and locksets, which likely involved undoing previously completed work.",
+        "rework_description": "Removal of existing locksets and wiring, installation of new electrified locksets, and potential reconfiguration of door hardware."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The RFI necessitated changes to the door hardware specifications and configurations, leading to adjustments in material costs and labor."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant coordination gap in the initial design regarding door functionalities, which could be improved in future projects to avoid similar issues.",
+        "prevention_action": "Implement a more thorough review process for door hardware specifications during the design phase to ensure all functionalities are clearly defined."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed coordination and communication regarding the intended functionalities of the door hardware, indicating a gap in the design process."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The changes to door functionalities could potentially affect fire safety systems and access control measures, leading to further adjustments in related systems."
+      },
+      "summary": {
+        "one_line": "The RFI addressed critical changes to door functionalities that impacted security and access control systems.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it involves significant changes to security-related hardware that could have broader implications for safety and compliance."
+      },
+      "rfi_id": "fb63bab6-f067-4e84-b064-f953192ea3c9",
+      "rfi_number": "RFI-1480",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Per 3/8/24 Door functionality meeting with DPR, PMA, & DES, please provide direction on the following Door Functionality: 1. Openings 136A, 136B, 137: please confirm these openings are to be prepped for future card reader functionality including: A. 136A - removing card reader device, change to passage only lockset, remove von duprin wiring harness. B. 136B - Change to electrified lockset with field reversible function and electrified hinge, set to fail safe. C. 137 - Change to electrified lockset with field reversible function and electrified hinge, set to fail safe. 2. Opening 126: Please confirm desired functionality is Classroom lock (key required to enter, manual required to lock when inside, and door stays locked. 3. Opening 119: Please confirm storeroom lockset. 4. Opening 128: Please confirm if panic hardware is required per code. 5. Opening 114: Please confirm if 9050 or 9056 is preferred. 6. Opening 104: Please confirm if 9050 or 9056 is preferred.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1030,
+        "output": 455
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The missed termination embed for the cable barrier required a significant remediation process, impacting the concrete and structural trades. The proposed solution involves multiple steps to ensure safety and functionality, indicating a notable impact on the project.",
+        "trades_affected": [
+          "concrete",
+          "structural",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing work of pouring the column had to be undone to accommodate the missed embed, requiring additional work to grout and finish the area.",
+        "rework_description": "Grouting and finishing the area where the embed was missed, followed by the installation of the post-installed embed."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to address the missed embed resulted in additional costs associated with the remediation process and labor for rework."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This incident highlights a critical field error that could be prevented in future projects through better coordination and verification of embed placements before concrete pours.",
+        "prevention_action": "Implement a checklist for embed verification prior to concrete pours to ensure all necessary components are in place."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a coordination gap in the installation process, where the embed was not accounted for prior to the concrete pour."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in embed location could potentially affect the structural integrity and require adjustments in other systems, such as electrical or mechanical installations that rely on the cable barrier."
+      },
+      "summary": {
+        "one_line": "A missed termination embed for a cable barrier required significant rework and remediation efforts.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves a critical field error that necessitated a complex solution and could have cascading effects on the project."
+      },
+      "rfi_id": "19a2fb3c-ac95-44ca-a9dc-405573a727c8",
+      "rfi_number": "RFI-1062",
+      "project": "Southline Office",
+      "trade": "concrete, structural, architectural",
+      "question_text": "Reference: SLP1 - RFI1062 - PSD Post Installation for Missed Termination Embed for Cable Barrier Confirmation Post On: A2.02 and A2.03 Background: On the ramp side along gridline GC on column G8/GC, a vehicular cable termination embed was missed prior to pouring the column. DPR Concrete tried to wet set the embed but were asked to stop to avoid hitting any boundary rebar. Cable Moore/Glazier have provided a post installed solution to add a termination embed wherever an embed got missed prior to the pour. The following remediation process is being proposed by DPR Concrete: 1. Grout and finish the area where the embed got missed. 2. Use Cable Moore/Glazier post install embed detail to install missed embed. 3. Prior to final set, embed location to get shifted so that the post installed anchors miss the main rebar of the boundary. Question: Please confirm that this post installation method is acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 991,
+        "output": 454
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 5,
+        "reasoning": "The discovered issue with the rebar configuration not meeting seismic requirements poses a significant risk to structural integrity and safety, necessitating immediate remediation.",
+        "trades_affected": [
+          "Concrete",
+          "Reinforcement"
+        ]
+      },
+      "rework_level": {
+        "level": "major",
+        "reasoning": "The incorrect spacing of the rebar ties required the re-evaluation and potential rework of the already placed shear walls.",
+        "rework_description": "Reinforcement ties need to be adjusted to comply with seismic code requirements, which may involve removing and replacing portions of the shear walls."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to modify the existing shear walls due to non-compliance with seismic codes will incur significant costs associated with labor and materials."
+      },
+      "learning_value": {
+        "score": 5,
+        "reasoning": "This incident highlights a critical oversight in the design and review process that could lead to severe safety violations and structural failures if not addressed.",
+        "prevention_action": "Implement a more rigorous review process for seismic compliance during the shop drawing phase to catch such discrepancies before construction."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough review of the rebar configuration against seismic codes during the design phase, indicating a gap in the design review process."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in rebar configuration could potentially affect the structural performance of other interconnected systems, including load-bearing elements and overall building safety."
+      },
+      "summary": {
+        "one_line": "The RFI addressed a critical issue regarding non-compliance of rebar spacing with seismic requirements, necessitating major rework.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine due to the significant safety implications and the potential for major structural failure if the issue is not resolved."
+      },
+      "rfi_id": "864ed27a-5693-4f1c-9bb4-fb9e759a1a52",
+      "rfi_number": "RFI-1268",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Reference: SLP1 - RFI1268 - PSD Floor Boundary Remediation Confirmation Sheet A2.01 Background: An alternate rebar configuration for the inner, horizontal ties at these eight(8) boundaries were proposed during the shop drawing process. While the initial calculations proved to satisfy the structural needs to support the elements above, the spacing of the ties did not comply with the seismic requirements for this type of boundary element per ACI code – which required a 14” MAX between the cross ties versus the ~15 5/8” spacing that was installed. This was only discovered by the engineer after the initial shear walls were placed on level 1 upon their review of the subsequent shear wall shop drawings. Question 1: See next page for proposed FRP solution and confirm this is acceptable.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see GPLA/DES response attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 956,
+        "output": 450
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The adjustments to the roofing substrate and scupper size are critical to maintaining the integrity of the roofing system and the overall design. These changes affect the exterior envelope and architectural trades significantly.",
+        "trades_affected": [
+          "exterior_envelope",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While the changes require adjustments to the roofing system and scupper sizes, they do not indicate extensive rework of existing installations.",
+        "rework_description": "Adjustment of roofing substrate thickness and resizing of scuppers."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The changes are necessary adjustments to maintain design integrity and do not involve extensive redesign or rework."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "This RFI highlights a notable coordination gap regarding the roofing substrate and scupper sizes, which could be improved with better initial design details.",
+        "prevention_action": "Implement a more thorough review process for design details related to roofing and drainage systems."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed coordination in the design phase, leading to the need for adjustments during construction."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The changes do not trigger further changes in other systems or trades, as they are specific to the roofing and scupper adjustments."
+      },
+      "summary": {
+        "one_line": "The RFI addresses necessary adjustments to the roofing substrate and scupper size to maintain design integrity.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it involves critical adjustments that impact the overall design and functionality of the roofing system."
+      },
+      "rfi_id": "6b82711b-77fc-4495-9c4f-79ba3746a351",
+      "rfi_number": "RFI-1327.1",
+      "project": "Southline Office",
+      "trade": "exterior_envelope, architectural",
+      "question_text": "Reference: SLP1 - RFI 1327.1 - PSD Roof Taper Adjustments_R1 Email Conversation between DES and DPR SLP1 - 3110 -076200-0 PSD Sheet Metal Shop Drawings SLP1 - 3939 -075419-2 PSD PVC Membrane Roofing Taper Layout and Shop Drawing Background: Per conversations with DES, to maintain metal panel coping dimensions at the roof of the elevator tower, the roofing substrate needs to be reduced. This reduction of the substrate will not affect the warranty of the roofing system. In addition, the scupper size would need to get reduced to avoid having part of the scupper in the plaster wall. Question 1: Please confirm it is acceptable to reduce the roofing substrate board to ¼” densedeck in order to maintain the roof slope as well as maintain the metal panel coping dimensions. Roofing warranty will be maintained with this change. Question 2: Please confirm it is acceptable to change the scupper size from 6”x8” to 4”x8”. This will allow us to maintain bottom of plaster elevation and keep scuppers below top of metal panel coping dimension. Question 3: Please confirm the exact verbiage and location for added signage at the roof level.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1052,
+        "output": 420
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The request for confirmation of connection details and waterproofing indicates a notable coordination gap that could lead to issues if not addressed properly, but it does not appear to have caused significant disruption to multiple trades.",
+        "trades_affected": [
+          "Roofing",
+          "Structural"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The need for waterproofing details suggests that some adjustments may be necessary, but it is not indicative of extensive rework.",
+        "rework_description": "Minor adjustments to the waterproofing details at the ladder penetration."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The RFI resulted in a change order to adjust the design details for waterproofing and connection, which implies additional costs."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "While this RFI highlights a coordination gap, it is not a critical failure. However, tracking such issues could improve future processes.",
+        "prevention_action": "Implement a more thorough review process for connection details and waterproofing in design phases."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed coordination in the design process, rather than a fundamental design flaw or missing detail."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "This change does not appear to trigger other changes or affect multiple systems significantly."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for confirmation of connection details and waterproofing for a roof access ladder.",
+        "is_routine": false,
+        "why_or_why_not": "While it involves standard details, the implications for waterproofing and structural connections elevate it beyond a routine clarification."
+      },
+      "rfi_id": "54232912-b301-462f-8b60-b5d62978bbde",
+      "rfi_number": "RFI-1332",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Reference: SLP1 - RFI 1332 - PSD Roof Access Ladder Details Confirmation Q1: Per GPLA's comment on Submittal 4357 Response, please confirm connection detail from the ladder to the CFS framing in the next page is acceptable. Q2: Per DES comment on Submittal 4357 Response, please provide waterproofing detail at ladder penetration.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 868,
+        "output": 413
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses a critical structural concern regarding anchor embedment depths, which, if not resolved, could lead to spalling and potential structural failure. This impacts the structural integrity of the building and requires adjustments from multiple trades.",
+        "trades_affected": [
+          "structural",
+          "concrete",
+          "general contractor"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to verify embedment depths and potentially modify the slab thickness indicates that existing work may need to be redone to ensure compliance with structural requirements.",
+        "rework_description": "Possible thickening of the slab or reinstallation of anchors to meet the required embedment depth."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The RFI leads to a change order that adjusts the project scope and costs due to necessary modifications in the structural design."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a significant oversight in the design and detailing process that could be prevented in future projects through better coordination and review of structural details.",
+        "prevention_action": "Implement a more rigorous review process for structural details and embedment requirements during design phases."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough review of the structural details and embedment requirements, indicating a gap in the design process rather than a simple missing detail."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The resolution of this RFI may trigger additional changes in related systems, such as adjustments to fire ratings or other structural elements that depend on the integrity of the slab."
+      },
+      "summary": {
+        "one_line": "The RFI addresses critical concerns regarding anchor embedment depths that could lead to structural spalling.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine due to the potential for significant structural implications and the need for substantial adjustments to existing work."
+      },
+      "rfi_id": "2673cf1b-a66f-4393-953d-03875a13b7a7",
+      "rfi_number": "RFI-0887",
+      "project": "Southline Office",
+      "trade": "structural",
+      "question_text": "Reference: Detail 10/A9.52 Detail 8/A9.51 Question: Building 2 slab is 5\" thick. Minimum distance between bottom of anchors to bottom of slab is 3\" to avoid spalling. There are various locations where the distance between the end of anchor to slab is at or exceeds this tolerance. 1. Please confirm 4\" embedment per Detail 10/A9.52 and 2\" embed per Detail 8/9.51 are structurally acceptable. 2. If expansion anchor embed length is not acceptable, please confirm thickened slab extent or similar remediation measure to avoid spalling. 3. Please confirm any additional locations where exceeding minimum anchor embedment may be a potential issue and associated remediation measures.",
+      "resolution_text": "Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 927,
+        "output": 467
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 2,
+        "reasoning": "The request for clarification on door hardware power requirements is a standard occurrence in construction projects, particularly in tenant improvement scenarios where existing conditions may differ from the design.",
+        "trades_affected": [
+          "electrical"
+        ]
+      },
+      "rework_level": {
+        "level": "none",
+        "reasoning": "No existing work was undone or redone as a result of this clarification.",
+        "rework_description": "N/A"
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "The RFI was primarily for clarification on power requirements, which does not necessitate any significant adjustments or rework."
+      },
+      "learning_value": {
+        "score": 2,
+        "reasoning": "While this RFI highlights a missing detail, it is a common issue that can be anticipated in similar projects. It does not indicate a major gap in the process.",
+        "prevention_action": "Implement a checklist for door hardware specifications during the design phase to ensure all power requirements are clearly outlined."
+      },
+      "root_cause_depth": {
+        "level": "surface",
+        "reasoning": "This issue stems from a missing detail in the documentation rather than a deeper coordination gap or design flaw."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The clarification did not trigger any other changes or affect multiple systems."
+      },
+      "summary": {
+        "one_line": "Clarification was needed on which doors required line voltage power for hardware installation.",
+        "is_routine": true,
+        "why_or_why_not": "This is a routine clarification that often arises in construction projects, especially when dealing with electrical requirements for hardware."
+      },
+      "rfi_id": "9b3a8257-698a-445c-9ec3-7f0c22d49058",
+      "rfi_number": "RFI-140",
+      "project": "CoreSite Data Center",
+      "trade": "electrical",
+      "question_text": "CEI is requesting clarification regarding the door hardware power requirements. Specifically, we need a confirmed list of all door numbers that will require line voltage power supplied above the door header to accommodate the specified hardware. Suggested answer Please confirm which doors are to receive line voltage power so that we can properly coordinate electrical rough- in.",
+      "resolution_text": "steven holt: No security doors require power from a source outside of our panels.",
+      "success": true,
+      "tokens_used": {
+        "input": 850,
+        "output": 383
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses critical design conflicts that could lead to significant rework and coordination issues among multiple trades, particularly affecting the architectural and structural elements.",
+        "trades_affected": [
+          "architectural",
+          "structural",
+          "glazier steel"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to potentially remove and revise the spoke plates under the TV indicates that existing work may need to be undone or redone to accommodate the design changes.",
+        "rework_description": "Removal of the spoke plates and adjustments to the TV support steel."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The RFI indicates that existing designs may clash with the installation of the TV, necessitating rework to correct the design and ensure proper installation."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This situation highlights a notable coordination gap that could be improved through better communication and design review processes to prevent similar issues in future projects.",
+        "prevention_action": "Implement a more thorough design review process that includes cross-trade coordination meetings to identify potential conflicts early."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of clear communication and coordination in the design process, leading to conflicts that were not identified until construction began."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The changes required to resolve the spoke plate issue could affect the installation of other systems, potentially leading to further adjustments in related trades."
+      },
+      "summary": {
+        "one_line": "The RFI addresses a critical design conflict regarding the TV support steel and spoke plates that could lead to significant rework.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine due to the potential for significant rework and the need for coordination among multiple trades, indicating a deeper issue in the design process."
+      },
+      "rfi_id": "80222e8c-af8c-4530-97cb-7fe171d7e417",
+      "rfi_number": "RFI-1089",
+      "project": "Southline Office",
+      "trade": "architectural, structural",
+      "question_text": "Referenced Attachments: A6.03, A9.51, E2.01, AV2.01 Question: 1. Please confirm the drawing attached received with RFI-1012 response is the current and required detail for the TV support steel as highlighted in yellow to be detailed and supplied by Glazier steel. 2. The Drum Hood is currently detailed with a \"spoke\" plate at each of the (8) Hangers (top and bottom of drum). This was confirmed in RFI-0889 response - see attached A9.51 which was attached to the RFI response with spokes added to detail 12. The spoke on the perpendicular north/south axis is also shown on detail 8. This is what is still shown on the current drawing A9.51. However, the spoke under the TV will clash with the TV in the arrangement shown on this drawing. All Architectural drawings show the TV over the spokes. There is a discussion on pages 5 thru 7 of RFI-1012 response regarding removal of this spoke and all those on the perpendicular Axes leaving (4) spokes top and bottom. It is not clear, however, if this was confirmed and we have never been instructed to remove these spokes or received a revised drawing to show this. Please advise if the spokes shown dotted on this mark-up are to be removed at the top and bottom of the drum. 3. Is the 1'-9\"13/16 Dimension from center of or face of the center HSS column? (3\" difference). 4. We have assumed a PL3/8\" x 4\" Plate welded to (2) spoke plates w/ 3/16\" Fillet welds both sides. Please verify or advise otherwise. 5. We have assumed 1\"1/2 SHD40 Pipe (outside dia. = 1\"7/8). Welded to plate with 3/16\" fillet weld all round. Please verify or advise otherwise.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1203,
+        "output": 456
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The request for details on wall-mounted shelving indicates a notable coordination gap that could affect multiple trades, particularly architectural and structural.",
+        "trades_affected": [
+          "architectural",
+          "structural"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "Some existing work may need to be adjusted to accommodate the new shelving requirements, but it does not indicate extensive rework.",
+        "rework_description": "Adjustments to wall backing and possibly minor modifications to electrical placements."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The request for additional details and specifications for shelving indicates an expansion of the project scope."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "While this RFI highlights a notable coordination gap, it does not indicate a major field error or repeated failure pattern, but it could improve future processes.",
+        "prevention_action": "Implement a more thorough review of shelving and fixture requirements during the design phase to ensure all details are included."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "This issue stems from a missing detail in the design process, indicating a need for better communication and documentation."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not appear to trigger other significant changes or affect critical systems."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for specifications on revised wall-mounted shelving, highlighting a coordination gap.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves additional specifications that could impact multiple trades, rather than a simple clarification."
+      },
+      "rfi_id": "966e3209-1f0f-4978-ad6c-89bd6919042f",
+      "rfi_number": "RFI-1524",
+      "project": "Southline Office",
+      "trade": "architectural, electrical, structural",
+      "question_text": "Please provide details for the revised and added wall-mounted shelving at Coffee and Bar back walls. Please also provide the fully loaded weight and backing requirements (flat strap or notch back).",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 828,
+        "output": 399
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The modification to the header board along the DG path indicates a notable coordination gap that could affect the installation of the drinking fountain and potentially other related systems.",
+        "trades_affected": [
+          "Plumbing",
+          "Electrical",
+          "General Contracting"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "Some existing work related to the header board may need to be adjusted, but it does not appear to be extensive.",
+        "rework_description": "Adjustment of the header board to accommodate the new drinking fountain orientation."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to modify existing work due to the change in orientation of the drinking fountain constitutes rework."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "While this issue is not entirely routine, it highlights a coordination gap that could be improved in future projects to avoid similar modifications.",
+        "prevention_action": "Implement a more thorough review process for design changes to ensure all affected trades are coordinated before finalizing modifications."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination in the design process, indicating that better communication and review processes could prevent such occurrences."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "This change does not appear to trigger other changes or affect multiple systems significantly."
+      },
+      "summary": {
+        "one_line": "The drinking fountain orientation change required modifications to the header board along the DG path.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves a specific design change that necessitated adjustments to existing work, indicating a coordination gap."
+      },
+      "rfi_id": "c483289f-529c-4e68-826d-9b78e2621daa",
+      "rfi_number": "RFI-2107",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Following the confirmation of the drinking fountain orientation, DES has noted that modifications were made to the header board along the DG path. Please provide updated drawings for this modification.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 823,
+        "output": 410
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The request for updated landscaping layout indicates a notable coordination gap that could affect the overall site aesthetics and functionality, but it does not appear to trigger significant rework across multiple trades.",
+        "trades_affected": [
+          "landscaping",
+          "civil_site"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The change requires adjustments to the landscaping layout, but it does not undo major existing work.",
+        "rework_description": "Minor adjustments to the landscaping plan around the B1 generator pad."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The need for updated drawings indicates a redesign of the landscaping layout, which may incur additional costs."
+      },
+      "learning_value": {
+        "score": 2,
+        "reasoning": "While this RFI highlights a missing detail, it is a standard occurrence in projects where existing conditions differ from initial designs.",
+        "prevention_action": "Implement a more thorough review process of site conditions prior to finalizing landscaping designs."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination in the design process, leading to the need for adjustments in the landscaping layout."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not appear to trigger other changes or affect critical systems."
+      },
+      "summary": {
+        "one_line": "An updated landscaping layout is required around the B1 generator pad due to coordination gaps.",
+        "is_routine": true,
+        "why_or_why_not": "This issue is routine as it involves adjustments to landscaping based on site conditions, which is common in construction projects."
+      },
+      "rfi_id": "e80400ad-002a-44ff-817d-cbd9c291e197",
+      "rfi_number": "RFI-1046.1",
+      "project": "Southline Office",
+      "trade": "architectural, landscaping, civil_site",
+      "question_text": "REF: Site - Onsite Current Set: L1.20A, L1.20B, L2.20 L3.20, L4.20 POST TO: Site - Onsite Current Set: L1.20A, L1.20B, L2.20, L3.20, L4.20 Per email correspondence, DES is to provide an updated layout to the landscaping around the B1 generator pad. Please provide updated drawings.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 890,
+        "output": 396
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses a critical acoustic requirement that impacts the performance of the HVAC system, which is essential for occupant comfort and compliance with sound regulations. The need for a specific floating floor system indicates a significant adjustment to the original design.",
+        "trades_affected": [
+          "architectural",
+          "structural",
+          "HVAC"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The requirement for a flat and level surface for the floating floor system necessitates re-evaluation and potential modification of the existing roof steel structure.",
+        "rework_description": "Adjustment of the roof steel to create a level surface for the installation of the Kinetics RIM floating floor system."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The need to modify the existing structure to accommodate the floating floor system represents a redesign of the original plans, leading to additional costs."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant oversight in the initial design regarding the acoustic requirements and structural compatibility, which could be avoided in future projects with better coordination between design and acoustic specifications.",
+        "prevention_action": "Implement a more thorough review process for acoustic requirements during the design phase, ensuring all structural elements are compatible with specified systems."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination between the design team and the acoustic consultants, indicating a gap in the process of integrating specialized requirements into the overall design."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in the structural design to accommodate the floating floor system may affect other systems, such as HVAC ductwork and fire safety measures, requiring further adjustments."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for a floating floor system to meet acoustic requirements, necessitating significant structural modifications.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine due to the critical nature of the acoustic requirements and the significant structural changes required to meet them."
+      },
+      "rfi_id": "7190aa12-4b49-4632-ad0d-d721c72d4811",
+      "rfi_number": "RFI-0733",
+      "project": "Southline Office",
+      "trade": "architectural, structural",
+      "question_text": "REF: A4.12, A2.07S, 16/S5.51, \"Building 1 & Building 7 Updated Acoustic HVAC Review\" dated 4/7/2022 The Saulter's Acoustic report dated 4/7/2022 recommends using a Kinetics RIM floating floor system with 2-inch pads and 4-inch concrete slab for the Air Handler Room for sound and vibration mitigation. Detail 16/S5.51 was added in SI-04 dated 04/19/2023, first calls out the isolated slab in the drawings. Please advise on all of the following: 1) Please provide a specification for the required products. 2) The roof steel is currently sloped. After consulting with the local Kinetics representatives, the product is required to be on a flat and level surface. Please advise on a solution to provide the vibration and sound mitigation needs per the Acoustic report, and meeting the already installed structure.",
+      "resolution_text": "Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 973,
+        "output": 489
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The requirement for sounder devices above the UPS room double doors is a critical security feature that was not included in the original drawings, impacting the overall security design of the facility.",
+        "trades_affected": [
+          "security",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While the change requires updates to the security drawings, it does not necessitate extensive rework of existing installations.",
+        "rework_description": "Updating security drawings to include sounder devices above the specified double doors."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The need for updated security drawings indicates a redesign of the original plan to incorporate the sounder devices."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "This RFI highlights a notable coordination gap in the initial design process, which could be improved with better communication and review of security requirements.",
+        "prevention_action": "Implement a more thorough review process for security requirements during the design phase to ensure all necessary features are included."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination in the design process, leading to missing details in the security drawings."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "This change does not trigger other changes or affect multiple systems; it is isolated to the security design."
+      },
+      "summary": {
+        "one_line": "The RFI addressed the omission of sounder devices above UPS room double doors in the security drawings.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a critical security feature that was overlooked, which could have significant implications for the project's safety and compliance."
+      },
+      "rfi_id": "5ded9446-3239-495c-8f7f-ec4e2ba7db97",
+      "rfi_number": "RFI-189",
+      "project": "CoreSite Data Center",
+      "trade": "security, architectural",
+      "question_text": "Per 10/17 discussion between DPR and PSG, each double door between UPS room should have a sounder mounted above the door header. The current security drawings do not reflect this. Suggested answer PSG, please confirm if the UPS room double doors, 241B, 242B, 243B, 246C, will require sounder devices. If so, please provide updated security drawings reflecting this update.",
+      "resolution_text": "steven holt: Attached is the ED typical for a contact and sounder double door only\nLatest revision attached as deiscussed.",
+      "success": true,
+      "tokens_used": {
+        "input": 883,
+        "output": 420
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The RFI addresses a coordination gap regarding the caulking material and color between two service yards, which could lead to inconsistencies in appearance and performance if not clarified.",
+        "trades_affected": [
+          "Masonry",
+          "Sealant application"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While no significant work was undone, the clarification ensures that the correct materials are used moving forward, preventing potential rework.",
+        "rework_description": "No specific rework was required, but future application will be aligned with the clarified specifications."
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "This RFI serves to clarify the specifications for caulking, which is essential for ensuring consistency and quality across the project."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "This RFI highlights a notable coordination gap that could be improved in future projects by ensuring that specifications are clearly communicated and documented.",
+        "prevention_action": "Implement a more rigorous review process for material specifications and ensure all trades are informed of changes."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of clear communication regarding material specifications, indicating a need for improved processes in documentation and coordination."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "This change does not trigger other changes or affect multiple systems; it is limited to the caulking application."
+      },
+      "summary": {
+        "one_line": "The RFI clarifies the acceptable caulking product and color for the B1 Service Yard to ensure consistency with B2.",
+        "is_routine": false,
+        "why_or_why_not": "While the request for confirmation is common, the implications of using the wrong material could lead to aesthetic and performance issues, making it more significant than a routine clarification."
+      },
+      "rfi_id": "f483d75d-44de-470e-b463-f2aa79a3510b",
+      "rfi_number": "RFI-1612.1",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Reference: SLP1 - RFI 1612.1 - B1 Service Yard CMU Caulking Confirmation_R1 SLP1 - RFI 1664 - B2 CMU Caulking Clarification SLP1 - RFI 1206 - B1 Gen. Yard CMU Added Joints Confirmation_Response Background: Per conversations between DES and DPR, CMU caulking at the B1 Service Yard is to match CMU caulking at B2. Per B2 RFI 1664, Dowsil 790 silicone sealant is to be used at porous surfaces such as CMU. Color to be used is the Natural Stone color. Question 1: Please confirm that it is acceptable to apply the same caulking product and color at the B1 Service Yard as B2 per RFI 1664. Note that no sand is to be applied to the B2 caulking to match mortar mixture.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 984,
+        "output": 442
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The handrail clash with the service corridor door required a significant design change, impacting the door replacement and potentially affecting accessibility compliance.",
+        "trades_affected": [
+          "General Contractor",
+          "Metal Fabrication",
+          "Door Installation"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing double door will need to be replaced to accommodate the new design, which involves undoing previous work.",
+        "rework_description": "Replacement of the existing double door with a new double door that fits a 5'-0\" opening."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The need to redesign the door configuration due to the handrail clash constitutes a significant change in the original design."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a notable coordination gap that could be improved with better initial design reviews and field verification processes.",
+        "prevention_action": "Implement a more thorough pre-construction coordination meeting to address potential clashes between structural elements and accessibility requirements."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue arose from a lack of detailed coordination between the design and field verification processes, leading to the oversight of the handrail's impact on the door."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in door design may affect other systems, such as fire ratings and accessibility compliance, which could trigger further changes."
+      },
+      "summary": {
+        "one_line": "The handrail extension clashed with a service corridor door, necessitating a redesign of the door.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves significant design changes and potential compliance issues, rather than a simple clarification."
+      },
+      "rfi_id": "80eecf8e-3808-488f-aa09-19124ea4530b",
+      "rfi_number": "RFI-76.1",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "question_text": "Reference: RFI 76.1 - Abbott Alameda 1420 HBP - Stair 2 Handrail Clash with Service Corridor Door Clarification A7.0.0 MAS Metals Guardrail Submittal Sheet S5.00 Attached pictures Per RFI 76 response, contractor was to verify that the handrail extension does not impeded into existing service corridor. After verifying in the field, it was confirmed that the rail will impeded with the service corridor door. DPR asked the City Inspector if there was an exception at this location to CBC 11B-404.2.4 since the door that is being impeded is a non active leaf, to which they then declined the exception. DPR is proposing to replace the double door at the service corridor with a new double door that will fit a 5'-0\" opening (3'-0\" active lead and 2'-0\" inactive leaf).",
+      "resolution_text": "Ava Ghiassi (FORGE - 10049724): Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 973,
+        "output": 427
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The need for additional bollards and a revised footing design indicates a significant impact on the construction process and coordination among trades, particularly affecting the structural and site work trades.",
+        "trades_affected": [
+          "Structural",
+          "Site Work",
+          "Concrete"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The rejection of the initial shop drawings and the need for an alternative design necessitated a redesign and potential rework of the foundation.",
+        "rework_description": "Rework involves adjusting the footing design to accommodate additional rebar and concrete, which was not part of the original plan."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The change order resulted from a redesign of the bollard foundation due to the rejection of the initial design, leading to additional costs for materials and labor."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This situation highlights the importance of thorough review and coordination of design documents before construction begins to prevent costly changes and rework.",
+        "prevention_action": "Implement a more rigorous review process for shop drawings and ensure all design details are clearly communicated and agreed upon before construction starts."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue arose from a lack of coordination and clarity in the design process, leading to rejected shop drawings and the need for an alternative solution."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in bollard design and foundation could potentially affect other site elements and their integration, leading to further adjustments in related trades."
+      },
+      "summary": {
+        "one_line": "The RFI addressed the need for additional bollards and a revised footing design due to rejected shop drawings, resulting in significant rework and cost implications.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it involves significant design changes and rework, indicating deeper issues in the design and coordination process."
+      },
+      "rfi_id": "415facb9-902b-4c33-a5ac-a99b99b34b64",
+      "rfi_number": "RFI-1808.1",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "REF: RFI 1808, Site - Onsite Current Set: C3.2 POST TO: Site - Onsite Current Set: C3.2 Please review the attached file. RFI 1808 required six (6) additional bollards to be procured and installed at the sidewalk outside the loading dock of PSD. These bollards were to match the same design as submitted for the Building 1 package. Glazier steel submitted shop drawings depicting bollards with baseplate embeds, which were rejected. A different footing design was provided in the submittal response by DES. This footing requires additional rebar and concrete and presents constructability and stability concerns. Per the site walk with DES on 9/11/24, DES was open to an alternative design of the bollard foundation. Please confirm the alternative method proposed by DPR is acceptable. Suggested answer DPR suggests installing the bollard tube greater than or equal to 1' in a foundation below the sidewalk. The foundation will be poured with the bollard set. Final dimensions to be confirmed by DES. Please see page 3 for a sketch of the proposed design.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 1019,
+        "output": 467
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The absence of the doubler plates in the original drawings could lead to significant structural implications if not addressed properly, affecting the integrity of in-plane braces on Levels 2 and 3.",
+        "trades_affected": [
+          "Structural Steel",
+          "General Contractor"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "Existing structural work may need to be modified or reinforced to accommodate the newly specified doubler plates.",
+        "rework_description": "Reinforcement of in-plane braces and potential adjustments to connections."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The introduction of doubler plates represents an addition to the original scope of work, necessitating changes in fabrication and installation."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical oversight in the design documents that could be mitigated through improved coordination and review processes.",
+        "prevention_action": "Implement a more rigorous review process for structural details in design documents before issuance."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough review and coordination in the design phase, leading to missing details in the fabrication drawings."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The need for doubler plates may affect other structural elements and connections, potentially leading to further changes in related trades."
+      },
+      "summary": {
+        "one_line": "The RFI addressed the absence of critical doubler plates in the structural design, necessitating confirmation of their application.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves significant structural implications and potential rework, rather than a simple clarification."
+      },
+      "rfi_id": "e4e96461-d658-4e7c-8aed-6a3afe1aa1b1",
+      "rfi_number": "RFI-2",
+      "project": "Silicon Valley Office",
+      "trade": null,
+      "question_text": "Ref: Attached file GPLA SSK_A02_DoublerPlate on Gusset_REV24-02-14.pdf Doubler plates as shown in Detail 8/PK2-S5.3.1 per PCR #2 and Bulletin #3 were not called out in previously issued fabrication erection drawings. Please confirm that this detail applies at all in-plane braces on Level 2 and Level 3. (Follow up to Issue #1746)",
+      "resolution_text": "Jason Hsia (GPLA Structural Engineers): The detail would apply where indicated in GPLA-SSK.",
+      "success": true,
+      "tokens_used": {
+        "input": 881,
+        "output": 419
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The changes to the onsite furnishing specs require confirmation and adjustment, indicating a significant impact on the project scope and costs.",
+        "trades_affected": [
+          "architectural",
+          "landscaping"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "Existing work related to the furnishings may need to be undone or redone to accommodate the new specifications.",
+        "rework_description": "Adjustment of installed furnishings and landscaping elements to align with the updated specifications."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The changes in specifications will incur additional costs that were not accounted for in the original contract."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This situation highlights a coordination gap between the architect's specifications and the drawings, which could be improved in future projects.",
+        "prevention_action": "Implement a more rigorous review process for changes in specifications to ensure all updates are reflected in the drawings."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination in the process of updating specifications and ensuring they are documented in the drawings."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The changes in furnishing specifications could potentially affect other trades and systems, leading to further adjustments."
+      },
+      "summary": {
+        "one_line": "Changes to onsite furnishing specifications require confirmation and will incur additional costs.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant changes that affect multiple trades and incur costs, rather than simple clarifications."
+      },
+      "rfi_id": "16cffcd5-c02c-4815-839c-670ce4f69894",
+      "rfi_number": "RFI-1018",
+      "project": "Southline Office",
+      "trade": "architectural, landscaping",
+      "question_text": "REF: BLDGSITE-L1.01 POST TO: BLDGSITE-L1.01 Please reference the attached files. Per response to submittal #4270-12-9313, several onsite furnishing specs were changed by the architect and resubmitted. These changes are not reflected in the drawings. Please confirm we are proceeding with these changes, which will incur cost",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 870,
+        "output": 391
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The failure of the percolation test at one location necessitates a significant change in the drainage approach, which impacts the landscaping trade and potentially others involved in site drainage.",
+        "trades_affected": [
+          "landscaping",
+          "drainage"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need for a sump drain indicates that existing plans for drainage must be altered, which may involve reworking previously completed landscaping and drainage installations.",
+        "rework_description": "Installation of a sump drain where the percolation test failed, requiring adjustments to the landscape design and possibly excavation work."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "The change order is driven by the need to adjust the drainage strategy based on the test results, which were not anticipated in the original design."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This situation highlights the importance of thorough site testing prior to finalizing drainage designs. Implementing more rigorous pre-construction testing could prevent similar issues in future projects.",
+        "prevention_action": "Incorporate mandatory percolation testing in the pre-construction phase for all landscaping projects to ensure proper drainage solutions are designed from the outset."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough site analysis and testing before the design phase, indicating a gap in the process of site evaluation."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "While this change affects the landscaping and drainage, it does not trigger changes in other systems or trades, thus not creating a cascade effect."
+      },
+      "summary": {
+        "one_line": "The percolation test results indicated a failure at one location, necessitating a change to the drainage plan.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant alterations to the original design based on unexpected site conditions, which could have been mitigated with better pre-construction testing."
+      },
+      "rfi_id": "a4958f61-5176-46b4-bc6b-027204b389de",
+      "rfi_number": "RFI-1817.2",
+      "project": "Southline Office",
+      "trade": "landscaping",
+      "question_text": "REF: RFI 1494.1 Please reference the attached file. Attached are the test results from tree pit percolation testing performed at three locations around the north side of Building 1 per RFI 1494.1. One location did not percolate and therefore Please review these results and provide direction on how to proceed. Suggested answer Brightview recommends using a sump drain at the location where the percolation test did not pass.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 880,
+        "output": 479
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The RFI addresses a modification to the extent of Tex-Cote application, which is significant enough to require clarification and adjustment but does not appear to trigger extensive rework across multiple trades.",
+        "trades_affected": [
+          "architectural",
+          "metal panel installation"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The modification requires adjustments to the application of Tex-Cote on specific beams, which may involve minor rework but does not indicate extensive undoing of completed work.",
+        "rework_description": "Adjustment of Tex-Cote application on upturned beams at the specified elevation."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "This classification is appropriate as the RFI seeks to clarify and adjust the scope of work rather than necessitating a complete redesign or extensive rework."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "While this RFI highlights a notable coordination gap regarding the application extent, it does not indicate a major systemic issue that could be broadly applied to future projects.",
+        "prevention_action": "Implement more thorough review processes for application extent details in design documents."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of clarity in the design documents regarding the extent of the Tex-Cote application, indicating a process gap in communication and detail specification."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not appear to trigger additional changes or affect other systems, as it is limited to the application of Tex-Cote on specific beams."
+      },
+      "summary": {
+        "one_line": "The RFI seeks confirmation on the modified extent of Tex-Cote application on upturned beams at the West elevation.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it involves a specific modification that requires clarification and could impact the overall aesthetic and performance of the architectural finish."
+      },
+      "rfi_id": "74f05ec7-6067-4e62-a309-64629941ea3f",
+      "rfi_number": "RFI-1378.1",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Reference: SLP1 - RFI 1378.1 - PSD Tex-Cote Application Extent Confirmation_R1 SLP1 - RFI 1378 - PSD Tex-Cote Application Extent Confirmation Sheets A2.01 and A8.10 Approved Submittal 3056 - PSD Metal Shop Drawings Per conversations with Dale/DES, please confirm that the extent of the Tex-Cote on the Upturned Beams at Tier 2 on the West Elevation are being modified to extend to the face of Metal Panel (Red Highlight) and face of CMU (Blue Highlight). See attached mark-ups for clarity. Please note that this only happens at the West elevation.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 928,
+        "output": 463
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The issue with the CLT opening L-angles and the roofing insulation buildup indicates a notable coordination gap that could lead to complications in the roofing installation.",
+        "trades_affected": [
+          "roofing",
+          "structural"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The need for additional taper/cricket details suggests that some adjustments to the roofing installation may be necessary, but it does not indicate extensive rework.",
+        "rework_description": "Adjustment of roofing insulation details to accommodate the L-angle dimensions."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The request for additional taper/cricket details indicates a need for design adjustments to ensure proper installation and performance of the roofing system."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "While this issue is not critical, it highlights a coordination gap that could be improved upon in future projects to avoid similar situations.",
+        "prevention_action": "Implement a more thorough review process for design documents to ensure all dimensions and details are accurately represented."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "This issue stems from a lack of detailed coordination in the design process, rather than a simple missing detail or a systemic flaw."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not appear to trigger other changes or affect multiple systems, as it is primarily focused on the roofing installation."
+      },
+      "summary": {
+        "one_line": "The discrepancy between the L-angle dimensions and the roofing insulation buildup requires additional taper/cricket details.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it indicates a specific coordination gap that could lead to installation complications, rather than a simple clarification."
+      },
+      "rfi_id": "bee923d5-abe1-48d7-a4f6-b454f3eae080",
+      "rfi_number": "RFI-1692",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Referenced Documents: S2.2 Question: The CLT opening L-angles on the roof currently have a vertical leg measuring 6\" and our roofing insulation buildup only measures 5 1/2\". Please provide additional taper/cricket details for every L-angle location.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 844,
+        "output": 426
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses unacceptable materials and missing items that were previously approved, indicating a significant impact on the landscaping trade and potentially others involved in the irrigation system.",
+        "trades_affected": [
+          "landscaping",
+          "irrigation"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need to revise plans and confirm previously approved submittals suggests that existing work related to irrigation materials will need to be undone or redone.",
+        "rework_description": "Revising irrigation plans and potentially replacing materials that do not meet BART requirements."
+      },
+      "cost_driver": {
+        "type": "rework",
+        "reasoning": "The need to revise and potentially replace materials due to non-compliance with BART specifications indicates a rework situation that will incur additional costs."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical coordination gap between design approvals and actual material specifications, which could be addressed in future projects to prevent similar issues.",
+        "prevention_action": "Implement a more rigorous review process for material specifications against approved submittals before finalizing designs."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination in the approval process for materials, indicating a need for improved processes rather than a simple missing detail."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in irrigation materials could affect other systems and trades, potentially leading to further adjustments and rework across the project."
+      },
+      "summary": {
+        "one_line": "The RFI addresses unacceptable irrigation materials and missing items, necessitating updates to plans and potential rework.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it involves significant changes to previously approved materials and has implications for multiple trades."
+      },
+      "rfi_id": "3cc44191-891b-4015-b6f7-ae5a2ab0509b",
+      "rfi_number": "RFI-1720",
+      "project": "Southline Office",
+      "trade": "landscaping",
+      "question_text": "REF: Site - Offsite Current Set: L3.00, L3.10.1, 3.20, RFI #1287, 1653, Submittal #4309, 4407, 4540 POST TO: Site - Offsite Current Set: L3.20 Please forward this RFI to Cynthia Greenburg with BART for review. Please review the attached file. Per the response to Submittal 4540-1, BART review states that the items spec'd in RFI 1287 response are unacceptable except for the controller. It is also stated that numerous missing items which were previously sent and approved in offsite irrigation submittals 4407 and 4039. Please provide updated plans to reflect correct BART irrigation material requirements and confirm previously approved submittals meet BART requirements.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 963,
+        "output": 443
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The addition of data drops indicates a notable coordination gap that could lead to further adjustments in the electrical and architectural trades, but it does not appear to have a cascading effect on multiple systems.",
+        "trades_affected": [
+          "electrical",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While the addition of data drops may require some adjustments, it does not undo significant existing work.",
+        "rework_description": "Minor adjustments to the electrical layout to accommodate the new data drops."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The request for additional data drops represents an expansion of the project scope rather than a clarification or rework of existing plans."
+      },
+      "learning_value": {
+        "score": 2,
+        "reasoning": "This RFI highlights a standard occurrence of missing details in the initial design, which could be improved with better coordination in future projects.",
+        "prevention_action": "Implement a more thorough review process for data and power requirements during the design phase."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough coordination in the initial planning stages, indicating a process gap rather than a design flaw."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not trigger other changes or affect multiple systems, as it is limited to the addition of data drops."
+      },
+      "summary": {
+        "one_line": "The RFI requests confirmation for adding data drops at specified locations, highlighting a coordination gap in the project.",
+        "is_routine": false,
+        "why_or_why_not": "While it addresses a common issue of missing details, the specific request for additional data drops indicates a notable gap in the initial scope that requires attention."
+      },
+      "rfi_id": "0d0c72e5-4b35-42ca-a490-67b0aedc6c96",
+      "rfi_number": "RFI-1628.1",
+      "project": "Southline Office",
+      "trade": "architectural, electrical",
+      "question_text": "Ref: TC2.01, QF301 Please confirm it is acceptable to add (2) data drops at each of the (3) locations noted on the attached TC2.01. Exact locations were previously provided in RFI 1628 response. This RFI captures the additional food service data as previous RFI only addressed the additional power. Please see attached for more information.",
+      "resolution_text": null,
+      "success": true,
+      "tokens_used": {
+        "input": 852,
+        "output": 427
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The lack of clarity regarding the bonding of interior metal ducts could lead to significant coordination issues and potential safety concerns if not addressed properly. This impacts the electrical trade directly and could affect other trades if bonding is required.",
+        "trades_affected": [
+          "electrical",
+          "mechanical"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While the response clarified that the flexible bonding jumper is not required, there may still be minor adjustments needed in the installation process to ensure compliance with the specifications.",
+        "rework_description": "Potential adjustments to the installation of ductwork to ensure proper bonding as per clarified requirements."
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "This RFI primarily sought clarification on the scope of work regarding duct bonding, which led to a change order but did not necessitate extensive rework."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "This RFI highlights a notable coordination gap in the drawings and specifications that could be improved in future projects to avoid similar issues.",
+        "prevention_action": "Implement a more thorough review process for specifications and drawings to ensure all bonding requirements are clearly indicated."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detail in the specifications and drawings, indicating a need for improved processes in documentation and coordination."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "This change does not appear to trigger other changes or affect multiple systems, as it is primarily a clarification regarding bonding requirements."
+      },
+      "summary": {
+        "one_line": "The RFI addressed the lack of details regarding the bonding of interior metal ducts, which could impact installation and compliance.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves a critical safety and compliance aspect that was not clearly defined in the project documentation."
+      },
+      "rfi_id": "45b59973-fa76-4a3c-b8d6-8bdcafce2c7b",
+      "rfi_number": "RFI-141",
+      "project": "CoreSite Data Center",
+      "trade": "electrical",
+      "question_text": "Per specification 260525 – Grounding and Bonding for Electrical Systems, Section 3.4(E) references the requirement for bonding of interior metal ducts. However, the Electrical Contract drawings including the ESS permit set does not indicate which ductwork requires bonding, nor is any detail provided. Please confirm if the bonding of interior metal ducts is included within CEI’s scope of work, and if so, please provide the appropriate details and location for coordination.",
+      "resolution_text": "Matthew Fagert (kW Engineering, Inc. - 10067687): KW Response\n1. The flexible bonding jumper specified across flexible duct connections is not required.\nAshley Hill (Corgan - 10059759): GC to refer to KW.\nGC to notify Owner if any cost",
+      "success": true,
+      "tokens_used": {
+        "input": 920,
+        "output": 452
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The change from an E-type wall to a D-type wall is significant as it directly impacts the fire rating requirements for the janitor's closet, which is critical for safety and compliance. This change affects the architectural and structural trades significantly.",
+        "trades_affected": [
+          "architectural",
+          "structural"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing design required a major alteration to ensure compliance with fire safety regulations, necessitating rework of the wall type and door adjustments.",
+        "rework_description": "Rework included changing the wall type from E to D and adjusting the door opening to maintain ADA clearance."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The need to redesign the wall type to maintain the required fire rating constitutes a redesign, which incurs additional costs."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a critical oversight in the initial design regarding fire ratings, which could have been prevented with better coordination and review processes.",
+        "prevention_action": "Implement a more thorough review process for fire safety requirements during the design phase to ensure compliance before construction begins."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue arose from a lack of detailed coordination regarding fire rating requirements, indicating a process gap in the design review stage."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "This change could potentially trigger further adjustments in related systems, such as fire alarms or smoke compartments, due to the change in wall type and its implications on fire safety."
+      },
+      "summary": {
+        "one_line": "The RFI addressed a critical issue regarding the fire rating of the janitor's closet wall, necessitating a change from an E-type to a D-type wall.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves significant safety compliance issues and requires substantial redesign efforts, which are not typical in standard RFIs."
+      },
+      "rfi_id": "a2b687f3-29d4-4a60-93eb-186571e8caa9",
+      "rfi_number": "RFI-94",
+      "project": "CoreSite Data Center",
+      "trade": "architectural, structural",
+      "question_text": "The current design calls for a furred wall (E6-D) at the south wall of the Janitor's Closet; however, the janitor's closet is to maintain a 1hr rating per A03-03B which cannot be achieved with an E type wall. If the wall rating is to be maintained, DPR proposes changing South wall of the janitors closet to a shaft wall (D-type). If this wall does not need to maintain a fire rating, the E6 wall type can remain. There will be a cost",
+      "resolution_text": "Ashley Hill (Corgan - 10059759): 1) JANITOR CLOSET TO MAINTAIN FIRE RATING AS NOTED ON PLANS, NO \nEXCEPTIONS TAKEN TO USING D-TYPE WALL.\n2) NO EXCEPTIONS TAKEN TO SOUTH WALL SHIFTING PLAN NORTH 5''. TO MAINTAIN ADA DOOR CLEARANCE, \nDOOR\nOPENING HAS BEEN ADJUSTED TO FLIP OUTWARD, SEE ATTACHED SDA.\nCreated",
+      "success": true,
+      "tokens_used": {
+        "input": 978,
+        "output": 475
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The conflict between the fire sprinkler and the mechanical return air duct indicates a significant coordination issue that could have led to safety concerns if not addressed. The adjustment required impacts the mechanical trade and potentially the fire protection systems.",
+        "trades_affected": [
+          "mechanical",
+          "fire protection"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "The adjustment to offset the sprinkler requires some rework, but it is not extensive enough to be classified as significant or major.",
+        "rework_description": "Repositioning the fire sprinkler to avoid conflict with the return air duct."
+      },
+      "cost_driver": {
+        "type": "adjustment",
+        "reasoning": "This RFI resulted in a necessary adjustment to the sprinkler's placement, which could incur additional costs for labor and materials."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This issue highlights a notable coordination gap that could be improved in future projects through better initial design reviews and cross-trade communication.",
+        "prevention_action": "Implement a more thorough review process for coordination between mechanical and fire protection systems during the design phase."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of coordination in the design process, indicating that better communication and planning could have prevented the conflict."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not appear to trigger further changes or affect other systems significantly, although it does require careful attention to ensure compliance with fire safety standards."
+      },
+      "summary": {
+        "one_line": "A conflict between the fire sprinkler and mechanical duct necessitated an adjustment to the sprinkler's location.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine due to the potential safety implications and the need for coordination between multiple trades."
+      },
+      "rfi_id": "c1e6ba23-c709-464a-9290-289525d0c740",
+      "rfi_number": "RFI-1805",
+      "project": "Southline Office",
+      "trade": "mechanical",
+      "question_text": "Reference Documents: M2.01, FP 1.01, Attachments Per drawing FP 1.01 the fire sprinkler marked is supposed to be centered in the last ceiling tile on the east side of the ceiling. However, in the drawing M2.01 there is a conflict with the mechanical return air duct. The sprinkler and the return duct are to be placed in the same area. Our solution is to offset the sprinkler north out of the way of the return duct in order to install it. Please confirm we would be able to move the sprinkler out of the way.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 906,
+        "output": 435
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 2,
+        "reasoning": "The RFI seeks confirmation on dimensions and location of the AED, which is a standard clarification in architectural projects. It does not indicate a significant impact on the overall project scope.",
+        "trades_affected": [
+          "Electrical",
+          "Architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "none",
+        "reasoning": "There is no indication that existing work was undone or redone as a result of this RFI.",
+        "rework_description": "N/A"
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "The RFI primarily seeks clarification on the AED's specifications rather than indicating a need for rework or redesign."
+      },
+      "learning_value": {
+        "score": 1,
+        "reasoning": "This RFI is a routine request for confirmation of dimensions and does not provide significant learning opportunities for future projects.",
+        "prevention_action": "Standardize AED placement details in future architectural drawings."
+      },
+      "root_cause_depth": {
+        "level": "surface",
+        "reasoning": "The issue arises from a missing detail in the drawings regarding the AED location and height, which is a common occurrence in architectural projects."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not trigger other changes or affect multiple systems."
+      },
+      "summary": {
+        "one_line": "The RFI seeks confirmation on the location and height of the AED, which is a routine clarification.",
+        "is_routine": true,
+        "why_or_why_not": "This is routine because it involves standard confirmation of dimensions and does not indicate a significant issue or impact."
+      },
+      "rfi_id": "ef3e0ff0-9fa4-478b-aa06-ffa25e30579e",
+      "rfi_number": "RFI-1505",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Ref A2.01 & 3/12/24 DNK/DES email/markup: 1. Please confirm AED is OFOI. 2. Please confirm desired location of the AED is 5'-0\" from finish of Service Corridor 118 north finish to centerline of AED. 3. Please provide height to centerline of AED.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 862,
+        "output": 382
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The request for additional conduit pathways indicates a significant change in the original design, impacting the cabling and food service trades. The need for additional data drops suggests that the initial planning did not account for the restaurant's requirements, leading to potential delays and increased costs.",
+        "trades_affected": [
+          "cabling",
+          "food service"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The existing conduit pathways need to be reworked to accommodate the new data cabling requirements, which involves altering previously completed work.",
+        "rework_description": "Reworking the existing 1 1/2\" conduit in Office 126 to stub out over cold storage instead of the vestibule."
+      },
+      "cost_driver": {
+        "type": "scope_addition",
+        "reasoning": "The request for additional data drops and the associated conduit pathways represents a change in the project scope, necessitating additional materials and labor."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant oversight in the initial design and planning phases, indicating a need for improved coordination and communication among trades to prevent similar issues in future projects.",
+        "prevention_action": "Implement a more thorough review process during the design phase to ensure all requirements are accounted for, especially in complex environments like restaurants."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of thorough planning and coordination between the design and construction teams, leading to missing details in the initial design."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The changes to the conduit pathways may affect other systems, such as electrical and HVAC, due to the need for re-routing and potential conflicts in overhead spaces."
+      },
+      "summary": {
+        "one_line": "The RFI addresses the need for additional conduit pathways for data cabling in the restaurant, indicating a significant change in scope.",
+        "is_routine": false,
+        "why_or_why_not": "This is not routine as it involves substantial rework and indicates a failure in the initial design to accommodate the project's needs."
+      },
+      "rfi_id": "7838a72e-bb49-4af5-8c83-172233d5c997",
+      "rfi_number": "RFI-1628.2",
+      "project": "Southline Office",
+      "trade": "cabling, food service, pathways",
+      "question_text": "Ref: RFI 1628, RFI 1628.1, TC2.01, QF301 The requested additional data drops needed for the restaurant will require additional conduit pathways for the added data cabling. 1) Please confirm it is acceptable to add (1) 2\" conduit overhead in Office 126 as shown on the attached drawing markup to go from data rack in office and stub out to overhead space in cold storage room. Please note the 2\" conduit will be surface mounted on the south wall to get down to data rack. 2) Please confirm it is acceptable to rework the existing 1 1/2\" conduit for the data cabling in Office 126 to stub out over cold storage as opposed to stubbing out to Vestibule. 3) Please confirm it is acceptable to utilize a 1\" spare conduit that is stubbing up into the millwork island in the Severy to feed the added (2) 2x CAT6 data drops. The spare conduit pathway goes underground and stubs up in north wall of the Kitchen and then stubs out into overhead space of kitchen. Please note these 4 added cables will fill the conduit and there will be no space to add additional cables in this pathway in future.",
+      "resolution_text": null,
+      "success": true,
+      "tokens_used": {
+        "input": 1037,
+        "output": 491
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The RFI addresses multiple aspects of the door installation that could affect the overall project timeline and coordination among trades, particularly if the specifications are not aligned with the existing conditions.",
+        "trades_affected": [
+          "Door Installation",
+          "Finishing",
+          "General Contracting"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While the RFI does not indicate significant rework, there may be minor adjustments needed based on the confirmation of specifications.",
+        "rework_description": "Potential adjustments to the door frame and material specifications could require minor rework in the installation process."
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "The RFI seeks clarification on specifications, which could lead to cost adjustments based on the materials chosen and their availability."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "This RFI highlights a notable coordination gap in the specification process, which could be improved in future projects to avoid similar issues.",
+        "prevention_action": "Implement a more thorough review process for specifications before issuing drawings to ensure all necessary details are included."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed specifications in the initial design process, indicating a gap in the project management or design review process."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not appear to trigger other changes or affect multiple systems, as it is focused on a specific door installation."
+      },
+      "summary": {
+        "one_line": "The RFI seeks confirmation on door specifications that were not provided, impacting installation and coordination.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it involves multiple specifications that could significantly impact the project timeline and coordination among trades."
+      },
+      "rfi_id": "800c54bf-731f-4ef5-ae79-21ec671008da",
+      "rfi_number": "RFI-89",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "question_text": "Reference: RFI 89 - Abbott Alameda 1420 HBP - Service Corridor DFH Spec Confirmation RFI 76.1 - Stair 2 Clash with Service Corridor Clarification ASK-18 Per RFI 76.1, a new 5'-0 double door (3'-0 active leaf) is to be installed at opening 01E9A. However, no spec was provided for this door. Q1: Please confirm if door frame can be Knock Down Aluminum frames (faster to install and procure, and can install tile flooring without frames onsite). Q2: Please confirm if door material can be a paint grade door (lead time is significantly less than a wood or HM door). Q3: Please confirm if a 10\"x10\" vision light is required at the active leaf or both. Q4: Please confirm the attached hardware schedule for this door is acceptable.",
+      "resolution_text": "Ava Ghiassi (FORGE - 10049724): Please see attached PDF.",
+      "success": true,
+      "tokens_used": {
+        "input": 970,
+        "output": 434
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 4,
+        "reasoning": "The RFI addresses a critical waterproofing detail at the main entry canopy, which is essential for preventing potential water intrusion issues. This indicates a significant impact on the project's integrity and could affect multiple trades involved in the installation.",
+        "trades_affected": [
+          "Roofing",
+          "Metal Panel Installation",
+          "Waterproofing"
+        ]
+      },
+      "rework_level": {
+        "level": "significant",
+        "reasoning": "The need for clarification on the waterproofing detail suggests that existing work may need to be redone to ensure proper installation and prevent future issues.",
+        "rework_description": "Potential rework on the coping attachment and waterproofing application."
+      },
+      "cost_driver": {
+        "type": "redesign",
+        "reasoning": "The clarification required indicates that the original design may not adequately address waterproofing, necessitating a redesign to ensure compliance with best practices."
+      },
+      "learning_value": {
+        "score": 4,
+        "reasoning": "This RFI highlights a significant oversight in the design phase regarding waterproofing details, which could be preventable with better initial coordination and detail review.",
+        "prevention_action": "Implement a more thorough review process for waterproofing details during the design phase to prevent similar issues in future projects."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed coordination and communication regarding waterproofing requirements, indicating a gap in the design process."
+      },
+      "cascade_risk": {
+        "has_cascade": true,
+        "reasoning": "The change in waterproofing detail could affect other systems, such as drainage and structural integrity, leading to further adjustments across multiple trades."
+      },
+      "summary": {
+        "one_line": "Clarification needed on waterproofing details for the main entry canopy coping to prevent water intrusion.",
+        "is_routine": false,
+        "why_or_why_not": "This issue is not routine as it involves critical waterproofing concerns that could lead to significant damage if not addressed properly."
+      },
+      "rfi_id": "b6ddddbd-8e38-4b7b-a0ba-ef7ca8bc033f",
+      "rfi_number": "RFI-1693",
+      "project": "Southline Office",
+      "trade": null,
+      "question_text": "Referenced Details: A4.20, Submittal 4389 BTM Metal Panel Shop Drawings 6/4.70 Question: Per coordination held with MCA/Alliance/DES on 05/22/24, additional clarification is needed at the main entry canopy coping attachment condition due to potential waterproofing concerns. Please advise on the acceptable waterproofing detail to be installed.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 867,
+        "output": 452
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 3,
+        "reasoning": "The RFI addresses a lack of clarity regarding the demolition and installation of new elements, which could lead to significant adjustments in the work scope for the trades involved, particularly in the areas of ceiling and lighting.",
+        "trades_affected": [
+          "Electrical",
+          "Drywall"
+        ]
+      },
+      "rework_level": {
+        "level": "minor",
+        "reasoning": "While the existing ceiling grid and light fixtures may need to be removed, this does not indicate extensive rework but rather a straightforward adjustment to the planned scope.",
+        "rework_description": "Removal of existing ceiling grid and light fixtures to accommodate the new gyp. soffit."
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "The RFI seeks clarification on the scope of work, which directly impacts the cost due to potential changes in labor and materials required."
+      },
+      "learning_value": {
+        "score": 3,
+        "reasoning": "This RFI highlights a notable coordination gap in the project documentation that could be improved in future projects to avoid similar confusion.",
+        "prevention_action": "Implement a more thorough review process for construction documents to ensure clarity on demolition and installation scopes."
+      },
+      "root_cause_depth": {
+        "level": "process",
+        "reasoning": "The issue stems from a lack of detailed information in the project documents, indicating a need for better processes in documentation and communication."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "The change does not appear to trigger other changes or affect multiple systems, as it is confined to the ceiling and lighting scope."
+      },
+      "summary": {
+        "one_line": "The RFI seeks clarification on the demolition of existing ceiling elements and the installation of a new soffit.",
+        "is_routine": false,
+        "why_or_why_not": "This RFI is not routine as it indicates a lack of clarity in the project documentation that could lead to significant adjustments in the work scope."
+      },
+      "rfi_id": "e4cb8499-3cdf-45a9-a094-c759eb893eb3",
+      "rfi_number": "RFI-75",
+      "project": "Abbott Alameda Office TI",
+      "trade": null,
+      "question_text": "Reference: RFI 75 - Abbott Alameda 1420 HBP - Stair 1 Skylight Scope Clarification Detail 3/A7.1.0 Attached Pictures Sheet note regarding OH skylight is unclear. Is the intent to demolish the existing ceiling plastic grid and light fixtures and then add a new 4-sided gyp. soffit? Please confirm.",
+      "resolution_text": "Elaine Yiu (FORGE - 10049724): LOB",
+      "success": true,
+      "tokens_used": {
+        "input": 860,
+        "output": 449
+      }
+    },
+    {
+      "impact_scope": {
+        "score": 2,
+        "reasoning": "The request for confirmation on paint colors is a standard occurrence in construction projects, particularly in architectural finishes. It does not significantly impact the overall project scope or timeline.",
+        "trades_affected": [
+          "painting",
+          "architectural"
+        ]
+      },
+      "rework_level": {
+        "level": "none",
+        "reasoning": "No existing work was undone or redone as the mockup was requested for confirmation before proceeding with painting.",
+        "rework_description": "N/A"
+      },
+      "cost_driver": {
+        "type": "clarification",
+        "reasoning": "This RFI primarily seeks clarification on the paint colors to be used, which is a common request and does not involve significant cost implications."
+      },
+      "learning_value": {
+        "score": 2,
+        "reasoning": "While this RFI highlights a missing detail regarding color selection, it is a standard occurrence that can be expected in projects with multiple design elements. It does not indicate a significant gap in process.",
+        "prevention_action": "Ensure that color selections are clearly documented in the project specifications to minimize similar RFIs in the future."
+      },
+      "root_cause_depth": {
+        "level": "surface",
+        "reasoning": "The issue arises from a missing detail in the documentation regarding paint colors, which is a surface-level concern rather than a deeper systemic issue."
+      },
+      "cascade_risk": {
+        "has_cascade": false,
+        "reasoning": "This change does not trigger other changes or affect multiple systems; it is isolated to the architectural finishes."
+      },
+      "summary": {
+        "one_line": "The RFI seeks confirmation on the paint colors for a specific architectural element.",
+        "is_routine": true,
+        "why_or_why_not": "This is routine as it involves a common clarification regarding design details that often arise in construction projects."
+      },
+      "rfi_id": "177251b7-0364-4353-b676-179adf48c66b",
+      "rfi_number": "RFI-1132.1",
+      "project": "Southline Office",
+      "trade": "architectural",
+      "question_text": "Referenced Documents: A2.01S, 9,10/S5.3, 6/S6.2, 3/S6.3 Question: RFI 1132 response requests a mockup for the 4 paint colors suggested to paint the vertical portion of the GL 9 Shearwall TOW steel embed. Please see pictures of mockup attached and confirm what color is to be used to paint the vertical portion of the steel or if it is to remain as is.",
+      "resolution_text": "Julia Morini (DES Architects & Engineers, Inc. - 10012655): Please see attached.",
+      "success": true,
+      "tokens_used": {
+        "input": 889,
+        "output": 414
+      }
+    }
+  ]
+}

@@ -177,10 +177,14 @@ export default function ToolSummary() {
       );
     }
 
-    // Filter by date (entries created on selected date)
+    // Filter by date (entries created on selected date, using local time)
     const dateEntryIds = new Set(
       feedbackEntries
-        .filter((e) => projectEntryIds.has(e.id) && e.createdAt.startsWith(selectedDate))
+        .filter((e) => {
+          const entryDate = new Date(e.createdAt);
+          const entryLocalDate = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, '0')}-${String(entryDate.getDate()).padStart(2, '0')}`;
+          return projectEntryIds.has(e.id) && entryLocalDate === selectedDate;
+        })
         .map((e) => e.id)
     );
 
@@ -574,10 +578,14 @@ export default function ToolSummary() {
             </div>
             <div className="p-4 overflow-y-auto max-h-[50vh]">
               {availableDates.map((date) => {
-                // Check if this date has any feedback
+                // Check if this date has any feedback (using local time)
                 const dateEntryIds = new Set(
                   feedbackEntries
-                    .filter((e) => (!currentProjectId || e.projectId === currentProjectId) && e.createdAt.startsWith(date))
+                    .filter((e) => {
+                      const entryDate = new Date(e.createdAt);
+                      const entryLocalDate = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, '0')}-${String(entryDate.getDate()).padStart(2, '0')}`;
+                      return (!currentProjectId || e.projectId === currentProjectId) && entryLocalDate === date;
+                    })
                     .map((e) => e.id)
                 );
                 const hasFeedback = feedbackSnippets.some((s) => dateEntryIds.has(s.feedbackId));

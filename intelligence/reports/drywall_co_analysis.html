@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drywall/Framing - Change Order Root Cause Analysis</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #1a1a2e; margin-bottom: 5px; }
+        .timestamp { color: #666; font-size: 14px; margin-bottom: 30px; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-value { font-size: 36px; font-weight: bold; color: #1a1a2e; }
+        .stat-label { color: #666; font-size: 14px; }
+
+        .category-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .category-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px;
+        }
+        .category-title { font-size: 20px; margin-bottom: 5px; }
+        .category-desc { opacity: 0.8; font-size: 14px; }
+        .category-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .category-stats span { opacity: 0.9; }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        @media (max-width: 800px) {
+            .analysis-grid { grid-template-columns: 1fr; }
+        }
+
+        .analysis-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .analysis-box h4 {
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .cause-item, .fix-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 13px;
+        }
+        .cause-item:last-child, .fix-item:last-child { border-bottom: none; }
+        .cause-name { color: #333; }
+        .cause-count {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        .fix-count {
+            background: #27ae60;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .examples-section {
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        .examples-section h4 {
+            color: #1a1a2e;
+            margin-bottom: 15px;
+        }
+        .example-card {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        .example-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .example-rfi { font-weight: bold; color: #1a1a2e; }
+        .example-project { color: #666; font-size: 13px; }
+
+        .example-question {
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 10px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .example-resolution {
+            color: #1a5f2a;
+            font-size: 13px;
+            margin-bottom: 10px;
+            background: #f0fff4;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #c6f6d5;
+            white-space: pre-wrap;
+        }
+        .example-resolution strong {
+            color: #166534;
+        }
+
+        .example-causes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .cause-tag {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .fix-tag {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .key-insights {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .key-insights h2 { margin-bottom: 15px; }
+        .insight-item {
+            background: rgba(255,255,255,0.1);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .insight-item:last-child { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Drywall/Framing - Change Order Root Cause Analysis</h1>
+        <p class="timestamp">Generated: 2026-04-30 15:09:35</p>
+
+        <div class="summary-grid">
+            <div class="stat-card">
+                <div class="stat-value">315</div>
+                <div class="stat-label">Total Drywall COs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">7</div>
+                <div class="stat-label">Issue Categories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Projects Affected</div>
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Wall-to-Structure Alignment</div>
+                <div class="category-desc">Partition walls not aligning with slabs, curbs, columns, or existing structure</div>
+                <div class="category-stats">
+                    <span><strong>108</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Steel embeds for the balcony guardrail were set 1&#39; off of correct locations at the SW and SE balconies due to missed steel embeds at corners of Level 3 balcony curbs.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Design clarification required</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Congestion at boundary elements on the Gridline 12 shear wall prevents consistent drilling spacing for embeds.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Need for specific screw specifications for the attachment of the exterior Glu-Lam Columns</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">No finishes existing or called out in plans for storage room 02D8C</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Uncertainty regarding ceiling height, ceiling type, and interior finishes, leading to additional work and costs for clarification and implementation</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing truss above the wall clashes with the new HSS4X4 column as per post-demo investigations.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Per attached ASK/detail</span>
+                        <span class="fix-count">84</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">See response for detail</span>
+                        <span class="fix-count">13</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Additional work required</span>
+                        <span class="fix-count">10</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved as proposed</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Coordinate with other trades</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Relocate element</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-10.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 10 / ASK-06, RFI 10.1 Abbott Alameda 1420 HBP - Storage 02D8C Finish Clarification As per RFI 10, existing storage room 02D8C is to remain. There are no finishes existing or called out in plans. Please confirm: Ceiling height, ceiling type, and interior finishes.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu: SEE ATTACHED RESPONSE. 3/20/25 - SEE ATTACHED 10.1 R1 FOR REVISED RESPONSE.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">No finishes existing or called out in plans for storage room 02D8C</span>
+                        <span class="cause-tag">Impact: Uncertainty regarding ceiling height, ceiling type, and interior finishes, leading to additional work and costs for clarification and implemen...</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all finishes are detailed in design documents before project initiation</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-107</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 107 - Abbott Alameda 1420 HBP - Stair 1 HSS Column Clash with Existing Truss Clarification MAS Metals RFI 004 Attached Markup and Pictures 1/A4.1.1 and 2/S2.01 call out the new HSS4X4 colum to be conceal in the wall near GL5&amp;J. Per post-demo investigations, it was observed that there is an existing truss above this wall which will clash with the new HSS column. Please advise if it is acceptable to shift the column outside of the wall per sketch in red to avoid clashing. The new column would be wrapped in an encased gyp. column. Please confirm.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. Tye - See attached with ASK-24. Per comments on attached, no structural exceptions, architectural finish and HSS column concealment in ASK-24.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing truss above the wall clashes with the new HSS4X4 column as per post-demo investigations.</span>
+                        <span class="cause-tag">Impact: The clash prevents the installation of the new HSS column as designed, requiring a shift of the column outside of the wall.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough post-demolition investigations to identify existing structural elements before fina</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-21</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 21 - Abbott Alameda 1420 HBP - Flooring Removal in Existing Conference Room 02H6C Confirmation Sheet AD2.1.2 and Note D21 in sheet AD2.1.2 Existing Conference Room 02H6C is to become the new employee Breakroom which will be getting new LVT plank flooring. Note D21 is not shown in the demo plans to remove existing flooring at this location. Question: Please confirm if existing carpet is to be demolished in existing Cala Conf. Room 02H6C for an additional cost.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing carpet in Conference Room 02H6C is not indicated for removal in the demo plans.</span>
+                        <span class="cause-tag">Impact: Additional work and cost required to remove existing flooring before installing new LVT plank flooring.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all existing conditions are accurately reflected in demo plans during design phase.</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Rated Wall Assembly</div>
+                <div class="category-desc">Fire-rated and sound-rated assembly requirements</div>
+                <div class="category-stats">
+                    <span><strong>77</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing truss above the wall clashes with the new HSS4X4 column as per post-demo investigations.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: The clash prevents the installation of the new HSS column as designed, requiring a shift of the column outside of the wall.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Current drawings do not show any FRP or Epoxy type paint being installed around the mop sink as required by building code.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Lack of specified wall protection around the mop sink could lead to water damage and code compliance issues.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Fire Smoke Damper (FSD) locations are not called out on the Mechanical Drawings, and the east wall of FAA-02H4M near the elevator shaft appears to be fire-rated.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: New FSDs will be required for all duct penetrations through the fire-rated wall, leading to additional procurement costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">The door schedule calls for a PS Cherry door, while the existing doors in the construction area are Rift White Oak, creating a conflict.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: The discrepancy between the specified door type and the existing doors necessitated additional work to confirm the use of Rift White Oak and to create a custom stain that matches the existing custom color.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Per attached ASK/detail</span>
+                        <span class="fix-count">63</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">See response for detail</span>
+                        <span class="fix-count">9</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved as proposed</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Additional work required</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Relocate element</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Coordinate with other trades</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-107</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 107 - Abbott Alameda 1420 HBP - Stair 1 HSS Column Clash with Existing Truss Clarification MAS Metals RFI 004 Attached Markup and Pictures 1/A4.1.1 and 2/S2.01 call out the new HSS4X4 colum to be conceal in the wall near GL5&amp;J. Per post-demo investigations, it was observed that there is an existing truss above this wall which will clash with the new HSS column. Please advise if it is acceptable to shift the column outside of the wall per sketch in red to avoid clashing. The new column would be wrapped in an encased gyp. column. Please confirm.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. Tye - See attached with ASK-24. Per comments on attached, no structural exceptions, architectural finish and HSS column concealment in ASK-24.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing truss above the wall clashes with the new HSS4X4 column as per post-demo investigations.</span>
+                        <span class="cause-tag">Impact: The clash prevents the installation of the new HSS column as designed, requiring a shift of the column outside of the wall.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough post-demolition investigations to identify existing structural elements before fina</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-109</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 109 - Abbott Alameda 1420 HBP - Janitor&#39;s Room FRP Confirmation A2.1.2 Per building code, mop sinks typically have FRP installed at the adjacent walls. Current drawings do not show any FRP or Epoxy type paint being installed. Please confirm if DPR is to provide some type of paint or panel to protect the walls around the mop sink. If so, please provide material and product type.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. Tye, see attached RFP panel specification and location at 2nd Floor Janitors Mop Sink.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Current drawings do not show any FRP or Epoxy type paint being installed around the mop sink as required by building code.</span>
+                        <span class="cause-tag">Impact: Lack of specified wall protection around the mop sink could lead to water damage and code compliance issues.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all code-required details, such as wall protection around mop sinks, are included in the cons</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-2</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 2 - Abbott Alameda HBP - Fire Rated Walls and FSDs Confirmation Sheets M-1.2 and M-1.3 Attached Marked Up Picture Fire Smoke Damper (FSD) locations are not called out on the Mechanical Drawings. From field survey on 01/06/25, there are qty (3) FSDs on the wall plan north of OFFICE 2052. In conversations with DPR Superintendent Ross Miller, east wall of FAA-02H4M near elevator shaft seems to be fire-rated. Please confirm: a. If any parts of the East wall of FAA-02H4M are fire-rated -- new FSDs will be required for all duct penetrations through this wall. b. If yes to question (a), please confirm it is acceptable to proceed with the procurement of these new FSDs. Note that this has potential cost</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Fire Smoke Damper (FSD) locations are not called out on the Mechanical Drawings, and the east wall of FAA-02H4M near the elevator shaft appears to be ...</span>
+                        <span class="cause-tag">Impact: New FSDs will be required for all duct penetrations through the fire-rated wall, leading to additional procurement costs.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all fire-rated wall details and FSD locations are clearly indicated in the mechanical drawing</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">MEP Penetration Framing</div>
+                <div class="category-desc">Framing conflicts with MEP penetrations, access panels, and duct routing</div>
+                <div class="category-stats">
+                    <span><strong>73</strong> Change Orders</span>
+                    <span><strong>4</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Need for an access panel above the door at the inverter enclosure</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">No details showing the transition from the Eco-Grip to the trough/trench drains in the kitchen</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing duct work prevents the roof access door from opening a full 90 degrees.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Requires modification of the door swing to a right-hand reverse (RHR) to allow proper access.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">No elevation or layout provided for the wood veneer paneling installation as per detail 9/A9.6.0.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Lack of clarity on the extent and orientation of veneer installation leads to additional work and costs for determining installation requirements.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Framing/backing/blocking requirements for wood veneer panels at Stair 1 were unclear, leading to the conclusion that existing wall should be demoed and rebuilt.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Increased costs and additional work required to demo and rebuild the wall instead of following the original framing plan.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Per attached ASK/detail</span>
+                        <span class="fix-count">50</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Additional work required</span>
+                        <span class="fix-count">9</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">See response for detail</span>
+                        <span class="fix-count">8</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Relocate element</span>
+                        <span class="fix-count">6</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved as proposed</span>
+                        <span class="fix-count">4</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved - no exceptions</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-10.2</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 10.2 - Abbott Alameda 1420 HBP - Roof Access Door Swing Change and Framing Modification Confirmation Doors, Frames, and Hardware Submittal A2.1.2 Attached Pictures Roof Access door calls for LH swing, however the door will not be able to open a full 90 degrees due to the existing duct work. DPR proposes to modify the swing of the door into a RHR, which would have the door opening into the hallway. Additionally, existing framing does not match the door height called out and is too damaged to be reused, so added framing is required. Please confirm these modifications to the door and framing is acceptable.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi (FORGE - 10049724): Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing duct work prevents the roof access door from opening a full 90 degrees.</span>
+                        <span class="cause-tag">Impact: Requires modification of the door swing to a right-hand reverse (RHR) to allow proper access.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct a thorough review of existing MEP layouts during design phase to identify potential conflict</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-103</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 103 - Abbott Alameda 1420 HBP - Stair 1 Wood Veneer Clarifications Detail 9/A9.6.0 Sheet A7.1.0 No elevation or layout is provided for the wood veneer paneling called out in detail 9/A9.6.0. 1) Please provide elevation showing the extent of the veneer installation (i.e. full height or partial height installation). 2) Additionally, please provide a layout that should be followed (ie panels to be installed vertically or horizontally).</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): REFER TO ATTACH FOR COMMENTS. 10/30/25 - ASK-22 UPDATED. SUPERSEDING PREVIOUS VERSION. 11/17/25 EY: ASK-22 UPDATED, ISSUING ASK-22.2 SUPERSEDING PREVIOUS VERSIONS ISSUED PRIOR. ASK22.2 SUPERSEDES RFI #106 RESPONSE ISSUED ON 10/30/25.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">No elevation or layout provided for the wood veneer paneling installation as per detail 9/A9.6.0.</span>
+                        <span class="cause-tag">Impact: Lack of clarity on the extent and orientation of veneer installation leads to additional work and costs for determining installation requireme...</span>
+                        <span class="fix-tag">See response for detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all necessary details for finishes, including elevations and layouts, are included in the des</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-103.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 103.1 - Abbott Alameda 1420 HBP - Stair 1 Wood Veneer Panel Wall Framing Clarifications DPR submitted RFI 103 to clarify the design intent for the wood veneer panels that are to be installed at Stair 1. As a result, Tipping Engineers provided the response below for the framing / backing / blocking requirements at this wall. However, after analyzing the information provided, DPR concluded that it would be much cheaper and easier to demo the existing wall and build a new wall with 16GA studs. Per the meeting held on 11/04/2025 with Forge, Tipping, and DPR, please confirm it is acceptable to demo and re- build the existing wall adjacent to Stair 1. Please provide all structural and architectural details for the framing at this location.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): FORGE 11/11/25 EY: FORGE DOES NOT ANTICIPATE ANY ARCHITECTURAL CHANGES SUBJECT TO STRUCTURAL&#39;S REVISION.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Framing/backing/blocking requirements for wood veneer panels at Stair 1 were unclear, leading to the conclusion that existing wall should be demoed an...</span>
+                        <span class="cause-tag">Impact: Increased costs and additional work required to demo and rebuild the wall instead of following the original framing plan.</span>
+                        <span class="fix-tag">See response for detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Provide detailed framing and blocking requirements in the design documents to avoid ambiguity.</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Blocking/Backing Requirements</div>
+                <div class="category-desc">Blocking and backing for accessories, AV, casework</div>
+                <div class="category-stats">
+                    <span><strong>69</strong> Change Orders</span>
+                    <span><strong>5</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Curb was installed short of the slab depression, leaving a gap from the edge of the curb to the framing for the terracotta return wall.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing truss above the wall clashes with the new HSS4X4 column as per post-demo investigations.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: The clash prevents the installation of the new HSS column as designed, requiring a shift of the column outside of the wall.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Salvaged restroom accessories observed to have scratches and other imperfections</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Uncertainty about the usability of salvaged restroom accessories for reinstallation</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Elevator Vestibule Door 01D9C was changed from 7&#39;-0&quot; to 8&#39;-10 1/2&quot; height in permit revision drawings without communication to DPR.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Framing was installed for an 8&#39;-10&quot; door, but the ordered door and frame were for a 7&#39;-0&quot; door, leading to a need for adjustment.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Final installation locations for controls, security, and telecom panels in ER 245 were not coordinated at the time of wall finish installation.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Per attached ASK/detail</span>
+                        <span class="fix-count">59</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">See response for detail</span>
+                        <span class="fix-count">7</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved - no exceptions</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Additional work required</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved as proposed</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Coordinate with other trades</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-107</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 107 - Abbott Alameda 1420 HBP - Stair 1 HSS Column Clash with Existing Truss Clarification MAS Metals RFI 004 Attached Markup and Pictures 1/A4.1.1 and 2/S2.01 call out the new HSS4X4 colum to be conceal in the wall near GL5&amp;J. Per post-demo investigations, it was observed that there is an existing truss above this wall which will clash with the new HSS column. Please advise if it is acceptable to shift the column outside of the wall per sketch in red to avoid clashing. The new column would be wrapped in an encased gyp. column. Please confirm.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): M. Tye - See attached with ASK-24. Per comments on attached, no structural exceptions, architectural finish and HSS column concealment in ASK-24.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing truss above the wall clashes with the new HSS4X4 column as per post-demo investigations.</span>
+                        <span class="cause-tag">Impact: The clash prevents the installation of the new HSS column as designed, requiring a shift of the column outside of the wall.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough post-demolition investigations to identify existing structural elements before fina</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-23</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference Sheet AD2.1.2 Demolition Plan Key Notes D61 says to &quot;Remove and salvage for reinstallation&quot;. Salvaged Restroom accessories were observed to have scratches and other imperfections. Please confirm that these units are still to be reused for construction.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Salvaged restroom accessories observed to have scratches and other imperfections</span>
+                        <span class="cause-tag">Impact: Uncertainty about the usability of salvaged restroom accessories for reinstallation</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough inspection and documentation of salvaged materials prior to reinstallation</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-60.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 60.1 - Abbott Alameda 1420 HBP - Elevator Vestibule Door 01D9C Height Confirmation Sheet A0.1.0 (Dated 11/08/2024) Sheet A0.1.0 (Dated 03/06/2025) Elevator Vestibule Door 01D9C was originally called out to be 7&#39;-0&quot;. When the DFH submittal for this door was submitted, it was approved to be a 7&#39;-0&quot;. At some point during the permit revision drawings, the door was changed from 7&#39; to 8&#39;-10 1/2&quot; height door. This change was never clouded or communicated to DPR. Since this was not captured during submittal, the door frame and door got ordered to be 7&#39;-0&quot;. The framers installed framing for a 8-10&quot; door. In order to avoid delaying the project, please confirm DPR is to proceed with adjusting the framing to accept the 7&#39;-0&quot; door as originally approved.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi (FORGE - 10049724): Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Elevator Vestibule Door 01D9C was changed from 7&#39;-0&quot; to 8&#39;-10 1/2&quot; height in permit revision drawings without communication to DPR.</span>
+                        <span class="cause-tag">Impact: Framing was installed for an 8&#39;-10&quot; door, but the ordered door and frame were for a 7&#39;-0&quot; door, leading to a need for adjustment.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Implement a communication protocol for changes in permit revision drawings to ensure all parties are</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Layout/Dimensional Issues</div>
+                <div class="category-desc">Stud layout, spacing, gauge, and dimensional coordination</div>
+                <div class="category-stats">
+                    <span><strong>53</strong> Change Orders</span>
+                    <span><strong>4</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Congestion at boundary elements on the Gridline 12 shear wall prevents consistent drilling spacing for embeds.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing FEC needs to be relocated due to stair redesign and addition of fire sprinklers under the stairs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Requires installation of a new access panel and service light, which was not originally planned.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Low wall framing detail specified as metal stud framing instead of wood framing as initially assumed.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Requires additional work to change the framing material from wood to metal, leading to increased labor and material costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Unclear intent regarding the demolition of the existing ceiling plastic grid and light fixtures and the addition of a new 4-sided gypsum soffit</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Per attached ASK/detail</span>
+                        <span class="fix-count">49</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">See response for detail</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Additional work required</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved - no exceptions</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Relocate element</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-46</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 46 Abbott Alameda 1420 HBP - Added Bike Racks Clarification RFI 26.1 Abbott Alameda 1420 HBP - Chipping of Concrete Footings Confirmation R_1 During OAC call on 2/25, Abbott confirmed that the no parking area highlighted in RFI 46 is to get added Bike Racks. Please confirm the Spec, Dimensioned location, Quantities, and mounting details for proposed Bike racks.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi: Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Addition of bike racks in a no parking area as confirmed during OAC call</span>
+                        <span class="cause-tag">Impact: Requires specification, dimensioned location, quantities, and mounting details for bike racks</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Incorporate bike rack requirements in initial design and confirm with stakeholders during design pha</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-66</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 66 - Abbott Alameda 1420 HBP - FEC Relocation and Access Panel Confirmation A2.1.1 Attached Pictures Due to the stair redesign, the existing FEC will need to be relocated. Additionally, since fire sprinklers are being added under the stairs, a new access panel and service light will need to be installed. Q1: Please confirm it is acceptable to remove and relocate the existing FEC to the wall directly across the hallway at the location shown. Q2: Please confirm access panel and light fixture are to be provided. Please provide elevations and plan dimensions for access panel location and service light (and switch).</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): SEE ATTACHED.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing FEC needs to be relocated due to stair redesign and addition of fire sprinklers under the stairs.</span>
+                        <span class="cause-tag">Impact: Requires installation of a new access panel and service light, which was not originally planned.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough design reviews to identify potential conflicts with existing conditions before fina</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-70</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 70 - Abbott Alameda 1420 HBP - Low Wall Framing Confirmation Email Confirmation from SEOR Markup Sheets A7.00, A9.5.0, and S6.01 This is a confirming RFI to document that the low wall shown in detail 6/A9.5.0 is to be constructed out of metal stud framing and not wood framing. Per SEOR email, please confirm no exceptions. Note: Wood framed stud wall to stop underneath the stringer as shown in detail 6/S6.01. Metal Stud wall to be installed outside of sheathing shown.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): FORGE takes no exception, see attached for additional comments.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Low wall framing detail specified as metal stud framing instead of wood framing as initially assumed.</span>
+                        <span class="cause-tag">Impact: Requires additional work to change the framing material from wood to metal, leading to increased labor and material costs.</span>
+                        <span class="fix-tag">Approved - no exceptions</span>
+                        <span class="fix-tag">Additional work required</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure clear communication of framing material specifications in design documents and confirm with a</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Ceiling Height/Framing</div>
+                <div class="category-desc">Ceiling heights, framing for soffits, and RCP coordination</div>
+                <div class="category-stats">
+                    <span><strong>35</strong> Change Orders</span>
+                    <span><strong>4</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Congestion at boundary elements on the Gridline 12 shear wall prevents consistent drilling spacing for embeds.</span>
+                        <span class="cause-count">2</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">No finishes existing or called out in plans for storage room 02D8C</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Uncertainty regarding ceiling height, ceiling type, and interior finishes, leading to additional work and costs for clarification and implementation</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing door height is 8&#39;-10&quot; while new doors are specified to be 7&#39;-0&quot; tall, requiring adjustment to the header framing.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Requires additional framing work to accommodate the new door height, potentially delaying the project and increasing costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Elevator Vestibule Door 01D9C was changed from 7&#39;-0&quot; to 8&#39;-10 1/2&quot; height in permit revision drawings without communication to DPR.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Per attached ASK/detail</span>
+                        <span class="fix-count">30</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Additional work required</span>
+                        <span class="fix-count">4</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved - no exceptions</span>
+                        <span class="fix-count">3</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved as proposed</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">See response for detail</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Coordinate with other trades</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-10.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 10 / ASK-06, RFI 10.1 Abbott Alameda 1420 HBP - Storage 02D8C Finish Clarification As per RFI 10, existing storage room 02D8C is to remain. There are no finishes existing or called out in plans. Please confirm: Ceiling height, ceiling type, and interior finishes.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu: SEE ATTACHED RESPONSE. 3/20/25 - SEE ATTACHED 10.1 R1 FOR REVISED RESPONSE.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">No finishes existing or called out in plans for storage room 02D8C</span>
+                        <span class="cause-tag">Impact: Uncertainty regarding ceiling height, ceiling type, and interior finishes, leading to additional work and costs for clarification and implemen...</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure all finishes are detailed in design documents before project initiation</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-35.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 35.1 - Abbott Alameda 1420 HBP - Header Detail at (N) Stairs 2 Doors Clarification DFH Submittal - Door Schedule RFI 35 Response ASK-07 Markup Attached Pictures (N) Stair #2 Double Doors were added per RFI 35. New pair of doors are to be 7&#39;-0&quot; tall. Existing doors are 8&#39;-10&quot; tall. Details provided in ASK-07 only show door framing details. Question: Please provide header framing detail to bring the opening framing to the correct height.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): -EY 04/08/25 PROVIDE GYP HEADER AS NEEDED FOR DOOR FRAME.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing door height is 8&#39;-10&quot; while new doors are specified to be 7&#39;-0&quot; tall, requiring adjustment to the header framing.</span>
+                        <span class="cause-tag">Impact: Requires additional framing work to accommodate the new door height, potentially delaying the project and increasing costs.</span>
+                        <span class="fix-tag">Additional work required</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure complete door framing details are included in the initial design documents.</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-47</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 47 - Abbott Alameda 1420 HBP - Restrooms Existing Conditions Confirmations Attached Pictures with Markups Sheet A4.4.0 Drawing sheet A4.4.0 provides design intent for the 2nd floor restrooms. DPR was contracted to only provide new finishes in these restrooms. However, additional work needs to be completed due to the existing conditions of the framing. Question 1: Existing framing only goes to 8&#39; height. RCP calls for 9&#39; ceilings. Per OAC on 02/27/25, DPR to proceed with 9&#39; ceilings. Please confirm no exceptions. Question 2: Plumbing will need to be removed to install the new 3 5/8&quot; studs (@ 10&#39; tall for the 9&#39; ceilings) and re- installed after framing is complete. Per OAC on 02/27/25, DPR to with removal and re-install of plumbing due to new framing installation. Please confirm no exceptions. Question 3: Per OAC on 02/27/25, DPR to proceed with shifting of plumbing carriers plan north to accommodate the ADA stall layout. Please confirm no exceptions. Question 4: Concrete wall calls for paint. Imperfections will be very noticeable if the wall is only primed and painted. Per OAC on 02/27/25, DPR to proceed with adding hat channels and drywall at this location to create a finished surface. Furred wall will have a total thickness of 1-1/2&quot; off concrete wall. Please confirm no exceptions.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu: Work is approved with no exceptions, see attached for additional comments.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing framing only goes to 8&#39; height while RCP calls for 9&#39; ceilings.</span>
+                        <span class="cause-tag">Impact: Requires removal and re-installation of plumbing to accommodate new 10&#39; tall studs for the 9&#39; ceilings.</span>
+                        <span class="fix-tag">Approved - no exceptions</span>
+                        <span class="fix-tag">Approved as proposed</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Conduct thorough existing conditions survey prior to finalizing design and scope.</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-title">Door/Opening Framing</div>
+                <div class="category-desc">Headers, rough openings, and door height modifications</div>
+                <div class="category-stats">
+                    <span><strong>15</strong> Change Orders</span>
+                    <span><strong>3</strong> Projects</span>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="analysis-box">
+                    <h4>Root Causes</h4>
+
+                    <div class="cause-item">
+                        <span class="cause-name">The door schedule calls for a PS Cherry door, while the existing doors in the construction area are Rift White Oak, creating a conflict.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: The discrepancy between the specified door type and the existing doors necessitated additional work to confirm the use of Rift White Oak and to create a custom stain that matches the existing custom color.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Existing door height is 8&#39;-10&quot; while new doors are specified to be 7&#39;-0&quot; tall, requiring adjustment to the header framing.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Requires additional framing work to accommodate the new door height, potentially delaying the project and increasing costs.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Elevator Vestibule Door 01D9C was changed from 7&#39;-0&quot; to 8&#39;-10 1/2&quot; height in permit revision drawings without communication to DPR.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Framing was installed for an 8&#39;-10&quot; door, but the ordered door and frame were for a 7&#39;-0&quot; door, leading to a need for adjustment.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Discrepancies between phase 3 security drawings and current Architectural drawings regarding door hardware requirements for doors 224, 229, 271, and 272.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                    <div class="cause-item">
+                        <span class="cause-name">Impact: Potential modification of existing doors and updates to hardware schedules to support access control security deployment.</span>
+                        <span class="cause-count">1</span>
+                    </div>
+
+                </div>
+                <div class="analysis-box">
+                    <h4>Typical Resolutions</h4>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Per attached ASK/detail</span>
+                        <span class="fix-count">12</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">See response for detail</span>
+                        <span class="fix-count">2</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Approved as proposed</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                    <div class="fix-item">
+                        <span class="cause-name">Additional work required</span>
+                        <span class="fix-count">1</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <h4>Example RFIs (Full Text)</h4>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-28</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 28 - Abbott Alameda 1420 HBP - Wood Doors Finish Confirmation Submittal 081000-1 - Doors, Frames and Hardware Attached Pictures Per Forge/Abbott comment on DFH Submittal, new wood doors are to follow the called out existing doors as BOD. These doors are a Rift White Oak door. However, this is in conflict the existing doors surrounding the construction area and with the callout on the door schedule of the same submittal (4th page). The callout on the door schedule is stating a PS Cherry door. Additionally, existing BOD doors are stained in a custom color that does not match any stock options. There are schedule and cost</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Marieca Tye: 1. Rift White Oak per submittal and confirmed in OAC on 2/18/25 2. Confirmed to proceed with custom Stain See attached for full comments</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">The door schedule calls for a PS Cherry door, while the existing doors in the construction area are Rift White Oak, creating a conflict.</span>
+                        <span class="cause-tag">Impact: The discrepancy between the specified door type and the existing doors necessitated additional work to confirm the use of Rift White Oak and t...</span>
+                        <span class="fix-tag">Approved as proposed</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure thorough review of existing conditions against door schedule during design phase</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-35.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 35.1 - Abbott Alameda 1420 HBP - Header Detail at (N) Stairs 2 Doors Clarification DFH Submittal - Door Schedule RFI 35 Response ASK-07 Markup Attached Pictures (N) Stair #2 Double Doors were added per RFI 35. New pair of doors are to be 7&#39;-0&quot; tall. Existing doors are 8&#39;-10&quot; tall. Details provided in ASK-07 only show door framing details. Question: Please provide header framing detail to bring the opening framing to the correct height.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Elaine Yiu (FORGE - 10049724): -EY 04/08/25 PROVIDE GYP HEADER AS NEEDED FOR DOOR FRAME.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Existing door height is 8&#39;-10&quot; while new doors are specified to be 7&#39;-0&quot; tall, requiring adjustment to the header framing.</span>
+                        <span class="cause-tag">Impact: Requires additional framing work to accommodate the new door height, potentially delaying the project and increasing costs.</span>
+                        <span class="fix-tag">Additional work required</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Ensure complete door framing details are included in the initial design documents.</span>
+
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-rfi">RFI-60.1</span>
+                        <span class="example-project">Abbott Alameda Office TI</span>
+                    </div>
+                    <div class="example-question">Reference: RFI 60.1 - Abbott Alameda 1420 HBP - Elevator Vestibule Door 01D9C Height Confirmation Sheet A0.1.0 (Dated 11/08/2024) Sheet A0.1.0 (Dated 03/06/2025) Elevator Vestibule Door 01D9C was originally called out to be 7&#39;-0&quot;. When the DFH submittal for this door was submitted, it was approved to be a 7&#39;-0&quot;. At some point during the permit revision drawings, the door was changed from 7&#39; to 8&#39;-10 1/2&quot; height door. This change was never clouded or communicated to DPR. Since this was not captured during submittal, the door frame and door got ordered to be 7&#39;-0&quot;. The framers installed framing for a 8-10&quot; door. In order to avoid delaying the project, please confirm DPR is to proceed with adjusting the framing to accept the 7&#39;-0&quot; door as originally approved.</div>
+                    <div class="example-resolution"><strong>Resolution:</strong> Ava Ghiassi (FORGE - 10049724): Please see attached PDF.</div>
+                    <div class="example-causes">
+                        <span class="cause-tag">Elevator Vestibule Door 01D9C was changed from 7&#39;-0&quot; to 8&#39;-10 1/2&quot; height in permit revision drawings without communication to DPR.</span>
+                        <span class="cause-tag">Impact: Framing was installed for an 8&#39;-10&quot; door, but the ordered door and frame were for a 7&#39;-0&quot; door, leading to a need for adjustment.</span>
+                        <span class="fix-tag">Per attached ASK/detail</span>
+                        <span class="fix-tag" style="background:#fef3c7;color:#92400e;">Prevention: Implement a communication protocol for changes in permit revision drawings to ensure all parties are</span>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="key-insights">
+            <h2>Top Root Causes Across All Categories</h2>
+
+            <div class="insight-item">
+                <strong>#1:</strong> Congestion at boundary elements on the Gridline 12 shear wall prevents consistent drilling spacing for embeds. <em>(6 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#2:</strong> Vehicular cable termination embed was missed prior to pouring the column on the ramp side along gridline GC on column G8/GC. <em>(5 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#3:</strong> Impact: Requires additional work to install a post-installed termination embed, which incurs extra costs and labor. <em>(5 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#4:</strong> The (3) light fixtures along GL7 do not align with the heat lamps, and (2) lights along the south side of the Servery need to be adjusted north ~1” to provide more space from the soffit control joint. <em>(5 occurrences)</em>
+            </div>
+
+            <div class="insight-item">
+                <strong>#5:</strong> Impact: The misalignment of light fixtures and heat lamps prevents proper lighting configuration and creates a conflict with the soffit control joint. <em>(5 occurrences)</em>
+            </div>
+
+            <div class="insight-item" style="margin-top: 20px;">
+                <strong>Prevention Strategy:</strong> For TI/renovation projects, survey existing framing heights,
+                concrete surface conditions, and MEP routing BEFORE drywall mobilization. Request blocking layouts early.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
