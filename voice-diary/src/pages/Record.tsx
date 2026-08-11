@@ -343,14 +343,18 @@ export default function Record() {
 
           updateVoiceNote(noteId, noteUpdates);
           
-          // Save to backend for admin visibility (includes all snippets)
+          // Save to backend for cross-device sync (include IDs to prevent duplicates)
+          const allSnippets = useVoiceDiaryStore.getState().categorizedSnippets;
+          const noteSnippets = allSnippets.filter(s => s.voiceNoteId === noteId);
           api.saveEntry({
+            id: noteId, // Use local note ID to prevent duplicates
             projectId: currentProjectId || undefined,
             projectName: currentProject?.name,
             transcriptText: cleanedText,
             cleanedText: processResult.cleanedTranscript || cleanedText,
             category: processResult.newSnippets?.[0]?.category,
-            snippets: processResult.newSnippets?.map(s => ({
+            snippets: noteSnippets.map(s => ({
+              id: s.id, // Include snippet ID
               category: s.category,
               content: s.content,
               scope: s.scope,
@@ -361,28 +365,30 @@ export default function Record() {
           addNotification('info', snippetCount > 0 ? `Added ${snippetCount} items` : 'Note saved');
         } else {
           updateVoiceNote(noteId, { status: 'complete' });
-          
+
           // Save to backend even without AI processing
           api.saveEntry({
+            id: noteId,
             projectId: currentProjectId || undefined,
             projectName: currentProject?.name,
             transcriptText: cleanedText,
             cleanedText: cleanedText,
           });
-          
+
           addNotification('success', 'Note saved');
         }
       } catch (apiError: any) {
         updateVoiceNote(noteId, { status: 'complete' });
-        
+
         // Save to backend even if AI fails
         api.saveEntry({
+          id: noteId,
           projectId: currentProjectId || undefined,
           projectName: currentProject?.name,
           transcriptText: cleanedText,
           cleanedText: cleanedText,
         });
-        
+
         addNotification('info', 'Note saved (categorization unavailable)');
       }
     } catch (err: any) {

@@ -258,12 +258,13 @@ class ApiClient {
   // ============================================
 
   async saveEntry(data: {
+    id?: string; // Local note ID to prevent duplicates across devices
     projectId?: string;
     projectName?: string;
     transcriptText: string;
     cleanedText?: string;
     category?: string;
-    snippets?: Array<{ category: string; content: string; scope?: string }>;
+    snippets?: Array<{ id?: string; category: string; content: string; scope?: string }>;
   }): Promise<{ success: boolean; id?: string; snippetCount?: number }> {
     try {
       const response = await this.client.post('/voice-diary/entry', data);

@@ -112,17 +112,25 @@ const voiceDiaryController = {
 
   async saveEntry(req, res, next) {
     try {
-      const { projectId, projectName, transcriptText, cleanedText, category, audioUrl, audioDuration, snippets } = req.body;
+      const { id, projectId, projectName, transcriptText, cleanedText, category, audioUrl, audioDuration, snippets } = req.body;
       const userId = req.user && req.user.id;
       const userName = req.user && req.user.name;
       if (!transcriptText) {
         return res.status(400).json({ error: 'Validation Error', message: 'transcriptText is required' });
       }
-      console.log('[voice-diary] Saving entry for user:', userName || userId);
+      console.log('[voice-diary] Saving entry for user:', userName || userId, 'id:', id || 'new');
 
-      // Create entry with snippets in a transaction
-      const entry = await prisma.voiceDiaryEntry.create({
-        data: {
+      // Use upsert to prevent duplicates when syncing across devices
+      const entry = await prisma.voiceDiaryEntry.upsert({
+        where: { id: id || 'non-existent-id' },
+        update: {
+          // Update existing entry (in case content changed)
+          transcriptText,
+          cleanedText,
+          category,
+        },
+        create: {
+          id: id || undefined, // Use provided ID or let Prisma generate
           userId,
           userName,
           projectId,
@@ -132,20 +140,39 @@ const voiceDiaryController = {
           category,
           audioUrl,
           audioDuration,
-          // Create snippets if provided
-          snippets: snippets && snippets.length > 0 ? {
-            create: snippets.map(s => ({
-              category: s.category,
-              content: s.content,
-              scope: s.scope || null,
-            })),
-          } : undefined,
         },
         include: { snippets: true },
       });
 
-      console.log('[voice-diary] Entry saved with', entry.snippets?.length || 0, 'snippets');
-      res.json({ success: true, id: entry.id, snippetCount: entry.snippets?.length || 0 });
+      // Handle snippets separately with upsert
+      if (snippets && snippets.length > 0) {
+        for (const s of snippets) {
+          await prisma.voiceDiarySnippet.upsert({
+            where: { id: s.id || 'non-existent-id' },
+            update: {
+              category: s.category,
+              content: s.content,
+              scope: s.scope || null,
+            },
+            create: {
+              id: s.id || undefined,
+              entryId: entry.id,
+              category: s.category,
+              content: s.content,
+              scope: s.scope || null,
+            },
+          });
+        }
+      }
+
+      // Fetch updated entry with snippets
+      const updatedEntry = await prisma.voiceDiaryEntry.findUnique({
+        where: { id: entry.id },
+        include: { snippets: true },
+      });
+
+      console.log('[voice-diary] Entry saved with', updatedEntry?.snippets?.length || 0, 'snippets');
+      res.json({ success: true, id: entry.id, snippetCount: updatedEntry?.snippets?.length || 0 });
     } catch (error) {
       console.error('[voice-diary] Entry save error:', error);
       next(error);
