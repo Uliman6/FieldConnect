@@ -340,13 +340,18 @@ export default function Record() {
 
           updateVoiceNote(noteId, noteUpdates);
           
-          // Save to backend for admin visibility
+          // Save to backend for admin visibility (includes all snippets)
           api.saveEntry({
             projectId: currentProjectId || undefined,
             projectName: currentProject?.name,
             transcriptText: cleanedText,
             cleanedText: processResult.cleanedTranscript || cleanedText,
             category: processResult.newSnippets?.[0]?.category,
+            snippets: processResult.newSnippets?.map(s => ({
+              category: s.category,
+              content: s.content,
+              scope: s.scope,
+            })),
           });
           
           const snippetCount = processResult.newSnippets?.length || 0;

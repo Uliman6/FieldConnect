@@ -112,17 +112,40 @@ const voiceDiaryController = {
 
   async saveEntry(req, res, next) {
     try {
-      const { projectId, projectName, transcriptText, cleanedText, category, audioUrl, audioDuration } = req.body;
+      const { projectId, projectName, transcriptText, cleanedText, category, audioUrl, audioDuration, snippets } = req.body;
       const userId = req.user && req.user.id;
       const userName = req.user && req.user.name;
       if (!transcriptText) {
         return res.status(400).json({ error: 'Validation Error', message: 'transcriptText is required' });
       }
       console.log('[voice-diary] Saving entry for user:', userName || userId);
+
+      // Create entry with snippets in a transaction
       const entry = await prisma.voiceDiaryEntry.create({
-        data: { userId, userName, projectId, projectName, transcriptText, cleanedText, category, audioUrl, audioDuration },
+        data: {
+          userId,
+          userName,
+          projectId,
+          projectName,
+          transcriptText,
+          cleanedText,
+          category,
+          audioUrl,
+          audioDuration,
+          // Create snippets if provided
+          snippets: snippets && snippets.length > 0 ? {
+            create: snippets.map(s => ({
+              category: s.category,
+              content: s.content,
+              scope: s.scope || null,
+            })),
+          } : undefined,
+        },
+        include: { snippets: true },
       });
-      res.json({ success: true, id: entry.id });
+
+      console.log('[voice-diary] Entry saved with', entry.snippets?.length || 0, 'snippets');
+      res.json({ success: true, id: entry.id, snippetCount: entry.snippets?.length || 0 });
     } catch (error) {
       console.error('[voice-diary] Entry save error:', error);
       next(error);
@@ -150,7 +173,11 @@ const voiceDiaryController = {
   async getAllEntries(req, res, next) {
     try {
       console.log('[voice-diary] Admin fetching all entries');
-      const entries = await prisma.voiceDiaryEntry.findMany({ orderBy: { createdAt: 'desc' }, take: 100 });
+      const entries = await prisma.voiceDiaryEntry.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        include: { snippets: true },
+      });
       const transformedEntries = entries.map(e => ({
         id: e.id,
         userId: e.userId,
@@ -158,6 +185,12 @@ const voiceDiaryController = {
         projectName: e.projectName,
         transcriptText: e.transcriptText,
         createdAt: e.createdAt.toISOString(),
+        snippets: e.snippets.map(s => ({
+          id: s.id,
+          category: s.category,
+          content: s.content,
+          scope: s.scope,
+        })),
       }));
       res.json(transformedEntries);
     } catch (error) {

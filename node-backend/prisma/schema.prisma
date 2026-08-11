@@ -1219,9 +1219,30 @@ model VoiceDiaryEntry {
   audioUrl       String?   @map("audio_url")
   audioDuration  Int?      @map("audio_duration") // seconds
 
+  // Related snippets
+  snippets       VoiceDiarySnippet[]
+
   @@index([userId])
   @@index([projectId])
   @@index([category])
   @@index([createdAt])
   @@map("voice_diary_entries")
+}
+
+model VoiceDiarySnippet {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Link to parent entry
+  entryId   String   @map("entry_id")
+  entry     VoiceDiaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  // Snippet content
+  category  String
+  content   String   @db.Text
+  scope     String?
+
+  @@index([entryId])
+  @@index([category])
+  @@map("voice_diary_snippets")
 }

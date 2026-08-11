@@ -263,7 +263,8 @@ class ApiClient {
     transcriptText: string;
     cleanedText?: string;
     category?: string;
-  }): Promise<{ success: boolean; id?: string }> {
+    snippets?: Array<{ category: string; content: string; scope?: string }>;
+  }): Promise<{ success: boolean; id?: string; snippetCount?: number }> {
     try {
       const response = await this.client.post('/voice-diary/entry', data);
       return response.data;

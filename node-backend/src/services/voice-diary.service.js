@@ -272,18 +272,107 @@ IMPORTANT:
     // Validate, normalize categories, include scope, and clean content
     return items
       .filter(item => item.category && item.content)
-      .map(item => ({
-        category: normalizeCategory(item.category),
-        scope: item.scope || 'General',
-        // Apply additional cleanup in case AI didn't fully follow instructions
-        content: cleanTextProfessional(item.content),
-      }))
+      .map(item => {
+        const category = normalizeCategory(item.category);
+        let content = cleanTextProfessional(item.content);
+
+        // Make follow-up items actionable standalone sentences
+        if (category === 'Follow-up Items') {
+          content = makeFollowUpActionable(content);
+        }
+
+        return {
+          category,
+          scope: item.scope || 'General',
+          content,
+        };
+      })
       .filter(item => VOICE_DIARY_CATEGORIES.includes(item.category) && item.content.length > 5);
 
   } catch (error) {
     console.error('[voice-diary] Categorization error:', error);
     return basicCategorization(transcript);
   }
+}
+
+/**
+ * Make follow-up items into standalone actionable sentences
+ * Converts passive statements into action items
+ */
+function makeFollowUpActionable(content) {
+  if (!content) return content;
+
+  let actionable = content.trim();
+
+  // Already starts with an action verb - keep as is (expanded list)
+  if (/^(follow up|coordinate|confirm|verify|check|call|contact|schedule|order|get|review|send|submit|arrange|ensure|update|notify|request|finalize|address|conduct|prepare|complete|resolve|investigate|discuss|meet|obtain|secure|track|monitor|assess|inspect|test|approve|process|handle|manage|organize|set up|establish|implement|create|assign|dispatch|arrange|book|reserve)\b/i.test(actionable)) {
+    // Capitalize first letter
+    return actionable.charAt(0).toUpperCase() + actionable.slice(1);
+  }
+
+  // "[Person/thing] is available [for] [time]" → "Confirm [person] availability for [time]"
+  const availableMatch = actionable.match(/^(\w+(?:\s+\w+)?)\s+is\s+available\s+(?:for\s+)?(.+)/i);
+  if (availableMatch) {
+    return `Confirm ${availableMatch[1]} availability for ${availableMatch[2]}`;
+  }
+
+  // "[Things] are ready/done/complete" → "Verify [things] are ready"
+  const areReadyMatch = actionable.match(/^(.+)\s+are\s+(ready|done|complete|finished|prepared|available)/i);
+  if (areReadyMatch) {
+    let subject = areReadyMatch[1];
+    if (/^the\s/i.test(subject)) {
+      subject = 'the' + subject.slice(3);
+    }
+    return `Verify ${subject} are ${areReadyMatch[2]}`;
+  }
+
+  // "[Person/thing] is ready/done/complete" → "Verify [thing] is ready"
+  const readyMatch = actionable.match(/^(.+)\s+is\s+(ready|done|complete|finished|prepared|needed)/i);
+  if (readyMatch) {
+    // Lowercase "the" if it's the first word
+    let subject = readyMatch[1];
+    if (/^the\s/i.test(subject)) {
+      subject = 'the' + subject.slice(3);
+    }
+    return `Verify ${subject} is ${readyMatch[2]}`;
+  }
+
+  // "[Person] can come/work [time]" → "Confirm [person] for [time]"
+  const canMatch = actionable.match(/^(\w+(?:\s+\w+)?)\s+can\s+(come|work|be there|arrive)\s+(.+)/i);
+  if (canMatch) {
+    return `Confirm ${canMatch[1]} for ${canMatch[3]}`;
+  }
+
+  // "the [thing]" at start → "Review the [thing]"
+  if (/^the\s+/i.test(actionable)) {
+    // Ensure lowercase "the"
+    return `Review the${actionable.slice(3)}`;
+  }
+
+  // "[Something] about [topic]" → "Follow up on [topic]"
+  const aboutMatch = actionable.match(/^(.+)\s+about\s+(.+)/i);
+  if (aboutMatch && aboutMatch[1].split(' ').length <= 3) {
+    return `Follow up on ${aboutMatch[2]}`;
+  }
+
+  // "with [person/company]" at start → "Coordinate with [person]"
+  if (/^with\s+/i.test(actionable)) {
+    return `Coordinate ${actionable}`;
+  }
+
+  // Generic: if it doesn't start with a verb, add "Ensure"
+  const startsWithNoun = /^[A-Z]?[a-z]+\s+(is|was|has|had|will|would|should|needs?|requires?)/i.test(actionable);
+  if (startsWithNoun) {
+    return `Ensure ${actionable.charAt(0).toLowerCase()}${actionable.slice(1)}`;
+  }
+
+  // If short and doesn't look actionable, prefix with action
+  if (actionable.split(' ').length <= 4 && !/^[A-Z]/.test(actionable)) {
+    return `Follow up on ${actionable}`;
+  }
+
+  // Capitalize first letter
+  return actionable.charAt(0).toUpperCase() + actionable.slice(1);
 }
 
 /**
@@ -432,7 +521,13 @@ function basicCategorization(transcript) {
     // Add result if category found
     if (category) {
       // Truncate to reasonable length
-      const content = cleaned.length > 100 ? cleaned.substring(0, 97) + '...' : cleaned;
+      let content = cleaned.length > 100 ? cleaned.substring(0, 97) + '...' : cleaned;
+
+      // Make follow-up items actionable standalone sentences
+      if (category === 'Follow-up Items') {
+        content = makeFollowUpActionable(content);
+      }
+
       results.push({ category, scope, content });
     }
   }
