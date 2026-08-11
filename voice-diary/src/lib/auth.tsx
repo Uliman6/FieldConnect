@@ -15,17 +15,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Syncs entries from backend to local store (for cross-device sync)
+// Syncs entries and summaries from backend to local store (for cross-device sync)
 async function syncEntriesFromBackend() {
   try {
-    console.log('[auth] Syncing entries from backend...');
-    const result = await api.getMyEntries();
-    if (result.success && result.entries) {
-      useVoiceDiaryStore.getState().syncFromBackend(result.entries);
+    console.log('[auth] Syncing from backend...');
+
+    // Fetch entries and summaries in parallel
+    const [entriesResult, summariesResult] = await Promise.all([
+      api.getMyEntries(),
+      api.getMySummaries(),
+    ]);
+
+    const entries = entriesResult.success ? entriesResult.entries : undefined;
+    const summaries = summariesResult.success ? summariesResult.summaries : undefined;
+
+    if (entries || summaries) {
+      useVoiceDiaryStore.getState().syncFromBackend(entries || [], summaries);
       console.log('[auth] Sync complete');
     }
   } catch (err) {
-    console.error('[auth] Failed to sync entries:', err);
+    console.error('[auth] Failed to sync:', err);
   }
 }
 

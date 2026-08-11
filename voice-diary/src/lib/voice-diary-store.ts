@@ -10,6 +10,7 @@ import type {
   Project,
 } from './types';
 import { VOICE_DIARY_CATEGORIES } from './types';
+import { api } from './api';
 
 interface VoiceDiaryStore {
   // State
@@ -79,6 +80,15 @@ interface VoiceDiaryStore {
       scope?: string;
       createdAt: string;
     }>;
+  }>, summaries?: Array<{
+    id: string;
+    date: string;
+    projectId: string;
+    userId: string;
+    summary: string;
+    voiceNoteCount: number;
+    hasMinimumInfo: boolean;
+    lastUpdatedAt: string;
   }>) => void;
 
   // Utilities
@@ -293,42 +303,43 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
 
       // Summary
       updateDailySummary: (date, projectId, summary, hasMinimumInfo, userId) => {
-        set((state) => {
-          const existing = state.dailySummaries.find(
-            (s) => s.date === date && s.projectId === projectId && s.userId === userId
-          );
+        const state = get();
+        const existing = state.dailySummaries.find(
+          (s) => s.date === date && s.projectId === projectId && s.userId === userId
+        );
 
-          const voiceNoteCount = state.voiceNotes.filter((n) => {
-            // Convert createdAt (UTC ISO string) to local date for comparison
-            const noteDate = new Date(n.createdAt);
-            const noteLocalDate = `${noteDate.getFullYear()}-${String(noteDate.getMonth() + 1).padStart(2, '0')}-${String(noteDate.getDate()).padStart(2, '0')}`;
-            const matchesDate = noteLocalDate === date;
-            const matchesProject = n.projectId === projectId;
-            const matchesUser = userId ? n.userId === userId : true;
-            return matchesDate && matchesProject && matchesUser;
-          }).length;
+        const voiceNoteCount = state.voiceNotes.filter((n) => {
+          // Convert createdAt (UTC ISO string) to local date for comparison
+          const noteDate = new Date(n.createdAt);
+          const noteLocalDate = `${noteDate.getFullYear()}-${String(noteDate.getMonth() + 1).padStart(2, '0')}-${String(noteDate.getDate()).padStart(2, '0')}`;
+          const matchesDate = noteLocalDate === date;
+          const matchesProject = n.projectId === projectId;
+          const matchesUser = userId ? n.userId === userId : true;
+          return matchesDate && matchesProject && matchesUser;
+        }).length;
 
-          if (existing) {
-            return {
-              dailySummaries: state.dailySummaries.map((s) =>
-                s.id === existing.id
-                  ? {
-                      ...s,
-                      summary,
-                      hasMinimumInfo,
-                      lastUpdatedAt: new Date().toISOString(),
-                      voiceNoteCount,
-                    }
-                  : s
-              ),
-            };
-          }
+        const summaryId = existing?.id || generateId();
 
-          return {
+        if (existing) {
+          set({
+            dailySummaries: state.dailySummaries.map((s) =>
+              s.id === existing.id
+                ? {
+                    ...s,
+                    summary,
+                    hasMinimumInfo,
+                    lastUpdatedAt: new Date().toISOString(),
+                    voiceNoteCount,
+                  }
+                : s
+            ),
+          });
+        } else {
+          set({
             dailySummaries: [
               ...state.dailySummaries,
               {
-                id: generateId(),
+                id: summaryId,
                 date,
                 projectId,
                 userId,
@@ -338,7 +349,17 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
                 hasMinimumInfo,
               },
             ],
-          };
+          });
+        }
+
+        // Save to backend for cross-device sync
+        api.saveSummary({
+          id: summaryId,
+          date,
+          projectId,
+          summary,
+          voiceNoteCount,
+          hasMinimumInfo,
         });
       },
 
@@ -484,64 +505,88 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
         set({ currentUserId: userId });
       },
 
-      // Sync entries from backend (merge with local, avoiding duplicates)
-      syncFromBackend: (entries) => {
-        if (!entries || entries.length === 0) return;
-
+      // Sync entries and summaries from backend (merge with local, avoiding duplicates)
+      syncFromBackend: (entries, summaries) => {
         set((state) => {
           const existingNoteIds = new Set(state.voiceNotes.map(n => n.id));
           const existingSnippetIds = new Set(state.categorizedSnippets.map(s => s.id));
+          const existingSummaryKeys = new Set(
+            state.dailySummaries.map(s => `${s.date}-${s.projectId}-${s.userId}`)
+          );
 
           // Create voice notes from backend entries (skip if already exists locally)
           const newNotes: VoiceNote[] = [];
           const newSnippets: CategorizedSnippet[] = [];
+          const newSummaries: DailySummary[] = [];
 
-          for (const entry of entries) {
-            // Skip if we already have this note locally
-            if (existingNoteIds.has(entry.id)) continue;
+          if (entries && entries.length > 0) {
+            for (const entry of entries) {
+              // Skip if we already have this note locally
+              if (existingNoteIds.has(entry.id)) continue;
 
-            // Create a voice note from the entry
-            const note: VoiceNote = {
-              id: entry.id,
-              projectId: entry.projectId,
-              userId: state.currentUserId || undefined,
-              audioUri: '', // No audio URL from backend sync
-              title: null,
-              transcriptText: entry.transcriptText,
-              cleanedTranscript: entry.cleanedText || null,
-              status: 'complete',
-              createdAt: entry.createdAt,
-              updatedAt: entry.createdAt,
-              duration: 0,
-              version: 1,
-            };
-            newNotes.push(note);
-
-            // Create snippets from the entry
-            for (const snippet of entry.snippets) {
-              if (existingSnippetIds.has(snippet.id)) continue;
-
-              const newSnippet: CategorizedSnippet = {
-                id: snippet.id,
-                voiceNoteId: entry.id,
-                category: snippet.category as VoiceDiaryCategory,
-                content: snippet.content,
-                scope: snippet.scope,
-                createdAt: snippet.createdAt,
+              // Create a voice note from the entry
+              const note: VoiceNote = {
+                id: entry.id,
+                projectId: entry.projectId,
+                userId: state.currentUserId || undefined,
+                audioUri: '', // No audio URL from backend sync
+                title: null,
+                transcriptText: entry.transcriptText,
+                cleanedTranscript: entry.cleanedText || null,
+                status: 'complete',
+                createdAt: entry.createdAt,
+                updatedAt: entry.createdAt,
+                duration: 0,
+                version: 1,
               };
-              newSnippets.push(newSnippet);
+              newNotes.push(note);
+
+              // Create snippets from the entry
+              for (const snippet of entry.snippets) {
+                if (existingSnippetIds.has(snippet.id)) continue;
+
+                const newSnippet: CategorizedSnippet = {
+                  id: snippet.id,
+                  voiceNoteId: entry.id,
+                  category: snippet.category as VoiceDiaryCategory,
+                  content: snippet.content,
+                  scope: snippet.scope,
+                  createdAt: snippet.createdAt,
+                };
+                newSnippets.push(newSnippet);
+              }
             }
           }
 
-          if (newNotes.length === 0 && newSnippets.length === 0) {
+          // Sync summaries
+          if (summaries && summaries.length > 0) {
+            for (const summary of summaries) {
+              const key = `${summary.date}-${summary.projectId}-${summary.userId}`;
+              if (existingSummaryKeys.has(key)) continue;
+
+              newSummaries.push({
+                id: summary.id,
+                date: summary.date,
+                projectId: summary.projectId,
+                userId: summary.userId,
+                summary: summary.summary,
+                voiceNoteCount: summary.voiceNoteCount,
+                hasMinimumInfo: summary.hasMinimumInfo,
+                lastUpdatedAt: summary.lastUpdatedAt,
+              });
+            }
+          }
+
+          if (newNotes.length === 0 && newSnippets.length === 0 && newSummaries.length === 0) {
             return state; // No changes
           }
 
-          console.log('[voice-diary] Synced', newNotes.length, 'notes and', newSnippets.length, 'snippets from backend');
+          console.log('[voice-diary] Synced', newNotes.length, 'notes,', newSnippets.length, 'snippets, and', newSummaries.length, 'summaries from backend');
 
           return {
             voiceNotes: [...newNotes, ...state.voiceNotes],
             categorizedSnippets: [...newSnippets, ...state.categorizedSnippets],
+            dailySummaries: [...newSummaries, ...state.dailySummaries],
           };
         });
       },

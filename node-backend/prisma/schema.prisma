@@ -1246,3 +1246,25 @@ model VoiceDiarySnippet {
   @@index([category])
   @@map("voice_diary_snippets")
 }
+
+model VoiceDiarySummary {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Unique key: date + project + user
+  date           String
+  projectId      String   @map("project_id")
+  userId         String   @map("user_id")
+
+  // Summary content
+  summary        String   @db.Text
+  voiceNoteCount Int      @map("voice_note_count")
+  hasMinimumInfo Boolean  @default(false) @map("has_minimum_info")
+
+  @@unique([date, projectId, userId])
+  @@index([userId])
+  @@index([projectId])
+  @@index([date])
+  @@map("voice_diary_summaries")
+}

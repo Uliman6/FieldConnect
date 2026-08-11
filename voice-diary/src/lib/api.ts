@@ -276,6 +276,48 @@ class ApiClient {
     }
   }
 
+  // Save a daily summary to backend
+  async saveSummary(data: {
+    id?: string;
+    date: string;
+    projectId: string;
+    summary: string;
+    voiceNoteCount: number;
+    hasMinimumInfo: boolean;
+  }): Promise<{ success: boolean; id?: string }> {
+    try {
+      const response = await this.client.post('/voice-diary/summary', data);
+      return response.data;
+    } catch (err) {
+      console.error('[api] Failed to save summary to backend:', err);
+      return { success: false };
+    }
+  }
+
+  // Fetch summaries from backend for syncing
+  async getMySummaries(projectId?: string): Promise<{
+    success: boolean;
+    summaries?: Array<{
+      id: string;
+      date: string;
+      projectId: string;
+      userId: string;
+      summary: string;
+      voiceNoteCount: number;
+      hasMinimumInfo: boolean;
+      lastUpdatedAt: string;
+    }>;
+  }> {
+    try {
+      const params = projectId ? { projectId } : {};
+      const response = await this.client.get('/voice-diary/summaries', { params });
+      return response.data;
+    } catch (err) {
+      console.error('[api] Failed to fetch summaries from backend:', err);
+      return { success: false };
+    }
+  }
+
   // Fetch entries from backend for syncing across devices
   async getMyEntries(projectId?: string): Promise<{
     success: boolean;

@@ -276,6 +276,89 @@ const voiceDiaryController = {
     }
   },
 
+  // Save or update a daily summary
+  async saveSummary(req, res, next) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { id, date, projectId, summary, voiceNoteCount, hasMinimumInfo } = req.body;
+      if (!date || !projectId || !summary) {
+        return res.status(400).json({ error: 'Validation Error', message: 'date, projectId, and summary are required' });
+      }
+
+      console.log('[voice-diary] Saving summary for user:', userId, 'date:', date, 'project:', projectId);
+
+      const savedSummary = await prisma.voiceDiarySummary.upsert({
+        where: {
+          date_projectId_userId: { date, projectId, userId },
+        },
+        update: {
+          summary,
+          voiceNoteCount: voiceNoteCount || 0,
+          hasMinimumInfo: hasMinimumInfo || false,
+        },
+        create: {
+          id: id || undefined,
+          date,
+          projectId,
+          userId,
+          summary,
+          voiceNoteCount: voiceNoteCount || 0,
+          hasMinimumInfo: hasMinimumInfo || false,
+        },
+      });
+
+      res.json({ success: true, id: savedSummary.id });
+    } catch (error) {
+      console.error('[voice-diary] Save summary error:', error);
+      next(error);
+    }
+  },
+
+  // Get summaries for the current user
+  async getMySummaries(req, res, next) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { projectId } = req.query;
+      console.log('[voice-diary] Fetching summaries for user:', userId, 'project:', projectId);
+
+      const where = { userId };
+      if (projectId) {
+        where.projectId = projectId;
+      }
+
+      const summaries = await prisma.voiceDiarySummary.findMany({
+        where,
+        orderBy: { date: 'desc' },
+        take: 100,
+      });
+
+      const transformedSummaries = summaries.map(s => ({
+        id: s.id,
+        date: s.date,
+        projectId: s.projectId,
+        userId: s.userId,
+        summary: s.summary,
+        voiceNoteCount: s.voiceNoteCount,
+        hasMinimumInfo: s.hasMinimumInfo,
+        lastUpdatedAt: s.updatedAt.toISOString(),
+      }));
+
+      console.log('[voice-diary] Returning', transformedSummaries.length, 'summaries');
+      res.json({ success: true, summaries: transformedSummaries });
+    } catch (error) {
+      console.error('[voice-diary] Get summaries error:', error);
+      next(error);
+    }
+  },
+
   // Process tool feedback
   async processToolFeedback(req, res, next) {
     try {
