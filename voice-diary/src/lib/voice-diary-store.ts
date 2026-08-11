@@ -64,6 +64,23 @@ interface VoiceDiaryStore {
   setCurrentProject: (projectId: string | null) => void;
   setCurrentUser: (userId: string | null) => void;
 
+  // Sync from backend
+  syncFromBackend: (entries: Array<{
+    id: string;
+    projectId: string;
+    projectName?: string;
+    transcriptText: string;
+    cleanedText?: string;
+    createdAt: string;
+    snippets: Array<{
+      id: string;
+      category: string;
+      content: string;
+      scope?: string;
+      createdAt: string;
+    }>;
+  }>) => void;
+
   // Utilities
   getTodayDate: () => string;
 
@@ -465,6 +482,68 @@ export const useVoiceDiaryStore = create<VoiceDiaryStore>()(
 
       setCurrentUser: (userId) => {
         set({ currentUserId: userId });
+      },
+
+      // Sync entries from backend (merge with local, avoiding duplicates)
+      syncFromBackend: (entries) => {
+        if (!entries || entries.length === 0) return;
+
+        set((state) => {
+          const existingNoteIds = new Set(state.voiceNotes.map(n => n.id));
+          const existingSnippetIds = new Set(state.categorizedSnippets.map(s => s.id));
+
+          // Create voice notes from backend entries (skip if already exists locally)
+          const newNotes: VoiceNote[] = [];
+          const newSnippets: CategorizedSnippet[] = [];
+
+          for (const entry of entries) {
+            // Skip if we already have this note locally
+            if (existingNoteIds.has(entry.id)) continue;
+
+            // Create a voice note from the entry
+            const note: VoiceNote = {
+              id: entry.id,
+              projectId: entry.projectId,
+              userId: state.currentUserId || undefined,
+              audioUri: '', // No audio URL from backend sync
+              title: null,
+              transcriptText: entry.transcriptText,
+              cleanedTranscript: entry.cleanedText || null,
+              status: 'complete',
+              createdAt: entry.createdAt,
+              updatedAt: entry.createdAt,
+              duration: 0,
+              version: 1,
+            };
+            newNotes.push(note);
+
+            // Create snippets from the entry
+            for (const snippet of entry.snippets) {
+              if (existingSnippetIds.has(snippet.id)) continue;
+
+              const newSnippet: CategorizedSnippet = {
+                id: snippet.id,
+                voiceNoteId: entry.id,
+                category: snippet.category as VoiceDiaryCategory,
+                content: snippet.content,
+                scope: snippet.scope,
+                createdAt: snippet.createdAt,
+              };
+              newSnippets.push(newSnippet);
+            }
+          }
+
+          if (newNotes.length === 0 && newSnippets.length === 0) {
+            return state; // No changes
+          }
+
+          console.log('[voice-diary] Synced', newNotes.length, 'notes and', newSnippets.length, 'snippets from backend');
+
+          return {
+            voiceNotes: [...newNotes, ...state.voiceNotes],
+            categorizedSnippets: [...newSnippets, ...state.categorizedSnippets],
+          };
+        });
       },
 
       // Utilities (use local time, not UTC)

@@ -274,6 +274,35 @@ class ApiClient {
       return { success: false };
     }
   }
+
+  // Fetch entries from backend for syncing across devices
+  async getMyEntries(projectId?: string): Promise<{
+    success: boolean;
+    entries?: Array<{
+      id: string;
+      projectId: string;
+      projectName?: string;
+      transcriptText: string;
+      cleanedText?: string;
+      createdAt: string;
+      snippets: Array<{
+        id: string;
+        category: string;
+        content: string;
+        scope?: string;
+        createdAt: string;
+      }>;
+    }>;
+  }> {
+    try {
+      const params = projectId ? { projectId } : {};
+      const response = await this.client.get('/voice-diary/entries', { params });
+      return response.data;
+    } catch (err) {
+      console.error('[api] Failed to fetch entries from backend:', err);
+      return { success: false };
+    }
+  }
 }
 
 export const api = new ApiClient();

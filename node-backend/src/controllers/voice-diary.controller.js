@@ -199,6 +199,56 @@ const voiceDiaryController = {
     }
   },
 
+  // Get entries for the current user (for syncing across devices)
+  async getMyEntries(req, res, next) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { projectId, since } = req.query;
+      console.log('[voice-diary] Fetching entries for user:', userId, 'project:', projectId, 'since:', since);
+
+      const where = { userId };
+      if (projectId) {
+        where.projectId = projectId;
+      }
+      if (since) {
+        where.createdAt = { gte: new Date(since) };
+      }
+
+      const entries = await prisma.voiceDiaryEntry.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+        include: { snippets: true },
+      });
+
+      const transformedEntries = entries.map(e => ({
+        id: e.id,
+        projectId: e.projectId,
+        projectName: e.projectName,
+        transcriptText: e.transcriptText,
+        cleanedText: e.cleanedText,
+        createdAt: e.createdAt.toISOString(),
+        snippets: e.snippets.map(s => ({
+          id: s.id,
+          category: s.category,
+          content: s.content,
+          scope: s.scope,
+          createdAt: s.createdAt.toISOString(),
+        })),
+      }));
+
+      console.log('[voice-diary] Returning', transformedEntries.length, 'entries');
+      res.json({ success: true, entries: transformedEntries });
+    } catch (error) {
+      console.error('[voice-diary] Get my entries error:', error);
+      next(error);
+    }
+  },
+
   // Process tool feedback
   async processToolFeedback(req, res, next) {
     try {

@@ -15,6 +15,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Syncs entries from backend to local store (for cross-device sync)
+async function syncEntriesFromBackend() {
+  try {
+    console.log('[auth] Syncing entries from backend...');
+    const result = await api.getMyEntries();
+    if (result.success && result.entries) {
+      useVoiceDiaryStore.getState().syncFromBackend(result.entries);
+      console.log('[auth] Sync complete');
+    }
+  } catch (err) {
+    console.error('[auth] Failed to sync entries:', err);
+  }
+}
+
 // Clears all user-scoped store data (in-memory + localStorage) to prevent
 // cross-user data leakage when switching accounts or on cold start
 function clearAllUserStores() {
@@ -62,6 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(currentUser);
           localStorage.setItem('voice-diary-last-user-id', currentUser.id);
           useVoiceDiaryStore.getState().setCurrentUser(currentUser.id);
+          // Sync entries from backend for cross-device access
+          syncEntriesFromBackend();
         } catch {
           // Token invalid, clear it
           api.logout();
@@ -88,6 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('voice-diary-last-user-id', response.user.id);
     // Set current user in store for data filtering
     useVoiceDiaryStore.getState().setCurrentUser(response.user.id);
+    // Sync entries from backend for cross-device access
+    syncEntriesFromBackend();
   };
 
   const register = async (email: string, password: string, name: string) => {
@@ -105,6 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('voice-diary-last-user-id', response.user.id);
     // Set current user in store for data filtering
     useVoiceDiaryStore.getState().setCurrentUser(response.user.id);
+    // Sync entries from backend (for new users, this will likely be empty)
+    syncEntriesFromBackend();
   };
 
   const logout = () => {
