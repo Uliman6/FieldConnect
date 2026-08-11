@@ -60,9 +60,12 @@ const CATEGORY_COLORS_RECORD: Record<string, string> = {
   'Materials': 'bg-stone-100 dark:bg-stone-900/30',
 };
 
-// Date utilities
+// Date utilities (use local time, not UTC)
 const formatDateISO = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const parseDate = (dateStr: string): Date => {
