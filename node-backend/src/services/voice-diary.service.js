@@ -182,17 +182,19 @@ CRITICAL RULES:
 2. NEVER copy raw transcript - always rewrite professionally
 3. "make sure" / "need to" / "follow up" = ALWAYS a Follow-up Item
 4. NEVER use "General" as scope - always find specific company/trade
+5. INCLUDE worker count AND hours WITHIN the Work Completed content - DO NOT create separate Team entries
 
 CATEGORIES:
-- Work Completed: Tasks done today (scope = company doing work)
+- Work Completed: Tasks done today WITH worker/hour info embedded. Format: "[Description]. [X] workers, [Y] hours."
 - Work To Be Done: Upcoming tasks, scheduled work
 - Follow-up Items: ANYTHING with "make sure", "need to", "follow up", "check with", "confirm"
 - Issues: Problems, delays, concerns
-- Team: Worker counts - format: "[Company]: [X] workers, [Y] hours"
 - Safety: Hazards, PPE, incidents
 - Materials: Supplies, deliveries, orders
 - Logistics: Equipment, staging, access
 - Process: Coordination, sequencing
+
+DO NOT USE "Team" CATEGORY - worker counts should be embedded in Work Completed content.
 
 SCOPE = COMPANY NAME (not generic trade):
 - If "ABC Electric" mentioned → scope: "ABC Electric"
@@ -202,9 +204,10 @@ SCOPE = COMPANY NAME (not generic trade):
 - For inspections → scope: "Inspections"
 - NEVER use "General"
 
-TEAM ENTRIES (worker counts):
+WORKER COUNTS (CRITICAL - embed in Work Completed):
 When you see "[Company] with X workers/guys" or "worked X hours":
-→ {"category": "Team", "scope": "[Company]", "content": "[X] workers, [Y] hours."}
+→ Include workers/hours at END of Work Completed content
+→ Example: "Second floor electrical work. 3 workers, 8 hours."
 
 FOLLOW-UP ITEMS (capture ALL):
 - "make sure to..." → Follow-up Item
@@ -217,22 +220,22 @@ Input: "ABC Electric working on second floor with three guys, worked eight hours
 
 Output:
 [
-  {"category": "Work Completed", "scope": "ABC Electric", "content": "Second floor electrical room work."},
-  {"category": "Team", "scope": "ABC Electric", "content": "3 workers, 8 hours."},
+  {"category": "Work Completed", "scope": "ABC Electric", "content": "Second floor electrical work. 3 workers, 8 hours."},
   {"category": "Work Completed", "scope": "CBD Concrete", "content": "Foundation work, northwest corner."},
   {"category": "Follow-up Items", "scope": "Inspections", "content": "Follow up with lab tomorrow."}
 ]
 
-OUTPUT: JSON array. Each item = one fact. Use company names as scope. Capture ALL "make sure" items.`;
+OUTPUT: JSON array. Each item = one fact. Use company names as scope. Embed worker counts in Work Completed.`;
 
-    const userPrompt = `DISSECT this transcript. For EACH company mentioned, extract: work done, worker count, hours. Capture ALL "make sure" items as Follow-up Items.
+    const userPrompt = `DISSECT this transcript. For EACH company mentioned, extract work done WITH worker count and hours included in the content.
 
 Transcript: "${cleanedTranscript}"
 
 IMPORTANT:
 - Use company names as scope (ABC Electric, CBD Concrete, CI Plumbing, etc.)
 - EVERY "make sure" = a separate Follow-up Item
-- Format Team entries as: "[X] workers, [Y] hours."
+- DO NOT create separate Team entries - embed worker/hours in Work Completed content
+- Format: "Description. X workers, Y hours." all in one entry
 - NEVER use "General" as scope`;
 
     const response = await fetch(CHAT_ENDPOINT, {

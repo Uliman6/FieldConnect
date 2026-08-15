@@ -81,8 +81,7 @@ const addDays = (date: Date, days: number): Date => {
 export default function Record() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  // Language is accessed via localStorage in recording callbacks
-  useLanguageStore(); // Keep hook active for reactivity
+  const { t } = useLanguageStore();
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -506,15 +505,16 @@ export default function Record() {
   };
 
   // Category icons for the record page hints - categoryKey maps to actual snippet categories
+  // labelKey maps to translation keys (category name lowercase, no spaces)
   const CATEGORY_HINTS = [
-    { icon: <CheckCircle2 size={18} />, label: 'Work Done', categoryKey: 'Work Completed', color: 'text-green-500', bgActive: 'bg-green-100 dark:bg-green-900/40' },
-    { icon: <ListTodo size={18} />, label: 'To Do', categoryKey: 'Work To Be Done', color: 'text-amber-500', bgActive: 'bg-amber-100 dark:bg-amber-900/40' },
-    { icon: <Shield size={18} />, label: 'Safety', categoryKey: 'Safety', color: 'text-red-500', bgActive: 'bg-red-100 dark:bg-red-900/40' },
-    { icon: <ArrowRight size={18} />, label: 'Follow-up', categoryKey: 'Follow-up Items', color: 'text-pink-500', bgActive: 'bg-pink-100 dark:bg-pink-900/40' },
-    { icon: <Users size={18} />, label: 'Team', categoryKey: 'Team', color: 'text-cyan-500', bgActive: 'bg-cyan-100 dark:bg-cyan-900/40' },
-    { icon: <Truck size={18} />, label: 'Logistics', categoryKey: 'Logistics', color: 'text-blue-500', bgActive: 'bg-blue-100 dark:bg-blue-900/40' },
-    { icon: <Package size={18} />, label: 'Materials', categoryKey: 'Materials', color: 'text-stone-500', bgActive: 'bg-stone-100 dark:bg-stone-900/40' },
-    { icon: <AlertCircle size={18} />, label: 'Issues', categoryKey: 'Issues', color: 'text-red-500', bgActive: 'bg-red-100 dark:bg-red-900/40' },
+    { icon: <CheckCircle2 size={18} />, labelKey: 'category.workcompleted', categoryKey: 'Work Completed', color: 'text-green-500', bgActive: 'bg-green-100 dark:bg-green-900/40' },
+    { icon: <ListTodo size={18} />, labelKey: 'category.worktobedone', categoryKey: 'Work To Be Done', color: 'text-amber-500', bgActive: 'bg-amber-100 dark:bg-amber-900/40' },
+    { icon: <Shield size={18} />, labelKey: 'category.safety', categoryKey: 'Safety', color: 'text-red-500', bgActive: 'bg-red-100 dark:bg-red-900/40' },
+    { icon: <ArrowRight size={18} />, labelKey: 'category.follow-upitems', categoryKey: 'Follow-up Items', color: 'text-pink-500', bgActive: 'bg-pink-100 dark:bg-pink-900/40' },
+    { icon: <Users size={18} />, labelKey: 'category.team', categoryKey: 'Team', color: 'text-cyan-500', bgActive: 'bg-cyan-100 dark:bg-cyan-900/40' },
+    { icon: <Truck size={18} />, labelKey: 'category.logistics', categoryKey: 'Logistics', color: 'text-blue-500', bgActive: 'bg-blue-100 dark:bg-blue-900/40' },
+    { icon: <Package size={18} />, labelKey: 'category.materials', categoryKey: 'Materials', color: 'text-stone-500', bgActive: 'bg-stone-100 dark:bg-stone-900/40' },
+    { icon: <AlertCircle size={18} />, labelKey: 'category.issues', categoryKey: 'Issues', color: 'text-red-500', bgActive: 'bg-red-100 dark:bg-red-900/40' },
   ];
 
   // Get selected date's snippets to check which categories are covered
@@ -696,7 +696,7 @@ export default function Record() {
         >
           <Building2 size={20} className={currentProjectId ? 'text-primary-600' : 'text-gray-400'} />
           <span className={`flex-1 text-left font-medium ${currentProject ? (isDark ? 'text-white' : 'text-gray-900') : 'text-gray-400'}`}>
-            {currentProject?.name || 'Select a project...'}
+            {currentProject?.name || t('record.selectProject')}
           </span>
           <ChevronDown size={20} className="text-gray-400" />
         </button>
@@ -740,7 +740,7 @@ export default function Record() {
           {currentProjectId && !isRecording && (
             <div className="mb-4">
               <p className={`text-xs text-center mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                Topics to cover in your note:
+                {t('record.topicsTocover')}
               </p>
               <div className="flex flex-wrap justify-center gap-2 max-w-xs">
                 {CATEGORY_HINTS.map((hint, idx) => {
@@ -755,7 +755,7 @@ export default function Record() {
                       }`}
                     >
                       <span className={hint.color}>{hint.icon}</span>
-                      <span className={`text-xs font-medium ${isCovered ? (isDark ? 'text-white' : 'text-gray-900') : (isDark ? 'text-gray-400' : 'text-gray-500')}`}>{hint.label}</span>
+                      <span className={`text-xs font-medium ${isCovered ? (isDark ? 'text-white' : 'text-gray-900') : (isDark ? 'text-gray-400' : 'text-gray-500')}`}>{t(hint.labelKey)}</span>
                       {isCovered && <Check size={12} className={hint.color} />}
                     </div>
                   );
@@ -766,14 +766,14 @@ export default function Record() {
 
           <p className={`text-base mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             {!currentProjectId
-              ? 'Select a project to start recording'
+              ? t('record.selectProjectFirst')
               : isRecording
               ? isFeedbackMode
-                ? 'Recording feedback... Tap to stop'
+                ? t('record.recordingFeedback')
                 : reRecordingNoteId
-                ? 'Re-recording... Tap to stop'
-                : 'Recording... Tap to stop'
-              : 'Tap to record a voice note'}
+                ? t('record.reRecording')
+                : t('record.recording')
+              : t('record.tapToRecord')}
           </p>
 
           <button
@@ -809,7 +809,7 @@ export default function Record() {
               className={`mt-6 flex items-center gap-2 px-4 py-2 rounded-full ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'}`}
             >
               <MessageSquare size={16} />
-              <span className="text-sm font-medium">Give Feedback</span>
+              <span className="text-sm font-medium">{t('record.giveFeedback')}</span>
             </button>
           )}
 
@@ -831,7 +831,7 @@ export default function Record() {
             >
               {showNotes ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
               <span className="font-medium">
-                View and Edit Notes {sortedNotes.length > 0 && `(${sortedNotes.length})`}
+                {t('record.viewEditNotes')} {sortedNotes.length > 0 && `(${sortedNotes.length})`}
               </span>
             </button>
 
@@ -841,7 +841,7 @@ export default function Record() {
                 {sortedNotes.length === 0 ? (
                   <div className={`p-5 rounded-xl text-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
                     <p className="text-gray-400 text-sm mb-3">
-                      No recordings on {formatDateDisplayLocalized(selectedDate)}
+                      {t('record.noRecordings')} {formatDateDisplayLocalized(selectedDate)}
                     </p>
                     {isToday && !hasExampleData() && (
                       <button
@@ -853,7 +853,7 @@ export default function Record() {
                         }}
                         className={`px-4 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700'}`}
                       >
-                        Load Example Data
+                        {t('record.loadExample')}
                       </button>
                     )}
                   </div>
@@ -883,7 +883,7 @@ export default function Record() {
                                   disabled={isSavingEdit}
                                   className={`flex-1 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'} disabled:opacity-50`}
                                 >
-                                  Cancel
+                                  {t('record.cancel')}
                                 </button>
                                 <button
                                   onClick={() => handleSaveEdit(note.id)}
@@ -893,12 +893,12 @@ export default function Record() {
                                   {isSavingEdit ? (
                                     <>
                                       <Loader2 size={14} className="animate-spin" />
-                                      Saving...
+                                      {t('record.saving')}
                                     </>
                                   ) : (
                                     <>
                                       <Save size={14} />
-                                      Save
+                                      {t('record.save')}
                                     </>
                                   )}
                                 </button>
@@ -964,7 +964,7 @@ export default function Record() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowProjectPicker(false)} />
           <div className={`relative w-full sm:max-w-md max-h-[80vh] rounded-t-2xl sm:rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} safe-area-bottom`}>
             <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Select Project</h2>
+              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('project.select')}</h2>
               <button onClick={() => setShowProjectPicker(false)} className="p-2">
                 <X size={24} className={isDark ? 'text-white' : 'text-gray-900'} />
               </button>
@@ -973,12 +973,12 @@ export default function Record() {
               {isCreatingProject ? (
                 <div className={`p-4 rounded-xl border border-primary-600 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
                   <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    New Project Name
+                    {t('project.name')}
                   </label>
                   <input
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
-                    placeholder="Enter project name..."
+                    placeholder={t('project.enterName')}
                     autoFocus
                     className={`w-full px-4 py-3 rounded-lg mb-3 ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
                   />
@@ -987,13 +987,13 @@ export default function Record() {
                       onClick={() => { setIsCreatingProject(false); setNewProjectName(''); }}
                       className={`flex-1 py-3 rounded-lg font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                     <button
                       onClick={handleCreateProject}
                       className="flex-1 py-3 rounded-lg font-medium bg-primary-600 text-white"
                     >
-                      Create
+                      {t('project.create')}
                     </button>
                   </div>
                 </div>
@@ -1003,7 +1003,7 @@ export default function Record() {
                   className={`w-full flex items-center gap-3 p-4 rounded-xl mb-4 border border-dashed ${isDark ? 'border-gray-700' : 'border-gray-300'}`}
                 >
                   <Plus size={24} className="text-primary-600" />
-                  <span className="text-primary-600 font-medium">Create New Project</span>
+                  <span className="text-primary-600 font-medium">{t('project.create')}</span>
                 </button>
               )}
 
@@ -1012,7 +1012,7 @@ export default function Record() {
                   <Loader2 className="animate-spin mx-auto text-gray-400" size={24} />
                 </div>
               ) : projects.length === 0 && !isCreatingProject ? (
-                <p className="text-center text-gray-400 py-6">No projects yet. Create one above!</p>
+                <p className="text-center text-gray-400 py-6">{t('project.noProjects')}</p>
               ) : (
                 projects.map((project) => (
                   <button

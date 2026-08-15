@@ -63,17 +63,17 @@ export default function Layout() {
                   ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                   : 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
               }`}
-              title={`Switch to ${appMode === 'voice-diary' ? 'Tool Feedback' : 'Voice Diary'}`}
+              title={appMode === 'voice-diary' ? t('app.toolFeedback') : t('app.voiceDiary')}
             >
               {appMode === 'voice-diary' ? (
                 <>
                   <Wrench size={14} />
-                  <span className="hidden sm:inline">Tools</span>
+                  <span className="hidden sm:inline">{t('nav.tools')}</span>
                 </>
               ) : (
                 <>
                   <FileText size={14} />
-                  <span className="hidden sm:inline">Diary</span>
+                  <span className="hidden sm:inline">{t('nav.diary')}</span>
                 </>
               )}
             </button>
@@ -87,7 +87,7 @@ export default function Layout() {
                       : isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
                   }`
                 }
-                title="Admin Dashboard"
+                title={t('header.admin')}
               >
                 <Shield size={20} className="text-primary-600" />
               </NavLink>
@@ -99,7 +99,7 @@ export default function Layout() {
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                   : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
               }`}
-              title={language === 'en' ? 'Cambiar a Espa\u00f1ol' : 'Switch to English'}
+              title={language === 'en' ? t('header.switchToSpanish') : t('header.switchToEnglish')}
             >
               <Globe size={16} />
               <span>{language === 'en' ? 'ES' : 'EN'}</span>
@@ -107,7 +107,7 @@ export default function Layout() {
             <button
               onClick={handleLogout}
               className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} transition-colors`}
-              title="Logout"
+              title={t('header.logout')}
             >
               <LogOut size={20} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
             </button>

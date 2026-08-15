@@ -88,37 +88,52 @@ export default function FormFill() {
     return prefillFormFromSnippets(templateId, selectedSnippets);
   });
 
-  // Work entries for daily log - extract company from content if pattern "Company - description" exists
+  // Work entries for daily log - use scope field for company name (AI extracts company name into scope)
   const [workEntries, setWorkEntries] = useState<WorkEntry[]>(() => {
     const entries: WorkEntry[] = [];
     // Include ALL categories in work entries (except Safety/Issues/Follow-up which go to inspection)
-    const workCategories = ['Work Completed', 'Work To Be Done', 'Materials', 'Logistics', 'Team', 'Process'];
+    const workCategories = ['Work Completed', 'Work To Be Done', 'Materials', 'Logistics', 'Process'];
     const workSnippets = selectedSnippets.filter(s => workCategories.includes(s.category));
 
-    // Group by extracted company name from content
-    const companyGroups: Record<string, string[]> = {};
+    // Group by scope field (company name) - AI now puts company name in scope
+    const companyGroups: Record<string, { descriptions: string[], workers: string, hours: string }> = {};
     workSnippets.forEach(s => {
-      // Try to extract company name from content like "ABC Electrical - pulled wire..."
-      const dashMatch = s.content.match(/^([^-]+)\s*-\s*(.+)$/s);
-      if (dashMatch) {
-        const companyName = dashMatch[1].trim();
-        const description = dashMatch[2].trim();
-        if (!companyGroups[companyName]) companyGroups[companyName] = [];
-        companyGroups[companyName].push(description);
-      } else {
-        // No company pattern found - use category as fallback
-        const key = s.category;
-        if (!companyGroups[key]) companyGroups[key] = [];
-        companyGroups[key].push(s.content);
+      // Use scope field for company name (preferred), fallback to category
+      const companyName = s.scope && s.scope !== 'General' ? s.scope : s.category;
+
+      if (!companyGroups[companyName]) {
+        companyGroups[companyName] = { descriptions: [], workers: '', hours: '' };
+      }
+
+      // Try to extract worker/hour info from content (format: "Description. X workers, Y hours.")
+      const workerMatch = s.content.match(/(\d+)\s*workers?/i);
+      const hourMatch = s.content.match(/(\d+)\s*hours?/i);
+
+      // Remove worker/hour info from description if present
+      let description = s.content
+        .replace(/\.\s*\d+\s*workers?,?\s*\d*\s*hours?\.?/i, '')
+        .replace(/\d+\s*workers?,?\s*\d*\s*hours?\.?/i, '')
+        .trim();
+
+      if (description) {
+        companyGroups[companyName].descriptions.push(description);
+      }
+
+      // Capture worker/hour info
+      if (workerMatch && !companyGroups[companyName].workers) {
+        companyGroups[companyName].workers = workerMatch[1];
+      }
+      if (hourMatch && !companyGroups[companyName].hours) {
+        companyGroups[companyName].hours = hourMatch[1];
       }
     });
 
-    Object.entries(companyGroups).forEach(([company, contents]) => {
+    Object.entries(companyGroups).forEach(([company, data]) => {
       entries.push({
         company: company,
-        workers: '',
-        hours: '',
-        description: contents.join('. '),
+        workers: data.workers,
+        hours: data.hours,
+        description: data.descriptions.join('. '),
         notes: '',
       });
     });
