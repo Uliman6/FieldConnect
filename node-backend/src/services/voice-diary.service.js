@@ -209,20 +209,26 @@ When you see "[Company] with X workers/guys" or "worked X hours":
 → Include workers/hours at END of Work Completed content
 → Example: "Second floor electrical work. 3 workers, 8 hours."
 
-FOLLOW-UP ITEMS (capture ALL):
-- "make sure to..." → Follow-up Item
-- "need to check..." → Follow-up Item
-- "follow up with..." → Follow-up Item
-- "confirm that..." → Follow-up Item
+FOLLOW-UP ITEMS (CRITICAL RULES):
+1. Follow-ups must be FUTURE ACTIONS - things that NEED to be done, NOT things already done
+2. Keep related info together as ONE follow-up item (person + action + purpose)
+3. NEVER create false statements about completed actions
+4. If transcript says "follow up with [person] to [action]" → ONE item: "[Action] - contact [person]"
+
+WRONG: "Booked inspection for Sunday" (false - it needs to be confirmed, not already booked)
+RIGHT: "Confirm inspection booking for Sunday with Rolando from City of Santa Clara"
+
+WRONG: Splitting into two items: "Contact Rolando" AND "Book inspection"
+RIGHT: ONE item: "Confirm Sunday inspection booking with Rolando (City of Santa Clara)"
 
 EXAMPLE:
-Input: "ABC Electric working on second floor with three guys, worked eight hours. CBD Concrete on foundations northwest corner. Make sure to follow up with the lab tomorrow."
+Input: "ABC Electric working on second floor with three guys, worked eight hours. CD Concrete poured foundations southeast side with eight workers for eight hours. Follow-up with Rolando from City of Santa Clara required to confirm inspection booking for Sunday."
 
 Output:
 [
-  {"category": "Work Completed", "scope": "ABC Electric", "content": "Second floor electrical work. 3 workers, 8 hours."},
-  {"category": "Work Completed", "scope": "CBD Concrete", "content": "Foundation work, northwest corner."},
-  {"category": "Follow-up Items", "scope": "Inspections", "content": "Follow up with lab tomorrow."}
+  {"category": "Work Completed", "scope": "ABC Electric", "content": "Second floor electrical room work. 3 workers, 8 hours."},
+  {"category": "Work Completed", "scope": "CD Concrete", "content": "Poured foundations, southeast side. 8 workers, 8 hours."},
+  {"category": "Follow-up Items", "scope": "Inspections", "content": "Confirm Sunday inspection booking with Rolando (City of Santa Clara)."}
 ]
 
 OUTPUT: JSON array. Each item = one fact. Use company names as scope. Embed worker counts in Work Completed.`;
@@ -232,8 +238,9 @@ OUTPUT: JSON array. Each item = one fact. Use company names as scope. Embed work
 Transcript: "${cleanedTranscript}"
 
 IMPORTANT:
-- Use company names as scope (ABC Electric, CBD Concrete, CI Plumbing, etc.)
-- EVERY "make sure" = a separate Follow-up Item
+- Use company names as scope (ABC Electric, CD Concrete, CI Plumbing, etc.)
+- Follow-up items must be FUTURE ACTIONS, not false statements about completed work
+- Keep related follow-up info as ONE item (e.g., "Confirm inspection with Rolando" not split into two)
 - DO NOT create separate Team entries - embed worker/hours in Work Completed content
 - Format: "Description. X workers, Y hours." all in one entry
 - NEVER use "General" as scope`;
